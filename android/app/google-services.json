@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "335851774651",
+    "project_id": "bugcash",
+    "storage_bucket": "bugcash.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:335851774651:android:9c485dd2a5f436ef0abf9e",
+        "android_client_info": {
+          "package_name": "com.bugcash.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0hLevMSRKZpoMaF4Sb_YgvR7ED1VR6Xo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:335851774651:android:3e9ba833d14e2f400abf9e",
+        "android_client_info": {
+          "package_name": "com.bugcash.app.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0hLevMSRKZpoMaF4Sb_YgvR7ED1VR6Xo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
