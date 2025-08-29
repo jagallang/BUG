@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Flutter-3.29.2-02569B?style=flat-square&logo=flutter" />
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Firebase-Enabled-FFCA28?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.1.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.1.1-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -17,6 +17,7 @@ BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의
 ### 🎯 미션 시스템
 - **미션 탐색**: 다양한 앱 테스트 미션 목록 및 필터링
 - **상세 정보**: 미션 요구사항, 보상, 마감일, 참여 현황 표시
+- **앱 설치 링크**: Google Play Store, Apple App Store, APK 직접 다운로드 지원
 - **실시간 참여**: 원클릭 미션 참여 및 진행 상황 추적
 
 ### 🐛 버그 리포트
@@ -199,6 +200,15 @@ service cloud.firestore {
 - **1,375줄 코드 개선**
 - **핵심 기능 3개 완성**
 
+### ✅ 추가 개선 (v1.1.1) - 2025.08.29
+
+- [x] **앱 설치 링크 기능** - 미션 상세 페이지에 테스트 앱 다운로드 섹션 추가
+
+#### 📊 v1.1.1 개선 지표
+- **3개 파일 수정**
+- **255줄 코드 추가**
+- **멀티 플랫폼 다운로드 링크 지원**
+
 ### 🔄 진행 예정
 
 - [ ] **Week 2-1**: 검색 기능 구현
@@ -269,6 +279,23 @@ flutter analyze
 - 앱 공급자 관리 기능
 
 ## 🔧 주요 버전 정보
+
+### v1.1.1 (2025-08-29) - 앱 설치 링크 기능 추가
+#### 📱 새로운 기능
+- **앱 설치 섹션**: 미션 상세 페이지에 테스트 앱 다운로드 영역 추가
+- **멀티 플랫폼 지원**: Google Play Store, Apple App Store, APK 직접 다운로드
+- **url_launcher 통합**: 외부 링크 실행 및 에러 핸들링
+
+#### 🎨 UI/UX 개선
+- 플랫폼별 아이콘 및 색상 구분 (Play Store, Apple, Android)
+- 인터랙티브 다운로드 버튼 디자인
+- 조건부 렌더링으로 사용 가능한 링크만 표시
+- 직관적인 설명 텍스트 및 사용자 가이드
+
+#### 📊 데이터 확장
+- Firebase Service 데모 미션에 downloadLinks 필드 추가
+- 미션별 맞춤형 다운로드 옵션 및 상세 요구사항
+- fallback 미션 데이터에도 링크 정보 통합
 
 ### v1.1.0 (2025-08-29) - Week 1 완료
 #### 🎯 새로운 주요 기능
