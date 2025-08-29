@@ -45,26 +45,64 @@ class _MissionPageState extends State<MissionPage> {
       {
         'id': 'offline_1',
         'title': '인스타그램 클론 앱 테스트',
+        'description': '소셜 미디어 앱의 사진 업로드 및 공유 기능을 테스트해주세요',
         'reward': 5000,
+        'category': 'Social Media',
+        'difficulty': 'Easy',
         'deadline': DateTime.now().add(const Duration(days: 5)).toIso8601String(),
         'participantCount': 8,
         'maxParticipants': 15,
+        'downloadLinks': {
+          'playStore': 'https://play.google.com/store/apps/details?id=com.instagram.clone',
+          'appStore': 'https://apps.apple.com/app/instagram-clone/id111222333',
+        },
+        'requirements': [
+          'SNS 앱 사용 경험',
+          '사진/동영상 업로드 테스트',
+          '소셜 기능 피드백 제공'
+        ],
       },
       {
         'id': 'offline_2',
         'title': '배달앱 주문 플로우 테스트',
+        'description': '음식 주문부터 결제까지 전체 플로우의 사용성을 검증해주세요',
         'reward': 3000,
+        'category': 'Food Delivery',
+        'difficulty': 'Medium',
         'deadline': DateTime.now().add(const Duration(days: 3)).toIso8601String(),
         'participantCount': 12,
         'maxParticipants': 20,
+        'downloadLinks': {
+          'playStore': 'https://play.google.com/store/apps/details?id=com.delivery.test',
+          'apkDirect': 'https://github.com/delivery-test/releases/download/v1.5.0/delivery-test.apk',
+        },
+        'requirements': [
+          '배달 앱 사용 경험',
+          '주문/결제 플로우 테스트',
+          '배달 추적 기능 검증'
+        ],
       },
       {
         'id': 'offline_3',
         'title': '온라인 쇼핑몰 결제 테스트',
+        'description': '전자상거래 앱의 장바구니부터 결제 완료까지 보안 테스트',
         'reward': 7000,
+        'category': 'E-commerce',
+        'difficulty': 'Hard',
         'deadline': DateTime.now().add(const Duration(days: 7)).toIso8601String(),
         'participantCount': 5,
         'maxParticipants': 10,
+        'downloadLinks': {
+          'playStore': 'https://play.google.com/store/apps/details?id=com.shop.secure',
+          'appStore': 'https://apps.apple.com/app/secure-shop/id444555666',
+          'apkDirect': 'https://secure-shop.com/downloads/shop-test-v2.apk',
+        },
+        'requirements': [
+          '온라인 쇼핑 경험 필수',
+          '결제 보안 테스트 가능',
+          '상세한 결제 플로우 분석',
+          'PCI DSS 기본 지식'
+        ],
       },
     ];
   }

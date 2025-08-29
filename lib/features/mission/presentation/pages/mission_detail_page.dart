@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../services/firebase_service.dart';
 import '../../../../core/utils/logger.dart';
@@ -176,6 +177,8 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           _buildInfoCard(),
           SizedBox(height: 16.h),
           _buildDescriptionCard(),
+          SizedBox(height: 16.h),
+          _buildAppDownloadCard(),
           SizedBox(height: 16.h),
           _buildRequirementsCard(),
           SizedBox(height: 16.h),
@@ -361,6 +364,191 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildAppDownloadCard() {
+    // 미션 데이터에서 앱 다운로드 링크들을 가져옵니다
+    final downloadLinks = mission?['downloadLinks'] as Map<String, dynamic>? ?? {
+      'playStore': 'https://play.google.com/store/apps/details?id=com.example.testapp',
+      'appStore': 'https://apps.apple.com/app/test-app/id123456789',
+      'apkDirect': 'https://github.com/example/testapp/releases/download/v1.0.0/app-release.apk',
+    };
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.download, color: AppColors.primary, size: 20.sp),
+                SizedBox(width: 8.w),
+                Text(
+                  '테스트 앱 설치',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              '아래 링크를 통해 테스트할 앱을 먼저 설치하세요',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            
+            // Play Store 링크
+            if (downloadLinks['playStore'] != null)
+              _buildDownloadButton(
+                icon: Icons.play_arrow,
+                title: 'Google Play Store',
+                subtitle: 'Android 사용자',
+                url: downloadLinks['playStore'],
+                color: AppColors.success,
+              ),
+            
+            if (downloadLinks['playStore'] != null && 
+                (downloadLinks['appStore'] != null || downloadLinks['apkDirect'] != null))
+              SizedBox(height: 12.h),
+            
+            // App Store 링크  
+            if (downloadLinks['appStore'] != null)
+              _buildDownloadButton(
+                icon: Icons.apple,
+                title: 'Apple App Store',
+                subtitle: 'iOS 사용자',
+                url: downloadLinks['appStore'],
+                color: AppColors.info,
+              ),
+            
+            if (downloadLinks['appStore'] != null && downloadLinks['apkDirect'] != null)
+              SizedBox(height: 12.h),
+            
+            // 직접 APK 다운로드
+            if (downloadLinks['apkDirect'] != null)
+              _buildDownloadButton(
+                icon: Icons.android,
+                title: 'APK 직접 다운로드',
+                subtitle: 'Android APK 파일',
+                url: downloadLinks['apkDirect'],
+                color: AppColors.warning,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDownloadButton({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String url,
+    required Color color,
+  }) {
+    return InkWell(
+      onTap: () => _launchUrl(url),
+      borderRadius: BorderRadius.circular(8.r),
+      child: Container(
+        padding: EdgeInsets.all(12.w),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(8.r),
+          border: Border.all(
+            color: color.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Icon(
+                icon,
+                color: color,
+                size: 20.sp,
+              ),
+            ),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 2.h),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: AppColors.textHint,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.launch,
+              color: color,
+              size: 18.sp,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchUrl(String url) async {
+    try {
+      final Uri uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('링크를 열 수 없습니다: $url'),
+              backgroundColor: AppColors.error,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      AppLogger.error('Failed to launch URL: $url', 'MissionDetail', e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('링크 실행 중 오류가 발생했습니다'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildStatsCard() {

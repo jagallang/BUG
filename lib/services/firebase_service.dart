@@ -268,6 +268,15 @@ class FirebaseService {
           'deadline': DateTime.now().add(const Duration(days: 30)),
           'participantCount': 15,
           'maxParticipants': 50,
+          'downloadLinks': {
+            'playStore': 'https://play.google.com/store/apps/details?id=com.shopapp.demo',
+            'appStore': 'https://apps.apple.com/app/shopapp-demo/id123456789',
+          },
+          'requirements': [
+            'Android 7.0 이상 또는 iOS 12.0 이상',
+            '결제 테스트 경험 선호',
+            '상세한 버그 리포트 작성 가능'
+          ],
         },
         {
           'title': 'GameCenter UI 검증',
@@ -279,6 +288,15 @@ class FirebaseService {
           'deadline': DateTime.now().add(const Duration(days: 20)),
           'participantCount': 8,
           'maxParticipants': 30,
+          'downloadLinks': {
+            'playStore': 'https://play.google.com/store/apps/details?id=com.gamecenter.test',
+            'apkDirect': 'https://github.com/gamecenter/releases/download/v2.1.0/gamecenter-release.apk',
+          },
+          'requirements': [
+            '모바일 게임 경험 필수',
+            'UI/UX 피드백 제공 가능',
+            '스크린샷 첨부 가능'
+          ],
         },
         {
           'title': '뱅킹앱 보안 테스트',
@@ -290,6 +308,17 @@ class FirebaseService {
           'deadline': DateTime.now().add(const Duration(days: 45)),
           'participantCount': 3,
           'maxParticipants': 20,
+          'downloadLinks': {
+            'playStore': 'https://play.google.com/store/apps/details?id=com.banktest.secure',
+            'appStore': 'https://apps.apple.com/app/banktest-secure/id987654321',
+            'apkDirect': 'https://banktest.com/downloads/secure-banking-test.apk',
+          },
+          'requirements': [
+            '보안 테스트 경험 필수',
+            '금융 앱 사용 경험',
+            '상세한 보안 취약점 리포트 작성',
+            'OWASP 모바일 보안 가이드 숙지'
+          ],
         },
       ];
 
