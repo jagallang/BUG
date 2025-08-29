@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Flutter-3.29.2-02569B?style=flat-square&logo=flutter" />
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Firebase-Enabled-FFCA28?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.0.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.1.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -12,7 +12,7 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.0.0)
+## ✨ 주요 기능 (v2.1.0)
 
 ### 🔔 실시간 알림 시스템 (NEW!)
 - **FCM 푸시 알림**: Firebase Cloud Messaging을 통한 실시간 알림
@@ -27,6 +27,13 @@ BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의
 - **연결 상태 모니터링**: connectivity_plus로 네트워크 상태 감지
 - **자동 재연결**: 네트워크 복구 시 자동 데이터 동기화
 - **오프라인 지원**: Firebase 오프라인 캐싱 활용
+
+### 📱 오프라인 지원 시스템 (NEW!)
+- **완전한 오프라인 기능**: 인터넷 없이도 모든 앱 기능 이용 가능
+- **스마트 동기화**: 연결 복원 시 자동 데이터 동기화 및 충돌 해결
+- **로컬 캐싱**: 효율적인 데이터 캐싱 및 만료 관리 시스템
+- **동기화 큐**: 오프라인 작업 큐잉 및 재시도 메커니즘
+- **연결 상태 UI**: 실시간 연결 상태 및 동기화 진행률 표시
 
 ### 🔍 고급 검색 시스템 (NEW!)
 - **실시간 검색**: 미션명, 앱명, 카테고리별 즉시 검색
@@ -81,7 +88,15 @@ lib/
 ├── core/                        # 핵심 인프라
 │   ├── config/                 # 앱 설정 및 환경변수
 │   ├── constants/              # 색상, 테마 상수
+│   ├── data/                   # 오프라인 지원 (NEW!)
+│   │   └── services/
+│   │       ├── offline_sync_service.dart
+│   │       └── offline_data_cache.dart
 │   ├── error/                  # 에러 처리 시스템
+│   ├── presentation/           # 공통 UI 컴포넌트 (NEW!)
+│   │   └── widgets/
+│   │       ├── connection_status_widget.dart
+│   │       └── sync_management_widget.dart
 │   └── utils/                  # 유틸리티 함수
 ├── features/                   # 기능별 모듈화 (Clean Architecture)
 │   ├── bug_report/            # 버그 리포트 기능
@@ -93,7 +108,8 @@ lib/
 │   │   ├── domain/
 │   │   └── presentation/
 │   │       └── providers/
-│   │           └── realtime_mission_provider.dart
+│   │           ├── realtime_mission_provider.dart
+│   │           └── offline_mission_provider.dart
 │   ├── notifications/         # 알림 시스템 (NEW!)
 │   │   ├── data/
 │   │   │   ├── repositories/
@@ -122,6 +138,10 @@ lib/
 │   │   ├── data/
 │   │   ├── domain/
 │   │   └── presentation/
+│   ├── settings/              # 설정 관리 (NEW!)
+│   │   └── presentation/
+│   │       └── pages/
+│   │           └── sync_settings_page.dart
 │   ├── points/                # 포인트 시스템
 │   └── wallet/                # 지갑/결제
 ├── services/                  # 외부 서비스 연동
@@ -223,7 +243,7 @@ flutter build apk --release
 
 ## 🛠️ 개발 현황
 
-### ✅ Week 3 완료 (v2.0.0) - 2025.08.29
+### ✅ Week 3 완료 (v2.1.0) - 2025.08.29
 
 #### 🎯 Week 3-1: FCM 알림 시스템
 - [x] **Firebase Messaging 통합** - FCM 완전 설정 및 토큰 관리
@@ -237,6 +257,9 @@ flutter build apk --release
 - [x] **연결 상태 모니터링** - connectivity_plus 네트워크 감지
 - [x] **미션 진행도 추적** - 사용자별 실시간 진행 상황
 - [x] **자동 재연결 시스템** - 네트워크 복구 시 데이터 동기화
+- [x] **오프라인 동기화 시스템** - 완전한 오프라인 지원 및 스마트 동기화
+- [x] **로컬 데이터 캐싱** - 효율적인 캐시 관리 및 만료 처리
+- [x] **연결 상태 UI** - 실시간 연결 상태 및 동기화 진행률 표시
 
 ### ✅ Week 2 완료 (v2.0.0) - 2025.08.29
 
@@ -269,9 +292,9 @@ flutter build apk --release
 - [x] **앱 설치 링크 기능** - 미션 상세 페이지에 테스트 앱 다운로드 섹션
 
 #### 📊 성과 지표
-- **40개 파일 변경** (v2.0.0)
-- **9,183줄 코드 추가** (v2.0.0)
-- **핵심 기능 12개 완성**
+- **46개 파일 변경** (v2.1.0)
+- **11,678줄 코드 추가** (v2.1.0)
+- **핵심 기능 15개 완성**
 
 ### 🔄 진행 예정
 
@@ -327,6 +350,26 @@ flutter analyze
 ```
 
 ## 🔧 주요 버전 정보
+
+### 🚀 v2.1.0 (2025-08-29) - 완전한 오프라인 지원
+
+#### ✨ 새로운 혁신 기능
+- **완전한 오프라인 지원**: 인터넷 연결 없이도 모든 앱 기능 이용
+- **스마트 동기화 시스템**: 연결 복원 시 자동 데이터 동기화 및 충돌 해결
+- **실시간 연결 상태 모니터링**: 네트워크 품질 및 연결 상태 시각적 표시
+- **효율적인 로컬 캐싱**: 데이터 캐시 크기 관리 및 자동 만료 처리
+
+#### 🔧 고급 기술 구현
+- **OfflineSyncService**: 동기화 큐 관리 및 자동 재시도 메커니즘
+- **OfflineDataCache**: 스마트 캐싱 시스템으로 빠른 로딩 보장
+- **ConnectionStatusWidget**: 실시간 연결 품질 및 상태 표시
+- **SyncManagementWidget**: 포괄적인 동기화 관리 인터페이스
+
+#### 🎯 사용자 경험 혁신
+- **무중단 서비스**: 네트워크 상태와 관계없이 원활한 앱 사용
+- **투명한 동기화**: 동기화 진행률 및 상태를 실시간으로 확인
+- **배터리 효율**: 백그라운드 동기화 최적화로 배터리 수명 보호
+- **데이터 절약**: Wi-Fi 전용 동기화 옵션으로 데이터 사용량 절약
 
 ### 🚀 v2.0.0 (2025-08-29) - 고급 기능 출시
 
