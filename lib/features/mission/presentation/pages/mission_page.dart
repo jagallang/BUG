@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../services/firebase_service.dart';
 import '../widgets/mission_card.dart';
 import 'mission_detail_page.dart';
+import '../../../search/presentation/pages/search_page.dart';
 
 class MissionPage extends StatefulWidget {
   final bool isFirebaseAvailable;
@@ -144,6 +145,56 @@ class _MissionPageState extends State<MissionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SearchPage(),
+                  ),
+                );
+              },
+              child: Container(
+                width: double.infinity,
+                margin: EdgeInsets.only(bottom: 20.h),
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: const Color(0xFFE9ECEF)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.search,
+                      size: 20.w,
+                      color: const Color(0xFF6C757D),
+                    ),
+                    SizedBox(width: 12.w),
+                    Text(
+                      '미션을 검색해보세요',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: const Color(0xFF6C757D),
+                      ),
+                    ),
+                    const Spacer(),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16.w,
+                      color: const Color(0xFF6C757D),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             Container(
               width: double.infinity,
               padding: EdgeInsets.all(24.w),
@@ -152,8 +203,8 @@ class _MissionPageState extends State<MissionPage> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF00BFA5).withOpacity(0.1),
-                    const Color(0xFF4EDBC5).withOpacity(0.1),
+                    const Color(0xFF00BFA5).withValues(alpha: 0.1),
+                    const Color(0xFF4EDBC5).withValues(alpha: 0.1),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16.r),

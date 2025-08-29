@@ -27,6 +27,25 @@ class FirebaseService {
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         data['id'] = doc.id;
+        
+        // Add keywords for search functionality
+        if (data['keywords'] == null) {
+          final title = data['title']?.toString().toLowerCase() ?? '';
+          final description = data['description']?.toString().toLowerCase() ?? '';
+          final company = data['company']?.toString().toLowerCase() ?? '';
+          final category = data['category']?.toString().toLowerCase() ?? '';
+          
+          data['keywords'] = [
+            title,
+            description,
+            company,
+            category,
+            ...title.split(' '),
+            ...description.split(' '),
+            ...company.split(' '),
+          ].where((keyword) => keyword.isNotEmpty).toSet().toList();
+        }
+        
         return data;
       }).toList();
     } catch (e, stackTrace) {

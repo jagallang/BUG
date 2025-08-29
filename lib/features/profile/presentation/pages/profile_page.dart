@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../services/firebase_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../points/presentation/pages/point_history_page.dart';
+import 'profile_edit_page.dart';
 import 'package:intl/intl.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -72,6 +73,29 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfileEditPage(),
+                ),
+              );
+            },
+            icon: Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Icon(
+                Icons.edit,
+                color: Colors.white,
+                size: 20.sp,
+              ),
+            ),
+            tooltip: '프로필 편집',
+          ),
           IconButton(
             onPressed: () {
               _showProviderManagement(context);
@@ -388,13 +412,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
         SizedBox(height: 12.h),
         _buildActionButton(
-          icon: Icons.settings,
-          title: '설정',
-          subtitle: '알림 및 개인정보 설정',
+          icon: Icons.edit,
+          title: '프로필 편집',
+          subtitle: '개인정보 및 설정을 변경하세요',
           onTap: () {
-            // TODO: Navigate to settings page
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('설정 페이지 준비 중입니다!')),
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ProfileEditPage(),
+              ),
             );
           },
         ),
