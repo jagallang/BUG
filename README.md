@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Flutter-3.29.2-02569B?style=flat-square&logo=flutter" />
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Firebase-Enabled-FFCA28?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.1.1-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.0.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -12,7 +12,42 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능
+## ✨ 주요 기능 (v2.0.0)
+
+### 🔔 실시간 알림 시스템 (NEW!)
+- **FCM 푸시 알림**: Firebase Cloud Messaging을 통한 실시간 알림
+- **카테고리별 알림**: 미션/포인트/랭킹/시스템/홍보별 세밀한 설정
+- **로컬 알림**: 예약된 알림 및 오프라인 알림 처리
+- **알림 관리**: 읽음/삭제, 필터링, 알림 히스토리 관리
+- **FCM 토큰 관리**: 토큰 자동 갱신 및 서버 동기화
+
+### 🔄 실시간 업데이트 시스템 (NEW!)
+- **미션 상태 실시간 추적**: Firestore 실시간 리스너로 즉시 상태 반영
+- **진행도 실시간 업데이트**: 사용자별 미션 참여 및 완료 상황 추적
+- **연결 상태 모니터링**: connectivity_plus로 네트워크 상태 감지
+- **자동 재연결**: 네트워크 복구 시 자동 데이터 동기화
+- **오프라인 지원**: Firebase 오프라인 캐싱 활용
+
+### 🔍 고급 검색 시스템 (NEW!)
+- **실시간 검색**: 미션명, 앱명, 카테고리별 즉시 검색
+- **검색 히스토리**: 최근 검색어 자동 저장 및 관리
+- **인기 검색어**: 실시간 인기 검색 키워드 제공
+- **필터링**: 상태, 카테고리, 리워드 범위별 고급 필터
+- **자동완성**: 입력 중 실시간 검색 제안
+
+### 🏆 랭킹 시스템 (NEW!)
+- **실시간 랭킹**: 포인트 기반 사용자 순위 시스템
+- **티어별 랭킹**: BRONZE/SILVER/GOLD/PLATINUM 등급별 리더보드
+- **카테고리별 순위**: 미션 완료수, 총 포인트, 버그 발견수별 랭킹
+- **개인 통계**: 상위 퍼센트, 순위 변동, 월별 성과 추적
+- **시각적 표현**: 포디움, 그래프, 뱃지 시스템
+
+### 👤 프로필 시스템 (ENHANCED!)
+- **완전한 프로필 편집**: 개인정보, 스킬, 관심사 관리
+- **프로필 이미지**: 카메라/갤러리 업로드 및 Firebase Storage 연동
+- **스킬 관리**: 기술 스택 선택 및 검색 기능
+- **관심사 설정**: 관심 분야 선택 및 개인화
+- **개인정보 보호**: 세밀한 프라이버시 설정
 
 ### 🎯 미션 시스템
 - **미션 탐색**: 다양한 앱 테스트 미션 목록 및 필터링
@@ -32,11 +67,6 @@ BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의
 - **시각적 대시보드**: 포인트 현황 및 통계의 직관적 표시
 - **다양한 적립 방식**: 미션 완료, 버그 발견, 일일 보너스 등
 
-### 👤 사용자 프로필
-- **티어 시스템**: BRONZE/SILVER/GOLD/PLATINUM 등급 관리
-- **활동 통계**: 완료한 미션 수, 가입일, 포인트 현황
-- **프로필 관리**: 개인 정보 및 설정 변경
-
 ### 앱 공급자를 위한 기능
 - **📊 대시보드**: 테스트 진행 상황 실시간 모니터링
 - **🐛 버그 리포트**: 상세한 버그 리포트 및 피드백 수집
@@ -48,35 +78,56 @@ BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의
 
 ```
 lib/
-├── core/                    # 핵심 인프라
-│   ├── config/             # 앱 설정 및 환경변수
-│   ├── constants/          # 색상, 테마 상수
-│   ├── error/              # 에러 처리 시스템
-│   └── utils/              # 유틸리티 함수
-├── features/               # 기능별 모듈화
-│   ├── bug_report/         # 버그 리포트 기능
+├── core/                        # 핵심 인프라
+│   ├── config/                 # 앱 설정 및 환경변수
+│   ├── constants/              # 색상, 테마 상수
+│   ├── error/                  # 에러 처리 시스템
+│   └── utils/                  # 유틸리티 함수
+├── features/                   # 기능별 모듈화 (Clean Architecture)
+│   ├── bug_report/            # 버그 리포트 기능
+│   ├── home/                  # 홈 화면
+│   ├── missions/              # 미션 관리 (NEW!)
+│   │   ├── data/
+│   │   │   └── services/
+│   │   │       └── realtime_mission_service.dart
+│   │   ├── domain/
 │   │   └── presentation/
-│   │       └── pages/
-│   │           └── bug_report_page.dart (626줄)
-│   ├── home/               # 홈 화면
-│   ├── mission/            # 미션 관리
+│   │       └── providers/
+│   │           └── realtime_mission_provider.dart
+│   ├── notifications/         # 알림 시스템 (NEW!)
+│   │   ├── data/
+│   │   │   ├── repositories/
+│   │   │   └── services/
+│   │   │       └── fcm_service.dart
+│   │   ├── domain/
+│   │   │   ├── models/
+│   │   │   └── repositories/
 │   │   └── presentation/
 │   │       ├── pages/
-│   │       │   ├── mission_page.dart
-│   │       │   └── mission_detail_page.dart (524줄)
+│   │       ├── providers/
 │   │       └── widgets/
-│   ├── points/             # 포인트 시스템
-│   │   ├── domain/models/
-│   │   └── presentation/pages/
-│   │       └── point_history_page.dart (412줄)
-│   ├── profile/            # 사용자 프로필
-│   ├── ranking/            # 랭킹 시스템
-│   ├── search/             # 검색 기능
-│   └── wallet/             # 지갑/결제
-├── services/               # 외부 서비스 연동
+│   ├── profile/               # 사용자 프로필 (ENHANCED!)
+│   │   ├── data/
+│   │   ├── domain/
+│   │   └── presentation/
+│   │       ├── pages/
+│   │       │   └── profile_edit_page.dart
+│   │       ├── providers/
+│   │       └── widgets/
+│   ├── ranking/               # 랭킹 시스템 (NEW!)
+│   │   ├── data/
+│   │   ├── domain/
+│   │   └── presentation/
+│   ├── search/                # 검색 기능 (NEW!)
+│   │   ├── data/
+│   │   ├── domain/
+│   │   └── presentation/
+│   ├── points/                # 포인트 시스템
+│   └── wallet/                # 지갑/결제
+├── services/                  # 외부 서비스 연동
 │   └── firebase_service.dart
-└── shared/                 # 공유 컴포넌트
-    └── providers/          # Riverpod 프로바이더
+└── shared/                    # 공유 컴포넌트
+    └── providers/             # Riverpod 프로바이더
 ```
 
 ### 📐 설계 원칙
@@ -85,7 +136,7 @@ lib/
 - **Feature-First**: 기능 중심의 모듈화된 폴더 구조  
 - **Dependency Injection**: GetIt + Injectable을 통한 의존성 관리
 - **State Management**: Riverpod을 활용한 반응형 상태 관리
-- **Type Safety**: Dart의 강타입 시스템 적극 활용
+- **Real-time Architecture**: Firebase 실시간 리스너 기반 데이터 동기화
 
 ## 🚀 시작하기
 
@@ -94,7 +145,7 @@ lib/
 - **Flutter SDK**: 3.29.2 이상
 - **Dart SDK**: 3.7.2 이상  
 - **Android Studio** 또는 **VS Code**
-- **Firebase 프로젝트** (Firestore, Storage, Auth)
+- **Firebase 프로젝트** (Firestore, Storage, Auth, Messaging)
 
 ### 🔧 설치 및 실행
 
@@ -151,72 +202,81 @@ flutter build apk --release
 1. **Firestore Database**
    - `missions` - 미션 정보
    - `users` - 사용자 데이터  
+   - `user_missions` - 사용자별 미션 참여 현황
    - `bug_reports` - 버그 리포트
    - `point_transactions` - 포인트 거래 내역
+   - `notifications` - 알림 데이터
+   - `rankings` - 랭킹 정보
 
 2. **Firebase Storage**
    - `bug_reports/` - 버그 리포트 첨부 파일
    - `user_assets/` - 사용자 업로드 파일
+   - `profile_images/` - 프로필 이미지
 
 3. **Firebase Auth**
    - Google 로그인
    - 익명 인증 (게스트 모드)
 
-### 보안 규칙 예시
-
-```javascript
-// Firestore Security Rules
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    match /missions/{missionId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-        resource.data.createdBy == request.auth.uid;
-    }
-    
-    match /bug_reports/{reportId} {
-      allow read, write: if request.auth != null;
-    }
-  }
-}
-```
+4. **Firebase Cloud Messaging**
+   - 푸시 알림 서비스
+   - FCM 토큰 관리
 
 ## 🛠️ 개발 현황
+
+### ✅ Week 3 완료 (v2.0.0) - 2025.08.29
+
+#### 🎯 Week 3-1: FCM 알림 시스템
+- [x] **Firebase Messaging 통합** - FCM 완전 설정 및 토큰 관리
+- [x] **실시간 푸시 알림** - 포그라운드/백그라운드 알림 처리
+- [x] **카테고리별 알림 설정** - 미션/포인트/랭킹/시스템/홍보별 세밀한 제어
+- [x] **로컬 알림 시스템** - flutter_local_notifications 통합
+- [x] **알림 관리 UI** - 알림 목록, 필터링, 설정 페이지
+
+#### 🔄 Week 3-2: 실시간 업데이트 시스템  
+- [x] **Firestore 실시간 리스너** - 미션 상태 즉시 반영
+- [x] **연결 상태 모니터링** - connectivity_plus 네트워크 감지
+- [x] **미션 진행도 추적** - 사용자별 실시간 진행 상황
+- [x] **자동 재연결 시스템** - 네트워크 복구 시 데이터 동기화
+
+### ✅ Week 2 완료 (v2.0.0) - 2025.08.29
+
+#### 🔍 Week 2-1: 검색 시스템
+- [x] **실시간 미션 검색** - 미션명, 앱명, 카테고리 검색
+- [x] **검색 히스토리** - shared_preferences 기반 최근 검색어
+- [x] **인기 검색어** - 실시간 트렌딩 키워드
+- [x] **고급 필터링** - 상태, 리워드, 카테고리별 필터
+- [x] **검색 UI/UX** - 직관적인 검색 인터페이스
+
+#### 🏆 Week 2-2: 랭킹 시스템
+- [x] **실시간 랭킹** - 포인트 기반 사용자 순위
+- [x] **티어별 리더보드** - 등급별 랭킹 시스템
+- [x] **랭킹 통계** - 개인 성과 및 순위 변동 추적
+- [x] **시각적 랭킹** - 포디움, 차트, 뱃지 시스템
+- [x] **카테고리별 랭킹** - 다양한 기준의 순위 표시
+
+#### 👤 Week 2-3: 프로필 편집 시스템
+- [x] **완전한 프로필 편집** - 개인정보, 설정 관리
+- [x] **프로필 이미지 업로드** - Firebase Storage 연동
+- [x] **스킬 관리** - 기술 스택 선택 및 검색
+- [x] **관심사 설정** - 개인화된 관심 분야
+- [x] **개인정보 보호** - 프라이버시 설정
 
 ### ✅ Week 1 완료 (v1.1.0) - 2025.08.29
 
 - [x] **미션 상세 페이지** - 포괄적인 미션 정보 표시 및 참여 시스템
 - [x] **버그 리포트 제출** - 완전한 제출 폼과 Firebase Storage 통합  
 - [x] **포인트 시스템** - 자동 적립, 히스토리, 프로필 통합
+- [x] **앱 설치 링크 기능** - 미션 상세 페이지에 테스트 앱 다운로드 섹션
 
-#### 📊 Week 1 성과 지표
-- **31개 파일 변경**
-- **4,593줄 코드 추가**
-- **1,375줄 코드 개선**
-- **핵심 기능 3개 완성**
-
-### ✅ 추가 개선 (v1.1.1) - 2025.08.29
-
-- [x] **앱 설치 링크 기능** - 미션 상세 페이지에 테스트 앱 다운로드 섹션 추가
-
-#### 📊 v1.1.1 개선 지표
-- **3개 파일 수정**
-- **255줄 코드 추가**
-- **멀티 플랫폼 다운로드 링크 지원**
+#### 📊 성과 지표
+- **40개 파일 변경** (v2.0.0)
+- **9,183줄 코드 추가** (v2.0.0)
+- **핵심 기능 12개 완성**
 
 ### 🔄 진행 예정
 
-- [ ] **Week 2-1**: 검색 기능 구현
-- [ ] **Week 2-2**: 랭킹 페이지 구현  
-- [ ] **Week 2-3**: 프로필 편집 기능
-- [ ] **Week 3-1**: FCM 푸시 알림 설정
-- [ ] **Week 3-2**: 관리자 대시보드 구현
-- [ ] **Week 3-3**: 실시간 업데이트 기능
+- [ ] **Week 3-3**: 사용자 인증 시스템 (Firebase Auth)
+- [ ] **Week 3-4**: 앱 성능 최적화 및 캐싱 시스템
 - [ ] **Week 4-1**: 테스트 코드 작성
 - [ ] **Week 4-2**: 성능 최적화
 - [ ] **Week 4-3**: 프로덕션 배포 준비
@@ -228,20 +288,22 @@ service cloud.firestore {
 - **State Management**: Riverpod 2.4.9
 - **Navigation**: Flutter Navigator 2.0
 - **Responsive Design**: flutter_screenutil 5.9.0
-- **Image Handling**: image_picker 1.2.0
+- **Image Handling**: image_picker 1.0.4
 
 ### Backend & Services  
-- **Database**: Firebase Firestore
+- **Database**: Firebase Firestore (실시간 리스너)
 - **Storage**: Firebase Storage
 - **Authentication**: Firebase Auth + Google Sign-In
-- **Push Notifications**: FCM (예정)
-- **Analytics**: Firebase Analytics (예정)
+- **Push Notifications**: Firebase Cloud Messaging (FCM)
+- **Real-time Updates**: Firestore Streams
+- **Connectivity**: connectivity_plus 6.1.0
 
 ### Development Tools
 - **Dependency Injection**: GetIt + Injectable
 - **Code Generation**: Build Runner
 - **Linting**: Flutter Lints 3.0.0
 - **Environment Variables**: flutter_dotenv
+- **Notifications**: flutter_local_notifications 17.2.3
 - **Unique IDs**: UUID 4.2.1
 
 ## 🧪 테스트
@@ -264,21 +326,35 @@ genhtml coverage/lcov.info -o coverage/html
 flutter analyze
 ```
 
-## 📱 스크린샷
-
-### 미션 화면
-<img src="https://raw.githubusercontent.com/jagallang/BUG/main/screenshots/mission.png" width="300" alt="미션 화면" />
-
-- 진행 중인 미션 목록
-- 미션별 리워드 및 진행률 표시
-- 카테고리별 필터링
-
-### 프로필 화면
-- 테스터 티어 및 포인트
-- 완료한 미션 통계
-- 앱 공급자 관리 기능
-
 ## 🔧 주요 버전 정보
+
+### 🚀 v2.0.0 (2025-08-29) - 고급 기능 출시
+
+#### ✨ 주요 신기능
+- **FCM 실시간 푸시 알림 시스템**: Firebase Cloud Messaging 완전 통합
+- **미션 상태 실시간 업데이트**: Firestore 실시간 리스너 기반 즉시 반영
+- **고급 검색 시스템**: 실시간 검색, 히스토리, 인기 검색어
+- **랭킹 시스템**: 포인트 기반 실시간 리더보드 및 티어 관리
+- **완전한 프로필 편집**: 이미지 업로드, 스킬/관심사 관리
+
+#### 🔧 기술적 개선
+- **Clean Architecture**: 완전한 feature-first 모듈화 구조
+- **실시간 데이터 동기화**: Firestore 실시간 리스너 전면 도입
+- **연결 상태 모니터링**: connectivity_plus를 통한 네트워크 감지
+- **상태 관리 고도화**: Riverpod 기반 복합 상태 관리
+- **패키지 확장**: 4개 신규 패키지 추가
+
+#### 📦 새로운 의존성
+- `firebase_messaging: ^15.1.3` - FCM 푸시 알림
+- `flutter_local_notifications: ^17.2.3` - 로컬 알림
+- `timezone: ^0.9.4` - 시간대 처리
+- `connectivity_plus: ^6.1.0` - 네트워크 상태 감지
+
+#### 🎨 UI/UX 혁신
+- **알림 센터**: 카테고리별 알림 관리 및 필터링
+- **실시간 랭킹 보드**: 포디움 및 차트 시각화
+- **고급 검색 인터페이스**: 자동완성 및 히스토리
+- **프로필 개인화**: 스킬 태그 및 관심사 선택 UI
 
 ### v1.1.1 (2025-08-29) - 앱 설치 링크 기능 추가
 #### 📱 새로운 기능
@@ -286,49 +362,33 @@ flutter analyze
 - **멀티 플랫폼 지원**: Google Play Store, Apple App Store, APK 직접 다운로드
 - **url_launcher 통합**: 외부 링크 실행 및 에러 핸들링
 
-#### 🎨 UI/UX 개선
-- 플랫폼별 아이콘 및 색상 구분 (Play Store, Apple, Android)
-- 인터랙티브 다운로드 버튼 디자인
-- 조건부 렌더링으로 사용 가능한 링크만 표시
-- 직관적인 설명 텍스트 및 사용자 가이드
-
-#### 📊 데이터 확장
-- Firebase Service 데모 미션에 downloadLinks 필드 추가
-- 미션별 맞춤형 다운로드 옵션 및 상세 요구사항
-- fallback 미션 데이터에도 링크 정보 통합
-
 ### v1.1.0 (2025-08-29) - Week 1 완료
 #### 🎯 새로운 주요 기능
 - **미션 상세 페이지**: 포괄적인 미션 정보 및 참여 시스템
 - **버그 리포트 제출**: Firebase Storage 통합 파일 업로드
 - **포인트 시스템**: 자동 적립 및 히스토리 관리
 
-#### 🏗️ 아키텍처 개선
-- Clean Architecture 구조 적용
-- Riverpod 상태 관리 통합
-- Firebase Services 확장
-- 통합 에러 핸들링 시스템
-- 환경변수 보안 설정
+## 📱 스크린샷
 
-#### 📱 UI/UX 향상
-- Material Design 3 일관 적용
-- 반응형 레이아웃 및 애니메이션
-- 사용자 친화적 네비게이션
-- 포인트 시각화 및 진행 상태 표시
+### 알림 시스템
+- 실시간 푸시 알림 
+- 카테고리별 알림 설정
+- 알림 히스토리 관리
 
-### v1.0.01 (2025-08-26) - 초기 출시
-#### 🐛 버그 수정
-- Android 검은 화면 문제 해결
-- Firebase 초기화 타임아웃 처리 추가 (5초)
-- Firestore API 비활성화 시 무한 대기 문제 수정
+### 랭킹 시스템
+- 실시간 리더보드
+- 티어별 포디움
+- 개인 랭킹 통계
 
-#### ✨ 기본 기능
-- 🔐 Google 로그인/로그아웃
-- 🏠 홈 화면 (미션 리스트)
-- 📋 미션 상세 정보
-- 💰 포인트 지갑 시스템
-- 👤 사용자 프로필
-- 📱 크로스플랫폼 지원
+### 검색 기능
+- 실시간 미션 검색
+- 검색 히스토리
+- 고급 필터링
+
+### 프로필 편집
+- 이미지 업로드
+- 스킬 선택
+- 관심사 관리
 
 ## 📝 기여하기
 
@@ -348,18 +408,6 @@ flutter analyze
 ## 📄 라이선스
 
 이 프로젝트는 [MIT License](LICENSE)로 배포됩니다.
-
-```
-MIT License
-
-Copyright (c) 2025 BugCash Team
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software...
-```
 
 ## 🤝 팀
 
