@@ -1,348 +1,302 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../submission/presentation/pages/submission_page.dart';
+import '../../../../services/firebase_service.dart';
+import '../../../../core/utils/logger.dart';
+import '../../../bug_report/presentation/pages/bug_report_page.dart';
 
-class MissionDetailPage extends StatelessWidget {
+class MissionDetailPage extends ConsumerStatefulWidget {
   final String missionId;
-  final String appName;
-  final String appUrl;
-  final String description;
-  final int currentDay;
-  final int totalDays;
-  final int dailyPoints;
-  final bool todayCompleted;
-  
+  final Map<String, dynamic>? missionData;
+
   const MissionDetailPage({
     super.key,
     required this.missionId,
-    required this.appName,
-    required this.appUrl,
-    required this.description,
-    required this.currentDay,
-    required this.totalDays,
-    required this.dailyPoints,
-    required this.todayCompleted,
+    this.missionData,
   });
+
+  @override
+  ConsumerState<MissionDetailPage> createState() => _MissionDetailPageState();
+}
+
+class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
+  Map<String, dynamic>? mission;
+  bool isLoading = true;
+  bool isParticipating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.missionData != null) {
+      mission = widget.missionData;
+      isLoading = false;
+    } else {
+      _loadMissionDetail();
+    }
+  }
+
+  Future<void> _loadMissionDetail() async {
+    try {
+      // TODO: Implement getMissionById in FirebaseService
+      final missions = await FirebaseService.getMissions();
+      final missionDetail = missions.firstWhere(
+        (m) => m['id'] == widget.missionId,
+        orElse: () => {},
+      );
+      
+      if (mounted) {
+        setState(() {
+          mission = missionDetail;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      AppLogger.error('Failed to load mission detail', 'MissionDetail', e);
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _participateInMission() async {
+    setState(() {
+      isParticipating = true;
+    });
+
+    try {
+      // TODO: Implement actual participation logic
+      await Future.delayed(const Duration(seconds: 1));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('미션 참여 신청이 완료되었습니다!'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        Navigator.pop(context, true);
+      }
+    } catch (e) {
+      AppLogger.error('Failed to participate in mission', 'MissionDetail', e);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('미션 참여에 실패했습니다. 다시 시도해주세요.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isParticipating = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(appName),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () {
-              _showMissionGuide(context);
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16.w),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Progress Card
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(20.w),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppColors.primary, AppColors.primaryLight],
-                      ),
-                      borderRadius: BorderRadius.circular(16.r),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 60.w,
-                              height: 60.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(16.r),
-                              ),
-                              child: Center(
-                                child: Text(
-                                  '🛍️',
-                                  style: TextStyle(fontSize: 32.sp),
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 16.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    appName,
-                                    style: TextStyle(
-                                      fontSize: 20.sp,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  SizedBox(height: 4.h),
-                                  Text(
-                                    'Day $currentDay/$totalDays',
-                                    style: TextStyle(
-                                      fontSize: 16.sp,
-                                      color: Colors.white.withOpacity(0.8),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12.w,
-                                vertical: 6.h,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(20.r),
-                              ),
-                              child: Text(
-                                '+${dailyPoints}P',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 20.h),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8.r),
-                          child: LinearProgressIndicator(
-                            value: currentDay / totalDays,
-                            minHeight: 8.h,
-                            backgroundColor: Colors.white.withOpacity(0.3),
-                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          '${(currentDay / totalDays * 100).toInt()}% 완료',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  SizedBox(height: 24.h),
-                  
-                  // Mission Description
-                  _SectionCard(
-                    title: '미션 설명',
-                    child: Text(
-                      description,
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        height: 1.5,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                  
-                  SizedBox(height: 16.h),
-                  
-                  // Daily Tasks
-                  _SectionCard(
-                    title: '오늘의 할 일',
-                    child: Column(
-                      children: [
-                        _TaskItem(
-                          icon: Icons.download,
-                          title: '1. 앱 다운로드 및 설치',
-                          isCompleted: true,
-                          onTap: () => _launchUrl(appUrl),
-                        ),
-                        _TaskItem(
-                          icon: Icons.timer,
-                          title: '2. 20분 이상 앱 사용',
-                          subtitle: '다양한 기능을 체험해보세요',
-                          isCompleted: false,
-                        ),
-                        _TaskItem(
-                          icon: Icons.videocam,
-                          title: '3. 사용 영상 녹화',
-                          subtitle: 'Google Drive에 업로드',
-                          isCompleted: false,
-                        ),
-                        _TaskItem(
-                          icon: Icons.quiz,
-                          title: '4. 간단한 Q&A 답변',
-                          subtitle: '앱 사용 경험 공유',
-                          isCompleted: false,
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  SizedBox(height: 16.h),
-                  
-                  // Today Status
-                  if (todayCompleted)
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(16.w),
-                      decoration: BoxDecoration(
-                        color: AppColors.success.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: AppColors.success.withOpacity(0.3),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.check_circle,
-                            color: AppColors.success,
-                            size: 24.sp,
-                          ),
-                          SizedBox(width: 12.w),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '오늘 미션 완료!',
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppColors.success,
-                                  ),
-                                ),
-                                Text(
-                                  '${dailyPoints}P가 적립되었습니다.',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          
-          // Bottom Action Button
-          if (!todayCompleted)
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: SafeArea(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => SubmissionPage(
-                          missionId: missionId,
-                          appName: appName,
-                          currentDay: currentDay,
-                        ),
-                      ),
-                    );
-                  },
-                  child: const Text('미션 제출하기'),
+      body: CustomScrollView(
+        slivers: [
+          _buildAppBar(),
+          if (isLoading)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
               ),
+            )
+          else if (mission == null || mission!.isEmpty)
+            const SliverFillRemaining(
+              child: Center(
+                child: Text('미션 정보를 불러올 수 없습니다.'),
+              ),
+            )
+          else
+            SliverToBoxAdapter(
+              child: _buildContent(),
             ),
+        ],
+      ),
+      bottomNavigationBar: mission != null && mission!.isNotEmpty
+          ? _buildBottomBar()
+          : null,
+    );
+  }
+
+  Widget _buildAppBar() {
+    return SliverAppBar(
+      expandedHeight: 200.h,
+      pinned: true,
+      backgroundColor: AppColors.primary,
+      flexibleSpace: FlexibleSpaceBar(
+        title: Text(
+          mission?['title'] ?? '미션 상세',
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppColors.primary,
+                AppColors.primaryLight,
+              ],
+            ),
+          ),
+          child: Center(
+            child: Icon(
+              Icons.bug_report,
+              size: 80.sp,
+              color: Colors.white.withValues(alpha: 0.3),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInfoCard(),
+          SizedBox(height: 16.h),
+          _buildDescriptionCard(),
+          SizedBox(height: 16.h),
+          _buildRequirementsCard(),
+          SizedBox(height: 16.h),
+          _buildStatsCard(),
+          SizedBox(height: 100.h), // Space for bottom bar
         ],
       ),
     );
   }
 
-  void _showMissionGuide(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
+  Widget _buildInfoCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
         child: Column(
           children: [
-            Container(
-              margin: EdgeInsets.only(top: 12.h),
-              width: 40.w,
-              height: 4.h,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2.r),
+            _buildInfoRow(
+              Icons.monetization_on,
+              '보상',
+              '${mission?['reward'] ?? 0} 포인트',
+              AppColors.success,
+            ),
+            Divider(height: 24.h),
+            _buildInfoRow(
+              Icons.calendar_today,
+              '마감일',
+              _formatDate(mission?['deadline']),
+              AppColors.warning,
+            ),
+            Divider(height: 24.h),
+            _buildInfoRow(
+              Icons.speed,
+              '난이도',
+              mission?['difficulty'] ?? 'Medium',
+              AppColors.info,
+            ),
+            Divider(height: 24.h),
+            _buildInfoRow(
+              Icons.category,
+              '카테고리',
+              mission?['category'] ?? '일반',
+              AppColors.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value, Color color) {
+    return Row(
+      children: [
+        Container(
+          padding: EdgeInsets.all(8.w),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          child: Icon(icon, color: color, size: 20.sp),
+        ),
+        SizedBox(width: 12.w),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: AppColors.textHint,
               ),
             ),
-            Padding(
-              padding: EdgeInsets.all(20.w),
-              child: Text(
-                '미션 가이드',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                ),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
               ),
             ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _GuideSection(
-                      title: '📱 앱 다운로드',
-                      content: '제공된 링크를 통해 앱을 다운로드하고 설치해주세요.',
-                    ),
-                    _GuideSection(
-                      title: '⏰ 20분 이상 사용',
-                      content: '앱의 다양한 기능을 체험해보세요. 쇼핑, 게임, 소셜 등 모든 기능을 자유롭게 사용하시면 됩니다.',
-                    ),
-                    _GuideSection(
-                      title: '🎥 영상 녹화',
-                      content: '화면 녹화를 통해 앱 사용 모습을 촬영해주세요. Google Drive에 업로드 후 링크를 제출하세요.',
-                    ),
-                    _GuideSection(
-                      title: '❓ Q&A 답변',
-                      content: '앱 사용 후 간단한 질문에 답변해주세요. 솔직한 의견을 공유해주시면 됩니다.',
-                    ),
-                    _GuideSection(
-                      title: '🐛 버그 발견시',
-                      content: '버그나 문제점을 발견하시면 추가 보상(+2,000P)을 받으실 수 있습니다!',
-                    ),
-                  ],
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDescriptionCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.description, color: AppColors.primary, size: 20.sp),
+                SizedBox(width: 8.w),
+                Text(
+                  '미션 설명',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              mission?['description'] ?? '상세 설명이 없습니다.',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: AppColors.textSecondary,
+                height: 1.5,
               ),
             ),
           ],
@@ -351,163 +305,260 @@ class MissionDetailPage extends StatelessWidget {
     );
   }
 
-  Future<void> _launchUrl(String url) async {
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    }
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  final String title;
-  final Widget child;
-  
-  const _SectionCard({
-    required this.title,
-    required this.child,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16.r),
+  Widget _buildRequirementsCard() {
+    final requirements = mission?['requirements'] as List<dynamic>? ?? 
+      ['Android 또는 iOS 디바이스', '테스트 경험 1회 이상', '버그 리포트 작성 가능'];
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.checklist, color: AppColors.primary, size: 20.sp),
+                SizedBox(width: 8.w),
+                Text(
+                  '참여 조건',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
             ),
-          ),
-          SizedBox(height: 12.h),
-          child,
-        ],
+            SizedBox(height: 12.h),
+            ...requirements.map((req) => Padding(
+              padding: EdgeInsets.symmetric(vertical: 4.h),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: AppColors.success,
+                    size: 16.sp,
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      req.toString(),
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            )).toList(),
+          ],
+        ),
       ),
     );
   }
-}
 
-class _TaskItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final bool isCompleted;
-  final VoidCallback? onTap;
-  
-  const _TaskItem({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    required this.isCompleted,
-    this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8.r),
+  Widget _buildStatsCard() {
+    final participants = mission?['participantCount'] ?? 0;
+    final maxParticipants = mission?['maxParticipants'] ?? 1;
+    final progress = (participants / maxParticipants).clamp(0.0, 1.0);
+    
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 12.h),
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.group, color: AppColors.primary, size: 20.sp),
+                SizedBox(width: 8.w),
+                Text(
+                  '참여 현황',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$participants / $maxParticipants 명',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Text(
+                  '${(progress * 100).toInt()}%',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            LinearProgressIndicator(
+              value: progress,
+              backgroundColor: AppColors.progressBackground,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                progress > 0.8 ? AppColors.warning : AppColors.primary,
+              ),
+              minHeight: 8.h,
+            ),
+            if (progress > 0.8)
+              Padding(
+                padding: EdgeInsets.only(top: 8.h),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning,
+                      color: AppColors.warning,
+                      size: 16.sp,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      '마감 임박!',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.warning,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomBar() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -5),
+          ),
+        ],
+      ),
+      child: SafeArea(
         child: Row(
           children: [
-            Container(
-              width: 40.w,
-              height: 40.h,
-              decoration: BoxDecoration(
-                color: isCompleted 
-                    ? AppColors.success.withOpacity(0.1) 
-                    : AppColors.primary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Icon(
-                isCompleted ? Icons.check : icon,
-                color: isCompleted ? AppColors.success : AppColors.primary,
-                size: 20.sp,
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BugReportPage(
+                        missionId: widget.missionId,
+                        missionTitle: mission?['title'],
+                      ),
+                    ),
+                  );
+                },
+                icon: Icon(Icons.bug_report, size: 18.sp),
+                label: Text(
+                  '버그 리포트',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.warning,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                ),
               ),
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                      decoration: isCompleted ? TextDecoration.lineThrough : null,
-                      color: isCompleted ? AppColors.textSecondary : AppColors.textPrimary,
-                    ),
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: isParticipating ? null : _participateInMission,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.r),
                   ),
-                  if (subtitle != null) ...[
-                    SizedBox(height: 2.h),
-                    Text(
-                      subtitle!,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: AppColors.textSecondary,
+                ),
+                child: isParticipating
+                    ? SizedBox(
+                        height: 20.h,
+                        width: 20.h,
+                        child: const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : Text(
+                        '미션 참여하기',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                  ],
-                ],
               ),
             ),
-            if (onTap != null)
-              Icon(
-                Icons.arrow_forward_ios,
-                size: 14.sp,
-                color: AppColors.textSecondary,
-              ),
           ],
         ),
       ),
     );
   }
-}
 
-class _GuideSection extends StatelessWidget {
-  final String title;
-  final String content;
-  
-  const _GuideSection({
-    required this.title,
-    required this.content,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 20.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16.sp,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            content,
-            style: TextStyle(
-              fontSize: 14.sp,
-              height: 1.5,
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
+  String _formatDate(dynamic date) {
+    if (date == null) return '날짜 미정';
+    
+    try {
+      DateTime dateTime;
+      if (date is DateTime) {
+        dateTime = date;
+      } else if (date is String) {
+        dateTime = DateTime.parse(date);
+      } else {
+        return '날짜 미정';
+      }
+      
+      final remaining = dateTime.difference(DateTime.now()).inDays;
+      if (remaining < 0) {
+        return '마감됨';
+      } else if (remaining == 0) {
+        return '오늘 마감';
+      } else if (remaining == 1) {
+        return '내일 마감';
+      } else {
+        return '$remaining일 남음';
+      }
+    } catch (e) {
+      return '날짜 미정';
+    }
   }
 }

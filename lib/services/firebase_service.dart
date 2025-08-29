@@ -1,15 +1,20 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import '../core/utils/logger.dart';
+import '../core/error/error_handler.dart';
 
 class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
+  static final FirebaseStorage _storage = FirebaseStorage.instance;
 
   // Collections
   static const String missionsCollection = 'missions';
   static const String usersCollection = 'users';
   static const String bugReportsCollection = 'bug_reports';
+  static const String pointTransactionsCollection = 'point_transactions';
 
   // 미션 데이터 CRUD
   static Future<List<Map<String, dynamic>>> getMissions() async {
@@ -24,11 +29,10 @@ class FirebaseService {
         data['id'] = doc.id;
         return data;
       }).toList();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Error getting missions: $e');
-      }
-      return [];
+    } catch (e, stackTrace) {
+      final error = ErrorHandler.handleError(e, stackTrace);
+      AppLogger.error('Failed to get missions', 'Firebase', error);
+      throw error;
     }
   }
 
@@ -41,14 +45,10 @@ class FirebaseService {
           .collection(missionsCollection)
           .add(missionData);
       
-      if (kDebugMode) {
-        print('Mission created with ID: ${docRef.id}');
-      }
+      AppLogger.info('Mission created with ID: ${docRef.id}', 'Firebase');
       return docRef.id;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error creating mission: $e');
-      }
+      AppLogger.error('Failed to create mission', 'Firebase', e);
       return null;
     }
   }
@@ -61,14 +61,10 @@ class FirebaseService {
           .doc(missionId)
           .update(updates);
       
-      if (kDebugMode) {
-        print('Mission updated: $missionId');
-      }
+      AppLogger.info('Mission updated: $missionId', 'Firebase');
       return true;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error updating mission: $e');
-      }
+      AppLogger.error('Failed to update mission', 'Firebase', e);
       return false;
     }
   }
@@ -80,14 +76,10 @@ class FirebaseService {
           .doc(missionId)
           .delete();
       
-      if (kDebugMode) {
-        print('Mission deleted: $missionId');
-      }
+      AppLogger.info('Mission deleted: $missionId', 'Firebase');
       return true;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error deleting mission: $e');
-      }
+      AppLogger.error('Failed to delete mission', 'Firebase', e);
       return false;
     }
   }
@@ -107,9 +99,7 @@ class FirebaseService {
       }
       return null;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting user data: $e');
-      }
+      AppLogger.error('Failed to get user data', 'Firebase', e);
       return null;
     }
   }
@@ -122,14 +112,10 @@ class FirebaseService {
           .doc(userId)
           .set(userData, SetOptions(merge: true));
       
-      if (kDebugMode) {
-        print('User data updated: $userId');
-      }
+      AppLogger.info('User data updated: $userId', 'Firebase');
       return true;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error updating user data: $e');
-      }
+      AppLogger.error('Failed to update user data', 'Firebase', e);
       return false;
     }
   }
@@ -144,16 +130,106 @@ class FirebaseService {
           .collection(bugReportsCollection)
           .add(bugReportData);
       
-      if (kDebugMode) {
-        print('Bug report submitted with ID: ${docRef.id}');
-      }
+      AppLogger.info('Bug report submitted with ID: ${docRef.id}', 'Firebase');
       return docRef.id;
     } catch (e) {
-      if (kDebugMode) {
-        print('Error submitting bug report: $e');
-      }
+      AppLogger.error('Failed to submit bug report', 'Firebase', e);
       return null;
     }
+  }
+
+  // 파일 업로드
+  static Future<String?> uploadFile(File file, String path) async {
+    try {
+      final Reference ref = _storage.ref().child(path);
+      final UploadTask uploadTask = ref.putFile(file);
+      final TaskSnapshot snapshot = await uploadTask;
+      final String downloadUrl = await snapshot.ref.getDownloadURL();
+      
+      AppLogger.info('File uploaded successfully: $path', 'Firebase');
+      return downloadUrl;
+    } catch (e) {
+      AppLogger.error('Failed to upload file: $path', 'Firebase', e);
+      return null;
+    }
+  }
+
+  // 포인트 관련 기능
+  static Future<bool> addPointTransaction(Map<String, dynamic> transactionData) async {
+    try {
+      transactionData['createdAt'] = FieldValue.serverTimestamp();
+      
+      // 트랜잭션 기록 추가
+      await _firestore
+          .collection(pointTransactionsCollection)
+          .add(transactionData);
+      
+      // 사용자 총 포인트 업데이트
+      final userId = transactionData['userId'];
+      final amount = transactionData['amount'] as int;
+      final type = transactionData['type'] as String;
+      
+      final increment = type == 'spent' ? -amount : amount;
+      await _firestore
+          .collection(usersCollection)
+          .doc(userId)
+          .update({
+            'totalPoints': FieldValue.increment(increment),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+      
+      AppLogger.info('Point transaction added: ${transactionData['type']} ${transactionData['amount']}', 'Firebase');
+      return true;
+    } catch (e) {
+      AppLogger.error('Failed to add point transaction', 'Firebase', e);
+      return false;
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getPointTransactions(String userId, {int limit = 20}) async {
+    try {
+      final QuerySnapshot snapshot = await _firestore
+          .collection(pointTransactionsCollection)
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
+          .get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+    } catch (e) {
+      AppLogger.error('Failed to get point transactions', 'Firebase', e);
+      return [];
+    }
+  }
+
+  static Future<bool> awardPointsForBugReport(String userId, String missionId, int points) async {
+    final transactionData = {
+      'userId': userId,
+      'amount': points,
+      'type': 'earned',
+      'source': 'bug_report',
+      'description': '버그 리포트 제출 보상',
+      'missionId': missionId,
+    };
+    
+    return await addPointTransaction(transactionData);
+  }
+
+  static Future<bool> awardPointsForMissionCompletion(String userId, String missionId, int points) async {
+    final transactionData = {
+      'userId': userId,
+      'amount': points,
+      'type': 'earned',
+      'source': 'mission_complete',
+      'description': '미션 완료 보상',
+      'missionId': missionId,
+    };
+    
+    return await addPointTransaction(transactionData);
   }
 
   // 랭킹 데이터 조회
@@ -171,17 +247,14 @@ class FirebaseService {
         return data;
       }).toList();
     } catch (e) {
-      if (kDebugMode) {
-        print('Error getting rankings: $e');
-      }
+      AppLogger.error('Failed to get rankings', 'Firebase', e);
       return [];
     }
   }
 
   // 데모 데이터 초기화 (개발용)
   static Future<void> initializeDemoData() async {
-    if (kDebugMode) {
-      print('Initializing demo data...');
+    AppLogger.info('Initializing demo data...', 'Firebase');
       
       // 데모 미션 데이터
       final List<Map<String, dynamic>> demoMissions = [
@@ -240,14 +313,9 @@ class FirebaseService {
         // 데모 사용자 추가
         await createOrUpdateUser('demo_user', demoUser);
 
-        if (kDebugMode) {
-          print('Demo data initialized successfully');
-        }
+        AppLogger.info('Demo data initialized successfully', 'Firebase');
       } catch (e) {
-        if (kDebugMode) {
-          print('Error initializing demo data: $e');
-        }
+        AppLogger.error('Failed to initialize demo data', 'Firebase', e);
       }
-    }
   }
 }
