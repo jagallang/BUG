@@ -4,13 +4,6 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
 
-enum MissionStatus {
-  draft,
-  active,
-  completed,
-  paused,
-  cancelled,
-}
 
 class RealtimeMissionService {
   final FirebaseFirestore _firestore;

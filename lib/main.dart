@@ -7,7 +7,7 @@ import 'firebase_options.dart';
 import 'services/firebase_service.dart';
 import 'core/utils/logger.dart';
 import 'core/config/app_config.dart';
-import 'features/home/presentation/pages/home_page.dart';
+import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'shared/theme/app_theme.dart';
 
 // 웹용 반응형 크기 헬퍼 - 깔끔한 크기로 조정
@@ -27,25 +27,26 @@ void main() async {
   bool isFirebaseAvailable = false;
   
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    isFirebaseAvailable = true;
-    AppLogger.info('Firebase initialized successfully', 'Main');
+    // Firebase 초기화 비활성화 - Mock 전용 모드로 실행
+    // await Firebase.initializeApp(
+    //   options: DefaultFirebaseOptions.currentPlatform,
+    // );
+    // isFirebaseAvailable = true;
+    AppLogger.info('Running in Mock-only mode', 'Main');
     
-    // 데모 데이터 초기화 (디버그 모드에서만)
-    if (kDebugMode) {
-      try {
-        await FirebaseService.initializeDemoData().timeout(
-          const Duration(seconds: 5),
-          onTimeout: () {
-            AppLogger.warning('Demo data initialization timed out', 'Main');
-          },
-        );
-      } catch (demoError) {
-        AppLogger.error('Demo data initialization failed', 'Main', demoError);
-      }
-    }
+    // 데모 데이터 초기화는 건너뛰기 (Firestore 의존성 때문)
+    // if (kDebugMode) {
+    //   try {
+    //     await FirebaseService.initializeDemoData().timeout(
+    //       const Duration(seconds: 5),
+    //       onTimeout: () {
+    //         AppLogger.warning('Demo data initialization timed out', 'Main');
+    //       },
+    //     );
+    //   } catch (demoError) {
+    //     AppLogger.error('Demo data initialization failed', 'Main', demoError);
+    //   }
+    // }
   } catch (e) {
     AppLogger.error('Firebase initialization failed', 'Main', e);
     AppLogger.info('Running in offline mode with fallback data', 'Main');
@@ -74,7 +75,7 @@ class BugCashWebApp extends StatelessWidget {
           title: 'BugCash - 웹 앱 테스트 플랫폼',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
-          home: BugCashHomePage(isFirebaseAvailable: isFirebaseAvailable),
+          home: const AuthWrapper(),
         );
       },
     );
