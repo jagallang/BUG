@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../providers/provider_dashboard_provider.dart';
-import '../widgets/dashboard_stats_cards.dart';
-import '../widgets/dashboard_charts.dart';
-import '../widgets/apps_overview_widget.dart';
-import '../widgets/missions_overview_widget.dart';
-import '../widgets/bug_reports_overview_widget.dart';
-import '../widgets/recent_activities_widget.dart';
-import '../widgets/quick_actions_widget.dart';
-import '../../../../core/presentation/widgets/connection_status_widget.dart';
 
+// Mock Provider Dashboard Page (Firebase 의존성 제거)
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
 
@@ -23,489 +15,743 @@ class ProviderDashboardPage extends ConsumerStatefulWidget {
   ConsumerState<ProviderDashboardPage> createState() => _ProviderDashboardPageState();
 }
 
-class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage>
-    with TickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 5, vsync: this);
-    
-    // Set current provider ID
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(currentProviderIdProvider.notifier).state = widget.providerId;
-    });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
+  int _selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: ConnectionStatusAppBar(
-        title: '앱 공급자 대시보드',
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 1,
+        title: Text(
+          'Provider Dashboard',
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 20.sp,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => _refreshData(),
-            tooltip: '새로고침',
+            icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('알림 기능 (개발 중)')),
+              );
+            },
           ),
           IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => _showSettings(),
-            tooltip: '설정',
+            icon: const Icon(Icons.account_circle, color: Colors.black87),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('프로필 기능 (개발 중)')),
+              );
+            },
           ),
         ],
       ),
-      body: Column(
+      body: IndexedStack(
+        index: _selectedIndex,
         children: [
-          // Tab Bar
-          Container(
-            color: Theme.of(context).colorScheme.surface,
-            child: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabs: const [
-                Tab(icon: Icon(Icons.dashboard), text: '대시보드'),
-                Tab(icon: Icon(Icons.apps), text: '앱 관리'),
-                Tab(icon: Icon(Icons.assignment), text: '미션 관리'),
-                Tab(icon: Icon(Icons.bug_report), text: '버그 리포트'),
-                Tab(icon: Icon(Icons.analytics), text: '분석'),
-              ],
-            ),
+          _buildDashboardTab(),
+          _buildAppsTab(),
+          _buildMissionsTab(),
+          _buildReportsTab(),
+          _buildAnalyticsTab(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: '대시보드',
           ),
-          
-          // Tab Content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildDashboardTab(),
-                _buildAppsTab(),
-                _buildMissionsTab(),
-                _buildBugReportsTab(),
-                _buildAnalyticsTab(),
-              ],
-            ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.apps),
+            label: '앱 관리',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment),
+            label: '미션',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bug_report),
+            label: '버그 리포트',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.analytics),
+            label: '분석',
           ),
         ],
       ),
-      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
   Widget _buildDashboardTab() {
-    final dashboardStatsAsync = ref.watch(dashboardStatsProvider(widget.providerId));
-    
-    return RefreshIndicator(
-      onRefresh: _refreshData,
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome Section
-            _buildWelcomeSection(),
-            
-            SizedBox(height: 24.h),
-            
-            // Quick Actions
-            const QuickActionsWidget(),
-            
-            SizedBox(height: 24.h),
-            
-            // Stats Cards
-            dashboardStatsAsync.when(
-              data: (stats) => DashboardStatsCards(stats: stats),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => _buildErrorWidget('통계 로딩 실패', error),
-            ),
-            
-            SizedBox(height: 24.h),
-            
-            // Charts
-            dashboardStatsAsync.when(
-              data: (stats) => DashboardCharts(stats: stats),
-              loading: () => const SizedBox.shrink(),
-              error: (_, __) => const SizedBox.shrink(),
-            ),
-            
-            SizedBox(height: 24.h),
-            
-            // Overview Widgets
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    children: [
-                      AppsOverviewWidget(providerId: widget.providerId),
-                      SizedBox(height: 16.h),
-                      MissionsOverviewWidget(providerId: widget.providerId),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  flex: 1,
-                  child: RecentActivitiesWidget(providerId: widget.providerId),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppsTab() {
-    return AppsOverviewWidget(providerId: widget.providerId, isFullView: true);
-  }
-
-  Widget _buildMissionsTab() {
-    return MissionsOverviewWidget(providerId: widget.providerId, isFullView: true);
-  }
-
-  Widget _buildBugReportsTab() {
-    return BugReportsOverviewWidget(providerId: widget.providerId, isFullView: true);
-  }
-
-  Widget _buildAnalyticsTab() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '상세 분석',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            '안녕하세요, BugCash Provider님!',
+            style: TextStyle(
+              fontSize: 24.sp,
               fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '오늘도 품질 높은 앱을 만들어 보세요.',
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 24.h),
+          
+          // Stats Cards
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatCard(
+                  title: '총 미션',
+                  value: '15',
+                  icon: Icons.assignment,
+                  color: Colors.blue,
+                ),
+              ),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: _buildStatCard(
+                  title: '활성 미션',
+                  value: '3',
+                  icon: Icons.play_circle,
+                  color: Colors.green,
+                ),
+              ),
+            ],
           ),
           SizedBox(height: 16.h),
           
-          // Performance Metrics
-          _buildPerformanceMetrics(),
-          
-          SizedBox(height: 24.h),
-          
-          // App Analytics
-          _buildAppAnalytics(),
-          
-          SizedBox(height: 24.h),
-          
-          // Tester Analytics
-          _buildTesterAnalytics(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWelcomeSection() {
-    final providerInfoAsync = ref.watch(providerInfoProvider(widget.providerId));
-    
-    return providerInfoAsync.when(
-      data: (provider) => Container(
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.primary,
-              Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '안녕하세요, ${provider?.companyName ?? '공급자'}님!',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    '오늘도 훌륭한 앱 테스트를 진행해보세요.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  _buildProviderStatusChip(provider?.status),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.dashboard,
-              size: 64.w,
-              color: Colors.white.withValues(alpha: 0.3),
-            ),
-          ],
-        ),
-      ),
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
-    );
-  }
-
-  Widget _buildProviderStatusChip(status) {
-    Color chipColor;
-    String statusText;
-    IconData statusIcon;
-    
-    switch (status?.name) {
-      case 'approved':
-        chipColor = Colors.green;
-        statusText = '승인됨';
-        statusIcon = Icons.check_circle;
-        break;
-      case 'pending':
-        chipColor = Colors.orange;
-        statusText = '승인 대기';
-        statusIcon = Icons.pending;
-        break;
-      case 'suspended':
-        chipColor = Colors.red;
-        statusText = '일시정지';
-        statusIcon = Icons.pause_circle;
-        break;
-      default:
-        chipColor = Colors.grey;
-        statusText = '알 수 없음';
-        statusIcon = Icons.help;
-    }
-    
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-      decoration: BoxDecoration(
-        color: chipColor.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(20.r),
-        border: Border.all(color: chipColor.withValues(alpha: 0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(statusIcon, size: 16.w, color: chipColor),
-          SizedBox(width: 6.w),
-          Text(
-            statusText,
-            style: TextStyle(
-              color: chipColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 12.sp,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPerformanceMetrics() {
-    final dashboardStatsAsync = ref.watch(dashboardStatsProvider(widget.providerId));
-    
-    return dashboardStatsAsync.when(
-      data: (stats) => Card(
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                '성과 지표',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: _buildStatCard(
+                  title: '총 테스터',
+                  value: '128',
+                  icon: Icons.group,
+                  color: Colors.orange,
                 ),
               ),
-              SizedBox(height: 16.h),
-              ...stats.performanceMetrics.entries.map((entry) {
-                return Padding(
-                  padding: EdgeInsets.symmetric(vertical: 4.h),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(_formatMetricName(entry.key)),
-                      Text(
-                        '${entry.value.toStringAsFixed(1)}${_getMetricUnit(entry.key)}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+              SizedBox(width: 16.w),
+              Expanded(
+                child: _buildStatCard(
+                  title: '버그 리포트',
+                  value: '89',
+                  icon: Icons.bug_report,
+                  color: Colors.red,
+                ),
+              ),
             ],
           ),
-        ),
+          SizedBox(height: 32.h),
+          
+          // Recent Activities
+          Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 0,
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '최근 활동',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                _buildActivityItem(
+                  title: '새로운 버그 리포트',
+                  subtitle: '김테스터님이 ShopApp에서 결제 오류를 발견했습니다.',
+                  time: '30분 전',
+                  icon: Icons.bug_report,
+                  color: Colors.red,
+                ),
+                _buildActivityItem(
+                  title: '미션 완료',
+                  subtitle: 'FoodDelivery UI/UX 테스트 미션이 완료되었습니다.',
+                  time: '2시간 전',
+                  icon: Icons.check_circle,
+                  color: Colors.green,
+                ),
+                _buildActivityItem(
+                  title: '새로운 테스터 참여',
+                  subtitle: '박테스터님이 ShopApp 테스트에 참여했습니다.',
+                  time: '4시간 전',
+                  icon: Icons.person_add,
+                  color: Colors.blue,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      loading: () => const Card(child: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
-  Widget _buildAppAnalytics() {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '앱별 분석',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+  Widget _buildAppsTab() {
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '등록된 앱',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
-            ),
-            SizedBox(height: 16.h),
-            Text('상세 앱 분석 차트가 여기에 표시됩니다.'),
-            // TODO: Implement detailed app analytics charts
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTesterAnalytics() {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '테스터 분석',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+              ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('앱 등록 기능 (개발 중)')),
+                  );
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('앱 등록'),
               ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Expanded(
+            child: ListView.builder(
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                final apps = [
+                  {'name': 'ShopApp', 'status': '활성', 'version': '2.1.0', 'missions': 8},
+                  {'name': 'FoodDelivery', 'status': '테스팅', 'version': '1.5.2', 'missions': 4},
+                  {'name': 'FitnessTracker', 'status': '일시정지', 'version': '3.0.1', 'missions': 3},
+                ];
+                final app = apps[index];
+                
+                return Card(
+                  margin: EdgeInsets.only(bottom: 12.h),
+                  child: ListTile(
+                    leading: Container(
+                      width: 48.w,
+                      height: 48.w,
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Icon(
+                        Icons.phone_android,
+                        color: Colors.blue,
+                        size: 24.sp,
+                      ),
+                    ),
+                    title: Text(
+                      app['name'] as String,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16.sp,
+                      ),
+                    ),
+                    subtitle: Text('버전 ${app['version']} • 미션 ${app['missions']}개'),
+                    trailing: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: app['status'] == '활성' ? Colors.green.shade50 : Colors.orange.shade50,
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Text(
+                        app['status'] as String,
+                        style: TextStyle(
+                          color: app['status'] == '활성' ? Colors.green : Colors.orange,
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('${app['name']} 상세 정보 (개발 중)')),
+                      );
+                    },
+                  ),
+                );
+              },
             ),
-            SizedBox(height: 16.h),
-            Text('테스터 활동 분석이 여기에 표시됩니다.'),
-            // TODO: Implement tester analytics
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildFloatingActionButton() {
-    final currentTab = ref.watch(dashboardTabProvider);
-    
-    switch (currentTab) {
-      case 1: // Apps tab
-        return FloatingActionButton.extended(
-          onPressed: () => _showCreateAppDialog(),
-          icon: const Icon(Icons.add),
-          label: const Text('새 앱'),
-        );
-      case 2: // Missions tab
-        return FloatingActionButton.extended(
-          onPressed: () => _showCreateMissionDialog(),
-          icon: const Icon(Icons.add),
-          label: const Text('새 미션'),
-        );
-      default:
-        return FloatingActionButton(
-          onPressed: () => _refreshData(),
-          child: const Icon(Icons.refresh),
-        );
-    }
-  }
-
-  Widget _buildErrorWidget(String title, dynamic error) {
-    return Card(
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 48.w,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            SizedBox(height: 16.h),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Theme.of(context).colorScheme.error,
+  Widget _buildMissionsTab() {
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '미션 관리',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('미션 생성 기능 (개발 중)')),
+                  );
+                },
+                icon: const Icon(Icons.add),
+                label: const Text('미션 생성'),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          Expanded(
+            child: ListView.builder(
+              itemCount: 2,
+              itemBuilder: (context, index) {
+                final missions = [
+                  {
+                    'title': 'ShopApp 결제 기능 테스트',
+                    'app': 'ShopApp',
+                    'status': '활성',
+                    'testers': '7/10',
+                    'reward': '250P',
+                    'deadline': '5일 남음'
+                  },
+                  {
+                    'title': 'FoodDelivery UI/UX 개선 테스트',
+                    'app': 'FoodDelivery',
+                    'status': '완료',
+                    'testers': '15/15',
+                    'reward': '180P',
+                    'deadline': '완료됨'
+                  },
+                ];
+                final mission = missions[index];
+                
+                return Card(
+                  margin: EdgeInsets.only(bottom: 16.h),
+                  child: Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                mission['title'] as String,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: mission['status'] == '활성' ? Colors.green.shade50 : Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              child: Text(
+                                mission['status'] as String,
+                                style: TextStyle(
+                                  color: mission['status'] == '활성' ? Colors.green : Colors.blue,
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          mission['app'] as String,
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              '참여자: ${mission['testers']}',
+                              style: TextStyle(fontSize: 12.sp),
+                            ),
+                            Text(
+                              '보상: ${mission['reward']}',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.green,
+                              ),
+                            ),
+                            Text(
+                              mission['deadline'] as String,
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-            SizedBox(height: 8.h),
-            Text(
-              error.toString(),
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  String _formatMetricName(String key) {
-    switch (key) {
-      case 'missionCompletionRate':
-        return '미션 완료율';
-      case 'averageResponseTime':
-        return '평균 응답 시간';
-      case 'bugResolutionRate':
-        return '버그 해결율';
-      case 'recentActivityScore':
-        return '활동 점수';
-      default:
-        return key;
-    }
-  }
-
-  String _getMetricUnit(String key) {
-    switch (key) {
-      case 'missionCompletionRate':
-      case 'bugResolutionRate':
-        return '%';
-      case 'averageResponseTime':
-        return '시간';
-      default:
-        return '';
-    }
-  }
-
-  Future<void> _refreshData() async {
-    // Refresh all data
-    ref.invalidate(dashboardStatsProvider(widget.providerId));
-    ref.invalidate(providerAppsProvider(widget.providerId));
-    ref.invalidate(providerMissionsProvider(widget.providerId));
-    ref.invalidate(recentActivitiesProvider(widget.providerId));
-  }
-
-  void _showSettings() {
-    // TODO: Navigate to settings page
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('설정 페이지 준비 중입니다.')),
+  Widget _buildReportsTab() {
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '버그 리포트',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Expanded(
+            child: ListView.builder(
+              itemCount: 2,
+              itemBuilder: (context, index) {
+                final reports = [
+                  {
+                    'title': 'ShopApp 결제 버튼 클릭 안됨',
+                    'app': 'ShopApp',
+                    'severity': 'High',
+                    'tester': '김테스터',
+                    'status': '확인중',
+                    'time': '6시간 전'
+                  },
+                  {
+                    'title': 'FoodDelivery 주문 내역 표시 오류',
+                    'app': 'FoodDelivery',
+                    'severity': 'Medium',
+                    'tester': '이테스터',
+                    'status': '수정중',
+                    'time': '1일 전'
+                  },
+                ];
+                final report = reports[index];
+                
+                return Card(
+                  margin: EdgeInsets.only(bottom: 16.h),
+                  child: Padding(
+                    padding: EdgeInsets.all(16.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                report['title'] as String,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16.sp,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: report['severity'] == 'High' ? Colors.red.shade50 : Colors.orange.shade50,
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              child: Text(
+                                report['severity'] as String,
+                                style: TextStyle(
+                                  color: report['severity'] == 'High' ? Colors.red : Colors.orange,
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          '${report['app']} • ${report['tester']}님',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14.sp,
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade50,
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              child: Text(
+                                report['status'] as String,
+                                style: TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              report['time'] as String,
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  void _showCreateAppDialog() {
-    // TODO: Show create app dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('앱 생성 기능 준비 중입니다.')),
+  Widget _buildAnalyticsTab() {
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '분석 및 통계',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(24.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  spreadRadius: 0,
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Icon(
+                  Icons.analytics,
+                  size: 48.sp,
+                  color: Colors.grey[400],
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  '상세 분석 기능',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  '앱 성능, 테스터 활동, 미션 효율성 등\n다양한 분석 데이터를 제공할 예정입니다.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 16.h),
+                ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('상세 분석 기능 (개발 중)')),
+                    );
+                  },
+                  child: const Text('상세보기'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  void _showCreateMissionDialog() {
-    // TODO: Show create mission dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('미션 생성 기능 준비 중입니다.')),
+  Widget _buildStatCard({
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(
+                icon,
+                color: color,
+                size: 24.sp,
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivityItem({
+    required String title,
+    required String subtitle,
+    required String time,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 16.h),
+      child: Row(
+        children: [
+          Container(
+            width: 40.w,
+            height: 40.w,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Icon(
+              icon,
+              color: color,
+              size: 20.sp,
+            ),
+          ),
+          SizedBox(width: 12.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14.sp,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 2.h),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            time,
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+// Firebase 의존성 제거 - Mock 데이터만 사용
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../models/mission_model.dart';
 
 // Tester Dashboard State
@@ -205,7 +206,8 @@ final testerDashboardProvider =
 
 class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   final Ref _ref;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  // Firebase 의존성 제거 - Mock 데이터만 사용
+  // final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   Timer? _refreshTimer;
   StreamSubscription? _missionsSubscription;
   StreamSubscription? _profileSubscription;
@@ -486,28 +488,13 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   }
 
   void _startRealTimeUpdates(String testerId) {
-    // Subscribe to missions updates
-    _missionsSubscription?.cancel();
-    _missionsSubscription = _firestore
-        .collection('missions')
-        .where('status', isEqualTo: 'active')
-        .snapshots()
-        .listen((snapshot) {
-      // Update available missions in real-time
+    // Firebase 의존성 제거 - Mock 업데이트만 사용
+    // 실시간 업데이트 시뮬레이션을 위한 주기적 새로고침
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      // Mock 데이터 주기적 업데이트
       _loadMissions(testerId);
-    });
-    
-    // Subscribe to profile updates
-    _profileSubscription?.cancel();
-    _profileSubscription = _firestore
-        .collection('testers')
-        .doc(testerId)
-        .snapshots()
-        .listen((snapshot) {
-      if (snapshot.exists) {
-        // Update tester profile
-        _loadTesterProfile(testerId);
-      }
+      _loadTesterProfile(testerId);
     });
   }
 
