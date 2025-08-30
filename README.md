@@ -3,8 +3,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Flutter-3.29.2-02569B?style=flat-square&logo=flutter" />
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
-  <img src="https://img.shields.io/badge/Firebase-Enabled-FFCA28?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.1.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Firebase-Mock%20Mode-FF9800?style=flat-square&logo=firebase" />
+  <img src="https://img.shields.io/badge/Version-2.2.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -12,7 +12,14 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.1.0)
+## ✨ 주요 기능 (v2.2.0)
+
+### 🔧 완전한 Mock 시스템 (NEW!)
+- **Firebase 독립**: Firebase 서버 없이도 모든 기능 완벽 동작
+- **Provider Dashboard**: 앱 등록, 미션 생성, 버그 리포트 관리, 분석 대시보드
+- **완전한 오프라인 지원**: 네트워크 연결 없이 앱의 모든 기능 이용 가능
+- **Mock 데이터**: 실제 운영 환경과 동일한 테스트 데이터 시뮬레이션
+- **즉시 실행**: 복잡한 서버 설정 없이 바로 앱 체험 가능
 
 ### 🔔 실시간 알림 시스템 (NEW!)
 - **FCM 푸시 알림**: Firebase Cloud Messaging을 통한 실시간 알림
@@ -350,17 +357,17 @@ flutter build apk --release
 ### Provider (앱 공급자) 계정
 | 계정 타입 | 이메일 | 비밀번호 | 설명 |
 |-----------|--------|----------|------|
-| 🏢 관리자 | admin@techcorp.com | admin123 | TechCorp 대표 관리자 |
-| 👨‍💼 공급자 | provider@gamedev.com | provider123 | GameDev Studio 담당자 |
-| 🏭 기업 | company@fintech.com | company123 | FinTech Solutions 담당자 |
+| 🏢 제공자 1 | provider1@bugcash.com | password123 | BugCash 파트너 기업 |
+| 👨‍💼 제공자 2 | provider2@bugcash.com | password123 | 스타트업 개발팀 |
+| 🏭 제공자 3 | provider3@bugcash.com | password123 | 대기업 QA팀 |
 
 ### Tester (테스터) 계정
 | 계정 타입 | 이메일 | 비밀번호 | 설명 |
 |-----------|--------|----------|------|
-| 👤 일반 | tester1@gmail.com | tester123 | 일반 앱 테스터 |
-| 🎨 UI/UX | tester2@gmail.com | test456 | UI/UX 전문 테스터 |
-| 🔒 보안 | tester3@gmail.com | tester789 | 보안 전문 테스터 |
-| 🏆 전문가 | tester4@gmail.com | test999 | 버그 헌팅 전문가 |
+| 👤 테스터 1 | tester1@bugcash.com | password123 | 일반 앱 테스터 |
+| 🎨 테스터 2 | tester2@bugcash.com | password123 | UI/UX 전문 테스터 |
+| 🔒 테스터 3 | tester3@bugcash.com | password123 | 보안 전문 테스터 |
+| 🏆 테스터 4 | tester4@bugcash.com | password123 | 버그 헌팅 전문가 |
 
 ### 📱 테스트 방법
 1. 앱 실행 후 로그인 페이지에서 **"테스트 계정 선택"** 버튼 클릭
@@ -389,6 +396,14 @@ flutter analyze
 ```
 
 ## 🔧 주요 버전 정보
+
+### 🚀 v2.2.0 (2025-08-30) - Provider Dashboard 완성
+- **Provider Dashboard Mock 구현**: Firebase 없이 완전 동작하는 Provider 대시보드
+- **5개 탭 인터페이스**: 대시보드/앱 관리/미션/버그 리포트/분석 탭 구현
+- **Mock 데이터 시뮬레이션**: 실제 운영과 동일한 테스트 환경 제공
+- **Firebase 의존성 완전 제거**: 모든 Provider 기능의 오프라인 동작
+- **Material Design 3**: 현대적인 UI/UX 디자인 적용
+- **즉시 테스트 가능**: 서버 설정 없이 바로 모든 기능 체험
 
 ### 🚀 v2.1.1 (2025-08-30) - Mock 인증 시스템 완성
 
