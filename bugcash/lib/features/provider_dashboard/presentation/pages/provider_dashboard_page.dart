@@ -5,6 +5,7 @@ import '../providers/provider_dashboard_provider.dart';
 import '../../domain/models/provider_model.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
+import 'app_registration_page.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -195,89 +196,165 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   Widget _buildAppsTab() {
-    final appsAsync = ref.watch(providerAppsProvider(widget.providerId));
+    // Debug logging
+    AppLogger.info('Building apps tab for provider: ${widget.providerId}', 'ProviderDashboard');
     
-    return Padding(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '등록된 앱',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+    // Start with the simplest possible implementation
+    return Container(
+      color: Colors.white,
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '등록된 앱',
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  print('앱 등록 버튼 클릭됨');
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('앱 등록 기능 (개발 중)')),
-                  );
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('앱 등록'),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          Expanded(
-            child: appsAsync.when(
-              data: (apps) {
-                if (apps.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.apps, size: 64.sp, color: Colors.grey),
-                        SizedBox(height: 16.h),
-                        Text(
-                          '등록된 앱이 없습니다',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                
-                return ListView.builder(
-                  itemCount: apps.length,
-                  itemBuilder: (context, index) {
-                    final app = apps[index];
-                    return _buildAppCard(app);
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => AppRegistrationPage(providerId: widget.providerId),
+                      ),
+                    );
                   },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error, size: 64.sp, color: Colors.red),
-                    SizedBox(height: 16.h),
-                    Text(
-                      '앱 목록을 불러올 수 없습니다',
-                      style: TextStyle(fontSize: 16.sp, color: Colors.red),
-                    ),
-                    SizedBox(height: 8.h),
-                    ElevatedButton(
-                      onPressed: () => ref.invalidate(providerAppsProvider(widget.providerId)),
-                      child: const Text('다시 시도'),
-                    ),
-                  ],
+                  icon: const Icon(Icons.add),
+                  label: const Text('앱 등록'),
                 ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            
+            // Test basic provider functionality
+            Expanded(
+              child: Consumer(
+                builder: (context, ref, child) {
+                  try {
+                    final appsAsync = ref.watch(providerAppsProvider(widget.providerId));
+                    AppLogger.info('Apps async loaded: ${appsAsync.runtimeType}', 'ProviderDashboard');
+                    
+                    return appsAsync.when(
+                      data: (apps) {
+                        AppLogger.info('Apps data: ${apps.length} items', 'ProviderDashboard');
+                        return Column(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.green.shade100,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('✅ 앱 탭이 정상적으로 로드되었습니다'),
+                                  Text('Provider ID: ${widget.providerId}'),
+                                  Text('앱 개수: ${apps.length}'),
+                                  SizedBox(height: 8),
+                                  Text('앱 목록:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                  ...apps.take(3).map((app) => Text('- ${app.appName} (${app.status.name})')),
+                                ],
+                              ),
+                            ),
+                            if (apps.isEmpty) 
+                              Expanded(
+                                child: Center(
+                                  child: Text('등록된 앱이 없습니다'),
+                                ),
+                              ),
+                            if (apps.isNotEmpty)
+                              Expanded(
+                                child: ListView.builder(
+                                  itemCount: apps.length,
+                                  itemBuilder: (context, index) {
+                                    final app = apps[index];
+                                    return Card(
+                                      child: ListTile(
+                                        title: Text(app.appName),
+                                        subtitle: Text('${app.category.name} • ${app.status.name}'),
+                                        trailing: Icon(Icons.chevron_right),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                      loading: () {
+                        AppLogger.info('Apps loading state', 'ProviderDashboard');
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('앱 목록을 불러오는 중...'),
+                            ],
+                          ),
+                        );
+                      },
+                      error: (error, stack) {
+                        AppLogger.error('Apps error: $error', 'ProviderDashboard', error);
+                        return Center(
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.error, color: Colors.red, size: 48),
+                                SizedBox(height: 16),
+                                Text('오류 발생', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                                Text('$error', style: TextStyle(color: Colors.red)),
+                                SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () => ref.invalidate(providerAppsProvider(widget.providerId)),
+                                  child: const Text('다시 시도'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  } catch (e) {
+                    AppLogger.error('Consumer exception: $e', 'ProviderDashboard', e);
+                    return Center(
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade100,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.warning, color: Colors.orange, size: 48),
+                            SizedBox(height: 16),
+                            Text('Consumer Exception', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
+                            Text('$e', style: TextStyle(color: Colors.orange)),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                },
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
