@@ -180,29 +180,42 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               ),
             ),
             actions: [
-              // Points display in collapsed state
-              Container(
-                margin: EdgeInsets.only(right: 16.w),
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(20.r),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.monetization_on, color: Colors.yellow, size: 16.w),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '${dashboardState.testerProfile?.totalPoints ?? 0}P',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
+              // Hamburger menu
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                offset: Offset(0, 50.h),
+                onSelected: (String value) {
+                  switch (value) {
+                    case 'provider':
+                      _navigateToProviderDashboard(context);
+                      break;
+                    case 'settings':
+                      _navigateToSettings(context);
+                      break;
+                  }
+                },
+                itemBuilder: (BuildContext context) => [
+                  PopupMenuItem<String>(
+                    value: 'provider',
+                    child: Row(
+                      children: [
+                        Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
+                        SizedBox(width: 12.w),
+                        const Text('공급자 기능'),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'settings',
+                    child: Row(
+                      children: [
+                        Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
+                        SizedBox(width: 12.w),
+                        const Text('설정'),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -485,6 +498,26 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 ),
               )
             : null,
+      ),
+    );
+  }
+
+  void _navigateToProviderDashboard(BuildContext context) {
+    // Provider Dashboard로 이동
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('공급자 대시보드로 이동하는 기능을 구현 예정입니다.'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _navigateToSettings(BuildContext context) {
+    // Settings 페이지로 이동
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('설정 페이지로 이동하는 기능을 구현 예정입니다.'),
+        duration: Duration(seconds: 2),
       ),
     );
   }
