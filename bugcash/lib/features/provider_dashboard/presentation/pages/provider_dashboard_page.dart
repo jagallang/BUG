@@ -30,6 +30,23 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     });
   }
 
+  Widget _buildCurrentTab() {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildDashboardTab();
+      case 1:
+        return _buildAppsTab();
+      case 2:
+        return _buildMissionsTab();
+      case 3:
+        return _buildReportsTab();
+      case 4:
+        return _buildAnalyticsTab();
+      default:
+        return _buildDashboardTab();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,20 +80,14 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
         ],
       ),
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: [
-          _buildDashboardTab(),
-          _buildAppsTab(),
-          _buildMissionsTab(),
-          _buildReportsTab(),
-          _buildAnalyticsTab(),
-        ],
-      ),
+      body: _buildCurrentTab(),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
+        onTap: (index) {
+          print('BottomNavigationBar tapped: $index');
+          setState(() => _selectedIndex = index);
+        },
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
@@ -204,6 +215,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               ),
               ElevatedButton.icon(
                 onPressed: () {
+                  print('앱 등록 버튼 클릭됨');
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('앱 등록 기능 (개발 중)')),
                   );
@@ -1033,6 +1045,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
         ),
         onTap: () {
+          print('앱 카드 클릭됨: ${app.appName}');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('${app.appName} 상세 정보 (개발 중)')),
           );

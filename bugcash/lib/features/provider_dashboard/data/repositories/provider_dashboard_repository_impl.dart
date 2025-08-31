@@ -13,7 +13,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<ProviderModel?> getProviderInfo(String providerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 100));
       
       final data = _mockDataSource.getProviderProfile(providerId);
       if (data.isEmpty) return null;
@@ -28,7 +28,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> updateProviderInfo(String providerId, Map<String, dynamic> data) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       _mockDataSource.updateProviderProfile(providerId, data);
       AppLogger.info('Provider info updated: $providerId', 'ProviderDashboardRepository');
@@ -42,7 +42,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   Future<void> updateProviderStatus(String providerId, ProviderStatus status) async {
     try {
       // Mock 상태 업데이트
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       AppLogger.info('Provider status updated (Mock): $providerId to ${status.name}', 'ProviderDashboardRepository');
     } catch (e) {
@@ -54,7 +54,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<List<AppModel>> getProviderApps(String providerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       final appDataList = _mockDataSource.getProviderApps(providerId);
       return appDataList.map((data) => AppModel.fromMap(data['id'], data)).toList();
@@ -67,7 +67,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<AppModel?> getApp(String appId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       final data = _mockDataSource.getApp(appId);
       if (data.isEmpty) return null;
@@ -82,7 +82,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<String> createApp(AppModel app) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 600));
+      await Future.delayed(const Duration(milliseconds: 100));
       
       final appId = _mockDataSource.createApp(app.toMap());
       AppLogger.info('App created: $appId', 'ProviderDashboardRepository');
@@ -96,7 +96,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> updateApp(String appId, Map<String, dynamic> data) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       _mockDataSource.updateApp(appId, data);
       AppLogger.info('App updated: $appId', 'ProviderDashboardRepository');
@@ -109,7 +109,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> updateAppStatus(String appId, AppStatus status) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       _mockDataSource.updateApp(appId, {'status': status.name});
       AppLogger.info('App status updated: $appId to ${status.name}', 'ProviderDashboardRepository');
@@ -122,7 +122,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> deleteApp(String appId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       _mockDataSource.deleteApp(appId);
       AppLogger.info('App deleted: $appId', 'ProviderDashboardRepository');
@@ -135,7 +135,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<List<MissionModel>> getProviderMissions(String providerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       final missionDataList = _mockDataSource.getProviderMissions(providerId);
       return missionDataList.map((data) => MissionModel.fromMap(data['id'], data)).toList();
@@ -148,7 +148,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<List<MissionModel>> getAppMissions(String appId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       final allMissions = _mockDataSource.getProviderMissions('provider1');
       final appMissions = allMissions.where((mission) => mission['appId'] == appId).toList();
@@ -162,7 +162,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<String> createMission(MissionModel mission) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 800));
+      await Future.delayed(const Duration(milliseconds: 100));
       
       final missionId = 'mission_${DateTime.now().millisecondsSinceEpoch}';
       AppLogger.info('Mission created: $missionId', 'ProviderDashboardRepository');
@@ -176,7 +176,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> updateMission(String missionId, Map<String, dynamic> data) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       AppLogger.info('Mission updated: $missionId', 'ProviderDashboardRepository');
     } catch (e) {
@@ -188,7 +188,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> deleteMission(String missionId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       AppLogger.info('Mission deleted: $missionId', 'ProviderDashboardRepository');
     } catch (e) {
@@ -200,7 +200,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<List<Map<String, dynamic>>> getBugReports(String providerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 600));
+      await Future.delayed(const Duration(milliseconds: 100));
       
       // Mock 버그 리포트 목록
       return [
@@ -240,7 +240,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<DashboardStats> getDashboardStats(String providerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       final data = _mockDataSource.getProviderDashboardStats(providerId);
       return DashboardStats.fromMap(data);
@@ -253,7 +253,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<List<Map<String, dynamic>>> getRecentActivities(String providerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 350));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       // Mock 최근 활동
       return [
@@ -292,7 +292,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<Map<String, dynamic>> getTesterProfile(String testerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 50));
       
       // Mock 테스터 프로필
       return {
@@ -314,7 +314,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<List<Map<String, dynamic>>> getAppBugReports(String appId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 50));
       return _mockDataSource.getAppBugReports(appId);
     } catch (e) {
       AppLogger.error('Failed to get app bug reports', 'ProviderDashboardRepository', e);
@@ -325,7 +325,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> updateBugReportStatus(String reportId, String status) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: 50));
       AppLogger.info('Bug report status updated: $reportId to $status', 'ProviderDashboardRepository');
     } catch (e) {
       AppLogger.error('Failed to update bug report status', 'ProviderDashboardRepository', e);
@@ -336,7 +336,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> addBugReportResponse(String reportId, String response) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 50));
       AppLogger.info('Bug report response added: $reportId', 'ProviderDashboardRepository');
     } catch (e) {
       AppLogger.error('Failed to add bug report response', 'ProviderDashboardRepository', e);
@@ -348,7 +348,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<Map<String, dynamic>> getAppAnalytics(String appId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 350));
+      await Future.delayed(const Duration(milliseconds: 50));
       return _mockDataSource.getAppAnalytics(appId);
     } catch (e) {
       AppLogger.error('Failed to get app analytics', 'ProviderDashboardRepository', e);
@@ -359,7 +359,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<Map<String, dynamic>> getMissionAnalytics(String missionId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 50));
       return {
         'views': 156,
         'applications': 23,
@@ -377,44 +377,36 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   // Real-time Streams
   @override
   Stream<ProviderModel> watchProviderInfo(String providerId) {
-    return Stream.periodic(const Duration(seconds: 30), (_) async {
-      return await getProviderInfo(providerId);
-    }).asyncMap((future) => future).where((provider) => provider != null).cast<ProviderModel>();
+    return Stream.fromFuture(getProviderInfo(providerId))
+        .where((provider) => provider != null)
+        .cast<ProviderModel>();
   }
 
   @override
   Stream<List<AppModel>> watchProviderApps(String providerId) {
-    return Stream.periodic(const Duration(seconds: 20), (_) async {
-      return await getProviderApps(providerId);
-    }).asyncMap((future) => future);
+    return Stream.fromFuture(getProviderApps(providerId));
   }
 
   @override
   Stream<List<MissionModel>> watchProviderMissions(String providerId) {
-    return Stream.periodic(const Duration(seconds: 15), (_) async {
-      return await getProviderMissions(providerId);
-    }).asyncMap((future) => future);
+    return Stream.fromFuture(getProviderMissions(providerId));
   }
 
   @override
   Stream<DashboardStats> watchDashboardStats(String providerId) {
-    return Stream.periodic(const Duration(seconds: 30), (_) async {
-      return await getDashboardStats(providerId);
-    }).asyncMap((future) => future);
+    return Stream.fromFuture(getDashboardStats(providerId));
   }
 
   @override
   Stream<List<Map<String, dynamic>>> watchRecentActivities(String providerId) {
-    return Stream.periodic(const Duration(seconds: 10), (_) async {
-      return await getRecentActivities(providerId);
-    }).asyncMap((future) => future);
+    return Stream.fromFuture(getRecentActivities(providerId));
   }
 
   // Tester Management
   @override
   Future<List<Map<String, dynamic>>> getProviderTesters(String providerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 50));
       return [
         {
           'id': 'tester1',
@@ -442,7 +434,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<List<Map<String, dynamic>>> getTesterHistory(String testerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 350));
+      await Future.delayed(const Duration(milliseconds: 50));
       return [
         {
           'missionId': 'mission1',
@@ -469,7 +461,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<Map<String, dynamic>> getFinancialSummary(String providerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      await Future.delayed(const Duration(milliseconds: 50));
       return {
         'totalSpent': 5420000,
         'thisMonthSpent': 1200000,
@@ -491,7 +483,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<List<Map<String, dynamic>>> getPaymentHistory(String providerId) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 50));
       return [
         {
           'id': 'payment1',
@@ -519,7 +511,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> processPayment(String providerId, Map<String, dynamic> paymentData) async {
     try {
-      await Future.delayed(const Duration(milliseconds: 800));
+      await Future.delayed(const Duration(milliseconds: 100));
       AppLogger.info('Payment processed for provider: $providerId', 'ProviderDashboardRepository');
     } catch (e) {
       AppLogger.error('Failed to process payment', 'ProviderDashboardRepository', e);

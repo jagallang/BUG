@@ -19,15 +19,15 @@ final providerInfoProvider = StreamProvider.family<ProviderModel?, String>((ref,
   return repository.watchProviderInfo(providerId);
 });
 
-final providerInfoStateProvider = FutureProvider.family<ProviderModel?, String>((ref, providerId) async {
+final providerInfoStateProvider = FutureProvider.family.autoDispose<ProviderModel?, String>((ref, providerId) async {
   final repository = ref.watch(providerDashboardRepositoryProvider);
   return await repository.getProviderInfo(providerId);
 });
 
-// Apps Providers
-final providerAppsProvider = StreamProvider.family<List<AppModel>, String>((ref, providerId) {
+// Apps Providers  
+final providerAppsProvider = FutureProvider.family.autoDispose<List<AppModel>, String>((ref, providerId) async {
   final repository = ref.watch(providerDashboardRepositoryProvider);
-  return repository.watchProviderApps(providerId);
+  return await repository.getProviderApps(providerId);
 });
 
 final appProvider = FutureProvider.family<AppModel?, String>((ref, appId) async {
@@ -36,9 +36,9 @@ final appProvider = FutureProvider.family<AppModel?, String>((ref, appId) async 
 });
 
 // Missions Providers
-final providerMissionsProvider = StreamProvider.family<List<MissionModel>, String>((ref, providerId) {
+final providerMissionsProvider = FutureProvider.family.autoDispose<List<MissionModel>, String>((ref, providerId) async {
   final repository = ref.watch(providerDashboardRepositoryProvider);
-  return repository.watchProviderMissions(providerId);
+  return await repository.getProviderMissions(providerId);
 });
 
 final appMissionsProvider = FutureProvider.family<List<MissionModel>, String>((ref, appId) async {
@@ -47,7 +47,7 @@ final appMissionsProvider = FutureProvider.family<List<MissionModel>, String>((r
 });
 
 // Bug Reports Providers
-final providerBugReportsProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, providerId) async {
+final providerBugReportsProvider = FutureProvider.family.autoDispose<List<Map<String, dynamic>>, String>((ref, providerId) async {
   final repository = ref.watch(providerDashboardRepositoryProvider);
   return await repository.getBugReports(providerId);
 });
@@ -58,15 +58,15 @@ final appBugReportsProvider = FutureProvider.family<List<Map<String, dynamic>>, 
 });
 
 // Dashboard Stats Provider
-final dashboardStatsProvider = StreamProvider.family<DashboardStats, String>((ref, providerId) {
+final dashboardStatsProvider = FutureProvider.family.autoDispose<DashboardStats, String>((ref, providerId) async {
   final repository = ref.watch(providerDashboardRepositoryProvider);
-  return repository.watchDashboardStats(providerId);
+  return await repository.getDashboardStats(providerId);
 });
 
 // Recent Activities Provider
-final recentActivitiesProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, providerId) {
+final recentActivitiesProvider = FutureProvider.family.autoDispose<List<Map<String, dynamic>>, String>((ref, providerId) async {
   final repository = ref.watch(providerDashboardRepositoryProvider);
-  return repository.watchRecentActivities(providerId);
+  return await repository.getRecentActivities(providerId);
 });
 
 // App Analytics Provider
