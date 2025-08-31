@@ -22,11 +22,14 @@ class TesterDashboardPage extends ConsumerStatefulWidget {
 class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     with TickerProviderStateMixin {
   late TabController _tabController;
+  late ScrollController _scrollController;
+  bool _isAppBarExpanded = false;
   
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+    _scrollController = ScrollController();
     
     // 초기 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -37,7 +40,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   @override
   void dispose() {
     _tabController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _toggleAppBar() {
+    setState(() {
+      _isAppBarExpanded = !_isAppBarExpanded;
+    });
   }
 
   @override
@@ -46,15 +56,19 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     
     return Scaffold(
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           // App Bar with Profile
           SliverAppBar(
-            expandedHeight: 200.h,
+            expandedHeight: _isAppBarExpanded ? 200.h : 60.h,
+            collapsedHeight: 60.h,
             floating: false,
             pinned: true,
             elevation: 0,
             backgroundColor: Theme.of(context).colorScheme.primary,
-            flexibleSpace: FlexibleSpaceBar(
+            snap: false,
+            automaticallyImplyLeading: false,
+            flexibleSpace: _isAppBarExpanded ? FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -73,6 +87,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
+                        // Top spacing to avoid overlap with title
+                        SizedBox(height: 60.h),
+                        
                         // Greeting and notifications
                         Row(
                           children: [
@@ -88,11 +105,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                                     ),
                                   ),
                                   Text(
-                                    dashboardState.testerProfile?.name ?? '테스터',
+                                    '오늘도 화이팅!',
                                     style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24.sp,
-                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white.withValues(alpha: 0.8),
+                                      fontSize: 14.sp,
                                     ),
                                   ),
                                 ],
@@ -129,6 +145,38 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     ),
                   ),
                 ),
+              ),
+            ) : null,
+            title: GestureDetector(
+              onTap: _toggleAppBar,
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16.w,
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 18.w,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Text(
+                      dashboardState.testerProfile?.name ?? '테스터',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Icon(
+                    _isAppBarExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                    color: Colors.white,
+                  ),
+                ],
               ),
             ),
             actions: [

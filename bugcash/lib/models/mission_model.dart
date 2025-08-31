@@ -1,5 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+extension FirstOrNullExtension<T> on Iterable<T> {
+  T? get firstOrNull => isEmpty ? null : first;
+}
+
 enum MissionStatus {
   draft,
   active,
@@ -421,4 +425,200 @@ class Mission {
   int get views => analytics?['views'] ?? 0;
   int get applications => analytics?['applications'] ?? 0;
   double get acceptanceRate => (analytics?['acceptanceRate'] as num?)?.toDouble() ?? 0.0;
+}
+
+// Daily Mission Progress Model
+class DailyMissionProgress {
+  final String missionId;
+  final String testerId;
+  final DateTime date;
+  final int dayNumber;
+  final double progressPercentage;
+  final bool isCompleted;
+  final bool isToday;
+  final String status; // 'pending', 'in_progress', 'completed', 'missed'
+  final List<String> completedTasks;
+  final String? notes;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
+  
+  const DailyMissionProgress({
+    required this.missionId,
+    required this.testerId,
+    required this.date,
+    required this.dayNumber,
+    required this.progressPercentage,
+    required this.isCompleted,
+    required this.isToday,
+    required this.status,
+    required this.completedTasks,
+    this.notes,
+    this.startedAt,
+    this.completedAt,
+  });
+  
+  factory DailyMissionProgress.fromFirestore(Map<String, dynamic> data) {
+    return DailyMissionProgress(
+      missionId: data['missionId'] ?? '',
+      testerId: data['testerId'] ?? '',
+      date: (data['date'] as Timestamp).toDate(),
+      dayNumber: data['dayNumber'] ?? 1,
+      progressPercentage: (data['progressPercentage'] as num?)?.toDouble() ?? 0.0,
+      isCompleted: data['isCompleted'] ?? false,
+      isToday: _isToday((data['date'] as Timestamp).toDate()),
+      status: data['status'] ?? 'pending',
+      completedTasks: List<String>.from(data['completedTasks'] ?? []),
+      notes: data['notes'],
+      startedAt: data['startedAt'] != null 
+          ? (data['startedAt'] as Timestamp).toDate() 
+          : null,
+      completedAt: data['completedAt'] != null 
+          ? (data['completedAt'] as Timestamp).toDate() 
+          : null,
+    );
+  }
+  
+  Map<String, dynamic> toFirestore() {
+    return {
+      'missionId': missionId,
+      'testerId': testerId,
+      'date': Timestamp.fromDate(date),
+      'dayNumber': dayNumber,
+      'progressPercentage': progressPercentage,
+      'isCompleted': isCompleted,
+      'status': status,
+      'completedTasks': completedTasks,
+      'notes': notes,
+      'startedAt': startedAt != null ? Timestamp.fromDate(startedAt!) : null,
+      'completedAt': completedAt != null ? Timestamp.fromDate(completedAt!) : null,
+    };
+  }
+  
+  static bool _isToday(DateTime date) {
+    final now = DateTime.now();
+    return date.year == now.year && date.month == now.month && date.day == now.day;
+  }
+  
+  String get formattedDate {
+    return '${date.month}월 ${date.day}일';
+  }
+  
+  String get dayLabel {
+    return '${dayNumber}일차';
+  }
+  
+  String get fullLabel {
+    return '$formattedDate ${dayLabel}';
+  }
+  
+  DailyMissionProgress copyWith({
+    String? missionId,
+    String? testerId,
+    DateTime? date,
+    int? dayNumber,
+    double? progressPercentage,
+    bool? isCompleted,
+    String? status,
+    List<String>? completedTasks,
+    String? notes,
+    DateTime? startedAt,
+    DateTime? completedAt,
+  }) {
+    return DailyMissionProgress(
+      missionId: missionId ?? this.missionId,
+      testerId: testerId ?? this.testerId,
+      date: date ?? this.date,
+      dayNumber: dayNumber ?? this.dayNumber,
+      progressPercentage: progressPercentage ?? this.progressPercentage,
+      isCompleted: isCompleted ?? this.isCompleted,
+      isToday: _isToday(date ?? this.date),
+      status: status ?? this.status,
+      completedTasks: completedTasks ?? this.completedTasks,
+      notes: notes ?? this.notes,
+      startedAt: startedAt ?? this.startedAt,
+      completedAt: completedAt ?? this.completedAt,
+    );
+  }
+}
+
+// Enhanced Mission Card with Daily Progress
+class MissionCardWithProgress {
+  final String id;
+  final String title;
+  final String appName;
+  final MissionType type;
+  final int rewardPoints;
+  final int estimatedMinutes;
+  final DateTime? deadline;
+  final DateTime? startedAt;
+  final double overallProgress;
+  final List<DailyMissionProgress> dailyProgress;
+  
+  const MissionCardWithProgress({
+    required this.id,
+    required this.title,
+    required this.appName,
+    required this.type,
+    required this.rewardPoints,
+    required this.estimatedMinutes,
+    this.deadline,
+    this.startedAt,
+    required this.overallProgress,
+    required this.dailyProgress,
+  });
+  
+  DailyMissionProgress? get todayProgress {
+    return dailyProgress.where((progress) => progress.isToday).firstOrNull;
+  }
+  
+  DailyMissionProgress? get nextPendingProgress {
+    final pendingProgress = dailyProgress
+        .where((progress) => progress.status == 'pending' || progress.status == 'in_progress')
+        .toList();
+    
+    if (pendingProgress.isEmpty) return null;
+    
+    pendingProgress.sort((a, b) => a.date.compareTo(b.date));
+    return pendingProgress.first;
+  }
+  
+  int get totalDays => dailyProgress.length;
+  int get completedDays => dailyProgress.where((p) => p.isCompleted).length;
+  int get remainingDays => totalDays - completedDays;
+  
+  double get calculatedOverallProgress {
+    if (totalDays == 0) return 0.0;
+    return completedDays / totalDays;
+  }
+  
+  double get actualOverallProgress => calculatedOverallProgress;
+  
+  bool get hasToday => todayProgress != null;
+  bool get isTodayCompleted => todayProgress?.isCompleted ?? false;
+  bool get shouldShowToday => hasToday && !isTodayCompleted;
+}
+
+// Mission Card Model (기존 유지)
+class MissionCard {
+  final String id;
+  final String title;
+  final String appName;
+  final MissionType type;
+  final int rewardPoints;
+  final int estimatedMinutes;
+  final DateTime? deadline;
+  final DateTime? startedAt;
+  final double? progress;
+  
+  const MissionCard({
+    required this.id,
+    required this.title,
+    required this.appName,
+    required this.type,
+    required this.rewardPoints,
+    required this.estimatedMinutes,
+    this.deadline,
+    this.startedAt,
+    this.progress,
+  });
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../providers/tester_dashboard_provider.dart';
+import '../providers/tester_dashboard_provider.dart' as provider;
 import '../../../../models/mission_model.dart';
 
 class MissionDiscoveryWidget extends ConsumerStatefulWidget {
@@ -35,7 +35,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
 
   @override
   Widget build(BuildContext context) {
-    final dashboardState = ref.watch(testerDashboardProvider);
+    final dashboardState = ref.watch(provider.testerDashboardProvider);
     final filteredMissions = _filterMissions(dashboardState.availableMissions);
 
     return Padding(
@@ -352,7 +352,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
           ),
           const Spacer(),
           TextButton.icon(
-            onPressed: () => ref.read(testerDashboardProvider.notifier).refreshData(widget.testerId),
+            onPressed: () => ref.read(provider.testerDashboardProvider.notifier).refreshData(widget.testerId),
             icon: Icon(Icons.refresh, size: 16.w),
             label: const Text('새로고침'),
             style: TextButton.styleFrom(
@@ -365,7 +365,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
     );
   }
 
-  Widget _buildMissionCard(MissionCard mission) {
+  Widget _buildMissionCard(provider.MissionCard mission) {
     final isExpanded = _expandedMissions.contains(mission.id);
     
     return Card(
@@ -733,7 +733,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
     );
   }
 
-  List<MissionCard> _filterMissions(List<MissionCard> missions) {
+  List<provider.MissionCard> _filterMissions(List<provider.MissionCard> missions) {
     return missions.where((mission) {
       // Search filter
       final searchQuery = _searchController.text.toLowerCase();
@@ -772,7 +772,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
            _searchController.text.isNotEmpty;
   }
 
-  void _showMissionDetails(MissionCard mission) {
+  void _showMissionDetails(provider.MissionCard mission) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -816,7 +816,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
     );
   }
 
-  Widget _buildMissionDetailContent(MissionCard mission) {
+  Widget _buildMissionDetailContent(provider.MissionCard mission) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -939,7 +939,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
     );
   }
 
-  Widget _buildInfoGrid(MissionCard mission) {
+  Widget _buildInfoGrid(provider.MissionCard mission) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -1030,8 +1030,8 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
     );
   }
 
-  void _joinMission(MissionCard mission) {
-    ref.read(testerDashboardProvider.notifier).joinMission(mission.id);
+  void _joinMission(provider.MissionCard mission) {
+    ref.read(provider.testerDashboardProvider.notifier).joinMission(mission.id);
     
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
