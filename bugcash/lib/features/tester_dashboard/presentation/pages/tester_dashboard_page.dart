@@ -6,6 +6,7 @@ import '../widgets/active_missions_widget.dart';
 import '../widgets/earnings_summary_widget.dart';
 import '../widgets/tester_profile_widget.dart';
 import '../providers/tester_dashboard_provider.dart';
+import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -504,10 +505,11 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
   void _navigateToProviderDashboard(BuildContext context) {
     // Provider Dashboard로 이동
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('공급자 대시보드로 이동하는 기능을 구현 예정입니다.'),
-        duration: Duration(seconds: 2),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ProviderDashboardPage(
+          providerId: widget.testerId, // 테스터 ID를 임시로 사용
+        ),
       ),
     );
   }

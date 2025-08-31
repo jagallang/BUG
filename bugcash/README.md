@@ -4,7 +4,7 @@
   <img src="https://img.shields.io/badge/Flutter-3.29.2-02569B?style=flat-square&logo=flutter" />
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Firebase-Mock%20Mode-FF9800?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.2.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.2.01-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -12,7 +12,7 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.2.0)
+## ✨ 주요 기능 (v1.2.01)
 
 ### 📅 일일 미션 진행률 추적 (NEW!)
 - **날짜별 진행 표시**: "몇월몇칠 1일차 미션" 형식으로 오늘 해야 할 미션을 명확히 표시
@@ -21,7 +21,14 @@ BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의
 - **실시간 진행률 업데이트**: 완료된 일수 기반으로 전체 진행률 자동 계산
 - **오늘 미션 하이라이트**: 오늘 해야 할 미션을 주황색으로 강조 표시
 
-### 🔧 접이식 앱바 인터페이스 (NEW!)
+### 🍔 햄버거 메뉴 네비게이션 (v1.2.01)
+- **햄버거 메뉴 추가**: 상단 앱바 우측에 드롭다운 메뉴 아이콘 배치
+- **공급자 기능 접근**: Provider Dashboard로 빠른 전환 메뉴 제공
+- **설정 메뉴**: 앱 설정 페이지로의 직접 접근 경로
+- **깔끔한 UI**: 포인트 표시를 제거하고 메뉴 방식으로 개선
+- **향상된 접근성**: 주요 기능을 메뉴로 통합하여 사용성 개선
+
+### 🔧 접이식 앱바 인터페이스 (v1.2.0)
 - **미니멀 기본 상태**: 상단 앱바가 접힌 상태로 화면 공간 최대 활용
 - **닉네임 클릭 확장**: 좌측 상단 닉네임 터치 시에만 앱바 확장
 - **스크롤 독립적 동작**: 스크롤 시 자동 확장되지 않아 의도하지 않은 확장 방지
@@ -424,6 +431,13 @@ flutter analyze
 ```
 
 ## 🔧 주요 버전 정보
+
+### 🚀 v1.2.01 (2025-08-31) - 햄버거 메뉴 네비게이션 업데이트
+- **햄버거 메뉴 추가**: 상단 앱바 우측에 드롭다운 메뉴 아이콘 배치
+- **포인트 표시 제거**: 기존 포인트 표시를 제거하여 깔끔한 UI 구현
+- **공급자 기능 접근**: Provider Dashboard로의 빠른 전환 메뉴 제공
+- **설정 메뉴**: 앱 설정 페이지로의 직접 접근 경로 추가
+- **향상된 네비게이션**: 주요 기능을 메뉴로 통합하여 사용성 개선
 
 ### 🚀 v1.2.0 (2025-08-31) - 일일 미션 진행률 추적 시스템
 - **일일 미션 진행률 추적**: "몇월몇칠 1일차 미션" 형식으로 날짜별 진행 상황 표시
