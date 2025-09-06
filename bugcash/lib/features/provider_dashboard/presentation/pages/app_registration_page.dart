@@ -582,7 +582,7 @@ class _AppRegistrationPageState extends ConsumerState<AppRegistrationPage>
             children: [
               TextSpan(text: label),
               if (isRequired)
-                TextSpan(
+                const TextSpan(
                   text: ' *',
                   style: TextStyle(color: Colors.red),
                 ),
@@ -740,7 +740,7 @@ class _AppRegistrationPageState extends ConsumerState<AppRegistrationPage>
             children: [
               TextSpan(text: title),
               if (isRequired)
-                TextSpan(
+                const TextSpan(
                   text: ' *',
                   style: TextStyle(color: Colors.red),
                 ),
@@ -816,7 +816,7 @@ class _AppRegistrationPageState extends ConsumerState<AppRegistrationPage>
             ),
             children: [
               const TextSpan(text: '스크린샷'),
-              TextSpan(
+              const TextSpan(
                 text: ' *',
                 style: TextStyle(color: Colors.red),
               ),

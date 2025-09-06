@@ -30,7 +30,7 @@ class _HomePageState extends State<HomePage> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -127,7 +127,7 @@ class MissionListView extends StatelessWidget {
             margin: EdgeInsets.only(right: 16.w),
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: AppColors.cashGreen.withOpacity(0.1),
+              color: AppColors.cashGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Row(
@@ -213,7 +213,7 @@ class WalletView extends StatelessWidget {
                     '보유 포인트',
                     style: TextStyle(
                       fontSize: 16.sp,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -260,19 +260,19 @@ class WalletView extends StatelessWidget {
                     Expanded(
                       child: ListView(
                         children: [
-                          _PointHistoryItem(
+                          const _PointHistoryItem(
                             title: '쇼핑앱 A - Day 7 완료',
                             points: '+5,000',
                             date: '2024-01-15',
                             isPositive: true,
                           ),
-                          _PointHistoryItem(
+                          const _PointHistoryItem(
                             title: '버그 발견 보너스',
                             points: '+2,000',
                             date: '2024-01-14',
                             isPositive: true,
                           ),
-                          _PointHistoryItem(
+                          const _PointHistoryItem(
                             title: '게임앱 B - Day 3 완료',
                             points: '+5,000',
                             date: '2024-01-13',
@@ -397,7 +397,7 @@ class ProfileView extends StatelessWidget {
                             vertical: 6.h,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.goldBadge.withOpacity(0.1),
+                            color: AppColors.goldBadge.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(16.r),
                           ),
                           child: Text(

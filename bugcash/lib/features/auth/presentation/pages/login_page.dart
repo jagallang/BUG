@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/mock_auth_provider.dart';
 import '../../data/services/mock_auth_service.dart';
 import 'signup_page.dart';
+import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -95,7 +96,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   gradient: LinearGradient(
                     colors: [
                       Theme.of(context).primaryColor,
-                      Theme.of(context).primaryColor.withOpacity(0.7),
+                      Theme.of(context).primaryColor.withValues(alpha: 0.7),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -103,7 +104,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -397,6 +398,27 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 style: TextStyle(
                   fontSize: 12,
                   color: Colors.grey[600],
+                ),
+              ),
+              
+              const SizedBox(height: 20),
+              
+              // Admin Function Button (for testing)
+              TextButton.icon(
+                onPressed: () {
+                  // 관리자 기능 - Provider Dashboard로 바로 이동
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (_) => const ProviderDashboardPage(
+                        providerId: 'test_provider_001',
+                      ),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.admin_panel_settings, size: 20),
+                label: const Text('관리자 기능 (테스트용)'),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
                 ),
               ),
             ],

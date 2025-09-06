@@ -23,7 +23,7 @@ class NavItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: isSelected 
-              ? const Color(0xFF00BFA5).withOpacity(0.1)
+              ? const Color(0xFF00BFA5).withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20.r),
         ),

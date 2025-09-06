@@ -30,6 +30,116 @@ final providerAppsProvider = FutureProvider.family.autoDispose<List<AppModel>, S
   return await repository.getProviderApps(providerId);
 });
 
+// 더미 데이터로 하드코딩된 테스트용 Provider
+final dummyAppsProvider = FutureProvider.family.autoDispose<List<AppModel>, String>((ref, providerId) async {
+  AppLogger.info('🔧 Dummy Apps Provider - Creating hardcoded test data', 'DummyAppsProvider');
+  
+  // 인위적 지연을 추가하여 로딩 상태 테스트
+  await Future.delayed(const Duration(milliseconds: 500));
+  
+  return [
+    AppModel(
+      id: 'dummy_app_1',
+      providerId: providerId,
+      appName: '버그캐시 테스트 앱 1',
+      description: '이것은 테스트용 더미 앱입니다. UI 컴포넌트들이 올바르게 렌더링되는지 확인하기 위한 샘플 데이터입니다.',
+      category: AppCategory.productivity,
+      type: AppType.android,
+      version: '1.0.0',
+      status: AppStatus.active,
+      createdAt: DateTime.now().subtract(const Duration(days: 5)),
+      screenshotUrls: const [],
+      totalMissions: 3,
+      activeMissions: 1,
+      completedMissions: 2,
+      totalBugReports: 5,
+      totalTesters: 12,
+      averageRating: 4.2,
+      totalRatings: 8,
+      totalDownloads: 150,
+      metadata: const {},
+      iconUrl: 'https://via.placeholder.com/100x100/4CAF50/FFFFFF?text=T1',
+    ),
+    AppModel(
+      id: 'dummy_app_2',
+      providerId: providerId,
+      appName: '게임 테스터 앱',
+      description: '게임 카테고리의 테스트 앱으로 검토 중 상태입니다.',
+      category: AppCategory.game,
+      type: AppType.ios,
+      version: '2.1.0',
+      status: AppStatus.review,
+      createdAt: DateTime.now().subtract(const Duration(days: 12)),
+      screenshotUrls: const [],
+      totalMissions: 7,
+      activeMissions: 3,
+      completedMissions: 4,
+      totalBugReports: 2,
+      totalTesters: 25,
+      averageRating: 4.8,
+      totalRatings: 15,
+      totalDownloads: 320,
+      metadata: const {},
+      iconUrl: 'https://via.placeholder.com/100x100/FF5722/FFFFFF?text=G2',
+    ),
+    AppModel(
+      id: 'dummy_app_3',
+      providerId: providerId,
+      appName: '교육용 앱',
+      description: '교육 카테고리 앱으로 현재 초안 상태입니다. 아직 개발 중인 앱입니다.',
+      category: AppCategory.education,
+      type: AppType.web,
+      version: '0.9.0',
+      status: AppStatus.draft,
+      createdAt: DateTime.now().subtract(const Duration(days: 2)),
+      screenshotUrls: const [],
+      totalMissions: 1,
+      activeMissions: 1,
+      completedMissions: 0,
+      totalBugReports: 0,
+      totalTesters: 3,
+      averageRating: 0.0,
+      totalRatings: 0,
+      totalDownloads: 0,
+      metadata: const {},
+      iconUrl: 'https://via.placeholder.com/100x100/2196F3/FFFFFF?text=E3',
+    ),
+    AppModel(
+      id: 'dummy_app_4',
+      providerId: providerId,
+      appName: '일시정지된 앱',
+      description: '현재 일시정지 상태인 앱입니다. 테스트를 위해 잠시 중단된 상태입니다.',
+      category: AppCategory.utility,
+      type: AppType.android,
+      version: '1.5.0',
+      status: AppStatus.paused,
+      createdAt: DateTime.now().subtract(const Duration(days: 30)),
+      screenshotUrls: const [],
+      totalMissions: 5,
+      activeMissions: 0,
+      completedMissions: 5,
+      totalBugReports: 8,
+      totalTesters: 18,
+      averageRating: 3.9,
+      totalRatings: 12,
+      totalDownloads: 89,
+      metadata: const {},
+      iconUrl: 'https://via.placeholder.com/100x100/9E9E9E/FFFFFF?text=U4',
+    ),
+  ];
+});
+
+// 간단한 앱 목록 Provider - 의존성 최소화
+final simpleAppsProvider = FutureProvider.family.autoDispose<List<AppModel>, String>((ref, providerId) async {
+  try {
+    final repository = ref.watch(providerDashboardRepositoryProvider);
+    return await repository.getProviderApps(providerId);
+  } catch (e) {
+    AppLogger.error('Simple apps provider error: $e', 'SimpleAppsProvider', e);
+    return []; // 에러 발생 시 빈 리스트 반환
+  }
+});
+
 final appProvider = FutureProvider.family<AppModel?, String>((ref, appId) async {
   final repository = ref.watch(providerDashboardRepositoryProvider);
   return await repository.getApp(appId);

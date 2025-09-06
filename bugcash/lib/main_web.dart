@@ -72,7 +72,7 @@ class _BugCashHomePageState extends State<BugCashHomePage> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -144,7 +144,7 @@ class _NavItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: isSelected 
-              ? const Color(0xFF00BFA5).withOpacity(0.1)
+              ? const Color(0xFF00BFA5).withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20.r),
         ),
@@ -205,8 +205,8 @@ class MissionPage extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF00BFA5).withOpacity(0.1),
-                    const Color(0xFF4EDBC5).withOpacity(0.1),
+                    const Color(0xFF00BFA5).withValues(alpha: 0.1),
+                    const Color(0xFF4EDBC5).withValues(alpha: 0.1),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16.r),
@@ -249,19 +249,19 @@ class MissionPage extends StatelessWidget {
               ),
             ),
             SizedBox(height: 16.h),
-            _MissionCard(
+            const _MissionCard(
               title: 'ShopApp 버그 테스트',
               reward: '5,000 포인트',
               deadline: '2024.12.31',
               progress: 0.7,
-              color: const Color(0xFFFFE4E1),
+              color: Color(0xFFFFE4E1),
             ),
-            _MissionCard(
+            const _MissionCard(
               title: 'GameCenter UI 검증',
               reward: '8,000 포인트',
               deadline: '2024.12.25',
               progress: 0.3,
-              color: const Color(0xFFE6F3FF),
+              color: Color(0xFFE6F3FF),
             ),
           ],
         ),
@@ -295,7 +295,7 @@ class _MissionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -336,7 +336,7 @@ class _MissionCard extends StatelessWidget {
           SizedBox(height: 12.h),
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: Colors.white.withOpacity(0.5),
+            backgroundColor: Colors.white.withValues(alpha: 0.5),
             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00BFA5)),
           ),
           SizedBox(height: 8.h),
@@ -377,7 +377,7 @@ class SearchPage extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12.r),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -605,7 +605,7 @@ class ProfilePage extends StatelessWidget {
             icon: Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(
@@ -645,7 +645,7 @@ class ProfilePage extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFD700).withOpacity(0.2),
+                color: const Color(0xFFFFD700).withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20.r),
               ),
               child: Text(

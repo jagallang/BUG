@@ -16,7 +16,7 @@ void main() async {
     if (kIsWeb) {
       // 웹에서는 Firebase 초기화를 스킵하고 데모 모드로 실행
       if (kDebugMode) {
-        print('Running in web demo mode without Firebase');
+        debugPrint('Running in web demo mode without Firebase');
       }
     } else {
       await Firebase.initializeApp(
@@ -25,7 +25,7 @@ void main() async {
     }
   } catch (e) {
     if (kDebugMode) {
-      print('Firebase initialization failed: $e');
+      debugPrint('Firebase initialization failed: $e');
     }
   }
   
@@ -71,14 +71,14 @@ class AppBlocObserver extends BlocObserver {
   void onChange(BlocBase bloc, Change change) {
     super.onChange(bloc, change);
     if (kDebugMode) {
-      print('${bloc.runtimeType} $change');
+      debugPrint('${bloc.runtimeType} $change');
     }
   }
 
   @override
   void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
     if (kDebugMode) {
-      print('${bloc.runtimeType} $error $stackTrace');
+      debugPrint('${bloc.runtimeType} $error $stackTrace');
     }
     super.onError(bloc, error, stackTrace);
   }

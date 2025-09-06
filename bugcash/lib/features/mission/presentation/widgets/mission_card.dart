@@ -76,7 +76,7 @@ class MissionCard extends StatelessWidget {
           SizedBox(height: 12.h),
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: Colors.white.withOpacity(0.5),
+            backgroundColor: Colors.white.withValues(alpha: 0.5),
             valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF00BFA5)),
           ),
           SizedBox(height: 8.h),

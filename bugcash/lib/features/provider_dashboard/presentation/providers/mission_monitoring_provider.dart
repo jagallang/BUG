@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../models/mission_model.dart';
@@ -316,7 +317,7 @@ class MissionMonitoringNotifier extends StateNotifier<MissionMonitoringState> {
       
       state = state.copyWith(statistics: updatedStats);
     } catch (e) {
-      print('Failed to load statistics for mission $missionId: $e');
+      debugPrint('Failed to load statistics for mission $missionId: $e');
     }
   }
 

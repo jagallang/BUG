@@ -7,7 +7,7 @@ class AppConfig {
       await dotenv.load(fileName: '.env');
     } catch (e) {
       if (kDebugMode) {
-        print('Warning: .env file not found. Using default configuration.');
+        debugPrint('Warning: .env file not found. Using default configuration.');
       }
     }
   }

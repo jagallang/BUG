@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   runApp(const BugCashWebDemo());
@@ -67,7 +66,7 @@ class _BugCashHomePageState extends State<BugCashHomePage> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -139,7 +138,7 @@ class _NavItem extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         decoration: BoxDecoration(
           color: isSelected 
-              ? const Color(0xFF00BFA5).withOpacity(0.1)
+              ? const Color(0xFF00BFA5).withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(20.r),
         ),
@@ -373,7 +372,7 @@ class ProfileView extends StatelessWidget {
             icon: Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: const Color(0xFF00BFA5).withOpacity(0.1),
+                color: const Color(0xFF00BFA5).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(
@@ -412,7 +411,7 @@ class ProfileView extends StatelessWidget {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFD700).withOpacity(0.1),
+                color: const Color(0xFFFFD700).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16.r),
               ),
               child: Text(

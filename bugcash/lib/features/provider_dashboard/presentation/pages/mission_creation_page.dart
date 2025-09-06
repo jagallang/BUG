@@ -990,7 +990,7 @@ class _MissionCreationPageState extends ConsumerState<MissionCreationPage>
             children: [
               TextSpan(text: label),
               if (isRequired)
-                TextSpan(
+                const TextSpan(
                   text: ' *',
                   style: TextStyle(color: Colors.red),
                 ),

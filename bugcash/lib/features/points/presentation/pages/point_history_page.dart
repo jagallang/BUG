@@ -69,7 +69,7 @@ class _PointHistoryPageState extends ConsumerState<PointHistoryPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('포인트 내역'),
+        title: const Text('포인트 내역'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -91,7 +91,7 @@ class _PointHistoryPageState extends ConsumerState<PointHistoryPage> {
       margin: EdgeInsets.all(16.w),
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
@@ -104,7 +104,7 @@ class _PointHistoryPageState extends ConsumerState<PointHistoryPage> {
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
-            offset: Offset(0, 4),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -210,7 +210,7 @@ class _PointHistoryPageState extends ConsumerState<PointHistoryPage> {
   Widget _buildTransactionList() {
     if (isLoading) {
       return Center(
-        child: CircularProgressIndicator(
+        child: const CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
         ),
       );
@@ -276,7 +276,7 @@ class _PointHistoryPageState extends ConsumerState<PointHistoryPage> {
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 8,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),

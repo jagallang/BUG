@@ -23,7 +23,6 @@ class ConnectionStatusWidget extends ConsumerWidget {
     
     final isConnected = connectionStatus['isConnected'] ?? false;
     final reconnectAttempts = connectionStatus['reconnectAttempts'] ?? 0;
-    final connectionType = connectionStatus['connectionType'] ?? 'unknown';
     
     final isReconnecting = !isConnected && reconnectAttempts > 0;
     
@@ -263,51 +262,24 @@ class _NetworkQualityIndicatorState extends ConsumerState<NetworkQualityIndicato
   @override
   Widget build(BuildContext context) {
     final connectionStatus = ref.watch(connectionStatusNotifierProvider);
-    final connectionType = connectionStatus['connectionType'] ?? 'unknown';
     final isConnected = connectionStatus['isConnected'] ?? false;
     
     if (!isConnected) {
       return const SizedBox.shrink();
     }
     
-    IconData networkIcon;
-    Color networkColor;
-    String networkLabel;
-    
-    switch (connectionType) {
-      case 'wifi':
-        networkIcon = Icons.wifi;
-        networkColor = Colors.green;
-        networkLabel = 'Wi-Fi';
-        break;
-      case 'mobile':
-        networkIcon = Icons.signal_cellular_alt;
-        networkColor = Colors.blue;
-        networkLabel = 'Mobile';
-        break;
-      case 'ethernet':
-        networkIcon = Icons.settings_ethernet;
-        networkColor = Colors.green;
-        networkLabel = 'Ethernet';
-        break;
-      default:
-        networkIcon = Icons.public;
-        networkColor = Colors.grey;
-        networkLabel = 'Network';
-    }
-    
     return Tooltip(
-      message: 'Connected via $networkLabel',
+      message: 'Connected via Network',
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: networkColor.withValues(alpha: 0.1),
+          color: Colors.green.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
         ),
-        child: Icon(
-          networkIcon,
+        child: const Icon(
+          Icons.wifi,
           size: 16,
-          color: networkColor,
+          color: Colors.green,
         ),
       ),
     );

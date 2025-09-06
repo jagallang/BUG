@@ -14,12 +14,12 @@ class AuthWrapper extends ConsumerWidget {
     final authState = ref.watch(mockAuthProvider);
 
     // 디버깅을 위한 로그
-    print('AuthWrapper - authState.isLoading: ${authState.isLoading}');
-    print('AuthWrapper - authState.currentUser: ${authState.currentUser?.email}');
-    print('AuthWrapper - authState.userData: ${authState.userData?.email}');
+    debugPrint('AuthWrapper - authState.isLoading: ${authState.isLoading}');
+    debugPrint('AuthWrapper - authState.currentUser: ${authState.currentUser?.email}');
+    debugPrint('AuthWrapper - authState.userData: ${authState.userData?.email}');
 
     if (authState.isLoading) {
-      print('AuthWrapper - Showing loading...');
+      debugPrint('AuthWrapper - Showing loading...');
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -28,7 +28,7 @@ class AuthWrapper extends ConsumerWidget {
     }
 
     if (authState.currentUser == null || authState.userData == null) {
-      print('AuthWrapper - Showing login page (user: ${authState.currentUser}, userData: ${authState.userData})');
+      debugPrint('AuthWrapper - Showing login page (user: ${authState.currentUser}, userData: ${authState.userData})');
       
       // 개발 모드일 때만 바이패스 옵션 표시
       if (kDebugMode) {
@@ -39,7 +39,7 @@ class AuthWrapper extends ConsumerWidget {
     }
 
     final userData = authState.userData!;
-    print('AuthWrapper - Navigating to dashboard for ${userData.userType}');
+    debugPrint('AuthWrapper - Navigating to dashboard for ${userData.userType}');
 
     switch (userData.userType) {
       case UserType.tester:

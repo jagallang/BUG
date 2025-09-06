@@ -62,10 +62,10 @@ class _SubmissionPageState extends State<SubmissionPage> {
                       width: double.infinity,
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: AppColors.primary.withOpacity(0.2),
+                          color: AppColors.primary.withValues(alpha: 0.2),
                         ),
                       ),
                       child: Row(
@@ -105,7 +105,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
                     SizedBox(height: 24.h),
                     
                     // Video URL Section
-                    _SectionHeader(
+                    const _SectionHeader(
                       icon: Icons.videocam,
                       title: '사용 영상 업로드',
                       isRequired: true,
@@ -139,7 +139,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
                     SizedBox(height: 24.h),
                     
                     // Q&A Section
-                    _SectionHeader(
+                    const _SectionHeader(
                       icon: Icons.quiz,
                       title: '간단한 Q&A',
                       isRequired: true,
@@ -171,7 +171,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
                     SizedBox(height: 24.h),
                     
                     // Bug Report Section
-                    _SectionHeader(
+                    const _SectionHeader(
                       icon: Icons.bug_report,
                       title: '버그 발견 보고 (선택)',
                       subtitle: '발견시 추가 +2,000P',
@@ -235,10 +235,10 @@ class _SubmissionPageState extends State<SubmissionPage> {
                       width: double.infinity,
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: AppColors.cashGreen.withOpacity(0.1),
+                        color: AppColors.cashGreen.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: AppColors.cashGreen.withOpacity(0.3),
+                          color: AppColors.cashGreen.withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -307,7 +307,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -357,8 +357,8 @@ class _SubmissionPageState extends State<SubmissionPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('미션이 성공적으로 제출되었습니다!'),
+          const SnackBar(
+            content: Text('미션이 성공적으로 제출되었습니다!'),
             backgroundColor: AppColors.success,
             behavior: SnackBarBehavior.floating,
           ),
@@ -434,7 +434,7 @@ class _SectionHeader extends StatelessWidget {
               vertical: 2.h,
             ),
             decoration: BoxDecoration(
-              color: AppColors.warning.withOpacity(0.1),
+              color: AppColors.warning.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Text(

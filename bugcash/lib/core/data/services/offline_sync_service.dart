@@ -101,7 +101,6 @@ class OfflineSyncService {
   final String _syncQueueKey = 'offline_sync_queue';
   final String _lastSyncKey = 'last_sync_timestamp';
   final int _maxRetries = 5;
-  final Duration _retryDelay = const Duration(seconds: 30);
 
   static OfflineSyncService? _instance;
   static OfflineSyncService get instance => _instance ??= OfflineSyncService._internal();

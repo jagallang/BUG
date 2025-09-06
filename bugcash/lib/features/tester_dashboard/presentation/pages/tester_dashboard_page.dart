@@ -61,14 +61,28 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         slivers: [
           // App Bar with Profile
           SliverAppBar(
-            expandedHeight: _isAppBarExpanded ? 200.h : 60.h,
-            collapsedHeight: 60.h,
+            expandedHeight: _isAppBarExpanded ? 200.h : kToolbarHeight,
+            collapsedHeight: kToolbarHeight,
             floating: false,
             pinned: true,
             elevation: 0,
             backgroundColor: Theme.of(context).colorScheme.primary,
             snap: false,
             automaticallyImplyLeading: false,
+            leading: IconButton(
+              icon: const Icon(Icons.swap_horiz, color: Colors.white),
+              tooltip: 'Provider 모드로 전환',
+              onPressed: () {
+                // Provider Dashboard로 이동
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(
+                    builder: (_) => const ProviderDashboardPage(
+                      providerId: 'test_provider_001',
+                    ),
+                  ),
+                );
+              },
+            ),
             flexibleSpace: _isAppBarExpanded ? FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(

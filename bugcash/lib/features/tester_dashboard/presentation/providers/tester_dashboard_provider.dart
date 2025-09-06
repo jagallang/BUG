@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Firebase 의존성 제거 - Mock 데이터만 사용
 // import 'package:cloud_firestore/cloud_firestore.dart';
@@ -271,7 +272,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       
       state = state.copyWith(testerProfile: profile);
     } catch (e) {
-      print('Failed to load tester profile: $e');
+      debugPrint('Failed to load tester profile: $e');
     }
   }
 
@@ -288,7 +289,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
         completedMissions: completedMissions,
       );
     } catch (e) {
-      print('Failed to load missions: $e');
+      debugPrint('Failed to load missions: $e');
     }
   }
 
@@ -459,7 +460,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       
       state = state.copyWith(earningsData: earningsData);
     } catch (e) {
-      print('Failed to load earnings data: $e');
+      debugPrint('Failed to load earnings data: $e');
     }
   }
 

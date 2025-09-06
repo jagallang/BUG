@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/user_entity.dart';
 
 class MockUser {
@@ -113,7 +114,7 @@ class MockAuthService {
     required String email,
     required String password,
   }) async {
-    print('MockAuthService - signInWithEmailAndPassword called with email: $email');
+    debugPrint('MockAuthService - signInWithEmailAndPassword called with email: $email');
     await Future.delayed(const Duration(milliseconds: 500));
 
     final mockCredentials = {
@@ -128,17 +129,17 @@ class MockAuthService {
 
     final account = mockCredentials[email];
     if (account == null || account['password'] != password) {
-      print('MockAuthService - Login failed for email: $email');
+      debugPrint('MockAuthService - Login failed for email: $email');
       throw Exception('잘못된 이메일 또는 비밀번호입니다.');
     }
 
     final userData = _userCache[account['uid']!];
     if (userData == null) {
-      print('MockAuthService - User data not found for uid: ${account['uid']}');
+      debugPrint('MockAuthService - User data not found for uid: ${account['uid']}');
       throw Exception('사용자 데이터를 찾을 수 없습니다.');
     }
 
-    print('MockAuthService - Login successful for: ${userData.email}, userType: ${userData.userType}');
+    debugPrint('MockAuthService - Login successful for: ${userData.email}, userType: ${userData.userType}');
 
     final mockUser = MockUser(
       uid: userData.uid,

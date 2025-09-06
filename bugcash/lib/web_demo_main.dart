@@ -127,7 +127,7 @@ class _HomePageState extends State<HomePage> {
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -5),
             ),
@@ -255,7 +255,7 @@ class _MissionListViewState extends State<MissionListView> with SingleTickerProv
             margin: EdgeInsets.only(right: 16.w),
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: const Color(0xFF00C853).withOpacity(0.1),
+              color: const Color(0xFF00C853).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Row(
@@ -356,7 +356,7 @@ class MissionScheduleView extends StatelessWidget {
             borderRadius: BorderRadius.circular(16.r),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
@@ -420,12 +420,12 @@ class MissionScheduleView extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: isToday 
                                 ? const Color(0xFF00BFA5)
-                                : dayStatus['color'].withOpacity(0.1),
+                                : dayStatus['color'].withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: isToday 
                                   ? const Color(0xFF00BFA5)
-                                  : dayStatus['color'].withOpacity(0.3),
+                                  : dayStatus['color'].withValues(alpha: 0.3),
                             ),
                           ),
                           child: Center(
@@ -647,10 +647,10 @@ class _TodayMissionItem extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.05),
+        color: statusColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: statusColor.withOpacity(0.2),
+          color: statusColor.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -659,7 +659,7 @@ class _TodayMissionItem extends StatelessWidget {
             width: 40.w,
             height: 40.h,
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.1),
+              color: statusColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Center(
@@ -714,7 +714,7 @@ class _TodayMissionItem extends StatelessWidget {
                   vertical: 4.h,
                 ),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Text(
@@ -763,10 +763,10 @@ class _MissionStatCard extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
-          color: color.withOpacity(0.2),
+          color: color.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -1111,7 +1111,7 @@ class _MissionSearchViewState extends State<MissionSearchView> {
             Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: const Color(0xFF00BFA5).withOpacity(0.1),
+                color: const Color(0xFF00BFA5).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Column(
@@ -1208,7 +1208,7 @@ class MissionSearchCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -1232,7 +1232,7 @@ class MissionSearchCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF00BFA5).withOpacity(0.8),
+                          const Color(0xFF00BFA5).withValues(alpha: 0.8),
                           const Color(0xFF4EDBC5),
                         ],
                       ),
@@ -1322,7 +1322,7 @@ class MissionSearchCard extends StatelessWidget {
                                 vertical: 2.h,
                               ),
                               decoration: BoxDecoration(
-                                color: _getDifficultyColor(mission.difficulty).withOpacity(0.1),
+                                color: _getDifficultyColor(mission.difficulty).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8.r),
                               ),
                               child: Text(
@@ -1378,7 +1378,7 @@ class MissionSearchCard extends StatelessWidget {
                           vertical: 4.h,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00C853).withOpacity(0.1),
+                          color: const Color(0xFF00C853).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                         child: Text(
@@ -1509,7 +1509,7 @@ class MissionSearchCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF00BFA5).withOpacity(0.8),
+                          const Color(0xFF00BFA5).withValues(alpha: 0.8),
                           const Color(0xFF4EDBC5),
                         ],
                       ),
@@ -1664,10 +1664,10 @@ class MissionSearchCard extends StatelessWidget {
                       width: double.infinity,
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00C853).withOpacity(0.1),
+                        color: const Color(0xFF00C853).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: const Color(0xFF00C853).withOpacity(0.3),
+                          color: const Color(0xFF00C853).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Column(
@@ -1777,10 +1777,10 @@ class _StatBox extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.r),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
         ),
       ),
       child: Column(
@@ -1831,7 +1831,7 @@ class MissionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -1865,7 +1865,7 @@ class MissionCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         colors: [
-                          const Color(0xFF00BFA5).withOpacity(0.8),
+                          const Color(0xFF00BFA5).withValues(alpha: 0.8),
                           const Color(0xFF4EDBC5),
                         ],
                       ),
@@ -1910,7 +1910,7 @@ class MissionCard extends StatelessWidget {
                       vertical: 6.h,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00C853).withOpacity(0.1),
+                      color: const Color(0xFF00C853).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20.r),
                     ),
                     child: Text(
@@ -2047,7 +2047,7 @@ class MissionDetailPage extends StatelessWidget {
                               width: 60.w,
                               height: 60.h,
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(16.r),
                               ),
                               child: Center(
@@ -2076,7 +2076,7 @@ class MissionDetailPage extends StatelessWidget {
                                     'Day $currentDay/$totalDays',
                                     style: TextStyle(
                                       fontSize: 16.sp,
-                                      color: Colors.white.withOpacity(0.8),
+                                      color: Colors.white.withValues(alpha: 0.8),
                                     ),
                                   ),
                                 ],
@@ -2088,7 +2088,7 @@ class MissionDetailPage extends StatelessWidget {
                                 vertical: 6.h,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
+                                color: Colors.white.withValues(alpha: 0.2),
                                 borderRadius: BorderRadius.circular(20.r),
                               ),
                               child: Text(
@@ -2108,7 +2108,7 @@ class MissionDetailPage extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: currentDay / totalDays,
                             minHeight: 8.h,
-                            backgroundColor: Colors.white.withOpacity(0.3),
+                            backgroundColor: Colors.white.withValues(alpha: 0.3),
                             valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                           ),
                         ),
@@ -2182,10 +2182,10 @@ class MissionDetailPage extends StatelessWidget {
                       width: double.infinity,
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF4CAF50).withOpacity(0.1),
+                        color: const Color(0xFF4CAF50).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: const Color(0xFF4CAF50).withOpacity(0.3),
+                          color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -2235,7 +2235,7 @@ class MissionDetailPage extends StatelessWidget {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -2333,8 +2333,8 @@ class _TaskItem extends StatelessWidget {
               height: 40.h,
               decoration: BoxDecoration(
                 color: isCompleted 
-                    ? const Color(0xFF4CAF50).withOpacity(0.1) 
-                    : const Color(0xFF00BFA5).withOpacity(0.1),
+                    ? const Color(0xFF4CAF50).withValues(alpha: 0.1) 
+                    : const Color(0xFF00BFA5).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(
@@ -2438,10 +2438,10 @@ class _SubmissionPageState extends State<SubmissionPage> {
                       width: double.infinity,
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00BFA5).withOpacity(0.1),
+                        color: const Color(0xFF00BFA5).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: const Color(0xFF00BFA5).withOpacity(0.2),
+                          color: const Color(0xFF00BFA5).withValues(alpha: 0.2),
                         ),
                       ),
                       child: Row(
@@ -2611,10 +2611,10 @@ class _SubmissionPageState extends State<SubmissionPage> {
                       width: double.infinity,
                       padding: EdgeInsets.all(16.w),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00C853).withOpacity(0.1),
+                        color: const Color(0xFF00C853).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12.r),
                         border: Border.all(
-                          color: const Color(0xFF00C853).withOpacity(0.3),
+                          color: const Color(0xFF00C853).withValues(alpha: 0.3),
                         ),
                       ),
                       child: Row(
@@ -2683,7 +2683,7 @@ class _SubmissionPageState extends State<SubmissionPage> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, -5),
                   ),
@@ -2809,7 +2809,7 @@ class _SectionHeader extends StatelessWidget {
               vertical: 2.h,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFFF9800).withOpacity(0.1),
+              color: const Color(0xFFFF9800).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Text(
@@ -3055,10 +3055,10 @@ class _RankingViewState extends State<RankingView> with SingleTickerProviderStat
         Container(
           padding: EdgeInsets.all(16.w),
           decoration: BoxDecoration(
-            color: const Color(0xFF00BFA5).withOpacity(0.1),
+            color: const Color(0xFF00BFA5).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
-              color: const Color(0xFF00BFA5).withOpacity(0.3),
+              color: const Color(0xFF00BFA5).withValues(alpha: 0.3),
             ),
           ),
           child: Column(
@@ -3079,7 +3079,7 @@ class _RankingViewState extends State<RankingView> with SingleTickerProviderStat
                     width: 50.w,
                     height: 50.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00BFA5).withOpacity(0.2),
+                      color: const Color(0xFF00BFA5).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Center(
@@ -3245,7 +3245,7 @@ class _RankingViewState extends State<RankingView> with SingleTickerProviderStat
           width: isFirst ? 80.w : 60.w,
           height: isFirst ? 80.h : 60.h,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             shape: BoxShape.circle,
             border: Border.all(
               color: Colors.white,
@@ -3273,7 +3273,7 @@ class _RankingViewState extends State<RankingView> with SingleTickerProviderStat
           '${user.points.toStringAsFixed(0)}P',
           style: TextStyle(
             fontSize: isFirst ? 12.sp : 10.sp,
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
           ),
         ),
         SizedBox(height: 8.h),
@@ -3281,7 +3281,7 @@ class _RankingViewState extends State<RankingView> with SingleTickerProviderStat
           width: isFirst ? 60.w : 40.w,
           height: isFirst ? 80.h : 60.h,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             borderRadius: BorderRadius.vertical(top: Radius.circular(8.r)),
           ),
           child: Center(
@@ -3304,10 +3304,10 @@ class _RankingViewState extends State<RankingView> with SingleTickerProviderStat
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
       decoration: BoxDecoration(
         color: user.isCurrentUser 
-            ? const Color(0xFF00BFA5).withOpacity(0.05)
+            ? const Color(0xFF00BFA5).withValues(alpha: 0.05)
             : Colors.transparent,
         border: user.isCurrentUser 
-            ? Border.all(color: const Color(0xFF00BFA5).withOpacity(0.2))
+            ? Border.all(color: const Color(0xFF00BFA5).withValues(alpha: 0.2))
             : null,
         borderRadius: user.isCurrentUser ? BorderRadius.circular(8.r) : null,
       ),
@@ -3317,7 +3317,7 @@ class _RankingViewState extends State<RankingView> with SingleTickerProviderStat
             width: 30.w,
             height: 30.h,
             decoration: BoxDecoration(
-              color: _getRankColor(user.rank).withOpacity(0.1),
+              color: _getRankColor(user.rank).withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -3337,7 +3337,7 @@ class _RankingViewState extends State<RankingView> with SingleTickerProviderStat
             width: 40.w,
             height: 40.h,
             decoration: BoxDecoration(
-              color: _getLevelColor(user.level).withOpacity(0.1),
+              color: _getLevelColor(user.level).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Center(
@@ -3504,10 +3504,10 @@ class _LevelInfoItem extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: isCurrentLevel ? color.withOpacity(0.05) : Colors.transparent,
+        color: isCurrentLevel ? color.withValues(alpha: 0.05) : Colors.transparent,
         borderRadius: BorderRadius.circular(8.r),
         border: isCurrentLevel 
-            ? Border.all(color: color.withOpacity(0.3))
+            ? Border.all(color: color.withValues(alpha: 0.3))
             : null,
       ),
       child: Row(
@@ -3516,7 +3516,7 @@ class _LevelInfoItem extends StatelessWidget {
             width: 40.w,
             height: 40.h,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Center(
@@ -3610,7 +3610,7 @@ class WalletView extends StatelessWidget {
                     '보유 포인트',
                     style: TextStyle(
                       fontSize: 16.sp,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                   SizedBox(height: 8.h),
@@ -3778,7 +3778,7 @@ class ProfileView extends StatelessWidget {
             icon: Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: const Color(0xFF00BFA5).withOpacity(0.1),
+                color: const Color(0xFF00BFA5).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(
@@ -3825,7 +3825,7 @@ class ProfileView extends StatelessWidget {
                       vertical: 6.h,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFD700).withOpacity(0.1),
+                      color: const Color(0xFFFFD700).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16.r),
                     ),
                     child: Text(
@@ -3991,7 +3991,7 @@ class _AppProviderManagementViewState extends State<AppProviderManagementView> w
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: const Color(0xFF00BFA5).withOpacity(0.1),
+                color: const Color(0xFF00BFA5).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Icon(
@@ -4488,7 +4488,7 @@ class _StatCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -4586,7 +4586,7 @@ class _MissionManagementItem extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
@@ -4701,7 +4701,7 @@ class _TesterItem extends StatelessWidget {
 
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: levelColor.withOpacity(0.1),
+        backgroundColor: levelColor.withValues(alpha: 0.1),
         child: Text(
           tester.name[0],
           style: TextStyle(

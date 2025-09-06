@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -6,6 +7,13 @@ import '../../domain/models/provider_model.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
 import 'app_registration_page.dart';
+import '../widgets/apps_header_widget.dart';
+import '../widgets/apps_list_widget.dart';
+import '../widgets/apps_empty_state_widget.dart';
+import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
+import 'apps_tab_test.dart';
+import 'missions_tab_test.dart';
+import 'missions_tab_simple.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -54,6 +62,20 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 1,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          tooltip: '테스터 모드로 전환',
+          onPressed: () {
+            // 테스터 대시보드로 이동
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => const TesterDashboardPage(
+                  testerId: 'test_tester_001',
+                ),
+              ),
+            );
+          },
+        ),
         title: Text(
           'Provider Dashboard',
           style: TextStyle(
@@ -86,7 +108,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: (index) {
-          print('BottomNavigationBar tapped: $index');
+          debugPrint('BottomNavigationBar tapped: $index');
           setState(() => _selectedIndex = index);
         },
         items: const [
@@ -196,274 +218,19 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   Widget _buildAppsTab() {
-    // Debug logging
-    AppLogger.info('Building apps tab for provider: ${widget.providerId}', 'ProviderDashboard');
+    AppLogger.info('🔧🔧🔧 Building Apps Tab with DUMMY DATA', 'ProviderDashboard');
+    AppLogger.info('Provider ID: ${widget.providerId}', 'ProviderDashboard');
     
-    // Start with the simplest possible implementation
-    return Container(
-      color: Colors.white,
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '등록된 앱',
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => AppRegistrationPage(providerId: widget.providerId),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.add),
-                  label: const Text('앱 등록'),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            
-            // Test basic provider functionality
-            Expanded(
-              child: Consumer(
-                builder: (context, ref, child) {
-                  try {
-                    final appsAsync = ref.watch(providerAppsProvider(widget.providerId));
-                    AppLogger.info('Apps async loaded: ${appsAsync.runtimeType}', 'ProviderDashboard');
-                    
-                    return appsAsync.when(
-                      data: (apps) {
-                        AppLogger.info('Apps data: ${apps.length} items', 'ProviderDashboard');
-                        return Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.green.shade100,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('✅ 앱 탭이 정상적으로 로드되었습니다'),
-                                  Text('Provider ID: ${widget.providerId}'),
-                                  Text('앱 개수: ${apps.length}'),
-                                  SizedBox(height: 8),
-                                  Text('앱 목록:', style: TextStyle(fontWeight: FontWeight.bold)),
-                                  ...apps.take(3).map((app) => Text('- ${app.appName} (${app.status.name})')),
-                                ],
-                              ),
-                            ),
-                            if (apps.isEmpty) 
-                              Expanded(
-                                child: Center(
-                                  child: Text('등록된 앱이 없습니다'),
-                                ),
-                              ),
-                            if (apps.isNotEmpty)
-                              Expanded(
-                                child: ListView.builder(
-                                  itemCount: apps.length,
-                                  itemBuilder: (context, index) {
-                                    final app = apps[index];
-                                    return Card(
-                                      child: ListTile(
-                                        title: Text(app.appName),
-                                        subtitle: Text('${app.category.name} • ${app.status.name}'),
-                                        trailing: Icon(Icons.chevron_right),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                          ],
-                        );
-                      },
-                      loading: () {
-                        AppLogger.info('Apps loading state', 'ProviderDashboard');
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(),
-                              SizedBox(height: 16),
-                              Text('앱 목록을 불러오는 중...'),
-                            ],
-                          ),
-                        );
-                      },
-                      error: (error, stack) {
-                        AppLogger.error('Apps error: $error', 'ProviderDashboard', error);
-                        return Center(
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade100,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.error, color: Colors.red, size: 48),
-                                SizedBox(height: 16),
-                                Text('오류 발생', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
-                                Text('$error', style: TextStyle(color: Colors.red)),
-                                SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: () => ref.invalidate(providerAppsProvider(widget.providerId)),
-                                  child: const Text('다시 시도'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  } catch (e) {
-                    AppLogger.error('Consumer exception: $e', 'ProviderDashboard', e);
-                    return Center(
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.orange.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.warning, color: Colors.orange, size: 48),
-                            SizedBox(height: 16),
-                            Text('Consumer Exception', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
-                            Text('$e', style: TextStyle(color: Colors.orange)),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    // 테스트용 간단한 UI로 교체
+    return const AppsTabTest();
   }
 
   Widget _buildMissionsTab() {
-    return Padding(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '미션 관리',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('미션 생성 기능 (개발 중)')),
-                  );
-                },
-                icon: const Icon(Icons.add),
-                label: const Text('미션 생성'),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-          Expanded(
-            child: ref.watch(providerMissionsProvider(widget.providerId)).when(
-              data: (missions) {
-                if (missions.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.assignment_outlined,
-                          size: 48.sp,
-                          color: Colors.grey[400],
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          '미션이 없습니다',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                
-                return ListView.builder(
-                  itemCount: missions.length,
-                  itemBuilder: (context, index) {
-                    final mission = missions[index];
-                    return _buildMissionCard(mission);
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48.sp,
-                      color: Colors.red,
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      '미션을 불러올 수 없습니다',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: Colors.red,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      error.toString(),
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: () {
-                        ref.refresh(providerMissionsProvider(widget.providerId));
-                      },
-                      child: const Text('다시 시도'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    AppLogger.info('🔧🔧🔧 Building Missions Tab with SIMPLE DUMMY DATA', 'ProviderDashboard');
+    AppLogger.info('Provider ID: ${widget.providerId}', 'ProviderDashboard');
+    
+    // 앱관리탭과 동일한 방식으로 간단한 UI로 교체
+    return const MissionsTabSimple();
   }
 
   Widget _buildReportsTab() {
@@ -583,7 +350,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               borderRadius: BorderRadius.circular(12.r),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withValues(alpha: 0.1),
                   spreadRadius: 0,
                   blurRadius: 10,
                   offset: const Offset(0, 2),
@@ -645,7 +412,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -701,7 +468,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             width: 40.w,
             height: 40.w,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(
@@ -1122,7 +889,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
         ),
         onTap: () {
-          print('앱 카드 클릭됨: ${app.appName}');
+          debugPrint('앱 카드 클릭됨: ${app.appName}');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('${app.appName} 상세 정보 (개발 중)')),
           );

@@ -146,7 +146,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           ),
         ),
         background: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -542,7 +542,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
       AppLogger.error('Failed to launch URL: $url', 'MissionDetail', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('링크 실행 중 오류가 발생했습니다'),
             backgroundColor: AppColors.error,
           ),

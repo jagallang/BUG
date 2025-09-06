@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreService {
@@ -18,7 +19,7 @@ class FirestoreService {
     try {
       return await _db.collection(usersCollection).doc(uid).get();
     } catch (e) {
-      print('Error getting user: $e');
+      debugPrint('Error getting user: $e');
       return null;
     }
   }
@@ -144,7 +145,7 @@ class FirestoreService {
     // Check if data already exists
     final missionsSnapshot = await _db.collection(missionsCollection).limit(1).get();
     if (missionsSnapshot.docs.isNotEmpty) {
-      print('Database already initialized');
+      debugPrint('Database already initialized');
       return;
     }
 
@@ -210,6 +211,6 @@ class FirestoreService {
     }
 
     await batch.commit();
-    print('Sample data initialized successfully');
+    debugPrint('Sample data initialized successfully');
   }
 }

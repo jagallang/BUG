@@ -181,7 +181,7 @@ class DailyProgressCalendarWidget extends StatelessWidget {
         icon = Container(
           width: 6.w,
           height: 6.w,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.blue,
             shape: BoxShape.circle,
           ),

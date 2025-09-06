@@ -2,7 +2,9 @@ import 'package:injectable/injectable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart';
 import '../models/user_model.dart';
+import '../../domain/entities/user_entity.dart';
 
 @LazySingleton()
 class AuthRepository {
@@ -47,7 +49,11 @@ class AuthRepository {
           email: user.email ?? '',
           displayName: user.displayName ?? 'User',
           photoUrl: user.photoURL,
+          userType: UserType.tester,
+          country: 'KR',
+          timezone: 'Asia/Seoul',
           createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
         );
         
         await userDoc.set(newUser.toFirestore());
@@ -61,7 +67,7 @@ class AuthRepository {
         return UserModel.fromFirestore(updatedDoc);
       }
     } catch (e) {
-      print('Error signing in with Google: $e');
+      debugPrint('Error signing in with Google: $e');
       return null;
     }
   }
@@ -77,7 +83,7 @@ class AuthRepository {
       }
       return null;
     } catch (e) {
-      print('Error getting user data: $e');
+      debugPrint('Error getting user data: $e');
       return null;
     }
   }
