@@ -12,7 +12,7 @@ class SyncSettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: const ConnectionStatusAppBar(
-        title: 'Sync Settings',
+        title: '동기화 설정',
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -60,7 +60,7 @@ class SyncSettingsPage extends ConsumerWidget {
                 const Icon(Icons.signal_wifi_4_bar, color: Colors.blue),
                 const SizedBox(width: 8),
                 const Text(
-                  'Connection Status',
+                  '연결 상태',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -72,24 +72,24 @@ class SyncSettingsPage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             _buildStatusDetailRow(
-              'Status',
-              isConnected ? 'Connected' : 'Disconnected',
+              '상태',
+              isConnected ? '연결됨' : '연결 안됨',
               isConnected ? Colors.green : Colors.red,
             ),
             _buildStatusDetailRow(
-              'Connection Type',
+              '연결 타입',
               connectionType.toUpperCase(),
               Colors.blue,
             ),
             if (reconnectAttempts > 0)
               _buildStatusDetailRow(
-                'Reconnect Attempts',
+                '재연결 시도',
                 reconnectAttempts.toString(),
                 Colors.orange,
               ),
             if (lastConnectedAt != null)
               _buildStatusDetailRow(
-                'Last Connected',
+                '마지막 연결',
                 _formatDateTime(lastConnectedAt),
                 Colors.grey,
               ),
@@ -100,7 +100,7 @@ class SyncSettingsPage extends ConsumerWidget {
                   child: ElevatedButton.icon(
                     onPressed: isConnected ? null : () => _testConnection(ref),
                     icon: const Icon(Icons.network_check),
-                    label: const Text('Test Connection'),
+                    label: const Text('연결 테스트'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -147,7 +147,7 @@ class SyncSettingsPage extends ConsumerWidget {
                 Icon(Icons.autorenew, color: Colors.green),
                 SizedBox(width: 8),
                 Text(
-                  'Auto-sync Settings',
+                  '자동 동기화 설정',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -157,24 +157,24 @@ class SyncSettingsPage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: const Text('Auto-sync when connected'),
-              subtitle: const Text('Automatically sync data when online'),
+              title: const Text('연결 시 자동 동기화'),
+              subtitle: const Text('온라인 상태일 때 자동으로 데이터 동기화'),
               value: true, // This would come from settings provider
               onChanged: (value) {
                 // Handle auto-sync toggle
               },
             ),
             SwitchListTile(
-              title: const Text('Sync on Wi-Fi only'),
-              subtitle: const Text('Avoid mobile data usage for syncing'),
+              title: const Text('Wi-Fi에서만 동기화'),
+              subtitle: const Text('동기화 시 모바일 데이터 사용 방지'),
               value: false, // This would come from settings provider
               onChanged: (value) {
                 // Handle Wi-Fi only toggle
               },
             ),
             SwitchListTile(
-              title: const Text('Background sync'),
-              subtitle: const Text('Sync data even when app is in background'),
+              title: const Text('백그라운드 동기화'),
+              subtitle: const Text('앱이 백그라운드에서도 데이터 동기화'),
               value: true, // This would come from settings provider
               onChanged: (value) {
                 // Handle background sync toggle
@@ -198,7 +198,7 @@ class SyncSettingsPage extends ConsumerWidget {
                 Icon(Icons.data_usage, color: Colors.purple),
                 SizedBox(width: 8),
                 Text(
-                  'Data Management',
+                  '데이터 관리',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -208,15 +208,15 @@ class SyncSettingsPage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             ListTile(
-              title: const Text('Cache Duration'),
-              subtitle: const Text('How long to keep cached data'),
+              title: const Text('캐시 유지 기간'),
+              subtitle: const Text('캐시된 데이터를 보관하는 기간'),
               trailing: DropdownButton<String>(
-                value: '1 hour',
+                value: '1시간',
                 items: const [
-                  DropdownMenuItem(value: '30 minutes', child: Text('30 minutes')),
-                  DropdownMenuItem(value: '1 hour', child: Text('1 hour')),
-                  DropdownMenuItem(value: '6 hours', child: Text('6 hours')),
-                  DropdownMenuItem(value: '1 day', child: Text('1 day')),
+                  DropdownMenuItem(value: '30분', child: Text('30분')),
+                  DropdownMenuItem(value: '1시간', child: Text('1시간')),
+                  DropdownMenuItem(value: '6시간', child: Text('6시간')),
+                  DropdownMenuItem(value: '1일', child: Text('1일')),
                 ],
                 onChanged: (value) {
                   // Handle cache duration change
@@ -224,8 +224,8 @@ class SyncSettingsPage extends ConsumerWidget {
               ),
             ),
             ListTile(
-              title: const Text('Max Cache Size'),
-              subtitle: const Text('Maximum storage for cached data'),
+              title: const Text('최대 캐시 크기'),
+              subtitle: const Text('캐시된 데이터의 최대 저장 용량'),
               trailing: DropdownButton<String>(
                 value: '50 MB',
                 items: const [
@@ -246,7 +246,7 @@ class SyncSettingsPage extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _cleanExpiredCache(ref),
                     icon: const Icon(Icons.cleaning_services),
-                    label: const Text('Clean Expired Cache'),
+                    label: const Text('만료된 캐시 정리'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -254,7 +254,7 @@ class SyncSettingsPage extends ConsumerWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _showCacheInfo(context, ref),
                     icon: const Icon(Icons.info),
-                    label: const Text('Cache Info'),
+                    label: const Text('캐시 정보'),
                   ),
                 ),
               ],
@@ -270,7 +270,7 @@ class SyncSettingsPage extends ConsumerWidget {
     connectionNotifier.checkConnection();
     
     ScaffoldMessenger.of(ref.context).showSnackBar(
-      const SnackBar(content: Text('Testing connection...')),
+      const SnackBar(content: Text('연결을 테스트 중입니다...')),
     );
   }
 
@@ -279,7 +279,7 @@ class SyncSettingsPage extends ConsumerWidget {
     cache.cleanExpiredCache();
     
     ScaffoldMessenger.of(ref.context).showSnackBar(
-      const SnackBar(content: Text('Expired cache cleaned')),
+      const SnackBar(content: Text('만료된 캐시가 정리되었습니다')),
     );
   }
 
@@ -289,25 +289,25 @@ class SyncSettingsPage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Cache Information'),
+        title: const Text('캐시 정보'),
         content: cacheInfoAsync.when(
           data: (cacheInfo) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildInfoRow('Total Items', cacheInfo['totalItems']?.toString() ?? '0'),
-              _buildInfoRow('Valid Items', cacheInfo['validItems']?.toString() ?? '0'),
-              _buildInfoRow('Expired Items', cacheInfo['expiredItems']?.toString() ?? '0'),
-              _buildInfoRow('Memory Items', cacheInfo['memoryItems']?.toString() ?? '0'),
-              _buildInfoRow('Total Size', '${cacheInfo['estimatedSizeKB'] ?? 0} KB'),
+              _buildInfoRow('전체 항목', cacheInfo['totalItems']?.toString() ?? '0'),
+              _buildInfoRow('유효 항목', cacheInfo['validItems']?.toString() ?? '0'),
+              _buildInfoRow('만료 항목', cacheInfo['expiredItems']?.toString() ?? '0'),
+              _buildInfoRow('메모리 항목', cacheInfo['memoryItems']?.toString() ?? '0'),
+              _buildInfoRow('전체 크기', '${cacheInfo['estimatedSizeKB'] ?? 0} KB'),
             ],
           ),
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const Text('Failed to load cache info'),
+          error: (_, __) => const Text('캐시 정보를 불러올 수 없습니다'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: const Text('닫기'),
           ),
         ],
       ),

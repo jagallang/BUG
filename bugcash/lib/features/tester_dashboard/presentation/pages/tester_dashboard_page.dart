@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/mission_discovery_widget.dart';
 import '../widgets/active_missions_widget.dart';
 import '../widgets/earnings_summary_widget.dart';
-import '../widgets/tester_profile_widget.dart';
+import '../widgets/community_board_widget.dart';
 import '../providers/tester_dashboard_provider.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 
@@ -244,7 +244,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   Tab(text: '미션 찾기', icon: Icon(Icons.search)),
                   Tab(text: '진행 중', icon: Icon(Icons.play_circle)),
                   Tab(text: '수익', icon: Icon(Icons.account_balance_wallet)),
-                  Tab(text: '프로필', icon: Icon(Icons.person)),
+                  Tab(text: '커뮤니티', icon: Icon(Icons.forum)),
                 ],
                 labelColor: Theme.of(context).colorScheme.primary,
                 unselectedLabelColor: Colors.grey,
@@ -272,8 +272,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                           // 수익 관리
                           EarningsSummaryWidget(testerId: widget.testerId),
                           
-                          // 프로필
-                          TesterProfileWidget(testerId: widget.testerId),
+                          // 커뮤니티
+                          CommunityBoardWidget(testerId: widget.testerId),
                         ],
                       ),
           ),
