@@ -141,7 +141,33 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v1.2.03 (Latest) - Code Quality & Performance Improvements
+### v1.2.04 (Latest) - UI Simplification & Clean Design
+*Released: 2025-01-09*
+
+**🎨 UI/UX Improvements:**
+- **Dashboard Simplification**: Removed statistics cards (오늘완료, 평균진행률, 오늘미션) from progress tab
+- **Clean Interface**: Eliminated redundant header cards and visual clutter
+- **Streamlined Navigation**: Direct focus on core mission functionality without distracting elements
+- **Minimalist Design**: Simplified mission tabs and progress displays
+
+**🔧 Code Optimization:**
+- **Reduced Complexity**: Removed 130+ lines of unused UI components and methods
+- **Better Performance**: Faster rendering with simplified widget structure
+- **Cleaner Architecture**: Eliminated redundant calculations and unused variables
+- **Mission Display**: Reduced mission cards from 5 to 3 for better focus
+
+**📱 User Experience:**
+- **Faster Loading**: Streamlined UI components for quicker app responses
+- **Intuitive Design**: Removed information overload for cleaner user journey
+- **Essential Features**: Focus on core functionality without unnecessary statistics
+- **Mobile Optimized**: Better space utilization on mobile devices
+
+**🚀 Performance:**
+- **Lighter Codebase**: Significant reduction in UI rendering overhead
+- **Improved Memory Usage**: Less widgets and calculations in memory
+- **Faster Navigation**: Direct access to mission lists without header delays
+
+### v1.2.03 - Code Quality & Performance Improvements
 *Released: 2025-01-09*
 
 **🔧 Major Improvements:**
