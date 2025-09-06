@@ -141,7 +141,46 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v1.2.04 (Latest) - UI Simplification & Clean Design
+### v1.2.05 (Latest) - Expandable UI & Korean Localization
+*Released: 2025-01-09*
+
+**🎨 Expandable UI Components:**
+- **Interactive Mission Cards**: Collapsible/expandable mission cards in progress tab with smooth 300ms animations
+- **Community Board Posts**: Touch-to-expand community posts with preview and full content states
+- **Daily Progress Grid**: Visual 7-day progress calendar with status indicators and touch interactions
+- **Responsive Layouts**: Fixed overflow issues with proper constraints and responsive design
+
+**📱 Community Board Enhancement:**
+- **Profile → Community**: Complete transformation of profile tab into fully functional community board
+- **Post Creation System**: Category-based post creation (버그발견, 팁공유, 미션추천, 질문)
+- **Advanced Filtering**: Real-time category filtering with visual feedback
+- **Rich Interactions**: Like, comment, share functionality with expandable action buttons
+
+**🚀 Mission Management:**
+- **Compact Overview**: Collapsed state showing essential info (progress %, points, deadline)
+- **Detailed Expansion**: Full progress tracking with daily status grid and action buttons
+- **Progress Visualization**: Color-coded progress indicators (green/orange/red) based on completion rates
+- **Quick Actions**: Direct access to daily missions, progress history, and detailed information
+
+**🌐 Korean Localization:**
+- **Complete Translation**: All sync management and settings interfaces fully localized
+- **Consistent Terminology**: Standardized Korean tech terms throughout the application
+- **User-Friendly Labels**: Natural Korean expressions for better user comprehension
+- **Cultural Adaptation**: UI text optimized for Korean reading patterns
+
+**🔧 Technical Excellence:**
+- **Animation Framework**: Smooth AnimatedContainer transitions for expand/collapse states
+- **Overflow Prevention**: SingleChildScrollView and Wrap widgets for responsive layouts
+- **Performance Optimization**: Reduced widget complexity and memory usage
+- **Touch Responsiveness**: Enhanced touch targets and visual feedback systems
+
+**📊 User Experience:**
+- **Information Hierarchy**: Clear distinction between overview and detailed states
+- **Space Efficiency**: More content visible in collapsed states for better screen utilization
+- **Intuitive Navigation**: Visual cues (expand/collapse icons) for clear interaction guidance
+- **Mobile-First Design**: Optimized for mobile touch interactions and screen sizes
+
+### v1.2.04 - UI Simplification & Clean Design
 *Released: 2025-01-09*
 
 **🎨 UI/UX Improvements:**
