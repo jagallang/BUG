@@ -139,7 +139,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
   Widget _buildDashboardTab() {
     final providerInfoAsync = ref.watch(providerInfoStateProvider(widget.providerId));
-    final dashboardStatsAsync = ref.watch(dashboardStatsProvider(widget.providerId));
     final recentActivitiesAsync = ref.watch(recentActivitiesProvider(widget.providerId));
 
     return SingleChildScrollView(
@@ -198,13 +197,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
           SizedBox(height: 24.h),
           
-          // Dashboard Stats Cards
-          dashboardStatsAsync.when(
-            data: (stats) => _buildStatsCards(stats),
-            loading: () => _buildStatsCardsLoading(),
-            error: (error, stack) => _buildStatsCardsError(),
-          ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 24.h),
           
           // Recent Activities Section
           recentActivitiesAsync.when(
@@ -399,59 +392,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     );
   }
 
-  Widget _buildStatCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Icon(
-                icon,
-                color: color,
-                size: 24.sp,
-              ),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey[600],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildActivityItem({
     required String title,
@@ -513,136 +453,9 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     );
   }
 
-  // Stats Cards Methods
-  Widget _buildStatsCards(DashboardStats stats) {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                title: '총 미션',
-                value: '${stats.totalMissions}',
-                icon: Icons.assignment,
-                color: Colors.blue,
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: _buildStatCard(
-                title: '활성 미션',
-                value: '${stats.activeMissions}',
-                icon: Icons.play_circle,
-                color: Colors.green,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        Row(
-          children: [
-            Expanded(
-              child: _buildStatCard(
-                title: '총 테스터',
-                value: '${stats.totalTesters}',
-                icon: Icons.group,
-                color: Colors.orange,
-              ),
-            ),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: _buildStatCard(
-                title: '버그 리포트',
-                value: '${stats.totalBugReports}',
-                icon: Icons.bug_report,
-                color: Colors.red,
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 32.h),
-      ],
-    );
-  }
 
-  Widget _buildStatsCardsLoading() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(child: _buildStatCardLoading()),
-            SizedBox(width: 16.w),
-            Expanded(child: _buildStatCardLoading()),
-          ],
-        ),
-        SizedBox(height: 16.h),
-        Row(
-          children: [
-            Expanded(child: _buildStatCardLoading()),
-            SizedBox(width: 16.w),
-            Expanded(child: _buildStatCardLoading()),
-          ],
-        ),
-        SizedBox(height: 32.h),
-      ],
-    );
-  }
 
-  Widget _buildStatsCardsError() {
-    return Container(
-      padding: EdgeInsets.all(20.w),
-      child: Column(
-        children: [
-          Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
-          SizedBox(height: 16.h),
-          Text(
-            '통계를 불러올 수 없습니다',
-            style: TextStyle(fontSize: 16.sp, color: Colors.red),
-          ),
-          SizedBox(height: 32.h),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildStatCardLoading() {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            height: 20.h,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-          ),
-          SizedBox(height: 8.h),
-          Container(
-            height: 30.h,
-            width: 60.w,
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(4.r),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // Recent Activities Methods
   Widget _buildRecentActivities(List<Map<String, dynamic>> activities) {

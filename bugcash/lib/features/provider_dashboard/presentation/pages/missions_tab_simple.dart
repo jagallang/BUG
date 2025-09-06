@@ -21,17 +21,10 @@ class MissionsTabSimple extends StatelessWidget {
           ),
           SizedBox(height: 16.h),
           
-          // 더미 데이터 리스트
+          // 미션 리스트 (간소화됨)
           Expanded(
             child: ListView(
               children: [
-                _buildSimpleMissionCard(
-                  title: '첫 번째 버그 찾기',
-                  description: '앱에서 발생하는 첫 번째 버그를 발견하고 리포트하세요',
-                  status: '진행중',
-                  statusColor: Colors.blue,
-                  reward: '5,000 BUG',
-                ),
                 _buildSimpleMissionCard(
                   title: 'UI/UX 개선사항 제안',
                   description: '사용자 인터페이스의 개선점을 찾아 제안해주세요',
@@ -52,13 +45,6 @@ class MissionsTabSimple extends StatelessWidget {
                   status: '검토중',
                   statusColor: Colors.orange,
                   reward: '15,000 BUG',
-                ),
-                _buildSimpleMissionCard(
-                  title: '접근성 테스트',
-                  description: '앱의 접근성을 테스트하고 개선사항을 제안하세요',
-                  status: '일시정지',
-                  statusColor: Colors.grey,
-                  reward: '7,000 BUG',
                 ),
               ],
             ),

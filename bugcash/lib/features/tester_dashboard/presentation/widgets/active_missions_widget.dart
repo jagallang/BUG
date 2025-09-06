@@ -29,10 +29,6 @@ class _ActiveMissionsWidgetState extends ConsumerState<ActiveMissionsWidget> {
       padding: EdgeInsets.all(16.w),
       child: Column(
         children: [
-          // Header with stats
-          _buildHeader(context, activeMissions),
-          
-          SizedBox(height: 16.h),
           
           // Filter and sort tabs
           _buildFilterTabs(),
@@ -329,137 +325,7 @@ class _ActiveMissionsWidgetState extends ConsumerState<ActiveMissionsWidget> {
     );
   }
 
-  Widget _buildHeader(BuildContext context, List<provider.MissionCard> missions) {
-    final today = DateTime.now();
-    final completedToday = missions.where((m) => 
-        m.startedAt != null && 
-        m.startedAt!.year == today.year &&
-        m.startedAt!.month == today.month &&
-        m.startedAt!.day == today.day &&
-        m.progress == 1.0
-    ).length;
-    
-    final todayMissions = missions.where((m) => 
-        m.startedAt != null &&
-        m.startedAt!.year == today.year &&
-        m.startedAt!.month == today.month &&
-        m.startedAt!.day == today.day
-    ).length;
-    
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.play_circle,
-                color: Theme.of(context).colorScheme.primary,
-                size: 24.w,
-              ),
-              SizedBox(width: 12.w),
-              Text(
-                '진행 중인 미션',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Text(
-                  '${missions.length}개',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          
-          SizedBox(height: 16.h),
-          
-          // Quick stats
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem(
-                context,
-                '오늘 완료',
-                completedToday.toString(),
-                Icons.check_circle,
-                Colors.green,
-              ),
-              _buildStatItem(
-                context,
-                '평균 진행률',
-                missions.isNotEmpty 
-                    ? '${((missions.map((m) => m.progress ?? 0).reduce((a, b) => a + b) / missions.length) * 100).toStringAsFixed(0)}%'
-                    : '0%',
-                Icons.trending_up,
-                Colors.blue,
-              ),
-              _buildStatItem(
-                context,
-                '오늘 미션',
-                todayMissions.toString(),
-                Icons.today,
-                Colors.purple,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildStatItem(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 20.w),
-        SizedBox(height: 4.h),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16.sp,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.sp,
-            color: Colors.grey.shade600,
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildEmptyState(BuildContext context) {
     return Center(

@@ -348,33 +348,20 @@ class MissionsOverviewWidget extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 32.h),
+        padding: EdgeInsets.symmetric(vertical: 24.h),
         child: Column(
           children: [
             Icon(
-              Icons.assignment,
-              size: 48.w,
+              Icons.assignment_outlined,
+              size: 32.w,
               color: Colors.grey.shade400,
             ),
-            SizedBox(height: 16.h),
+            SizedBox(height: 12.h),
             Text(
-              '진행중인 미션이 없습니다',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: Colors.grey.shade600,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '새로운 미션을 생성해보세요',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              '미션이 없습니다',
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 color: Colors.grey.shade500,
               ),
-            ),
-            SizedBox(height: 16.h),
-            ElevatedButton.icon(
-              onPressed: () => _showCreateMissionDialog(context),
-              icon: const Icon(Icons.add),
-              label: const Text('새 미션 생성'),
             ),
           ],
         ),
