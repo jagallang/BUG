@@ -14,7 +14,7 @@ import '../widgets/apps_empty_state_widget.dart';
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import 'apps_tab_test.dart';
 import 'missions_tab_test.dart';
-import 'missions_tab_simple.dart';
+import '../widgets/tester_management_tab.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -47,7 +47,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       case 1:
         return _buildAppsTab();
       case 2:
-        return _buildMissionsTab();
+        return _buildTesterManagementTab();
       case 3:
         return _buildReportsTab();
       case 4:
@@ -78,7 +78,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           },
         ),
         title: Text(
-          'Provider Dashboard',
+          '공급자 대시보드',
           style: TextStyle(
             color: Colors.black87,
             fontWeight: FontWeight.w600,
@@ -122,8 +122,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             label: '앱 관리',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.assignment),
-            label: '미션',
+            icon: Icon(Icons.people),
+            label: '테스터 관리',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bug_report),
@@ -219,12 +219,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     return AppManagementPage(providerId: widget.providerId);
   }
 
-  Widget _buildMissionsTab() {
-    AppLogger.info('🔧🔧🔧 Building Missions Tab with SIMPLE DUMMY DATA', 'ProviderDashboard');
-    AppLogger.info('Provider ID: ${widget.providerId}', 'ProviderDashboard');
-    
-    // 앱관리탭과 동일한 방식으로 간단한 UI로 교체
-    return const MissionsTabSimple();
+  Widget _buildTesterManagementTab() {
+    return TesterManagementTab(providerId: widget.providerId);
   }
 
   Widget _buildReportsTab() {

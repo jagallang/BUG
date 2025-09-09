@@ -585,7 +585,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             items: const [
               DropdownMenuItem(
                 value: 'play_store',
-                child: Text('Google Play Store'),
+                child: Text('구글 플레이 스토어'),
               ),
               DropdownMenuItem(
                 value: 'apk_upload',

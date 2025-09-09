@@ -413,7 +413,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
             if (downloadLinks['playStore'] != null)
               _buildDownloadButton(
                 icon: Icons.play_arrow,
-                title: 'Google Play Store',
+                title: '구글 플레이 스토어',
                 subtitle: 'Android 사용자',
                 url: downloadLinks['playStore'],
                 color: AppColors.success,

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../providers/tester_dashboard_provider.dart' as provider;
 import '../../../../models/mission_model.dart';
 import '../../../search/presentation/providers/search_provider.dart';
@@ -740,6 +739,113 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
         ],
       ),
     );
+  }
+
+  List<provider.MissionCard> _convertSearchResultsToMissions(List<dynamic> searchResults) {
+    // 검색 결과를 MissionCard 객체로 변환
+    return searchResults.map<provider.MissionCard>((result) {
+      // 검색 결과가 이미 MissionCard 타입인 경우
+      if (result is provider.MissionCard) {
+        return result;
+      }
+      
+      // 검색 결과가 Map인 경우 MissionCard로 변환
+      if (result is Map<String, dynamic>) {
+        return provider.MissionCard(
+          id: result['id'] ?? '',
+          title: result['title'] ?? '',
+          description: result['description'] ?? '',
+          appName: result['appName'] ?? '',
+          type: _parseMissionType(result['type']),
+          difficulty: _parseMissionDifficulty(result['difficulty']),
+          rewardPoints: result['rewardPoints'] ?? 0,
+          estimatedMinutes: result['estimatedMinutes'] ?? 30,
+          currentParticipants: result['currentParticipants'] ?? 0,
+          maxParticipants: result['maxParticipants'] ?? 10,
+          requiredSkills: List<String>.from(result['requiredSkills'] ?? []),
+          deadline: result['deadline'] != null ? DateTime.parse(result['deadline']) : null,
+          status: MissionStatus.active,
+        );
+      }
+      
+      // 기본값 반환
+      return provider.MissionCard(
+        id: 'unknown',
+        title: '알 수 없는 미션',
+        description: '',
+        appName: '',
+        type: MissionType.functional,
+        difficulty: MissionDifficulty.easy,
+        rewardPoints: 0,
+        estimatedMinutes: 30,
+        currentParticipants: 0,
+        maxParticipants: 10,
+        requiredSkills: [],
+        deadline: null,
+        status: MissionStatus.active,
+      );
+    }).toList();
+  }
+
+  MissionType _parseMissionType(dynamic type) {
+    if (type is MissionType) return type;
+    if (type is String) {
+      switch (type.toLowerCase()) {
+        case 'bugreport':
+        case 'bug_report':
+          return MissionType.bugReport;
+        case 'featuretesting':
+        case 'feature_testing':
+          return MissionType.featureTesting;
+        case 'usabilitytest':
+        case 'usability_test':
+          return MissionType.usabilityTest;
+        case 'performancetest':
+        case 'performance_test':
+          return MissionType.performanceTest;
+        case 'survey':
+          return MissionType.survey;
+        case 'feedback':
+          return MissionType.feedback;
+        case 'functional':
+          return MissionType.functional;
+        case 'uiux':
+        case 'ui_ux':
+          return MissionType.uiUx;
+        case 'performance':
+          return MissionType.performance;
+        case 'security':
+          return MissionType.security;
+        case 'compatibility':
+          return MissionType.compatibility;
+        case 'accessibility':
+          return MissionType.accessibility;
+        case 'localization':
+          return MissionType.localization;
+        default:
+          return MissionType.functional;
+      }
+    }
+    return MissionType.functional;
+  }
+
+  MissionDifficulty _parseMissionDifficulty(dynamic difficulty) {
+    if (difficulty is MissionDifficulty) return difficulty;
+    if (difficulty is String) {
+      switch (difficulty.toLowerCase()) {
+        case 'easy':
+          return MissionDifficulty.easy;
+        case 'medium':
+          return MissionDifficulty.medium;
+        case 'hard':
+          return MissionDifficulty.hard;
+        case 'expert':
+          return MissionDifficulty.expert;
+        default:
+          return MissionDifficulty.easy;
+      }
+    }
+    return MissionDifficulty.easy;
   }
 
   List<provider.MissionCard> _filterMissions(List<provider.MissionCard> missions) {

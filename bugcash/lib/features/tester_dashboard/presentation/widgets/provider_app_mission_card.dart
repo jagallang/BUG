@@ -382,7 +382,7 @@ class ProviderAppMissionCard extends StatelessWidget {
   String _getInstallTypeText(String? installType) {
     switch (installType) {
       case 'play_store':
-        return 'Google Play Store';
+        return '구글 플레이 스토어';
       case 'apk_upload':
         return 'APK 직접 다운로드';
       case 'testflight':

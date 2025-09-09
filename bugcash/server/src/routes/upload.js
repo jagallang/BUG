@@ -19,7 +19,7 @@ const s3 = new AWS.S3({
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 100 * 1024 * 1024, // 100MB limit for APK files
+    fileSize: 300 * 1024 * 1024, // 300MB limit for APK files
   },
   fileFilter: (req, file, cb) => {
     // Allow APK files, images, and documents
@@ -57,30 +57,39 @@ router.post('/apk', upload.single('apk'), async (req, res) => {
     const fileId = crypto.randomUUID();
     const fileName = `apk/${providerId}/${fileId}_${appName.replace(/[^a-zA-Z0-9]/g, '_')}.apk`;
 
-    // Upload to S3
-    const uploadParams = {
-      Bucket: process.env.AWS_S3_BUCKET || 'bugcash-files',
-      Key: fileName,
-      Body: req.file.buffer,
-      ContentType: 'application/vnd.android.package-archive',
-      Metadata: {
-        'provider-id': providerId,
-        'app-name': appName,
-        'app-version': appVersion || '1.0.0',
-        'upload-timestamp': new Date().toISOString()
-      }
-    };
+    let downloadUrl;
+    
+    // Development mode - simulate upload without AWS
+    if (process.env.NODE_ENV === 'development') {
+      // Simulate successful upload
+      downloadUrl = `http://localhost:${process.env.PORT || 3002}/api/upload/download/${fileId}`;
+      console.log(`📁 [DEV] Mock APK uploaded: ${fileName} (${req.file.size} bytes)`);
+    } else {
+      // Production mode - use real AWS S3
+      const uploadParams = {
+        Bucket: process.env.AWS_S3_BUCKET || 'bugcash-files',
+        Key: fileName,
+        Body: req.file.buffer,
+        ContentType: 'application/vnd.android.package-archive',
+        Metadata: {
+          'provider-id': providerId,
+          'app-name': appName,
+          'app-version': appVersion || '1.0.0',
+          'upload-timestamp': new Date().toISOString()
+        }
+      };
 
-    const uploadResult = await s3.upload(uploadParams).promise();
+      const uploadResult = await s3.upload(uploadParams).promise();
 
-    // Generate signed URL for download (valid for 24 hours)
-    const downloadUrl = s3.getSignedUrl('getObject', {
-      Bucket: uploadParams.Bucket,
-      Key: fileName,
-      Expires: 24 * 60 * 60 // 24 hours
-    });
+      // Generate signed URL for download (valid for 24 hours)
+      downloadUrl = s3.getSignedUrl('getObject', {
+        Bucket: uploadParams.Bucket,
+        Key: fileName,
+        Expires: 24 * 60 * 60 // 24 hours
+      });
+    }
 
-    // Save file info to Firestore
+    // Save file info to Firestore (development mode uses mock data)
     const fileInfo = {
       fileId,
       providerId,
@@ -90,15 +99,21 @@ router.post('/apk', upload.single('apk'), async (req, res) => {
       filePath: fileName,
       fileSize: req.file.size,
       downloadUrl,
-      uploadedAt: admin.firestore.FieldValue.serverTimestamp(),
+      uploadedAt: process.env.NODE_ENV === 'development' ? new Date() : admin.firestore.FieldValue.serverTimestamp(),
       downloadCount: 0,
       status: 'active'
     };
 
-    await admin.firestore()
-      .collection('uploaded_files')
-      .doc(fileId)
-      .set(fileInfo);
+    if (process.env.NODE_ENV === 'development') {
+      // Development mode - store in memory or log instead of Firestore
+      console.log(`📄 [DEV] Mock file info stored:`, fileInfo);
+    } else {
+      // Production mode - use real Firestore
+      await admin.firestore()
+        .collection('uploaded_files')
+        .doc(fileId)
+        .set(fileInfo);
+    }
 
     res.json({
       success: true,
@@ -123,52 +138,62 @@ router.post('/image', upload.single('image'), async (req, res) => {
 
     const { providerId, appId, imageType } = req.body; // imageType: 'icon', 'screenshot', 'banner'
     
-    // Optimize image with Sharp
     let processedImage;
-    if (imageType === 'icon') {
-      // App icons - resize to 512x512
-      processedImage = await sharp(req.file.buffer)
-        .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
-        .png({ quality: 90 })
-        .toBuffer();
-    } else if (imageType === 'screenshot') {
-      // Screenshots - optimize but maintain aspect ratio
-      processedImage = await sharp(req.file.buffer)
-        .resize(1080, 1920, { fit: 'inside', withoutEnlargement: true })
-        .jpeg({ quality: 80 })
-        .toBuffer();
-    } else {
-      // Other images - general optimization
-      processedImage = await sharp(req.file.buffer)
-        .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
-        .jpeg({ quality: 85 })
-        .toBuffer();
-    }
-
+    let publicUrl;
     const fileId = crypto.randomUUID();
     const fileName = `images/${providerId}/${appId || 'general'}/${imageType}/${fileId}.${imageType === 'icon' ? 'png' : 'jpg'}`;
-
-    // Upload optimized image to S3
-    const uploadParams = {
-      Bucket: process.env.AWS_S3_BUCKET || 'bugcash-files',
-      Key: fileName,
-      Body: processedImage,
-      ContentType: imageType === 'icon' ? 'image/png' : 'image/jpeg',
-      CacheControl: 'public, max-age=31536000', // Cache for 1 year
-      Metadata: {
-        'provider-id': providerId,
-        'app-id': appId || '',
-        'image-type': imageType,
-        'original-name': req.file.originalname
+    
+    if (process.env.NODE_ENV === 'development') {
+      // Development mode - skip image processing
+      processedImage = req.file.buffer;
+      publicUrl = `http://localhost:${process.env.PORT || 3003}/api/upload/image/${fileId}`;
+      console.log(`🖼️ [DEV] Mock image uploaded: ${fileName} (${req.file.size} bytes, type: ${imageType})`);
+    } else {
+      // Production mode - optimize image with Sharp
+      if (imageType === 'icon') {
+        // App icons - resize to 512x512
+        processedImage = await sharp(req.file.buffer)
+          .resize(512, 512, { fit: 'inside', withoutEnlargement: true })
+          .png({ quality: 90 })
+          .toBuffer();
+      } else if (imageType === 'screenshot') {
+        // Screenshots - optimize but maintain aspect ratio
+        processedImage = await sharp(req.file.buffer)
+          .resize(1080, 1920, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 80 })
+          .toBuffer();
+      } else {
+        // Other images - general optimization
+        processedImage = await sharp(req.file.buffer)
+          .resize(1200, 1200, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 85 })
+          .toBuffer();
       }
-    };
+    }
 
-    const uploadResult = await s3.upload(uploadParams).promise();
+    // Upload to S3 (production only)
+    if (process.env.NODE_ENV !== 'development') {
+      const uploadParams = {
+        Bucket: process.env.AWS_S3_BUCKET || 'bugcash-files',
+        Key: fileName,
+        Body: processedImage,
+        ContentType: imageType === 'icon' ? 'image/png' : 'image/jpeg',
+        CacheControl: 'public, max-age=31536000', // Cache for 1 year
+        Metadata: {
+          'provider-id': providerId,
+          'app-id': appId || '',
+          'image-type': imageType,
+          'original-name': req.file.originalname
+        }
+      };
 
-    // Make image publicly accessible
-    const publicUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+      const uploadResult = await s3.upload(uploadParams).promise();
 
-    // Save image info to Firestore
+      // Make image publicly accessible
+      publicUrl = `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
+    }
+
+    // Save image info to Firestore (development mode uses mock data)
     const imageInfo = {
       fileId,
       providerId,
@@ -178,14 +203,20 @@ router.post('/image', upload.single('image'), async (req, res) => {
       filePath: fileName,
       publicUrl,
       fileSize: processedImage.length,
-      uploadedAt: admin.firestore.FieldValue.serverTimestamp(),
+      uploadedAt: process.env.NODE_ENV === 'development' ? new Date() : admin.firestore.FieldValue.serverTimestamp(),
       status: 'active'
     };
 
-    await admin.firestore()
-      .collection('uploaded_images')
-      .doc(fileId)
-      .set(imageInfo);
+    if (process.env.NODE_ENV === 'development') {
+      // Development mode - store in memory or log instead of Firestore
+      console.log(`📷 [DEV] Mock image info stored:`, imageInfo);
+    } else {
+      // Production mode - use real Firestore
+      await admin.firestore()
+        .collection('uploaded_images')
+        .doc(fileId)
+        .set(imageInfo);
+    }
 
     res.json({
       success: true,

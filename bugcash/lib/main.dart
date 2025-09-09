@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'generated/l10n/app_localizations.dart';
 import 'firebase_options.dart';
 import 'services/firebase_service.dart';
 import 'core/utils/logger.dart';
 import 'core/config/app_config.dart';
 // import 'features/auth/presentation/widgets/auth_wrapper.dart';  // 임시 비활성화
-// import 'features/provider_dashboard/presentation/pages/provider_dashboard_page.dart';  // Provider Dashboard
-import 'features/tester_dashboard/presentation/pages/tester_dashboard_page.dart';  // Tester Dashboard 직접 import
+import 'features/provider_dashboard/presentation/pages/provider_dashboard_page.dart';  // Provider Dashboard
+// import 'features/tester_dashboard/presentation/pages/tester_dashboard_page.dart';  // Tester Dashboard 직접 import
 import 'shared/theme/app_theme.dart';
 
 // 웹용 반응형 크기 헬퍼 - 깔끔한 크기로 조정
@@ -77,9 +79,20 @@ class BugCashWebApp extends StatelessWidget {
           title: 'BugCash - 웹 앱 테스트 플랫폼',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [
+            Locale('en', ''),
+            Locale('ko', ''),
+          ],
+          locale: const Locale('ko', ''),  // 기본 언어를 한글로 설정
           // home: const AuthWrapper(),  // 임시 비활성화
-          home: const TesterDashboardPage(
-            testerId: 'test_tester_001',  // 테스트용 Tester ID
+          home: const ProviderDashboardPage(
+            providerId: 'test_provider_001',  // 테스트용 Provider ID
           ),
         );
       },

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../widgets/mission_discovery_widget.dart';
-import '../widgets/active_missions_widget.dart';
 import '../widgets/earnings_summary_widget.dart';
 import '../widgets/community_board_widget.dart';
 import '../providers/tester_dashboard_provider.dart';
@@ -29,7 +27,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _scrollController = ScrollController();
     
     // 초기 데이터 로드
@@ -241,10 +239,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               TabBar(
                 controller: _tabController,
                 tabs: const [
-                  Tab(text: '미션 찾기', icon: Icon(Icons.search)),
-                  Tab(text: '진행 중', icon: Icon(Icons.play_circle)),
+                  Tab(text: '미션', icon: Icon(Icons.assignment)),
                   Tab(text: '수익', icon: Icon(Icons.account_balance_wallet)),
-                  Tab(text: '커뮤니티', icon: Icon(Icons.forum)),
+                  Tab(text: '게시판', icon: Icon(Icons.forum)),
                 ],
                 labelColor: Theme.of(context).colorScheme.primary,
                 unselectedLabelColor: Colors.grey,
@@ -263,16 +260,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     : TabBarView(
                         controller: _tabController,
                         children: [
-                          // 미션 찾기
-                          MissionDiscoveryWidget(testerId: widget.testerId),
-                          
-                          // 진행 중인 미션
-                          ActiveMissionsWidget(testerId: widget.testerId),
+                          // 미션 (미션 찾기 + 진행 중인 미션 통합)
+                          _buildMissionTab(),
                           
                           // 수익 관리
                           EarningsSummaryWidget(testerId: widget.testerId),
                           
-                          // 커뮤니티
+                          // 게시판 (커뮤니티)
                           CommunityBoardWidget(testerId: widget.testerId),
                         ],
                       ),
@@ -562,8 +556,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildQuickActionItem(
-                  '새 미션 찾기',
-                  Icons.search,
+                  '미션 보기',
+                  Icons.assignment,
                   Colors.blue,
                   () {
                     Navigator.of(context).pop();
@@ -571,8 +565,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   },
                 ),
                 _buildQuickActionItem(
-                  '진행 중 보기',
-                  Icons.play_circle,
+                  '수익 확인',
+                  Icons.account_balance_wallet,
                   Colors.green,
                   () {
                     Navigator.of(context).pop();
@@ -580,9 +574,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   },
                 ),
                 _buildQuickActionItem(
-                  '수익 확인',
-                  Icons.account_balance_wallet,
-                  Colors.orange,
+                  '게시판',
+                  Icons.forum,
+                  Colors.purple,
                   () {
                     Navigator.of(context).pop();
                     _tabController.animateTo(2);
@@ -644,6 +638,290 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     } else {
       return '방금 전';
     }
+  }
+
+  Widget _buildMissionTab() {
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        children: [
+          Container(
+            color: Colors.grey[100],
+            child: const TabBar(
+              labelColor: Colors.blue,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Colors.blue,
+              tabs: [
+                Tab(text: '미션 찾기', icon: Icon(Icons.search)),
+                Tab(text: '진행 중', icon: Icon(Icons.play_circle)),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                // 미션 찾기 간단 버전
+                _buildMissionDiscoveryTab(),
+                // 진행 중인 미션 간단 버전  
+                _buildActiveMissionsTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMissionDiscoveryTab() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '추천 미션',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          _buildMissionCard(
+            title: '인스타그램 클론 앱 테스트',
+            description: 'UI/UX 테스트 및 기능 검증',
+            reward: '5,000P',
+            deadline: '5일 남음',
+            participants: '8/15',
+          ),
+          SizedBox(height: 12.h),
+          _buildMissionCard(
+            title: '배달앱 주문 플로우 테스트',
+            description: '주문부터 결제까지 전체 프로세스 테스트',
+            reward: '3,000P',
+            deadline: '3일 남음',
+            participants: '12/20',
+          ),
+          SizedBox(height: 12.h),
+          _buildMissionCard(
+            title: '온라인 쇼핑몰 결제 테스트',
+            description: '다양한 결제 수단 테스트 및 검증',
+            reward: '7,000P',
+            deadline: '7일 남음',
+            participants: '5/10',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveMissionsTab() {
+    return SingleChildScrollView(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '진행 중인 미션',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          _buildActiveMissionCard(
+            title: '채팅앱 알림 기능 테스트',
+            progress: 0.7,
+            status: '테스트 진행 중',
+            deadline: '2일 남음',
+          ),
+          SizedBox(height: 12.h),
+          _buildActiveMissionCard(
+            title: '게임 앱 성능 테스트',
+            progress: 0.3,
+            status: '준비 단계',
+            deadline: '5일 남음',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMissionCard({
+    required String title,
+    required String description,
+    required String reward,
+    required String deadline,
+    required String participants,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: InkWell(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$title 미션 상세보기')),
+          );
+        },
+        borderRadius: BorderRadius.circular(12.r),
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade100,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      reward,
+                      style: TextStyle(
+                        color: Colors.green.shade700,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                description,
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 12.h),
+              Row(
+                children: [
+                  Icon(Icons.access_time, size: 16.w, color: Colors.grey[600]),
+                  SizedBox(width: 4.w),
+                  Text(
+                    deadline,
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                  ),
+                  SizedBox(width: 16.w),
+                  Icon(Icons.people, size: 16.w, color: Colors.grey[600]),
+                  SizedBox(width: 4.w),
+                  Text(
+                    participants,
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActiveMissionCard({
+    required String title,
+    required double progress,
+    required String status,
+    required String deadline,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: InkWell(
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('$title 진행상황')),
+          );
+        },
+        borderRadius: BorderRadius.circular(12.r),
+        child: Padding(
+          padding: EdgeInsets.all(16.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.shade100,
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(
+                        color: Colors.orange.shade700,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12.sp,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 12.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      backgroundColor: Colors.grey[300],
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '${(progress * 100).toInt()}%',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              Row(
+                children: [
+                  Icon(Icons.access_time, size: 16.w, color: Colors.grey[600]),
+                  SizedBox(width: 4.w),
+                  Text(
+                    deadline,
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
