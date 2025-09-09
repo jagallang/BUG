@@ -19,37 +19,67 @@ class _CommunityBoardWidgetState extends State<CommunityBoardWidget> {
     CommunityPost(
       id: '1',
       author: '버그헌터123',
-      title: 'iOS 앱 테스트 중 발견한 흥미로운 버그',
-      content: '오늘 새로운 앱을 테스트하다가 정말 신기한 버그를 발견했어요. 화면을 빠르게 터치하면...',
+      title: 'iOS 앱 테스터 5명 모집중 (시급 15,000원)',
+      content: '새로 출시되는 iOS 금융 앱 테스트를 함께 진행할 테스터분들을 모집합니다. 경험자 우대...',
       timestamp: DateTime.now().subtract(const Duration(hours: 2)),
       likes: 12,
       comments: 3,
-      category: '버그발견',
+      category: '모집중',
     ),
     CommunityPost(
       id: '2',
       author: '테스터프로',
-      title: '효과적인 테스트 방법 공유',
-      content: '5년간 앱 테스트를 해온 경험을 바탕으로 효과적인 테스트 방법들을 공유합니다.',
+      title: '안드로이드 게임 앱 테스트 프로젝트 완료',
+      content: '지난 주부터 진행했던 모바일 게임 테스트 프로젝트가 성공적으로 완료되었습니다.',
       timestamp: DateTime.now().subtract(const Duration(hours: 5)),
       likes: 28,
       comments: 8,
-      category: '팁공유',
+      category: '모집완료',
     ),
     CommunityPost(
       id: '3',
       author: '모바일매니아',
-      title: '이번 주 추천 테스트 미션',
-      content: '이번 주에 나온 테스트 미션 중에서 정말 재미있고 보상도 좋은 미션들을 소개합니다.',
+      title: '프리랜서 QA 테스터 경력직 구합니다',
+      content: '스타트업에서 정규직 QA 테스터를 채용합니다. 2년 이상 경력자, 협업 도구 경험 필수...',
       timestamp: DateTime.now().subtract(const Duration(days: 1)),
       likes: 15,
       comments: 5,
-      category: '미션추천',
+      category: '구인',
+    ),
+    CommunityPost(
+      id: '4',
+      author: '신입테스터',
+      title: '테스터 신입 구직활동 중입니다',
+      content: '컴퓨터공학과 졸업 예정이며, 앱 테스팅 분야로 취업을 준비하고 있습니다. 조언 부탁드립니다.',
+      timestamp: DateTime.now().subtract(const Duration(hours: 8)),
+      likes: 7,
+      comments: 12,
+      category: '구직',
+    ),
+    CommunityPost(
+      id: '5',
+      author: '질문왕',
+      title: '테스트 리포트 작성 방법이 궁금해요',
+      content: '효과적인 버그 리포트 작성 방법에 대해 질문드립니다. 어떤 형식으로 작성해야 할까요?',
+      timestamp: DateTime.now().subtract(const Duration(hours: 12)),
+      likes: 4,
+      comments: 6,
+      category: '질문',
+    ),
+    CommunityPost(
+      id: '6',
+      author: '자유로운영혼',
+      title: '테스터들의 소소한 일상 이야기',
+      content: '오늘 테스트하다가 웃긴 일이 있어서 공유해요. 개발자님이 Easter Egg를 숨겨놨네요 ㅋㅋ',
+      timestamp: DateTime.now().subtract(const Duration(days: 2)),
+      likes: 18,
+      comments: 9,
+      category: '기타',
     ),
   ];
 
   String _selectedCategory = '전체';
-  final List<String> _categories = ['전체', '버그발견', '팁공유', '미션추천', '질문'];
+  final List<String> _categories = ['전체', '모집중', '모집완료', '구인', '구직', '질문', '기타'];
 
   @override
   Widget build(BuildContext context) {
@@ -378,14 +408,18 @@ class _CommunityBoardWidgetState extends State<CommunityBoardWidget> {
 
   Color _getCategoryColor(String category) {
     switch (category) {
-      case '버그발견':
-        return Colors.red;
-      case '팁공유':
-        return Colors.blue;
-      case '미션추천':
+      case '모집중':
         return Colors.green;
+      case '모집완료':
+        return Colors.grey;
+      case '구인':
+        return Colors.blue;
+      case '구직':
+        return Colors.purple;
       case '질문':
         return Colors.orange;
+      case '기타':
+        return Colors.teal;
       default:
         return Colors.grey;
     }
@@ -484,8 +518,8 @@ class _CreatePostDialog extends StatefulWidget {
 class _CreatePostDialogState extends State<_CreatePostDialog> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
-  String _selectedCategory = '버그발견';
-  final List<String> _categories = ['버그발견', '팁공유', '미션추천', '질문'];
+  String _selectedCategory = '모집중';
+  final List<String> _categories = ['모집중', '모집완료', '구인', '구직', '질문', '기타'];
 
   @override
   void dispose() {
