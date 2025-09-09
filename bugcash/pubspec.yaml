@@ -43,8 +43,9 @@ dependencies:
   # Authentication
   google_sign_in: ^6.1.6
   
-  # File Handling
-  image_picker: ^1.0.4
+  # Image Picking
+  image_picker: ^1.0.7
+  
   
   # Additional Utils
   uuid: ^4.2.1

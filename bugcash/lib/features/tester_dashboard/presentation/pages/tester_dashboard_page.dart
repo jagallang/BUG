@@ -5,6 +5,7 @@ import '../widgets/earnings_summary_widget.dart';
 import '../widgets/community_board_widget.dart';
 import '../providers/tester_dashboard_provider.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
+import 'mission_detail_page.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -646,28 +647,49 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       child: Column(
         children: [
           Container(
-            color: Colors.grey[100],
-            child: const TabBar(
-              labelColor: Colors.blue,
-              unselectedLabelColor: Colors.grey,
-              indicatorColor: Colors.blue,
+            height: 60.h, // 높이 줄임 (기본 72.h에서 60.h로)
+            decoration: BoxDecoration(
+              color: Colors.blue.shade50, // 연한 파란색 배경
+              border: Border(
+                bottom: BorderSide(
+                  color: Colors.grey.shade200,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: TabBar(
+              labelColor: Colors.blue.shade700,
+              unselectedLabelColor: Colors.grey.shade600,
+              indicatorColor: Colors.blue.shade700,
+              indicatorWeight: 3,
+              labelStyle: TextStyle(
+                fontSize: 13.sp, // 폰트 크기 조정
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: TextStyle(
+                fontSize: 13.sp,
+                fontWeight: FontWeight.normal,
+              ),
               tabs: [
-                Tab(text: '미션 찾기', icon: Icon(Icons.search)),
-                Tab(text: '진행 중', icon: Icon(Icons.play_circle)),
-                Tab(text: '완료', icon: Icon(Icons.check_circle)),
+                Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 18.w)),
+                Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 18.w)),
+                Tab(text: '완료', icon: Icon(Icons.check_circle, size: 18.w)),
               ],
             ),
           ),
           Expanded(
-            child: TabBarView(
-              children: [
-                // 미션 찾기 간단 버전
-                _buildMissionDiscoveryTab(),
-                // 진행 중인 미션 간단 버전  
-                _buildActiveMissionsTab(),
-                // 완료된 미션 탭
-                _buildCompletedMissionsTab(),
-              ],
+            child: Container(
+              color: Colors.grey.shade50, // 본문 배경색을 연한 회색으로
+              child: TabBarView(
+                children: [
+                  // 미션 찾기 간단 버전
+                  _buildMissionDiscoveryTab(),
+                  // 진행 중인 미션 간단 버전  
+                  _buildActiveMissionsTab(),
+                  // 완료된 미션 탭
+                  _buildCompletedMissionsTab(),
+                ],
+              ),
             ),
           ),
         ],
@@ -848,8 +870,16 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       ),
       child: InkWell(
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$title 진행상황')),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MissionDetailPage(
+                missionId: 'mission_${title.hashCode}',
+                missionTitle: title,
+                missionDescription: '앱 테스트를 통해 품질을 검증하고 개선점을 찾아주세요.',
+                appName: title.contains('채팅') ? '채팅메신저 앱' : '모바일 게임 앱',
+              ),
+            ),
           );
         },
         borderRadius: BorderRadius.circular(12.r),

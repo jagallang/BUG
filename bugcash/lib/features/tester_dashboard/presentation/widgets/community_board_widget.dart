@@ -83,10 +83,12 @@ class _CommunityBoardWidgetState extends State<CommunityBoardWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        children: [
+    return Container(
+      color: Colors.purple.shade50, // 연한 보라색 배경
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          children: [
           // Header with post button
           _buildHeader(),
           SizedBox(height: 16.h),
@@ -99,7 +101,8 @@ class _CommunityBoardWidgetState extends State<CommunityBoardWidget> {
           Expanded(
             child: _buildPostsList(),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

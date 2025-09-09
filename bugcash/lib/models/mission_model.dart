@@ -598,6 +598,240 @@ class MissionCardWithProgress {
   bool get shouldShowToday => hasToday && !isTodayCompleted;
 }
 
+// Mission Application Status
+enum MissionApplicationStatus {
+  pending,    // 신청 대기 중
+  reviewing,  // 검토 중
+  accepted,   // 수락됨
+  rejected,   // 거부됨
+  cancelled,  // 신청 취소됨
+}
+
+// Mission Application Model
+class MissionApplication {
+  final String id;
+  final String missionId;
+  final String testerId;
+  final String providerId;
+  final String testerName;
+  final String testerEmail;
+  final String? testerProfile;
+  final MissionApplicationStatus status;
+  final String? message; // 테스터의 신청 메시지
+  final String? responseMessage; // 공급자의 응답 메시지
+  final DateTime appliedAt;
+  final DateTime? reviewedAt;
+  final DateTime? acceptedAt;
+  final DateTime? rejectedAt;
+  final Map<String, dynamic>? testerInfo; // 테스터 추가 정보
+  
+  const MissionApplication({
+    required this.id,
+    required this.missionId,
+    required this.testerId,
+    required this.providerId,
+    required this.testerName,
+    required this.testerEmail,
+    this.testerProfile,
+    required this.status,
+    this.message,
+    this.responseMessage,
+    required this.appliedAt,
+    this.reviewedAt,
+    this.acceptedAt,
+    this.rejectedAt,
+    this.testerInfo,
+  });
+  
+  factory MissionApplication.fromFirestore(Map<String, dynamic> data) {
+    return MissionApplication(
+      id: data['id'] ?? '',
+      missionId: data['missionId'] ?? '',
+      testerId: data['testerId'] ?? '',
+      providerId: data['providerId'] ?? '',
+      testerName: data['testerName'] ?? '',
+      testerEmail: data['testerEmail'] ?? '',
+      testerProfile: data['testerProfile'],
+      status: MissionApplicationStatus.values.byName(data['status'] ?? 'pending'),
+      message: data['message'],
+      responseMessage: data['responseMessage'],
+      appliedAt: (data['appliedAt'] as Timestamp).toDate(),
+      reviewedAt: data['reviewedAt'] != null 
+          ? (data['reviewedAt'] as Timestamp).toDate() 
+          : null,
+      acceptedAt: data['acceptedAt'] != null 
+          ? (data['acceptedAt'] as Timestamp).toDate() 
+          : null,
+      rejectedAt: data['rejectedAt'] != null 
+          ? (data['rejectedAt'] as Timestamp).toDate() 
+          : null,
+      testerInfo: data['testerInfo'] as Map<String, dynamic>?,
+    );
+  }
+  
+  Map<String, dynamic> toFirestore() {
+    return {
+      'missionId': missionId,
+      'testerId': testerId,
+      'providerId': providerId,
+      'testerName': testerName,
+      'testerEmail': testerEmail,
+      'testerProfile': testerProfile,
+      'status': status.name,
+      'message': message,
+      'responseMessage': responseMessage,
+      'appliedAt': Timestamp.fromDate(appliedAt),
+      'reviewedAt': reviewedAt != null ? Timestamp.fromDate(reviewedAt!) : null,
+      'acceptedAt': acceptedAt != null ? Timestamp.fromDate(acceptedAt!) : null,
+      'rejectedAt': rejectedAt != null ? Timestamp.fromDate(rejectedAt!) : null,
+      'testerInfo': testerInfo,
+    };
+  }
+  
+  MissionApplication copyWith({
+    String? id,
+    String? missionId,
+    String? testerId,
+    String? providerId,
+    String? testerName,
+    String? testerEmail,
+    String? testerProfile,
+    MissionApplicationStatus? status,
+    String? message,
+    String? responseMessage,
+    DateTime? appliedAt,
+    DateTime? reviewedAt,
+    DateTime? acceptedAt,
+    DateTime? rejectedAt,
+    Map<String, dynamic>? testerInfo,
+  }) {
+    return MissionApplication(
+      id: id ?? this.id,
+      missionId: missionId ?? this.missionId,
+      testerId: testerId ?? this.testerId,
+      providerId: providerId ?? this.providerId,
+      testerName: testerName ?? this.testerName,
+      testerEmail: testerEmail ?? this.testerEmail,
+      testerProfile: testerProfile ?? this.testerProfile,
+      status: status ?? this.status,
+      message: message ?? this.message,
+      responseMessage: responseMessage ?? this.responseMessage,
+      appliedAt: appliedAt ?? this.appliedAt,
+      reviewedAt: reviewedAt ?? this.reviewedAt,
+      acceptedAt: acceptedAt ?? this.acceptedAt,
+      rejectedAt: rejectedAt ?? this.rejectedAt,
+      testerInfo: testerInfo ?? this.testerInfo,
+    );
+  }
+}
+
+// Mission Notification Model
+enum NotificationType {
+  missionApplication,     // 미션 신청 관련
+  applicationAccepted,    // 신청 수락됨
+  applicationRejected,    // 신청 거부됨
+  missionStarted,        // 미션 시작
+  missionCompleted,      // 미션 완료
+  missionExpired,        // 미션 만료
+  paymentReceived,       // 결제 받음
+  systemMessage,         // 시스템 메시지
+}
+
+class MissionNotification {
+  final String id;
+  final String recipientId; // 수신자 ID
+  final String senderId;    // 발신자 ID
+  final NotificationType type;
+  final String title;
+  final String message;
+  final String? missionId;
+  final String? applicationId;
+  final bool isRead;
+  final DateTime createdAt;
+  final DateTime? readAt;
+  final Map<String, dynamic>? data; // 추가 데이터
+  
+  const MissionNotification({
+    required this.id,
+    required this.recipientId,
+    required this.senderId,
+    required this.type,
+    required this.title,
+    required this.message,
+    this.missionId,
+    this.applicationId,
+    required this.isRead,
+    required this.createdAt,
+    this.readAt,
+    this.data,
+  });
+  
+  factory MissionNotification.fromFirestore(Map<String, dynamic> data) {
+    return MissionNotification(
+      id: data['id'] ?? '',
+      recipientId: data['recipientId'] ?? '',
+      senderId: data['senderId'] ?? '',
+      type: NotificationType.values.byName(data['type'] ?? 'systemMessage'),
+      title: data['title'] ?? '',
+      message: data['message'] ?? '',
+      missionId: data['missionId'],
+      applicationId: data['applicationId'],
+      isRead: data['isRead'] ?? false,
+      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      readAt: data['readAt'] != null 
+          ? (data['readAt'] as Timestamp).toDate() 
+          : null,
+      data: data['data'] as Map<String, dynamic>?,
+    );
+  }
+  
+  Map<String, dynamic> toFirestore() {
+    return {
+      'recipientId': recipientId,
+      'senderId': senderId,
+      'type': type.name,
+      'title': title,
+      'message': message,
+      'missionId': missionId,
+      'applicationId': applicationId,
+      'isRead': isRead,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'readAt': readAt != null ? Timestamp.fromDate(readAt!) : null,
+      'data': data,
+    };
+  }
+  
+  MissionNotification copyWith({
+    String? id,
+    String? recipientId,
+    String? senderId,
+    NotificationType? type,
+    String? title,
+    String? message,
+    String? missionId,
+    String? applicationId,
+    bool? isRead,
+    DateTime? createdAt,
+    DateTime? readAt,
+    Map<String, dynamic>? data,
+  }) {
+    return MissionNotification(
+      id: id ?? this.id,
+      recipientId: recipientId ?? this.recipientId,
+      senderId: senderId ?? this.senderId,
+      type: type ?? this.type,
+      title: title ?? this.title,
+      message: message ?? this.message,
+      missionId: missionId ?? this.missionId,
+      applicationId: applicationId ?? this.applicationId,
+      isRead: isRead ?? this.isRead,
+      createdAt: createdAt ?? this.createdAt,
+      readAt: readAt ?? this.readAt,
+      data: data ?? this.data,
+    );
+  }
+}
+
 // Mission Card Model (기존 유지)
 class MissionCard {
   final String id;

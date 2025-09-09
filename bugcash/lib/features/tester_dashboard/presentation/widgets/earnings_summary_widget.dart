@@ -20,10 +20,12 @@ class EarningsSummaryWidget extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        children: [
+    return Container(
+      color: Colors.green.shade50, // 연한 녹색 배경
+      child: SingleChildScrollView(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          children: [
           // Total Earnings Card
           _buildTotalEarningsCard(context, earningsData),
           
@@ -46,7 +48,8 @@ class EarningsSummaryWidget extends ConsumerWidget {
           
           // Payout Info
           _buildPayoutInfo(context, earningsData),
-        ],
+          ],
+        ),
       ),
     );
   }

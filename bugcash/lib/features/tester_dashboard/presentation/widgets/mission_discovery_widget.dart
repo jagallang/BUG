@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../providers/tester_dashboard_provider.dart' as provider;
 import '../../../../models/mission_model.dart';
 import '../../../search/presentation/providers/search_provider.dart';
+import 'mission_application_dialog.dart';
 
 class MissionDiscoveryWidget extends ConsumerStatefulWidget {
   final String testerId;
@@ -645,19 +646,20 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                 // Action Buttons
                 Row(
                   children: [
-                    // 상세보기 버튼
+                    // 테스트하기 버튼 (요구사항 확인용)
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => _showMissionDetails(mission),
                         style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: Colors.grey.shade300),
+                          side: BorderSide(color: Colors.blue.shade300),
                           padding: EdgeInsets.symmetric(vertical: 12.h),
                         ),
                         child: Text(
-                          '상세보기',
+                          '테스트',
                           style: TextStyle(
-                            color: Colors.grey.shade700,
+                            color: Colors.blue.shade700,
                             fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -665,13 +667,13 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                     
                     SizedBox(width: 12.w),
                     
-                    // 참여하기 버튼
+                    // 미션 신청하기 버튼
                     Expanded(
                       flex: 2,
                       child: ElevatedButton(
                         onPressed: mission.currentParticipants >= mission.maxParticipants
                             ? null
-                            : () => _joinMission(mission),
+                            : () => _showApplicationDialog(mission),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: mission.currentParticipants >= mission.maxParticipants
                               ? Colors.grey
@@ -682,7 +684,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                         child: Text(
                           mission.currentParticipants >= mission.maxParticipants
                               ? '정원 마감'
-                              : '미션 참여하기',
+                              : '미션 신청하기',
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
@@ -1030,7 +1032,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                 ? null
                 : () {
                     Navigator.of(context).pop();
-                    _joinMission(mission);
+                    _showApplicationDialog(mission);
                   },
             style: ElevatedButton.styleFrom(
               backgroundColor: mission.currentParticipants >= mission.maxParticipants
@@ -1042,7 +1044,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
             child: Text(
               mission.currentParticipants >= mission.maxParticipants
                   ? '정원이 마감되었습니다'
-                  : '미션 참여하기',
+                  : '미션 신청하기',
               style: TextStyle(
                 fontSize: 16.sp,
                 fontWeight: FontWeight.bold,
@@ -1145,20 +1147,22 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
     );
   }
 
-  void _joinMission(provider.MissionCard mission) {
-    ref.read(provider.testerDashboardProvider.notifier).joinMission(mission.id);
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${mission.title} 미션에 참여했습니다!'),
-        backgroundColor: Colors.green,
-        action: SnackBarAction(
-          label: '확인',
-          textColor: Colors.white,
-          onPressed: () {},
-        ),
+  void _showApplicationDialog(provider.MissionCard mission) {
+    showDialog(
+      context: context,
+      builder: (context) => MissionApplicationDialog(
+        mission: mission,
+        onApplicationSubmitted: () => _onApplicationSubmitted(mission),
       ),
     );
+  }
+
+  void _onApplicationSubmitted(provider.MissionCard mission) {
+    // 미션 신청이 완료되었을 때의 처리
+    ref.read(provider.testerDashboardProvider.notifier).refreshData(widget.testerId);
+    
+    // 신청 상태를 추적하거나 로컬 상태를 업데이트할 수 있음
+    // 예: 신청한 미션 목록에 추가, 알림 설정 등
   }
 
   // Helper methods

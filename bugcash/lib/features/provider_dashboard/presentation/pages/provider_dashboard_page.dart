@@ -16,6 +16,7 @@ import 'apps_tab_test.dart';
 import 'missions_tab_test.dart';
 import '../widgets/tester_management_tab.dart';
 import '../widgets/payment_management_tab.dart';
+import '../widgets/mission_approval_tab.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -50,7 +51,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       case 2:
         return _buildTesterManagementTab();
       case 3:
-        return _buildReportsTab();
+        return _buildMissionApprovalTab();
       case 4:
         return _buildPaymentTab();
       default:
@@ -127,8 +128,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             label: '테스터 관리',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bug_report),
-            label: '버그 리포트',
+            icon: Icon(Icons.assignment_turned_in),
+            label: '미션 승인',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.payment),
@@ -224,97 +225,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     return TesterManagementTab(providerId: widget.providerId);
   }
 
-  Widget _buildReportsTab() {
-    return Padding(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '버그 리포트',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Expanded(
-            child: ref.watch(providerBugReportsProvider(widget.providerId)).when(
-              data: (reports) {
-                if (reports.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.bug_report_outlined,
-                          size: 48.sp,
-                          color: Colors.grey[400],
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          '버그 리포트가 없습니다',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                
-                return ListView.builder(
-                  itemCount: reports.length,
-                  itemBuilder: (context, index) {
-                    final report = reports[index];
-                    return _buildReportCard(report);
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.error_outline,
-                      size: 48.sp,
-                      color: Colors.red,
-                    ),
-                    SizedBox(height: 16.h),
-                    Text(
-                      '리포트를 불러올 수 없습니다',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        color: Colors.red,
-                      ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      error.toString(),
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    SizedBox(height: 16.h),
-                    ElevatedButton(
-                      onPressed: () {
-                        ref.refresh(providerBugReportsProvider(widget.providerId));
-                      },
-                      child: const Text('다시 시도'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  Widget _buildMissionApprovalTab() {
+    return MissionApprovalTab(providerId: widget.providerId);
   }
 
 

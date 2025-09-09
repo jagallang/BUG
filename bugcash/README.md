@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Mock%20Mode-FF9800?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.3.05-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.3.06-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,19 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.3.05)
+## ✨ 주요 기능 (v1.3.06)
 
-### 🏆 NEW! 완료된 미션 관리 & 포인트 정산 시스템 (v1.3.05)
+### 🎯 NEW! 미션 신청 및 승인 시스템 (v1.3.06)
+- **📋 완전한 미션 신청 워크플로우**: 테스터가 미션을 발견하고 신청부터 공급자 승인까지 전체 프로세스 구현
+- **📝 상세 신청 다이얼로그**: 요구사항 확인, 앱 설치 준비 체크리스트, 개인 메시지 작성 기능
+- **🏢 공급자 신청 관리 시스템**: 테스터 프로필, 경험, 평점, 전문분야 확인 후 승인/거부 결정
+- **💬 양방향 메시지 교환**: 신청 시 테스터 메시지와 승인/거부 시 공급자 응답 메시지
+- **📊 신청 현황 대시보드**: 대기중, 검토중, 승인됨 상태별 통계 및 관리
+- **🔔 실시간 알림 시스템**: 신청 → 승인/거부 → 테스터 알림 완전한 알림 체인
+- **👤 테스터 프로필 시스템**: 경험 년수, 완료 미션 수, 평점, 전문 분야 표시
+- **✅ 스마트 상태 관리**: pending → reviewing → accepted/rejected 상태 자동 추적
+
+### 🏆 완료된 미션 관리 & 포인트 정산 시스템 (v1.3.05)
 - **3단계 미션 탭 시스템**: '미션 찾기', '진행 중', '완료' 탭으로 전체 미션 라이프사이클 관리
 - **지능형 정산 시스템**: 3단계 정산 상태(정산 대기, 정산 처리중, 정산 완료) 자동 관리
 - **색상 코딩 상태 표시**: 주황색(대기), 파란색(처리중), 녹색(완료)로 직관적 상태 파악
@@ -250,6 +260,25 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 | 🏆 테스터 4 | tester4@bugcash.com | password123 | 버그 헌팅 전문가 |
 
 ## 🔧 주요 버전 정보
+
+### 🚀 v1.3.06 (2025-09-09) - 미션 신청 및 승인 시스템
+
+#### ✨ 혁신적인 새 기능
+- **🎯 완전한 미션 신청 워크플로우**: 테스터 미션 발견 → 테스트 → 신청 → 공급자 승인/거부 → 테스트 시작 전체 프로세스
+- **📋 상세 신청 다이얼로그**: 공급자 요구사항 확인, 앱 설치 준비 체크리스트, 개인 어필 메시지 작성
+- **🏢 공급자 신청 관리**: 테스터 프로필(경험/평점/전문분야) 확인 후 승인/거부 결정 시스템
+- **💬 양방향 커뮤니케이션**: 테스터 신청 메시지 ↔ 공급자 응답 메시지 완전한 소통 체계
+- **📊 신청 현황 통계**: 대기중/검토중/승인됨 상태별 실시간 관리 대시보드
+- **🔔 통합 알림 시스템**: 신청-승인-거부 전 단계 실시간 알림 (MissionNotification 모델)
+- **👤 테스터 프로필**: 경험 년수, 완료 미션 수, 평점, 전문 분야 종합 정보 시스템
+- **⚡ 스마트 상태 관리**: MissionApplicationStatus enum 기반 체계적 상태 추적
+
+#### 🛠️ 기술적 구현
+- **새로운 데이터 모델**: MissionApplication, MissionApplicationStatus, MissionNotification, NotificationType
+- **미션 신청 다이얼로그**: MissionApplicationDialog 위젯으로 사용자 친화적 신청 인터페이스
+- **공급자 관리 위젯**: MissionApplicationsWidget으로 신청 승인/거부 완전 관리
+- **실시간 상태 업데이트**: 신청-검토-승인/거부 상태의 실시간 UI 반영
+- **Mock 데이터 통합**: Firebase 없이도 완전한 워크플로우 테스트 가능
 
 ### 🚀 v1.3.05 (2025-09-09) - 완료된 미션 관리 & 포인트 정산 시스템
 
