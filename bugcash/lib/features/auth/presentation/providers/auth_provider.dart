@@ -138,7 +138,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       if (userCredential?.user != null) {
-        final userData = await _authService.getUserData(userCredential!.user!.uid);
+        final userData = await _authService.getUserData(userCredential.user!.uid);
         state = state.copyWith(user: userData, isLoading: false);
       }
     } catch (e) {

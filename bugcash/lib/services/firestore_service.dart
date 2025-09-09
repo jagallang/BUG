@@ -73,7 +73,7 @@ class FirestoreService {
         .get();
     
     return result.docs.where((doc) {
-      final data = doc.data() as Map<String, dynamic>;
+      final data = doc.data();
       final title = data['title']?.toString().toLowerCase() ?? '';
       final appName = data['appName']?.toString().toLowerCase() ?? '';
       final category = data['category']?.toString().toLowerCase() ?? '';

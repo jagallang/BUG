@@ -86,6 +86,7 @@ class _CommunityBoardWidgetState extends State<CommunityBoardWidget> {
           ),
         ),
         FloatingActionButton(
+          heroTag: "community_board_fab",
           onPressed: _showCreatePostDialog,
           backgroundColor: Theme.of(context).colorScheme.primary,
           child: const Icon(Icons.add, color: Colors.white),

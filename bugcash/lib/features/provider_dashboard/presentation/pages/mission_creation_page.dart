@@ -1271,6 +1271,20 @@ class _MissionCreationPageState extends ConsumerState<MissionCreationPage>
         return '설문조사';
       case MissionType.feedback:
         return '피드백 수집';
+      case MissionType.functional:
+        return '기능 테스트';
+      case MissionType.uiUx:
+        return 'UI/UX 테스트';
+      case MissionType.performance:
+        return '성능 테스트';
+      case MissionType.security:
+        return '보안 테스트';
+      case MissionType.compatibility:
+        return '호환성 테스트';
+      case MissionType.accessibility:
+        return '접근성 테스트';
+      case MissionType.localization:
+        return '지역화 테스트';
     }
   }
 
@@ -1314,6 +1328,20 @@ class _MissionCreationPageState extends ConsumerState<MissionCreationPage>
         return Colors.purple;
       case MissionType.feedback:
         return Colors.indigo;
+      case MissionType.functional:
+        return Colors.blueGrey;
+      case MissionType.uiUx:
+        return Colors.pink;
+      case MissionType.performance:
+        return Colors.deepOrange;
+      case MissionType.security:
+        return Colors.red.shade900;
+      case MissionType.compatibility:
+        return Colors.cyan;
+      case MissionType.accessibility:
+        return Colors.amber;
+      case MissionType.localization:
+        return Colors.lime;
     }
   }
 

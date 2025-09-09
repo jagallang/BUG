@@ -19,6 +19,9 @@ class UserEntity extends Equatable {
   final bool isActive;
   final DateTime? lastLoginAt;
   final UserProfile? profile;
+  final int level;
+  final int completedMissions;
+  final int points;
   
   const UserEntity({
     required this.uid,
@@ -34,6 +37,9 @@ class UserEntity extends Equatable {
     this.isActive = true,
     this.lastLoginAt,
     this.profile,
+    this.level = 1,
+    this.completedMissions = 0,
+    this.points = 0,
   });
 
   UserEntity copyWith({
@@ -50,6 +56,9 @@ class UserEntity extends Equatable {
     bool? isActive,
     DateTime? lastLoginAt,
     UserProfile? profile,
+    int? level,
+    int? completedMissions,
+    int? points,
   }) {
     return UserEntity(
       uid: uid ?? this.uid,
@@ -65,6 +74,9 @@ class UserEntity extends Equatable {
       isActive: isActive ?? this.isActive,
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
       profile: profile ?? this.profile,
+      level: level ?? this.level,
+      completedMissions: completedMissions ?? this.completedMissions,
+      points: points ?? this.points,
     );
   }
 
@@ -104,6 +116,9 @@ class UserEntity extends Equatable {
       profile: data['profile'] != null
           ? UserProfile.fromMap(data['profile'])
           : null,
+      level: data['level'] ?? 1,
+      completedMissions: data['completedMissions'] ?? 0,
+      points: data['points'] ?? 0,
     );
   }
   
@@ -122,6 +137,9 @@ class UserEntity extends Equatable {
     isActive,
     lastLoginAt,
     profile,
+    level,
+    completedMissions,
+    points,
   ];
 }
 

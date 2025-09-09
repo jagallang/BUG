@@ -100,6 +100,9 @@ class SearchRepositoryImpl implements SearchRepository {
       return data;
     }).toList();
     
+    // 공급자가 등록한 앱들도 검색 결과에 포함
+    await _includeProviderApps(results, query);
+    
     // Client-side filtering for days left
     if (maxDaysLeft != null) {
       final now = DateTime.now();
@@ -126,6 +129,68 @@ class SearchRepositoryImpl implements SearchRepository {
     }
     
     return results;
+  }
+
+  // 공급자가 등록한 앱들을 검색 결과에 포함하는 메서드
+  Future<void> _includeProviderApps(List<Map<String, dynamic>> results, String query) async {
+    try {
+      final providerAppsSnapshot = await _firestore
+          .collection('provider_apps')
+          .where('status', isEqualTo: 'active')
+          .get();
+      
+      final providerApps = providerAppsSnapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          })
+          .where((app) {
+            if (query.isEmpty) return true;
+            
+            final searchTerm = query.toLowerCase();
+            final appName = (app['appName'] as String? ?? '').toLowerCase();
+            final description = (app['description'] as String? ?? '').toLowerCase();
+            final category = (app['category'] as String? ?? '').toLowerCase();
+            
+            return appName.contains(searchTerm) ||
+                   description.contains(searchTerm) ||
+                   category.contains(searchTerm);
+          })
+          .map((app) => _convertProviderAppToMissionFormat(app))
+          .toList();
+      
+      results.addAll(providerApps);
+    } catch (e) {
+      // 에러가 발생해도 기존 검색 결과는 유지
+      print('Error including provider apps: $e');
+    }
+  }
+
+  // 공급자 앱 데이터를 미션 포맷으로 변환
+  Map<String, dynamic> _convertProviderAppToMissionFormat(Map<String, dynamic> app) {
+    final now = DateTime.now();
+    final endDate = now.add(const Duration(days: 30)); // 30일 후 종료
+    
+    return {
+      'id': 'provider_app_${app['id']}',
+      'title': '${app['appName']} 테스팅',
+      'description': app['description'] ?? '앱 테스팅 및 피드백 제공',
+      'company': '공급자',
+      'category': app['category'] ?? 'Other',
+      'type': 'app_testing',
+      'difficulty': 'medium',
+      'reward': 5000, // 기본 리워드
+      'maxParticipants': 50,
+      'currentParticipants': app['activeTesters'] ?? 0,
+      'status': 'active',
+      'createdAt': app['createdAt'] ?? Timestamp.fromDate(now),
+      'endDate': Timestamp.fromDate(endDate),
+      'requirements': ['앱 설치 가능', '피드백 작성'],
+      'tags': ['앱테스팅', app['category']?.toString().toLowerCase() ?? 'other'],
+      'isProviderApp': true, // 공급자 앱 구분용 플래그
+      'originalAppData': app, // 원본 앱 데이터 보존
+    };
   }
   
   @override

@@ -4035,6 +4035,7 @@ class _AppProviderManagementViewState extends State<AppProviderManagementView> w
         ],
       ),
       floatingActionButton: _tabController.index == 0 ? FloatingActionButton(
+        heroTag: "web_demo_fab",
         onPressed: _showCreateMissionDialog,
         backgroundColor: const Color(0xFF00BFA5),
         child: const Icon(Icons.add, color: Colors.white),

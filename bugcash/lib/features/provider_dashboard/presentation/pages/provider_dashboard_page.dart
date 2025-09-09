@@ -7,6 +7,7 @@ import '../../domain/models/provider_model.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
 import 'app_registration_page.dart';
+import 'app_management_page.dart' hide ProviderAppModel;
 import '../widgets/apps_header_widget.dart';
 import '../widgets/apps_list_widget.dart';
 import '../widgets/apps_empty_state_widget.dart';
@@ -211,11 +212,11 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   Widget _buildAppsTab() {
-    AppLogger.info('🔧🔧🔧 Building Apps Tab with DUMMY DATA', 'ProviderDashboard');
+    AppLogger.info('🔧🔧🔧 Building Apps Tab', 'ProviderDashboard');
     AppLogger.info('Provider ID: ${widget.providerId}', 'ProviderDashboard');
     
-    // 테스트용 간단한 UI로 교체
-    return const AppsTabTest();
+    // 앱 관리 페이지 import 및 사용
+    return AppManagementPage(providerId: widget.providerId);
   }
 
   Widget _buildMissionsTab() {

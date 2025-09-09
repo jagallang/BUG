@@ -282,6 +282,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       
       // Floating Action Button for quick mission creation
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: "tester_dashboard_fab",
         onPressed: () => _showQuickActions(context),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,

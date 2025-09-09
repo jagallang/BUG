@@ -51,4 +51,9 @@ class AppColors {
   
   // Progress Colors
   static Color progressBackground = Colors.white.withValues(alpha: 0.5);
+  
+  // Badge Colors
+  static const Color goldBadge = Color(0xFFFFD700);
+  static const Color silverBadge = Color(0xFFC0C0C0);
+  static const Color bronzeBadge = Color(0xFFCD7F32);
 }

@@ -401,7 +401,7 @@ class ProfileView extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16.r),
                           ),
                           child: Text(
-                            '${state.user.level.toUpperCase()} 테스터',
+                            '${state.user.level} 테스터',
                             style: TextStyle(
                               fontSize: 12.sp,
                               fontWeight: FontWeight.w600,

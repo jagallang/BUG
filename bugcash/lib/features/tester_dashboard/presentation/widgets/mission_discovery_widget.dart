@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/tester_dashboard_provider.dart' as provider;
 import '../../../../models/mission_model.dart';
+import '../../../search/presentation/providers/search_provider.dart';
 
 class MissionDiscoveryWidget extends ConsumerStatefulWidget {
   final String testerId;
@@ -36,7 +38,14 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
   @override
   Widget build(BuildContext context) {
     final dashboardState = ref.watch(provider.testerDashboardProvider);
-    final filteredMissions = _filterMissions(dashboardState.availableMissions);
+    final searchState = ref.watch(searchProvider);
+    
+    // 검색이 활성화된 경우 검색 결과 사용, 아니면 대시보드 미션 사용
+    final missions = _searchController.text.isNotEmpty && searchState.results.isNotEmpty
+        ? _convertSearchResultsToMissions(searchState.results)
+        : dashboardState.availableMissions;
+        
+    final filteredMissions = _filterMissions(missions);
 
     return Padding(
       padding: EdgeInsets.all(16.w),

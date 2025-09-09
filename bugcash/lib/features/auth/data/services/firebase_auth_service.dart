@@ -13,6 +13,7 @@ class FirebaseAuthService {
   static final _mockAuthController = StreamController<User?>.broadcast();
   
   // Combined auth stream
+  // ignore: unused_field
   late Stream<User?> _combinedAuthStream;
 
   FirebaseAuthService() {

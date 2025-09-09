@@ -5,6 +5,8 @@ import '../../features/mission/presentation/pages/mission_detail_page.dart';
 
 class MissionCard extends StatelessWidget {
   final String appName;
+  final String? appUrl;
+  final String? description;
   final int currentDay;
   final int totalDays;
   final int dailyPoints;
@@ -13,6 +15,8 @@ class MissionCard extends StatelessWidget {
   const MissionCard({
     super.key,
     required this.appName,
+    this.appUrl,
+    this.description,
     required this.currentDay,
     required this.totalDays,
     required this.dailyPoints,
@@ -40,13 +44,15 @@ class MissionCard extends StatelessWidget {
             MaterialPageRoute(
               builder: (_) => MissionDetailPage(
                 missionId: 'mission_${appName.toLowerCase()}',
-                appName: appName,
-                appUrl: 'https://play.google.com/store',
-                description: '$appName 앱을 체험하고 사용자 경험을 공유해주세요. 다양한 기능을 탐색하며 앱의 장단점을 발견해보세요.',
-                currentDay: currentDay,
-                totalDays: totalDays,
-                dailyPoints: dailyPoints,
-                todayCompleted: todayCompleted,
+                missionData: {
+                  'appName': appName,
+                  'appUrl': appUrl ?? 'https://play.google.com/store',
+                  'description': description ?? '$appName 앱을 체험하고 사용자 경험을 공유해주세요. 다양한 기능을 탐색하며 앱의 장단점을 발견해보세요.',
+                  'currentDay': currentDay,
+                  'totalDays': totalDays,
+                  'dailyPoints': dailyPoints,
+                  'todayCompleted': todayCompleted,
+                },
               ),
             ),
           );
