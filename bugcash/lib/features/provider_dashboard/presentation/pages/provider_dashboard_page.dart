@@ -15,6 +15,7 @@ import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart'
 import 'apps_tab_test.dart';
 import 'missions_tab_test.dart';
 import '../widgets/tester_management_tab.dart';
+import '../widgets/payment_management_tab.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -51,7 +52,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       case 3:
         return _buildReportsTab();
       case 4:
-        return _buildAnalyticsTab();
+        return _buildPaymentTab();
       default:
         return _buildDashboardTab();
     }
@@ -130,8 +131,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             label: '버그 리포트',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.analytics),
-            label: '분석',
+            icon: Icon(Icons.payment),
+            label: '결제',
           ),
         ],
       ),
@@ -317,76 +318,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
 
-  Widget _buildAnalyticsTab() {
-    return Padding(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '분석 및 통계',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(24.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  spreadRadius: 0,
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.analytics,
-                  size: 48.sp,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  '상세 분석 기능',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  '앱 성능, 테스터 활동, 미션 효율성 등\n다양한 분석 데이터를 제공할 예정입니다.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('상세 분석 기능 (개발 중)')),
-                    );
-                  },
-                  child: const Text('상세보기'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  Widget _buildPaymentTab() {
+    return PaymentManagementTab(providerId: widget.providerId);
   }
 
 
