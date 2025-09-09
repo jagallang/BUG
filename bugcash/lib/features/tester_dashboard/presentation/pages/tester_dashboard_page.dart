@@ -642,7 +642,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
   Widget _buildMissionTab() {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Column(
         children: [
           Container(
@@ -654,6 +654,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               tabs: [
                 Tab(text: '미션 찾기', icon: Icon(Icons.search)),
                 Tab(text: '진행 중', icon: Icon(Icons.play_circle)),
+                Tab(text: '완료', icon: Icon(Icons.check_circle)),
               ],
             ),
           ),
@@ -664,6 +665,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 _buildMissionDiscoveryTab(),
                 // 진행 중인 미션 간단 버전  
                 _buildActiveMissionsTab(),
+                // 완료된 미션 탭
+                _buildCompletedMissionsTab(),
               ],
             ),
           ),
@@ -923,6 +926,314 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       ),
     );
   }
+
+  Widget _buildCompletedMissionsTab() {
+    final completedMissions = _getCompletedMissions();
+    
+    if (completedMissions.isEmpty) {
+      return _buildEmptyCompletedMissions();
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.all(16.w),
+      itemCount: completedMissions.length,
+      itemBuilder: (context, index) {
+        final mission = completedMissions[index];
+        return _buildCompletedMissionCard(mission);
+      },
+    );
+  }
+
+  Widget _buildEmptyCompletedMissions() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 64.w,
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            '완료된 미션이 없습니다',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '미션을 완료하고 포인트를 획득하세요!',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompletedMissionCard(CompletedMission mission) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: _getSettlementStatusColor(mission.settlementStatus),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    _getSettlementStatusText(mission.settlementStatus),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  mission.completedDate,
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              mission.title,
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 4.h),
+            Text(
+              mission.description,
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Icon(
+                  Icons.monetization_on,
+                  size: 16.w,
+                  color: Colors.amber,
+                ),
+                SizedBox(width: 4.w),
+                Text(
+                  '${mission.points}P',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber[700],
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Icon(
+                  Icons.star,
+                  size: 16.w,
+                  color: Colors.orange,
+                ),
+                SizedBox(width: 4.w),
+                Text(
+                  '${mission.rating}/5.0',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const Spacer(),
+                if (mission.settlementStatus == SettlementStatus.pending)
+                  ElevatedButton(
+                    onPressed: () => _showSettlementInfo(mission),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      minimumSize: Size(80.w, 32.h),
+                    ),
+                    child: Text(
+                      '정산 대기',
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  List<CompletedMission> _getCompletedMissions() {
+    return [
+      CompletedMission(
+        id: 'completed_1',
+        title: '쇼핑몰 앱 버그 테스트',
+        description: '결제 시스템 및 상품 검색 기능 테스트 완료',
+        points: 8000,
+        rating: 4.8,
+        completedDate: '2024-01-15',
+        settlementStatus: SettlementStatus.settled,
+      ),
+      CompletedMission(
+        id: 'completed_2', 
+        title: '금융 앱 보안 테스트',
+        description: '로그인 및 본인인증 프로세스 테스트 완료',
+        points: 12000,
+        rating: 4.9,
+        completedDate: '2024-01-10',
+        settlementStatus: SettlementStatus.processing,
+      ),
+      CompletedMission(
+        id: 'completed_3',
+        title: 'SNS 앱 UI/UX 테스트',
+        description: '게시글 작성 및 댓글 기능 사용성 테스트 완료',
+        points: 6000,
+        rating: 4.5,
+        completedDate: '2024-01-08',
+        settlementStatus: SettlementStatus.pending,
+      ),
+    ];
+  }
+
+  Color _getSettlementStatusColor(SettlementStatus status) {
+    switch (status) {
+      case SettlementStatus.pending:
+        return Colors.orange;
+      case SettlementStatus.processing:
+        return Colors.blue;
+      case SettlementStatus.settled:
+        return Colors.green;
+    }
+  }
+
+  String _getSettlementStatusText(SettlementStatus status) {
+    switch (status) {
+      case SettlementStatus.pending:
+        return '정산 대기';
+      case SettlementStatus.processing:
+        return '정산 처리중';
+      case SettlementStatus.settled:
+        return '정산 완료';
+    }
+  }
+
+  void _showSettlementInfo(CompletedMission mission) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          '정산 정보',
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('미션: ${mission.title}'),
+            SizedBox(height: 8.h),
+            Text('획득 포인트: ${mission.points}P'),
+            SizedBox(height: 8.h),
+            Text('평가 점수: ${mission.rating}/5.0'),
+            SizedBox(height: 8.h),
+            Text('완료일: ${mission.completedDate}'),
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.orange[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info, color: Colors.orange, size: 16.w),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '정산 대기 중',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    '공급자가 포인트 정산을 완료하면 자동으로 사라집니다.',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: Colors.orange[700],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum SettlementStatus {
+  pending,    // 정산 대기
+  processing, // 정산 처리중  
+  settled,    // 정산 완료
+}
+
+class CompletedMission {
+  final String id;
+  final String title;
+  final String description;
+  final int points;
+  final double rating;
+  final String completedDate;
+  final SettlementStatus settlementStatus;
+
+  CompletedMission({
+    required this.id,
+    required this.title,
+    required this.description,
+    required this.points,
+    required this.rating,
+    required this.completedDate,
+    required this.settlementStatus,
+  });
 }
 
 // Custom SliverPersistentHeaderDelegate for TabBar
