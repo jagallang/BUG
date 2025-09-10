@@ -18,6 +18,7 @@ enum MissionType {
   featureTesting, // 기능 테스트
   usabilityTest,  // 사용성 테스트
   performanceTest, // 성능 테스트
+  performance,     // 성능 테스트 (별칭)
   survey,         // 설문조사
   feedback,       // 피드백 수집
   functional,     // 기능 테스트 (featureTesting과 통합 가능)

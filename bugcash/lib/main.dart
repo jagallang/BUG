@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'generated/l10n/app_localizations.dart';
 import 'core/utils/logger.dart';
 import 'core/config/app_config.dart';
+import 'firebase_options.dart';
+import 'services/firebase_service.dart';
+import 'core/di/injection.dart';
 // import 'features/auth/presentation/widgets/auth_wrapper.dart';  // 임시 비활성화
 import 'features/provider_dashboard/presentation/pages/provider_dashboard_page.dart';  // Provider Dashboard
 // import 'features/tester_dashboard/presentation/pages/tester_dashboard_page.dart';  // Tester Dashboard 직접 import
@@ -25,29 +29,32 @@ void main() async {
   // 앱 설정 초기화
   await AppConfig.initialize();
   
+  // Dependency injection 초기화
+  await configureDependencies();
+  
   bool isFirebaseAvailable = false;
   
   try {
-    // Firebase 초기화 비활성화 - Mock 전용 모드로 실행
-    // await Firebase.initializeApp(
-    //   options: DefaultFirebaseOptions.currentPlatform,
-    // );
-    // isFirebaseAvailable = true;
-    AppLogger.info('Running in Mock-only mode', 'Main');
+    // Firebase 초기화 활성화
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    isFirebaseAvailable = true;
+    AppLogger.info('Firebase initialized successfully', 'Main');
     
-    // 데모 데이터 초기화는 건너뛰기 (Firestore 의존성 때문)
-    // if (kDebugMode) {
-    //   try {
-    //     await FirebaseService.initializeDemoData().timeout(
-    //       const Duration(seconds: 5),
-    //       onTimeout: () {
-    //         AppLogger.warning('Demo data initialization timed out', 'Main');
-    //       },
-    //     );
-    //   } catch (demoError) {
-    //     AppLogger.error('Demo data initialization failed', 'Main', demoError);
-    //   }
-    // }
+    // 데모 데이터 초기화
+    if (kDebugMode) {
+      try {
+        await FirebaseService.initializeDemoData().timeout(
+          const Duration(seconds: 5),
+          onTimeout: () {
+            AppLogger.warning('Demo data initialization timed out', 'Main');
+          },
+        );
+      } catch (demoError) {
+        AppLogger.error('Demo data initialization failed', 'Main', demoError);
+      }
+    }
   } catch (e) {
     AppLogger.error('Firebase initialization failed', 'Main', e);
     AppLogger.info('Running in offline mode with fallback data', 'Main');

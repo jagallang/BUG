@@ -16,6 +16,7 @@ import 'package:bugcash_web_demo/features/auth/presentation/bloc/auth_bloc.dart'
     as _i323;
 import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
+import 'package:firebase_storage/firebase_storage.dart' as _i457;
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:google_sign_in/google_sign_in.dart' as _i116;
 import 'package:injectable/injectable.dart' as _i526;
@@ -34,6 +35,7 @@ extension GetItInjectableX on _i174.GetIt {
     final appModule = _$AppModule();
     gh.lazySingleton<_i59.FirebaseAuth>(() => appModule.firebaseAuth);
     gh.lazySingleton<_i974.FirebaseFirestore>(() => appModule.firestore);
+    gh.lazySingleton<_i457.FirebaseStorage>(() => appModule.firebaseStorage);
     gh.lazySingleton<_i116.GoogleSignIn>(() => appModule.googleSignIn);
     gh.lazySingleton<_i380.AuthRepository>(() => _i380.AuthRepository(
           gh<_i59.FirebaseAuth>(),

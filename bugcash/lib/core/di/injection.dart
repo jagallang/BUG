@@ -11,9 +11,9 @@ final getIt = GetIt.instance;
 @InjectableInit()
 Future<void> configureDependencies() async => getIt.init();
 
-// Core services module
+// App module for dependency injection
 @module
-abstract class CoreModule {
+abstract class AppModule {
   @lazySingleton
   FirebaseAuth get firebaseAuth => FirebaseAuth.instance;
   
