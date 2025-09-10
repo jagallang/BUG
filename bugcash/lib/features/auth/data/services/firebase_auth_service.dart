@@ -92,6 +92,36 @@ class FirebaseAuthService {
         'displayName': '최버그헌터',
         'userType': 'tester',
       },
+      'tester5@gmail.com': {
+        'uid': 'mock_tester_005',
+        'email': 'tester5@gmail.com',
+        'password': 'tester555',
+        'displayName': '정모바일테스터',
+        'userType': 'tester',
+      },
+      'tester6@naver.com': {
+        'uid': 'mock_tester_006',
+        'email': 'tester6@naver.com',
+        'password': 'naver123',
+        'displayName': '강웹테스터',
+        'userType': 'tester',
+      },
+      'developer@startup.com': {
+        'uid': 'mock_provider_002',
+        'email': 'developer@startup.com',
+        'password': 'dev123',
+        'displayName': '임개발자',
+        'userType': 'provider',
+        'companyName': 'Startup Inc.',
+      },
+      'qa@enterprise.com': {
+        'uid': 'mock_provider_003',
+        'email': 'qa@enterprise.com',
+        'password': 'qa456',
+        'displayName': '황품질관리자',
+        'userType': 'provider',
+        'companyName': 'Enterprise Solutions',
+      },
     };
 
     // Mock 사용자 엔티티 생성 및 캐시에 저장
@@ -138,6 +168,57 @@ class FirebaseAuthService {
   Future<void> updateUserData(UserEntity user) async {
     // Mock 캐시에 업데이트
     _mockUserCache[user.uid] = user.copyWith(updatedAt: DateTime.now());
+  }
+
+  // 사용자 검색 기능 추가
+  Future<List<UserEntity>> searchUsers({
+    required String query,
+    int limit = 20,
+  }) async {
+    if (query.trim().isEmpty) {
+      return [];
+    }
+
+    final searchQuery = query.toLowerCase();
+    final matchedUsers = _mockUserCache.values.where((user) {
+      return user.displayName.toLowerCase().contains(searchQuery) ||
+             user.email.toLowerCase().contains(searchQuery);
+    }).take(limit).toList();
+
+    // 관련도 순으로 정렬 (이름이 먼저 일치하는 것을 우선)
+    matchedUsers.sort((a, b) {
+      final aNameMatch = a.displayName.toLowerCase().startsWith(searchQuery);
+      final bNameMatch = b.displayName.toLowerCase().startsWith(searchQuery);
+      
+      if (aNameMatch && !bNameMatch) return -1;
+      if (!aNameMatch && bNameMatch) return 1;
+      
+      return a.displayName.compareTo(b.displayName);
+    });
+
+    return matchedUsers;
+  }
+
+  // 모든 사용자 목록 가져오기 (관리용)
+  Future<List<UserEntity>> getAllUsers() async {
+    return _mockUserCache.values.toList();
+  }
+
+  // Mock 사용자를 현재 사용자로 설정 (테스트용)
+  Future<void> setMockUser(UserEntity user) async {
+    // Mock user cache에 추가
+    _mockUserCache[user.uid] = user;
+    
+    // Mock Firebase User 생성
+    _mockCurrentUser = _MockUser(
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoUrl,
+    );
+    
+    // Auth state 업데이트
+    _mockAuthController.add(_mockCurrentUser);
   }
 
   // Mock 로그인 메서드들

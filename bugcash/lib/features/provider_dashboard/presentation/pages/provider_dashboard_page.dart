@@ -12,6 +12,8 @@ import '../widgets/apps_header_widget.dart';
 import '../widgets/apps_list_widget.dart';
 import '../widgets/apps_empty_state_widget.dart';
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
+import '../../../chat/presentation/pages/chat_list_page.dart';
+import '../../../chat/presentation/providers/chat_providers.dart';
 import 'apps_tab_test.dart';
 import 'missions_tab_test.dart';
 import '../widgets/tester_management_tab.dart';
@@ -107,6 +109,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         ],
       ),
       body: _buildCurrentTab(),
+      floatingActionButton: _buildChatFAB(),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
@@ -821,5 +824,58 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     } else {
       return '${(-difference.inDays)}일 지남';
     }
+  }
+
+  Widget _buildChatFAB() {
+    final currentUser = ref.watch(currentUserProvider);
+    final unreadCount = currentUser != null 
+        ? ref.watch(unreadMessagesCountProvider(currentUser.uid))
+        : 0;
+        
+    return Stack(
+      children: [
+        FloatingActionButton(
+          heroTag: "provider_dashboard_chat_fab",
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ChatListPage(),
+              ),
+            );
+          },
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          child: const Icon(
+            Icons.chat,
+            color: Colors.white,
+          ),
+        ),
+        if (unreadCount > 0)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Container(
+              padding: EdgeInsets.all(2.w),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+              constraints: BoxConstraints(
+                minWidth: 16.w,
+                minHeight: 16.w,
+              ),
+              child: Text(
+                unreadCount > 99 ? '99+' : unreadCount.toString(),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }

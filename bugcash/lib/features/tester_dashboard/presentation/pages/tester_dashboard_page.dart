@@ -5,6 +5,7 @@ import '../widgets/earnings_summary_widget.dart';
 import '../widgets/community_board_widget.dart';
 import '../providers/tester_dashboard_provider.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
+import '../../../chat/presentation/pages/chat_list_page.dart';
 import 'mission_detail_page.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
@@ -275,15 +276,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         ],
       ),
       
-      // Floating Action Button for quick mission creation
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: "tester_dashboard_fab",
-        onPressed: () => _showQuickActions(context),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('빠른 참여'),
-      ),
+      // Floating Action Button for chat
+      floatingActionButton: _buildChatFAB(),
     );
   }
 
@@ -538,91 +532,52 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     // Navigate to profile settings page
   }
 
-  void _showQuickActions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '빠른 액션',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+  // Chat FAB with unread message badge
+  Widget _buildChatFAB() {
+    // 임시 데이터 - 나중에 Provider로 관리
+    const int unreadCount = 3;
+    
+    return Stack(
+      children: [
+        FloatingActionButton(
+          heroTag: "tester_dashboard_chat_fab",
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ChatListPage()),
+            );
+          },
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: Colors.white,
+          child: const Icon(Icons.chat),
+        ),
+        if (unreadCount > 0)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: Container(
+              padding: EdgeInsets.all(4.w),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              constraints: BoxConstraints(
+                minWidth: 20.w,
+                minHeight: 20.w,
+              ),
+              child: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 10.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+                textAlign: TextAlign.center,
               ),
             ),
-            SizedBox(height: 16.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildQuickActionItem(
-                  '미션 보기',
-                  Icons.assignment,
-                  Colors.blue,
-                  () {
-                    Navigator.of(context).pop();
-                    _tabController.animateTo(0);
-                  },
-                ),
-                _buildQuickActionItem(
-                  '수익 확인',
-                  Icons.account_balance_wallet,
-                  Colors.green,
-                  () {
-                    Navigator.of(context).pop();
-                    _tabController.animateTo(1);
-                  },
-                ),
-                _buildQuickActionItem(
-                  '게시판',
-                  Icons.forum,
-                  Colors.purple,
-                  () {
-                    Navigator.of(context).pop();
-                    _tabController.animateTo(2);
-                  },
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickActionItem(
-    String label,
-    IconData icon,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 60.w,
-            height: 60.w,
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-              border: Border.all(color: color.withValues(alpha: 0.3)),
-            ),
-            child: Icon(icon, color: color, size: 28.w),
           ),
-          SizedBox(height: 8.h),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+      ],
     );
   }
 
