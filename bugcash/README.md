@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Mock%20Mode-FF9800?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.3.07-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.00-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,21 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.3.06)
+## ✨ 주요 기능 (v1.4.00)
 
-### 🎯 NEW! 미션 신청 및 승인 시스템 (v1.3.06)
+### 💬 NEW! 완전한 실시간 채팅 시스템 (v1.4.00)
+- **🏗️ Clean Architecture 기반 채팅**: Domain-Data-Presentation 레이어로 확장 가능한 채팅 시스템 구축
+- **🔥 Firebase Firestore 실시간 메시징**: 실시간 메시지 전송, 읽음 상태, 온라인 상태 완벽 지원
+- **5가지 채팅방 유형**: 1:1 채팅, 미션 채팅, 고객 지원, 그룹 채팅, 공지 채팅
+- **👤 회원 검색 시스템**: 11명의 Mock 사용자로 실제 사용자 검색 및 1:1 채팅 시작
+- **🚀 개발자 친화적 로그인 우회**: 테스트용 로그인 우회 버튼으로 즉시 채팅 기능 테스트
+- **💬 고급 채팅 UI**: 메시지 버블, 타이핑 인디케이터, 온라인 상태, 시간 표시
+- **📊 읽지않음 메시지 카운트**: 실시간 배지 시스템으로 새 메시지 알림
+- **🔗 미션 시스템 연동**: 미션 참여 시 자동 채팅방 생성 및 관리
+- **📱 통합 UI 디자인**: 테스터/공급자 대시보드에 채팅 FAB 버튼 통합
+- **⚡ 모듈형 컴포넌트**: 재사용 가능한 채팅 위젯 및 서비스 구조
+
+### 🎯 미션 신청 및 승인 시스템 (v1.3.06)
 - **📋 완전한 미션 신청 워크플로우**: 테스터가 미션을 발견하고 신청부터 공급자 승인까지 전체 프로세스 구현
 - **📝 상세 신청 다이얼로그**: 요구사항 확인, 앱 설치 준비 체크리스트, 개인 메시지 작성 기능
 - **🏢 공급자 신청 관리 시스템**: 테스터 프로필, 경험, 평점, 전문분야 확인 후 승인/거부 결정
@@ -154,7 +166,11 @@ BugCash/
 │   ├── lib/
 │   │   ├── core/                   # 핵심 인프라
 │   │   ├── features/               # 기능별 모듈
-│   │   │   ├── provider_dashboard/ # 공급자 대시보드 (NEW!)
+│   │   │   ├── chat/               # 실시간 채팅 시스템 (NEW!)
+│   │   │   │   ├── data/          # 데이터 레이어
+│   │   │   │   ├── domain/        # 도메인 레이어
+│   │   │   │   └── presentation/  # 프레젠테이션 레이어
+│   │   │   ├── provider_dashboard/ # 공급자 대시보드
 │   │   │   │   └── pages/
 │   │   │   │       └── app_management_page.dart
 │   │   │   ├── search/             # 검색 시스템 (ENHANCED!)
@@ -247,19 +263,50 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 ### Provider (앱 공급자) 계정
 | 계정 타입 | 이메일 | 비밀번호 | 설명 |
 |-----------|--------|----------|------|
-| 🏢 제공자 1 | provider1@bugcash.com | password123 | BugCash 파트너 기업 |
-| 👨‍💼 제공자 2 | provider2@bugcash.com | password123 | 스타트업 개발팀 |
-| 🏭 제공자 3 | provider3@bugcash.com | password123 | 대기업 QA팀 |
+| 🏢 관리자 | admin@techcorp.com | admin123 | TechCorp Ltd. 관리자 |
+| 👨‍💼 공급자 | provider@gamedev.com | provider123 | GameDev Studio 개발팀 |
+| 🏭 기업 | company@fintech.com | company123 | FinTech Solutions |
+| 💻 개발자 | developer@startup.com | dev123 | Startup Inc. 개발자 |
+| 🔍 QA | qa@enterprise.com | qa456 | Enterprise Solutions QA |
 
-### Tester (테스터) 계정
+### Tester (테스터) 계정  
 | 계정 타입 | 이메일 | 비밀번호 | 설명 |
 |-----------|--------|----------|------|
-| 👤 테스터 1 | tester1@bugcash.com | password123 | 일반 앱 테스터 |
-| 🎨 테스터 2 | tester2@bugcash.com | password123 | UI/UX 전문 테스터 |
-| 🔒 테스터 3 | tester3@bugcash.com | password123 | 보안 전문 테스터 |
-| 🏆 테스터 4 | tester4@bugcash.com | password123 | 버그 헌팅 전문가 |
+| 👤 김테스터 | tester1@gmail.com | tester123 | 일반 앱 테스터 |
+| 🎨 이사용자 | tester2@gmail.com | test456 | UI/UX 전문 테스터 |
+| 🔒 박검증자 | tester3@gmail.com | tester789 | 보안 전문 테스터 |
+| 🏆 최버그헌터 | tester4@gmail.com | test999 | 버그 헌팅 전문가 |
+| 📱 정모바일테스터 | tester5@gmail.com | tester555 | 모바일 앱 전문 |
+| 🌐 강웹테스터 | tester6@naver.com | naver123 | 웹 애플리케이션 전문 |
+
+### 🔧 채팅 시스템 테스트 (v1.4.00)
+- **로그인 우회 기능**: 채팅 페이지에서 "테스트용 로그인 우회" 버튼 클릭
+- **회원 검색**: 검색 아이콘으로 위 계정들을 이름이나 이메일로 검색
+- **1:1 채팅 시작**: 검색 결과에서 채팅 버튼 클릭하여 즉시 채팅 시작
 
 ## 🔧 주요 버전 정보
+
+### 💬 v1.4.00 (2025-09-10) - 완전한 실시간 채팅 시스템
+
+#### ✨ 혁신적인 새 기능
+- **🏗️ Clean Architecture 기반 채팅 시스템**: Domain-Data-Presentation 레이어로 완전히 분리된 확장 가능한 채팅 아키텍처
+- **🔥 Firebase Firestore 실시간 메시징**: 실시간 메시지 전송, 읽음 상태, 타이핑 인디케이터, 온라인 상태 완벽 지원
+- **5가지 채팅방 유형**: 1:1 직접 채팅, 미션 채팅, 고객 지원 채팅, 그룹 채팅, 공지 채팅방
+- **👤 완전한 회원 검색 시스템**: 11명의 Mock 사용자 계정으로 실제 검색 환경 시뮬레이션
+- **🚀 개발자 친화적 테스트 환경**: 로그인 우회 버튼으로 Firebase 설정 없이 즉시 채팅 기능 테스트
+- **💬 고급 채팅 UI 컴포넌트**: 메시지 버블, 시간 표시, 읽음 상태, 타이핑 인디케이터 완전 구현
+- **📊 실시간 알림 시스템**: 읽지않음 메시지 카운트 배지와 실시간 업데이트
+- **🔗 미션 시스템 완전 연동**: 미션 참여 시 자동 채팅방 생성 및 관리 워크플로우
+- **📱 완전한 UI 통합**: 테스터/공급자 대시보드에 채팅 FAB 버튼과 배지 시스템 추가
+
+#### 🛠️ 기술적 구현
+- **새로운 도메인 모델**: Message, ChatRoom, ChatRoomType, MessageStatus, MessageType enum
+- **Repository Pattern**: ChatRepository로 데이터 추상화 및 Firebase 연동
+- **Riverpod 상태 관리**: 채팅 상태, 메시지, 사용자 검색을 위한 완전한 Provider 시스템
+- **UI 컴포넌트**: MessageBubble, MessageInput, TypingIndicator, ChatAppBar 재사용 가능 위젯
+- **Mock 데이터 시스템**: 11명의 다양한 테스터/공급자 계정으로 완전한 테스트 환경
+- **로그인 우회 시스템**: setMockUser 메서드로 개발 및 테스트 편의성 극대화
+- **실시간 동기화**: Firebase Auth State와 채팅 시스템 완전 연동
 
 ### 🏗️ v1.3.07 (2025-01-10) - Clean Architecture & 확장 가능한 구조
 
