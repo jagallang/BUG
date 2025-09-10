@@ -7,7 +7,6 @@ import 'firebase_options.dart';
 import 'services/firebase_service.dart';
 import 'core/utils/logger.dart';
 import 'core/config/app_config.dart';
-import 'features/home/presentation/pages/home_page.dart';
 
 // 웹용 반응형 크기 헬퍼 - 깔끔한 크기로 조정
 extension ResponsiveText on num {

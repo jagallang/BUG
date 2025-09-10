@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../models/mission_model.dart';
+import '../../../../models/mission_model.dart' as models;
 import '../providers/mission_creation_provider.dart';
 
 class MissionDifficultyAnalyzerWidget extends ConsumerWidget {
@@ -251,7 +251,7 @@ class MissionDifficultyAnalyzerWidget extends ConsumerWidget {
     );
   }
 
-  Widget _buildOptimizationSuggestions(BuildContext context, MissionDifficulty difficulty) {
+  Widget _buildOptimizationSuggestions(BuildContext context, MissionDifficultyAnalysis difficulty) {
     final suggestions = _generateOptimizationSuggestions(difficulty);
     
     if (suggestions.isEmpty) return const SizedBox.shrink();
@@ -313,7 +313,7 @@ class MissionDifficultyAnalyzerWidget extends ConsumerWidget {
     );
   }
 
-  List<String> _generateOptimizationSuggestions(MissionDifficulty difficulty) {
+  List<String> _generateOptimizationSuggestions(MissionDifficultyAnalysis difficulty) {
     final List<String> suggestions = [];
     
     // High difficulty suggestions

@@ -1,12 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n/app_localizations.dart';
-import 'firebase_options.dart';
-import 'services/firebase_service.dart';
 import 'core/utils/logger.dart';
 import 'core/config/app_config.dart';
 // import 'features/auth/presentation/widgets/auth_wrapper.dart';  // 임시 비활성화

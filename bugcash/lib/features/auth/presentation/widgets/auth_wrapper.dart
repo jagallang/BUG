@@ -214,44 +214,45 @@ class _DevBypassPage extends ConsumerWidget {
   }
 }
 
-class _UserDataMissingPage extends ConsumerWidget {
-  const _UserDataMissingPage();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.person_off,
-              size: 64,
-              color: Colors.orange,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '사용자 정보를 찾을 수 없습니다',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '계정 설정을 다시 완료해주세요.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () async {
-                await ref.read(mockAuthProvider.notifier).signOut();
-              },
-              child: const Text('로그아웃'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// Unused widget - commented out for now
+// class _UserDataMissingPage extends ConsumerWidget {
+//   const _UserDataMissingPage();
+//
+//   @override
+//   Widget build(BuildContext context, WidgetRef ref) {
+//     return Scaffold(
+//       body: Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             const Icon(
+//               Icons.person_off,
+//               size: 64,
+//               color: Colors.orange,
+//             ),
+//             const SizedBox(height: 16),
+//             Text(
+//               '사용자 정보를 찾을 수 없습니다',
+//               style: Theme.of(context).textTheme.headlineSmall,
+//             ),
+//             const SizedBox(height: 8),
+//             Text(
+//               '계정 설정을 다시 완료해주세요.',
+//               textAlign: TextAlign.center,
+//               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+//                 color: Colors.grey[600],
+//               ),
+//             ),
+//             const SizedBox(height: 24),
+//             ElevatedButton(
+//               onPressed: () async {
+//                 await ref.read(mockAuthProvider.notifier).signOut();
+//               },
+//               child: const Text('로그아웃'),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

@@ -20,9 +20,8 @@ enum MissionType {
   performanceTest, // 성능 테스트
   survey,         // 설문조사
   feedback,       // 피드백 수집
-  functional,     // 기능 테스트
-  uiUx,         // UI/UX 테스트
-  performance,   // 성능 테스트
+  functional,     // 기능 테스트 (featureTesting과 통합 가능)
+  uiUx,          // UI/UX 테스트
   security,      // 보안 테스트
   compatibility, // 호환성 테스트
   accessibility, // 접근성 테스트

@@ -208,6 +208,18 @@ class MissionCreationNotifier extends StateNotifier<MissionCreationState> {
         return '설문조사';
       case MissionType.feedback:
         return '피드백 수집';
+      case MissionType.functional:
+        return '기능 테스트';
+      case MissionType.uiUx:
+        return 'UI/UX 테스트';
+      case MissionType.security:
+        return '보안 테스트';
+      case MissionType.compatibility:
+        return '호환성 테스트';
+      case MissionType.accessibility:
+        return '접근성 테스트';
+      case MissionType.localization:
+        return '지역화 테스트';
     }
   }
 
@@ -387,22 +399,94 @@ MissionTemplate _getMissionTemplate(MissionType type) {
         suggestedReward: 250,
         suggestedComplexity: MissionComplexity.medium,
       );
+    case MissionType.functional:
+      return const MissionTemplate(
+        titleSuggestion: '[앱명] 기능 테스트',
+        descriptionTemplate: '앱의 주요 기능들이 정상적으로 작동하는지 테스트해주세요.',
+        instructionsTemplate: '1. 모든 주요 기능을 테스트하세요\n2. 예상대로 작동하는지 확인하세요\n3. 문제점을 자세히 기록하세요',
+        completionCriteriaTemplate: '• 모든 기능 테스트 완료\n• 테스트 결과 상세 보고\n• 문제점 및 개선사항 제시',
+        suggestedSkills: ['기능 테스트', '품질 검증', '문서작성'],
+        suggestedTags: ['기능', '테스트', '검증'],
+        suggestedDuration: 90,
+        suggestedReward: 300,
+        suggestedComplexity: MissionComplexity.medium,
+      );
+    case MissionType.uiUx:
+      return const MissionTemplate(
+        titleSuggestion: '[앱명] UI/UX 평가',
+        descriptionTemplate: '앱의 사용자 인터페이스와 경험을 평가해주세요.',
+        instructionsTemplate: '1. 디자인과 레이아웃을 평가하세요\n2. 사용자 경험을 분석하세요\n3. 개선점을 제안하세요',
+        completionCriteriaTemplate: '• UI/UX 평가 보고서\n• 스크린샷과 주석\n• 개선 제안 5개 이상',
+        suggestedSkills: ['UI/UX 평가', '디자인 감각', '사용성 분석'],
+        suggestedTags: ['UI', 'UX', '디자인'],
+        suggestedDuration: 60,
+        suggestedReward: 250,
+        suggestedComplexity: MissionComplexity.medium,
+      );
+    case MissionType.security:
+      return const MissionTemplate(
+        titleSuggestion: '[앱명] 보안 테스트',
+        descriptionTemplate: '앱의 보안 취약점을 찾아 보고해주세요.',
+        instructionsTemplate: '1. 일반적인 보안 취약점 테스트\n2. 데이터 보호 확인\n3. 권한 관리 검증',
+        completionCriteriaTemplate: '• 보안 테스트 체크리스트 완료\n• 발견된 취약점 상세 보고\n• 보안 개선 제안',
+        suggestedSkills: ['보안 테스트', '취약점 분석', '보안 지식'],
+        suggestedTags: ['보안', '취약점', '테스트'],
+        suggestedDuration: 120,
+        suggestedReward: 500,
+        suggestedComplexity: MissionComplexity.expert,
+      );
+    case MissionType.compatibility:
+      return const MissionTemplate(
+        titleSuggestion: '[앱명] 호환성 테스트',
+        descriptionTemplate: '다양한 기기와 OS 버전에서 앱의 호환성을 테스트해주세요.',
+        instructionsTemplate: '1. 다양한 기기에서 테스트\n2. OS 버전별 호환성 확인\n3. 호환성 이슈 기록',
+        completionCriteriaTemplate: '• 최소 2개 이상 기기/OS 테스트\n• 호환성 이슈 리포트\n• 해결 방안 제시',
+        suggestedSkills: ['호환성 테스트', '다양한 기기 경험', '문제 해결'],
+        suggestedTags: ['호환성', '기기', 'OS'],
+        suggestedDuration: 90,
+        suggestedReward: 350,
+        suggestedComplexity: MissionComplexity.hard,
+      );
+    case MissionType.accessibility:
+      return const MissionTemplate(
+        titleSuggestion: '[앱명] 접근성 평가',
+        descriptionTemplate: '장애인 및 고령자를 위한 앱의 접근성을 평가해주세요.',
+        instructionsTemplate: '1. 접근성 기능 테스트\n2. 스크린 리더 호환성 확인\n3. 접근성 개선점 제안',
+        completionCriteriaTemplate: '• 접근성 체크리스트 완료\n• 접근성 이슈 보고\n• 개선 방안 제시',
+        suggestedSkills: ['접근성 평가', '사용성 테스트', '포용적 디자인'],
+        suggestedTags: ['접근성', '사용성', '포용성'],
+        suggestedDuration: 60,
+        suggestedReward: 300,
+        suggestedComplexity: MissionComplexity.medium,
+      );
+    case MissionType.localization:
+      return const MissionTemplate(
+        titleSuggestion: '[앱명] 지역화 테스트',
+        descriptionTemplate: '앱의 다국어 지원과 지역화를 테스트해주세요.',
+        instructionsTemplate: '1. 언어 변경 테스트\n2. 지역별 형식 확인\n3. 번역 품질 평가',
+        completionCriteriaTemplate: '• 지역화 테스트 완료\n• 번역 오류 보고\n• 개선 제안',
+        suggestedSkills: ['다국어 능력', '지역화 테스트', '문화적 이해'],
+        suggestedTags: ['지역화', '번역', '다국어'],
+        suggestedDuration: 45,
+        suggestedReward: 200,
+        suggestedComplexity: MissionComplexity.medium,
+      );
   }
 }
 
 // Mission difficulty calculator
-final missionDifficultyProvider = Provider.family<MissionDifficulty, Map<String, dynamic>>((ref, missionData) {
+final missionDifficultyProvider = Provider.family<MissionDifficultyAnalysis, Map<String, dynamic>>((ref, missionData) {
   return _calculateMissionDifficulty(missionData);
 });
 
-class MissionDifficulty {
+class MissionDifficultyAnalysis {
   final MissionComplexity complexity;
   final int skillRequirements;
   final int timeCommitment;
   final double difficultyScore;
   final String recommendation;
 
-  const MissionDifficulty({
+  const MissionDifficultyAnalysis({
     required this.complexity,
     required this.skillRequirements,
     required this.timeCommitment,
@@ -411,7 +495,7 @@ class MissionDifficulty {
   });
 }
 
-MissionDifficulty _calculateMissionDifficulty(Map<String, dynamic> data) {
+MissionDifficultyAnalysis _calculateMissionDifficulty(Map<String, dynamic> data) {
   final complexity = data['complexity'] as MissionComplexity? ?? MissionComplexity.medium;
   final requiredSkills = data['requiredSkills'] as List<String>? ?? [];
   final estimatedMinutes = data['estimatedMinutes'] as int? ?? 30;
@@ -453,7 +537,7 @@ MissionDifficulty _calculateMissionDifficulty(Map<String, dynamic> data) {
     recommendation = '전문가 수준의 테스터만 참여 가능한 고난도 미션입니다';
   }
   
-  return MissionDifficulty(
+  return MissionDifficultyAnalysis(
     complexity: complexity,
     skillRequirements: requiredSkills.length,
     timeCommitment: estimatedMinutes,

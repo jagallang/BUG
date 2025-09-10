@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Mock%20Mode-FF9800?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.3.06-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.3.07-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -260,6 +260,29 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 | 🏆 테스터 4 | tester4@bugcash.com | password123 | 버그 헌팅 전문가 |
 
 ## 🔧 주요 버전 정보
+
+### 🏗️ v1.3.07 (2025-01-10) - Clean Architecture & 확장 가능한 구조
+
+#### ✨ 아키텍처 개선
+- **🏛️ Clean Architecture 전면 적용**: Domain, Data, Presentation 레이어 명확히 분리
+- **💉 의존성 주입 개선**: GetIt과 Injectable을 활용한 DI 컨테이너 구성
+- **📁 모듈화 구조**: 기능별 독립적인 모듈로 재구성
+
+#### 🆕 신규 기능 준비
+- **💳 결제 시스템 아키텍처**: Payment 도메인 설계 (카카오페이, 네이버페이, 토스페이 지원 예정)
+- **💬 실시간 채팅 아키텍처**: Chat 도메인 설계 (1:1, 그룹, 미션 채팅 지원)
+- **🔄 Repository Pattern**: 데이터 추상화 레이어 구현
+
+#### 🐛 버그 수정
+- **✅ MissionType enum 중복 제거**: functional, performance 등 중복 타입 정리
+- **✅ MissionDifficulty 클래스명 충돌 해결**: MissionDifficultyAnalysis로 변경
+- **✅ Switch 문 누락 case 추가**: 모든 enum 타입에 대한 완전한 처리
+- **✅ 사용하지 않는 import 및 코드 제거**: 코드베이스 정리
+
+#### 📚 문서화
+- **📖 ARCHITECTURE.md 생성**: 전체 아키텍처 가이드라인 문서
+- **📝 코드 주석 개선**: 주요 클래스 및 메서드 문서화
+- **🗺️ 확장 로드맵 추가**: 향후 기능 개발 계획
 
 ### 🚀 v1.3.06 (2025-09-09) - 미션 신청 및 승인 시스템
 
