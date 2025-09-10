@@ -32,10 +32,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     _tabController = TabController(length: 3, vsync: this);
     _scrollController = ScrollController();
     
-    // TabController 리스너 추가 (FAB 위치 조정을 위해)
-    _tabController.addListener(() {
-      setState(() {});
-    });
+    // TabController 초기화 완료
     
     // 초기 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -283,9 +280,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       
       // Floating Action Button for chat
       floatingActionButton: _buildChatFAB(),
-      floatingActionButtonLocation: _tabController.index == 1 
-          ? FloatingActionButtonLocation.endTop 
-          : FloatingActionButtonLocation.endFloat,
+      floatingActionButtonLocation: _CustomFabLocation(), // 모든 탭에서 동일한 중간 위치로 고정
     );
   }
 
@@ -1254,5 +1249,20 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   @override
   bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
     return false;
+  }
+}
+
+// Custom FAB Location to avoid overlap with bottom tabs
+class _CustomFabLocation extends FloatingActionButtonLocation {
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
+    // 기본 endFloat 위치를 기준으로 Y 좌표만 조정
+    final double x = scaffoldGeometry.scaffoldSize.width - 
+                     scaffoldGeometry.floatingActionButtonSize.width - 16.0;
+    final double y = scaffoldGeometry.scaffoldSize.height - 
+                     scaffoldGeometry.floatingActionButtonSize.height - 
+                     120.0; // 하단 탭바와 기본 위치의 중간 지점으로 고정
+    
+    return Offset(x, y);
   }
 }

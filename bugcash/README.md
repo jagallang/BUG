@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.04-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.05-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,16 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.04)
+## ✨ 주요 기능 (v1.4.05)
 
-### 🎨 NEW! 테마 분리 & UI/UX 개선 (v1.4.04)
+### 🎯 NEW! 일관된 FAB 위치 개선 (v1.4.05)
+- **📍 고정된 채팅 FAB 위치**: 테스터 모드에서 모든 탭에서 동일한 중간 위치로 채팅 버튼 고정
+- **🔧 Custom FAB Location**: `_CustomFabLocation` 클래스로 Y 좌표 120px 고정 위치 구현
+- **✨ 사용자 경험 개선**: 탭 변경 시 FAB 위치가 달라지는 혼란 완전 제거
+- **🎯 정확한 위치 계산**: 하단 탭바와 기본 위치의 중간 지점으로 최적화된 접근성
+- **⚡ 효율적인 코드**: TabController 리스너 제거로 불필요한 상태 업데이트 방지
+
+### 🎨 테마 분리 & UI/UX 개선 (v1.4.04)
 - **🔵 앱공급자 인디고 테마**: 전체 Provider Dashboard를 진한 파란색(Indigo) 테마로 통일
 - **🟢 앱테스터 그린 테마 유지**: 기존 Tester 인터페이스의 녹색 테마 그대로 유지
 - **📱 하단 탭 네비게이션**: 미션 탭을 하단으로 이동하여 모바일 접근성 향상
@@ -319,6 +326,22 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 - **1:1 채팅 시작**: 검색 결과에서 채팅 버튼 클릭하여 즉시 채팅 시작
 
 ## 🔧 주요 버전 정보
+
+### 🎯 v1.4.05 (2025-09-11) - 일관된 FAB 위치 개선
+
+#### ✨ 사용자 경험 개선
+- **📍 고정된 채팅 FAB 위치**: 테스터 모드에서 모든 탭('미션찾기', '진행중', '완료')에서 동일한 중간 위치로 채팅 버튼 완전 고정
+- **🔧 Custom FloatingActionButtonLocation**: `_CustomFabLocation` 클래스 구현으로 Y 좌표 120px 고정 위치 제공
+- **✨ 일관성 있는 UX**: 탭 변경 시 FAB 위치가 달라지는 사용자 혼란 완전 제거
+- **🎯 최적화된 위치**: 하단 탭바 위 적절한 거리에 위치하여 엄지 접근성 향상
+- **⚡ 효율적인 상태 관리**: 불필요한 TabController 리스너 제거로 성능 개선
+
+#### 🛠️ 기술적 구현 세부사항
+- **커스텀 FAB 위치 클래스**: `class _CustomFabLocation extends FloatingActionButtonLocation`
+- **고정 좌표 계산**: `final double y = scaffoldGeometry.scaffoldSize.height - height - 120.0`
+- **단일 위치 적용**: `floatingActionButtonLocation: _CustomFabLocation()` 모든 탭에 적용
+- **상태 최적화**: TabController addListener() 제거로 불필요한 setState() 호출 방지
+- **코드 정리**: 탭별 조건부 로직 제거로 더 깔끔한 코드베이스
 
 ### 🎨 v1.4.04 (2025-09-11) - 테마 분리 & UI/UX 개선
 
