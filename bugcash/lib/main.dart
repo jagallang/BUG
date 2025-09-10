@@ -42,19 +42,20 @@ void main() async {
     isFirebaseAvailable = true;
     AppLogger.info('Firebase initialized successfully', 'Main');
     
-    // 데모 데이터 초기화
-    if (kDebugMode) {
-      try {
-        await FirebaseService.initializeDemoData().timeout(
-          const Duration(seconds: 5),
-          onTimeout: () {
-            AppLogger.warning('Demo data initialization timed out', 'Main');
-          },
-        );
-      } catch (demoError) {
-        AppLogger.error('Demo data initialization failed', 'Main', demoError);
-      }
-    }
+    // 데모 데이터 초기화 비활성화 - 실제 사용자 데이터로 테스트
+    // if (kDebugMode) {
+    //   try {
+    //     await FirebaseService.initializeDemoData().timeout(
+    //       const Duration(seconds: 5),
+    //       onTimeout: () {
+    //         AppLogger.warning('Demo data initialization timed out', 'Main');
+    //       },
+    //     );
+    //   } catch (demoError) {
+    //     AppLogger.error('Demo data initialization failed', 'Main', demoError);
+    //   }
+    // }
+    AppLogger.info('Demo data initialization disabled - using real user data', 'Main');
   } catch (e) {
     AppLogger.error('Firebase initialization failed', 'Main', e);
     AppLogger.info('Running in offline mode with fallback data', 'Main');

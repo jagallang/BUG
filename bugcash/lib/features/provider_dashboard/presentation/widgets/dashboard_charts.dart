@@ -269,11 +269,11 @@ class _LineChartPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     
-    // 샘플 데이터
+    // TODO: Replace with actual Firebase performance data
     final data = [
-      [65, 70, 68, 75, 80, 85],
-      [72, 75, 78, 76, 82, 88],
-      [68, 72, 74, 73, 78, 82],
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0],
     ];
     
     final colors = [Colors.blue, Colors.green, Colors.orange];

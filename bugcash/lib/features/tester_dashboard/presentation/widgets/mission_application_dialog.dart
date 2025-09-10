@@ -407,8 +407,8 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
     });
 
     try {
-      // 실제 구현에서는 여기서 API 호출
-      await Future.delayed(const Duration(seconds: 2)); // 시뮬레이션
+      // TODO: Replace with actual Firebase mission application API
+      await Future.delayed(const Duration(seconds: 2));
 
       // 성공 처리
       if (mounted) {

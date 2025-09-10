@@ -6,6 +6,7 @@ import '../providers/provider_dashboard_provider.dart';
 import '../../domain/models/provider_model.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/services/auth_service.dart';
 import 'app_registration_page.dart';
 import 'app_management_page.dart' hide ProviderAppModel;
 import '../widgets/apps_header_widget.dart';
@@ -72,10 +73,11 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           tooltip: '테스터 모드로 전환',
           onPressed: () {
             // 테스터 대시보드로 이동
+            final userId = CurrentUserService.getCurrentUserIdOrDefault();
             Navigator.of(context).pushReplacement(
               MaterialPageRoute(
-                builder: (_) => const TesterDashboardPage(
-                  testerId: 'test_tester_001',
+                builder: (_) => TesterDashboardPage(
+                  testerId: userId,
                 ),
               ),
             );

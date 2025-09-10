@@ -432,14 +432,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 ),
               ),
               Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  itemCount: 5, // Mock notifications
-                  itemBuilder: (context, index) => _buildNotificationItem(
-                    '새로운 미션이 있습니다',
-                    '${['UI 테스트', '성능 테스트', '버그 찾기', '사용성 테스트', '피드백 수집'][index]} 미션에 참여해보세요!',
-                    DateTime.now().subtract(Duration(hours: index)),
-                    index < 2, // First 2 are unread
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.notifications_none, size: 48, color: Colors.grey),
+                      SizedBox(height: 16),
+                      Text('알림이 없습니다', style: TextStyle(color: Colors.grey)),
+                    ],
                   ),
                 ),
               ),
@@ -534,8 +534,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
   // Chat FAB with unread message badge
   Widget _buildChatFAB() {
-    // 임시 데이터 - 나중에 Provider로 관리
-    const int unreadCount = 3;
+    final dashboardState = ref.watch(testerDashboardProvider);
+    final int unreadCount = dashboardState.unreadNotifications;
     
     return Stack(
       children: [
@@ -653,76 +653,95 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   Widget _buildMissionDiscoveryTab() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '추천 미션',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
+    final dashboardState = ref.watch(testerDashboardProvider);
+    
+    if (dashboardState.availableMissions.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.search_off, size: 64.w, color: Colors.grey[400]),
+            SizedBox(height: 16.h),
+            Text(
+              '사용 가능한 미션이 없습니다',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
             ),
-          ),
-          SizedBox(height: 16.h),
-          _buildMissionCard(
-            title: '인스타그램 클론 앱 테스트',
-            description: 'UI/UX 테스트 및 기능 검증',
-            reward: '5,000P',
-            deadline: '5일 남음',
-            participants: '8/15',
-          ),
-          SizedBox(height: 12.h),
-          _buildMissionCard(
-            title: '배달앱 주문 플로우 테스트',
-            description: '주문부터 결제까지 전체 프로세스 테스트',
-            reward: '3,000P',
-            deadline: '3일 남음',
-            participants: '12/20',
-          ),
-          SizedBox(height: 12.h),
-          _buildMissionCard(
-            title: '온라인 쇼핑몰 결제 테스트',
-            description: '다양한 결제 수단 테스트 및 검증',
-            reward: '7,000P',
-            deadline: '7일 남음',
-            participants: '5/10',
-          ),
-        ],
-      ),
+            SizedBox(height: 8.h),
+            Text(
+              '새로운 미션이 등록되면 알려드릴게요!',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return ListView.builder(
+      padding: EdgeInsets.all(16.w),
+      itemCount: dashboardState.availableMissions.length,
+      itemBuilder: (context, index) {
+        final mission = dashboardState.availableMissions[index];
+        return _buildMissionCard(
+          title: mission.title,
+          description: mission.description,
+          reward: '${mission.rewardPoints}P',
+          deadline: '${mission.deadline ?? DateTime.now().add(Duration(days: 7)).day}일 남음',
+          participants: '${mission.currentParticipants}/${mission.maxParticipants}',
+        );
+      },
     );
   }
 
   Widget _buildActiveMissionsTab() {
-    return SingleChildScrollView(
-      padding: EdgeInsets.all(16.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '진행 중인 미션',
-            style: TextStyle(
-              fontSize: 20.sp,
-              fontWeight: FontWeight.bold,
+    final dashboardState = ref.watch(testerDashboardProvider);
+    
+    if (dashboardState.activeMissions.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.play_circle_outline, size: 64.w, color: Colors.grey[400]),
+            SizedBox(height: 16.h),
+            Text(
+              '진행 중인 미션이 없습니다',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
             ),
-          ),
-          SizedBox(height: 16.h),
-          _buildActiveMissionCard(
-            title: '채팅앱 알림 기능 테스트',
-            progress: 0.7,
-            status: '테스트 진행 중',
-            deadline: '2일 남음',
-          ),
-          SizedBox(height: 12.h),
-          _buildActiveMissionCard(
-            title: '게임 앱 성능 테스트',
-            progress: 0.3,
-            status: '준비 단계',
-            deadline: '5일 남음',
-          ),
-        ],
-      ),
+            SizedBox(height: 8.h),
+            Text(
+              '미션을 신청하고 테스트를 시작하세요!',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return ListView.builder(
+      padding: EdgeInsets.all(16.w),
+      itemCount: dashboardState.activeMissions.length,
+      itemBuilder: (context, index) {
+        final mission = dashboardState.activeMissions[index];
+        return _buildActiveMissionCard(
+          title: mission.title,
+          progress: mission.progress ?? 0.0,
+          status: mission.status.toString().split('.').last,
+          deadline: '${mission.deadline ?? DateTime.now().add(Duration(days: 7)).day}일 남음',
+        );
+      },
     );
   }
 
@@ -913,18 +932,28 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   Widget _buildCompletedMissionsTab() {
-    final completedMissions = _getCompletedMissions();
+    final dashboardState = ref.watch(testerDashboardProvider);
     
-    if (completedMissions.isEmpty) {
+    if (dashboardState.completedMissions.isEmpty) {
       return _buildEmptyCompletedMissions();
     }
 
     return ListView.builder(
       padding: EdgeInsets.all(16.w),
-      itemCount: completedMissions.length,
+      itemCount: dashboardState.completedMissions.length,
       itemBuilder: (context, index) {
-        final mission = completedMissions[index];
-        return _buildCompletedMissionCard(mission);
+        final mission = dashboardState.completedMissions[index];
+        // Convert MissionCard to CompletedMission for display
+        final completedMission = CompletedMission(
+          id: mission.id,
+          title: mission.title,
+          description: mission.description,
+          points: mission.rewardPoints,
+          rating: 4.5, // Default rating
+          completedDate: DateTime.now().toString().substring(0, 10),
+          settlementStatus: SettlementStatus.settled,
+        );
+        return _buildCompletedMissionCard(completedMission);
       },
     );
   }
@@ -1071,37 +1100,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  List<CompletedMission> _getCompletedMissions() {
-    return [
-      CompletedMission(
-        id: 'completed_1',
-        title: '쇼핑몰 앱 버그 테스트',
-        description: '결제 시스템 및 상품 검색 기능 테스트 완료',
-        points: 8000,
-        rating: 4.8,
-        completedDate: '2024-01-15',
-        settlementStatus: SettlementStatus.settled,
-      ),
-      CompletedMission(
-        id: 'completed_2', 
-        title: '금융 앱 보안 테스트',
-        description: '로그인 및 본인인증 프로세스 테스트 완료',
-        points: 12000,
-        rating: 4.9,
-        completedDate: '2024-01-10',
-        settlementStatus: SettlementStatus.processing,
-      ),
-      CompletedMission(
-        id: 'completed_3',
-        title: 'SNS 앱 UI/UX 테스트',
-        description: '게시글 작성 및 댓글 기능 사용성 테스트 완료',
-        points: 6000,
-        rating: 4.5,
-        completedDate: '2024-01-08',
-        settlementStatus: SettlementStatus.pending,
-      ),
-    ];
-  }
+  // Removed hardcoded dummy data - using real data from provider
 
   Color _getSettlementStatusColor(SettlementStatus status) {
     switch (status) {

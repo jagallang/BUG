@@ -232,39 +232,8 @@ class TesterActivityTracker extends ConsumerWidget {
   }
 
   List<ActivityItem> _generateRecentActivities() {
-    // Mock recent activities - replace with actual data
-    return [
-      ActivityItem(
-        testerName: '김철수',
-        action: '버그 리포트 제출',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 15)),
-        type: ActivityType.submission,
-      ),
-      ActivityItem(
-        testerName: '이영희',
-        action: '테스트 완료',
-        timestamp: DateTime.now().subtract(const Duration(hours: 1)),
-        type: ActivityType.completion,
-      ),
-      ActivityItem(
-        testerName: '박민수',
-        action: '미션 참여',
-        timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-        type: ActivityType.participation,
-      ),
-      ActivityItem(
-        testerName: '정수진',
-        action: '추가 정보 제출',
-        timestamp: DateTime.now().subtract(const Duration(hours: 3)),
-        type: ActivityType.update,
-      ),
-      ActivityItem(
-        testerName: '최동훈',
-        action: '스크린샷 업로드',
-        timestamp: DateTime.now().subtract(const Duration(hours: 4)),
-        type: ActivityType.upload,
-      ),
-    ];
+    // TODO: Replace with actual Firebase activity data
+    return [];
   }
 
   Widget _buildActivityItem(BuildContext context, ActivityItem activity) {
@@ -384,13 +353,13 @@ class TesterActivityTracker extends ConsumerWidget {
               children: [
                 _buildMetricItem(
                   '참여율',
-                  '85%',
+                  'N/A',
                   Icons.people,
                   Colors.blue,
                 ),
                 _buildMetricItem(
                   '완료율',
-                  '72%',
+                  'N/A',
                   Icons.check_circle,
                   Colors.green,
                 ),
@@ -402,7 +371,7 @@ class TesterActivityTracker extends ConsumerWidget {
                 ),
                 _buildMetricItem(
                   '재참여율',
-                  '65%',
+                  'N/A',
                   Icons.repeat,
                   Colors.purple,
                 ),

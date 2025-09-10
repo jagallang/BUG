@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/services/auth_service.dart';
 
-class CommunityBoardWidget extends StatefulWidget {
+class CommunityBoardWidget extends ConsumerStatefulWidget {
   final String testerId;
 
   const CommunityBoardWidget({
@@ -10,73 +13,12 @@ class CommunityBoardWidget extends StatefulWidget {
   });
 
   @override
-  State<CommunityBoardWidget> createState() => _CommunityBoardWidgetState();
+  ConsumerState<CommunityBoardWidget> createState() => _CommunityBoardWidgetState();
 }
 
-class _CommunityBoardWidgetState extends State<CommunityBoardWidget> {
+class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
   final Set<String> _expandedPosts = {};
-  final List<CommunityPost> _posts = [
-    CommunityPost(
-      id: '1',
-      author: '버그헌터123',
-      title: 'iOS 앱 테스터 5명 모집중 (시급 15,000원)',
-      content: '새로 출시되는 iOS 금융 앱 테스트를 함께 진행할 테스터분들을 모집합니다. 경험자 우대...',
-      timestamp: DateTime.now().subtract(const Duration(hours: 2)),
-      likes: 12,
-      comments: 3,
-      category: '모집중',
-    ),
-    CommunityPost(
-      id: '2',
-      author: '테스터프로',
-      title: '안드로이드 게임 앱 테스트 프로젝트 완료',
-      content: '지난 주부터 진행했던 모바일 게임 테스트 프로젝트가 성공적으로 완료되었습니다.',
-      timestamp: DateTime.now().subtract(const Duration(hours: 5)),
-      likes: 28,
-      comments: 8,
-      category: '모집완료',
-    ),
-    CommunityPost(
-      id: '3',
-      author: '모바일매니아',
-      title: '프리랜서 QA 테스터 경력직 구합니다',
-      content: '스타트업에서 정규직 QA 테스터를 채용합니다. 2년 이상 경력자, 협업 도구 경험 필수...',
-      timestamp: DateTime.now().subtract(const Duration(days: 1)),
-      likes: 15,
-      comments: 5,
-      category: '구인',
-    ),
-    CommunityPost(
-      id: '4',
-      author: '신입테스터',
-      title: '테스터 신입 구직활동 중입니다',
-      content: '컴퓨터공학과 졸업 예정이며, 앱 테스팅 분야로 취업을 준비하고 있습니다. 조언 부탁드립니다.',
-      timestamp: DateTime.now().subtract(const Duration(hours: 8)),
-      likes: 7,
-      comments: 12,
-      category: '구직',
-    ),
-    CommunityPost(
-      id: '5',
-      author: '질문왕',
-      title: '테스트 리포트 작성 방법이 궁금해요',
-      content: '효과적인 버그 리포트 작성 방법에 대해 질문드립니다. 어떤 형식으로 작성해야 할까요?',
-      timestamp: DateTime.now().subtract(const Duration(hours: 12)),
-      likes: 4,
-      comments: 6,
-      category: '질문',
-    ),
-    CommunityPost(
-      id: '6',
-      author: '자유로운영혼',
-      title: '테스터들의 소소한 일상 이야기',
-      content: '오늘 테스트하다가 웃긴 일이 있어서 공유해요. 개발자님이 Easter Egg를 숨겨놨네요 ㅋㅋ',
-      timestamp: DateTime.now().subtract(const Duration(days: 2)),
-      likes: 18,
-      comments: 9,
-      category: '기타',
-    ),
-  ];
+  // Removed hardcoded dummy data - now using Firebase
 
   String _selectedCategory = '전체';
   final List<String> _categories = ['전체', '모집중', '모집완료', '구인', '구직', '질문', '기타'];
@@ -165,18 +107,44 @@ class _CommunityBoardWidgetState extends State<CommunityBoardWidget> {
   }
 
   Widget _buildPostsList() {
-    final filteredPosts = _selectedCategory == '전체' 
-        ? _posts 
-        : _posts.where((post) => post.category == _selectedCategory).toList();
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('community_posts')
+          .orderBy('timestamp', descending: true)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    if (filteredPosts.isEmpty) {
-      return _buildEmptyState();
-    }
+        if (snapshot.hasError) {
+          return Center(
+            child: Text('데이터를 불러올 수 없습니다: ${snapshot.error}'),
+          );
+        }
 
-    return ListView.builder(
-      itemCount: filteredPosts.length,
-      itemBuilder: (context, index) {
-        return _buildPostCard(filteredPosts[index]);
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return _buildEmptyState();
+        }
+
+        final posts = snapshot.data!.docs
+            .map((doc) => CommunityPost.fromFirestore(doc))
+            .toList();
+
+        final filteredPosts = _selectedCategory == '전체'
+            ? posts
+            : posts.where((post) => post.category == _selectedCategory).toList();
+
+        if (filteredPosts.isEmpty) {
+          return _buildEmptyState();
+        }
+
+        return ListView.builder(
+          itemCount: filteredPosts.length,
+          itemBuilder: (context, index) {
+            return _buildPostCard(filteredPosts[index]);
+          },
+        );
       },
     );
   }
@@ -450,9 +418,12 @@ class _CommunityBoardWidgetState extends State<CommunityBoardWidget> {
       context: context,
       builder: (context) => _CreatePostDialog(
         onPostCreated: (post) {
-          setState(() {
-            _posts.insert(0, post);
-          });
+          // Firebase streams automatically update the UI
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('게시글이 작성되었습니다!')),
+            );
+          }
         },
       ),
     );
@@ -465,13 +436,27 @@ class _CommunityBoardWidgetState extends State<CommunityBoardWidget> {
     );
   }
 
-  void _toggleLike(CommunityPost post) {
-    setState(() {
-      post.likes++;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('좋아요를 눌렀습니다!')),
-    );
+  void _toggleLike(CommunityPost post) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('community_posts')
+          .doc(post.id)
+          .update({
+        'likes': FieldValue.increment(1),
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('좋아요를 눌렀습니다!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('좋아요 처리에 실패했습니다: $e')),
+        );
+      }
+    }
   }
 
   void _openComments(CommunityPost post) {
@@ -496,6 +481,7 @@ class CommunityPost {
   int likes;
   final int comments;
   final String category;
+  final String authorId;
 
   CommunityPost({
     required this.id,
@@ -506,7 +492,38 @@ class CommunityPost {
     required this.likes,
     required this.comments,
     required this.category,
+    required this.authorId,
   });
+
+  factory CommunityPost.fromFirestore(QueryDocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return CommunityPost(
+      id: doc.id,
+      author: data['author'] ?? '익명',
+      title: data['title'] ?? '',
+      content: data['content'] ?? '',
+      timestamp: data['timestamp'] != null 
+          ? (data['timestamp'] as Timestamp).toDate()
+          : DateTime.now(),
+      likes: data['likes'] ?? 0,
+      comments: data['comments'] ?? 0,
+      category: data['category'] ?? '기타',
+      authorId: data['authorId'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'author': author,
+      'title': title,
+      'content': content,
+      'timestamp': Timestamp.fromDate(timestamp),
+      'likes': likes,
+      'comments': comments,
+      'category': category,
+      'authorId': authorId,
+    };
+  }
 }
 
 class _CreatePostDialog extends StatefulWidget {
@@ -649,7 +666,7 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
     );
   }
 
-  void _createPost() {
+  void _createPost() async {
     if (_titleController.text.trim().isEmpty || _contentController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('제목과 내용을 모두 입력해주세요')),
@@ -657,22 +674,39 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
       return;
     }
 
-    final newPost = CommunityPost(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      author: '나',
-      title: _titleController.text.trim(),
-      content: _contentController.text.trim(),
-      timestamp: DateTime.now(),
-      likes: 0,
-      comments: 0,
-      category: _selectedCategory,
-    );
+    try {
+      final currentUserId = CurrentUserService.getCurrentUserIdOrDefault();
+      final newPost = CommunityPost(
+        id: '',
+        author: '익명 사용자',
+        title: _titleController.text.trim(),
+        content: _contentController.text.trim(),
+        timestamp: DateTime.now(),
+        likes: 0,
+        comments: 0,
+        category: _selectedCategory,
+        authorId: currentUserId,
+      );
 
-    widget.onPostCreated(newPost);
-    Navigator.pop(context);
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('게시글이 작성되었습니다!')),
-    );
+      // Firebase에 저장
+      await FirebaseFirestore.instance
+          .collection('community_posts')
+          .add(newPost.toFirestore());
+
+      widget.onPostCreated(newPost);
+      if (mounted) {
+        Navigator.pop(context);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('게시글이 작성되었습니다!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('게시글 작성에 실패했습니다: $e')),
+        );
+      }
+    }
   }
 }

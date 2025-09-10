@@ -199,7 +199,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       ),
-      error: (error, stackTrace) => _buildContent(_getDummyApps()),
+      error: (error, stackTrace) => _buildErrorContent(error),
     );
   }
 
@@ -732,60 +732,120 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     }
   }
 
-  // Dummy data for testing
-  List<ProviderAppModel> _getDummyApps() {
-    return [
-      ProviderAppModel(
-        id: '1',
-        providerId: widget.providerId,
-        appName: 'BugCash Mobile',
-        appUrl: 'https://play.google.com/store/apps/bugcash',
-        description: '버그 테스팅 플랫폼 모바일 앱',
-        category: 'Productivity',
-        status: 'active',
-        totalTesters: 150,
-        activeTesters: 89,
-        totalBugs: 45,
-        resolvedBugs: 32,
-        progressPercentage: 71.0,
-        createdAt: DateTime.now().subtract(const Duration(days: 30)),
-        updatedAt: DateTime.now(),
-        metadata: {},
+  Widget _buildErrorContent(Object error) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Main error content
+          Padding(
+            padding: EdgeInsets.all(16.w),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with Add button (same as success state)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '내 앱 관리',
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    SizedBox(
+                      width: 120.w,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showUploadDialog = true;
+                          });
+                        },
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('앱 등록'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 24.h),
+                
+                // Error state content
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64.w,
+                          color: Colors.red[300],
+                        ),
+                        SizedBox(height: 16.h),
+                        Text(
+                          '앱 목록을 불러올 수 없습니다',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
+                        Text(
+                          error.toString(),
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.grey[500],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 24.h),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            // Refresh the provider
+                            ref.refresh(providerAppsProvider(widget.providerId));
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('다시 시도'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Upload dialog overlay
+          if (_showUploadDialog)
+            Container(
+              color: Colors.black54,
+              child: Center(
+                child: Container(
+                  margin: EdgeInsets.all(20.w),
+                  padding: EdgeInsets.all(24.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: _buildUploadDialog(),
+                ),
+              ),
+            ),
+        ],
       ),
-      ProviderAppModel(
-        id: '2',
-        providerId: widget.providerId,
-        appName: 'Task Manager Pro',
-        appUrl: 'https://play.google.com/store/apps/taskmanager',
-        description: '스마트한 일정 관리 앱',
-        category: 'Productivity',
-        status: 'active',
-        totalTesters: 100,
-        activeTesters: 45,
-        totalBugs: 23,
-        resolvedBugs: 18,
-        progressPercentage: 45.0,
-        createdAt: DateTime.now().subtract(const Duration(days: 15)),
-        updatedAt: DateTime.now(),
-        metadata: {},
-      ),
-      ProviderAppModel(
-        id: '3',
-        providerId: widget.providerId,
-        appName: 'Social Connect',
-        appUrl: 'https://play.google.com/store/apps/socialconnect',
-        description: '새로운 소셜 네트워킹 앱',
-        category: 'Social',
-        status: 'paused',
-        totalTesters: 200,
-        activeTesters: 0,
-        totalBugs: 67,
-        resolvedBugs: 55,
-        progressPercentage: 82.0,
-        createdAt: DateTime.now().subtract(const Duration(days: 45)),
-        updatedAt: DateTime.now().subtract(const Duration(days: 5)),
-        metadata: {},
-      ),
-    ];
+    );
   }
 }

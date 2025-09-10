@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum MissionSubmissionStatus {
   submitted,          // 제출됨
@@ -8,6 +10,103 @@ enum MissionSubmissionStatus {
   pending,            // 승인 대기
   needsRevision,      // 보완 요청
   resubmitted,        // 재제출됨
+}
+
+// Firebase Provider for mission submissions
+final missionSubmissionsProvider = StreamProvider.family<List<SubmittedMission>, String>((ref, providerId) {
+  return FirebaseFirestore.instance
+      .collection('mission_submissions')
+      .where('providerId', isEqualTo: providerId)
+      .orderBy('submissionTime', descending: true)
+      .snapshots()
+      .asyncMap((snapshot) async {
+    final List<SubmittedMission> submissions = [];
+    
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      
+      // Get mission details
+      final missionDoc = await FirebaseFirestore.instance
+          .collection('missions')
+          .doc(data['missionId'])
+          .get();
+      
+      // Get tester details
+      final testerDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(data['testerId'])
+          .get();
+      
+      if (missionDoc.exists && testerDoc.exists) {
+        final missionData = missionDoc.data()!;
+        final testerData = testerDoc.data()!;
+        
+        submissions.add(SubmittedMission(
+          id: doc.id,
+          missionTitle: missionData['title'] ?? 'Unknown Mission',
+          testerName: testerData['displayName'] ?? 'Unknown Tester',
+          testerId: data['testerId'],
+          appName: missionData['appName'] ?? 'Unknown App',
+          submissionTime: (data['submissionTime'] as Timestamp).toDate(),
+          screenshots: _parseScreenshots(data['screenshots'] ?? []),
+          notes: data['notes'],
+          status: _parseStatus(data['status'] ?? 'submitted'),
+          rewardPoints: data['rewardPoints'] ?? 0,
+          rejectionReason: data['rejectionReason'],
+          revisionRequest: data['revisionRequest'],
+          rejectionTime: (data['rejectionTime'] as Timestamp?)?.toDate(),
+          resubmissionTime: (data['resubmissionTime'] as Timestamp?)?.toDate(),
+        ));
+      }
+    }
+    
+    return submissions;
+  });
+});
+
+List<MissionScreenshotData> _parseScreenshots(List<dynamic> screenshots) {
+  return screenshots.map((screenshot) {
+    return MissionScreenshotData(
+      id: screenshot['id'] ?? '',
+      type: screenshot['type'] ?? 'unknown',
+      timestamp: (screenshot['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      imagePath: screenshot['imagePath'],
+    );
+  }).toList();
+}
+
+MissionSubmissionStatus _parseStatus(String status) {
+  switch (status) {
+    case 'approved':
+      return MissionSubmissionStatus.approved;
+    case 'rejected':
+      return MissionSubmissionStatus.rejected;
+    case 'pending':
+      return MissionSubmissionStatus.pending;
+    case 'needsRevision':
+      return MissionSubmissionStatus.needsRevision;
+    case 'resubmitted':
+      return MissionSubmissionStatus.resubmitted;
+    default:
+      return MissionSubmissionStatus.submitted;
+  }
+}
+
+String _statusToString(MissionSubmissionStatus status) {
+  switch (status) {
+    case MissionSubmissionStatus.approved:
+      return 'approved';
+    case MissionSubmissionStatus.rejected:
+      return 'rejected';
+    case MissionSubmissionStatus.pending:
+      return 'pending';
+    case MissionSubmissionStatus.needsRevision:
+      return 'needsRevision';
+    case MissionSubmissionStatus.resubmitted:
+      return 'resubmitted';
+    default:
+      return 'submitted';
+  }
 }
 
 class SubmittedMission {
@@ -58,7 +157,7 @@ class MissionScreenshotData {
   });
 }
 
-class MissionApprovalTab extends StatefulWidget {
+class MissionApprovalTab extends ConsumerStatefulWidget {
   final String providerId;
   
   const MissionApprovalTab({
@@ -67,18 +166,16 @@ class MissionApprovalTab extends StatefulWidget {
   });
 
   @override
-  State<MissionApprovalTab> createState() => _MissionApprovalTabState();
+  ConsumerState<MissionApprovalTab> createState() => _MissionApprovalTabState();
 }
 
-class _MissionApprovalTabState extends State<MissionApprovalTab> with SingleTickerProviderStateMixin {
+class _MissionApprovalTabState extends ConsumerState<MissionApprovalTab> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  List<SubmittedMission> _allMissions = [];
   
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _initializeMockData();
   }
   
   @override
@@ -86,355 +183,191 @@ class _MissionApprovalTabState extends State<MissionApprovalTab> with SingleTick
     _tabController.dispose();
     super.dispose();
   }
-  
-  void _initializeMockData() {
-    _allMissions = [
-      SubmittedMission(
-        id: 'mission_1',
-        missionTitle: '채팅앱 알림 기능 테스트',
-        testerName: '김테스터',
-        testerId: 'tester_001',
-        appName: '채팅메신저 앱',
-        submissionTime: DateTime.now().subtract(const Duration(hours: 2)),
-        screenshots: [
-          MissionScreenshotData(
-            id: 'shot_1',
-            type: 'start',
-            timestamp: DateTime.now().subtract(const Duration(hours: 2, minutes: 15)),
-          ),
-          MissionScreenshotData(
-            id: 'shot_2',
-            type: 'middle',
-            timestamp: DateTime.now().subtract(const Duration(hours: 2, minutes: 8)),
-          ),
-          MissionScreenshotData(
-            id: 'shot_3',
-            type: 'end',
-            timestamp: DateTime.now().subtract(const Duration(hours: 2, minutes: 1)),
-          ),
-        ],
-        notes: '푸시 알림이 제대로 동작하며, 메시지 읽음 표시도 정상적으로 업데이트됩니다.',
-        status: MissionSubmissionStatus.submitted,
-        rewardPoints: 5000,
-      ),
-      SubmittedMission(
-        id: 'mission_2',
-        missionTitle: '게임 앱 성능 테스트',
-        testerName: '박테스터',
-        testerId: 'tester_002',
-        appName: '모바일 게임 앱',
-        submissionTime: DateTime.now().subtract(const Duration(hours: 4)),
-        screenshots: [
-          MissionScreenshotData(
-            id: 'shot_4',
-            type: 'start',
-            timestamp: DateTime.now().subtract(const Duration(hours: 4, minutes: 12)),
-          ),
-          MissionScreenshotData(
-            id: 'shot_5',
-            type: 'middle',
-            timestamp: DateTime.now().subtract(const Duration(hours: 4, minutes: 6)),
-          ),
-          MissionScreenshotData(
-            id: 'shot_6',
-            type: 'end',
-            timestamp: DateTime.now().subtract(const Duration(hours: 4, minutes: 1)),
-          ),
-        ],
-        status: MissionSubmissionStatus.approved,
-        rewardPoints: 7000,
-      ),
-      SubmittedMission(
-        id: 'mission_3',
-        missionTitle: '쇼핑앱 결제 플로우 테스트',
-        testerName: '이테스터',
-        testerId: 'tester_003',
-        appName: '온라인 쇼핑몰',
-        submissionTime: DateTime.now().subtract(const Duration(minutes: 30)),
-        screenshots: [
-          MissionScreenshotData(
-            id: 'shot_7',
-            type: 'start',
-            timestamp: DateTime.now().subtract(const Duration(minutes: 45)),
-          ),
-          MissionScreenshotData(
-            id: 'shot_8',
-            type: 'middle',
-            timestamp: DateTime.now().subtract(const Duration(minutes: 38)),
-          ),
-          MissionScreenshotData(
-            id: 'shot_9',
-            type: 'end',
-            timestamp: DateTime.now().subtract(const Duration(minutes: 31)),
-          ),
-        ],
-        notes: '결제 과정에서 로딩이 다소 오래 걸리는 부분이 있었습니다.',
-        status: MissionSubmissionStatus.submitted,
-        rewardPoints: 6000,
-      ),
-      SubmittedMission(
-        id: 'mission_4',
-        missionTitle: '소셜미디어 앱 공유 기능 테스트',
-        testerName: '최테스터',
-        testerId: 'tester_004',
-        appName: '소셜미디어 앱',
-        submissionTime: DateTime.now().subtract(const Duration(hours: 6)),
-        screenshots: [
-          MissionScreenshotData(
-            id: 'shot_10',
-            type: 'start',
-            timestamp: DateTime.now().subtract(const Duration(hours: 6, minutes: 12)),
-          ),
-          MissionScreenshotData(
-            id: 'shot_11',
-            type: 'middle',
-            timestamp: DateTime.now().subtract(const Duration(hours: 6, minutes: 6)),
-          ),
-          MissionScreenshotData(
-            id: 'shot_12',
-            type: 'end',
-            timestamp: DateTime.now().subtract(const Duration(hours: 6, minutes: 1)),
-          ),
-        ],
-        notes: '공유 기능이 동작하지만 이미지 업로드 속도가 느립니다.',
-        status: MissionSubmissionStatus.needsRevision,
-        rewardPoints: 4000,
-        rejectionReason: '스크린샷 품질 부족',
-        revisionRequest: '스크린샷이 흐릿하고 텍스트가 잘 보이지 않습니다. 더 선명한 스크린샷을 다시 촬영해 주세요. 특히 공유 기능 사용 과정을 단계별로 명확하게 보여주시기 바랍니다.',
-        rejectionTime: DateTime.now().subtract(const Duration(hours: 3)),
-      ),
-    ];
-  }
-  
-  List<SubmittedMission> _getMissionsByStatus(MissionSubmissionStatus status) {
-    return _allMissions.where((mission) => mission.status == status).toList();
-  }
-  
-  void _handleMissionApproval(SubmittedMission mission, bool approved) {
-    if (approved) {
-      setState(() {
-        mission.status = MissionSubmissionStatus.approved;
-      });
+
+  Future<void> _updateMissionStatus(String submissionId, MissionSubmissionStatus status, {String? reason}) async {
+    try {
+      final updateData = {
+        'status': _statusToString(status),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      if (reason != null) {
+        if (status == MissionSubmissionStatus.rejected) {
+          updateData['rejectionReason'] = reason;
+          updateData['rejectionTime'] = FieldValue.serverTimestamp();
+        } else if (status == MissionSubmissionStatus.needsRevision) {
+          updateData['revisionRequest'] = reason;
+          updateData['rejectionTime'] = FieldValue.serverTimestamp();
+        }
+      }
+
+      await FirebaseFirestore.instance
+          .collection('mission_submissions')
+          .doc(submissionId)
+          .update(updateData);
       
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${mission.testerName}님의 미션이 승인되었습니다!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } else {
-      _showRejectionDialog(mission);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(_getStatusUpdateMessage(status)),
+            backgroundColor: _getStatusColor(status),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('업데이트 중 오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
-  
-  void _showRejectionDialog(SubmittedMission mission) {
-    final rejectionReasonController = TextEditingController();
-    final revisionRequestController = TextEditingController();
-    bool isRevisionRequest = true; // 기본값을 보완요청으로 설정
+
+  String _getStatusUpdateMessage(MissionSubmissionStatus status) {
+    switch (status) {
+      case MissionSubmissionStatus.approved:
+        return '미션이 승인되었습니다';
+      case MissionSubmissionStatus.rejected:
+        return '미션이 거부되었습니다';
+      case MissionSubmissionStatus.needsRevision:
+        return '보완 요청이 전송되었습니다';
+      default:
+        return '상태가 업데이트되었습니다';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final submissionsAsync = ref.watch(missionSubmissionsProvider(widget.providerId));
     
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: Text('미션 검토 결과'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${mission.testerName}님의 "${mission.missionTitle}" 미션',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 16.h),
-                
-                // 처리 유형 선택
-                Text('처리 유형', style: TextStyle(fontWeight: FontWeight.w600)),
-                SizedBox(height: 8.h),
-                Row(
+    return Scaffold(
+      backgroundColor: Colors.grey[50],
+      body: Column(
+        children: [
+          _buildHeader(),
+          _buildTabBar(),
+          Expanded(
+            child: submissionsAsync.when(
+              data: (submissions) => _buildTabBarView(submissions),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Expanded(
-                      child: RadioListTile<bool>(
-                        title: Text('보완 요청'),
-                        subtitle: Text('수정 후 재제출 가능'),
-                        value: true,
-                        groupValue: isRevisionRequest,
-                        onChanged: (value) {
-                          setDialogState(() {
-                            isRevisionRequest = value!;
-                          });
-                        },
-                      ),
+                    Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                    SizedBox(height: 16.h),
+                    Text(
+                      '미션 제출 내역을 불러올 수 없습니다',
+                      style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      error.toString(),
+                      style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<bool>(
-                        title: Text('완전 거부'),
-                        subtitle: Text('재제출 불가'),
-                        value: false,
-                        groupValue: isRevisionRequest,
-                        onChanged: (value) {
-                          setDialogState(() {
-                            isRevisionRequest = value!;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                
-                SizedBox(height: 16.h),
-                
-                // 거부 이유 입력
-                Text('거부 이유', style: TextStyle(fontWeight: FontWeight.w600)),
-                SizedBox(height: 8.h),
-                TextField(
-                  controller: rejectionReasonController,
-                  decoration: InputDecoration(
-                    hintText: '거부하는 이유를 간단히 입력하세요',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 2,
-                ),
-                
-                SizedBox(height: 16.h),
-                
-                // 보완 요청사항 입력 (보완요청인 경우에만)
-                if (isRevisionRequest) ...[
-                  Text('보완 요청사항', style: TextStyle(fontWeight: FontWeight.w600)),
-                  SizedBox(height: 8.h),
-                  TextField(
-                    controller: revisionRequestController,
-                    decoration: InputDecoration(
-                      hintText: '어떤 부분을 어떻게 보완해야 하는지 상세히 설명해주세요',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 4,
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('취소'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (rejectionReasonController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('거부 이유를 입력해주세요.')),
-                  );
-                  return;
-                }
-                
-                if (isRevisionRequest && revisionRequestController.text.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('보완 요청사항을 입력해주세요.')),
-                  );
-                  return;
-                }
-                
-                setState(() {
-                  mission.status = isRevisionRequest 
-                    ? MissionSubmissionStatus.needsRevision 
-                    : MissionSubmissionStatus.rejected;
-                  mission.rejectionReason = rejectionReasonController.text;
-                  mission.revisionRequest = isRevisionRequest 
-                    ? revisionRequestController.text 
-                    : null;
-                  mission.rejectionTime = DateTime.now();
-                });
-                
-                Navigator.of(context).pop();
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      isRevisionRequest 
-                        ? '${mission.testerName}님에게 보완요청을 보냈습니다.'
-                        : '${mission.testerName}님의 미션을 거부했습니다.',
-                    ),
-                    backgroundColor: isRevisionRequest ? Colors.orange : Colors.red,
-                  ),
-                );
-              },
-              child: Text(isRevisionRequest ? '보완요청' : '거부하기'),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
-  
-  @override
-  Widget build(BuildContext context) {
-    final submittedMissions = _getMissionsByStatus(MissionSubmissionStatus.submitted)
-      ..addAll(_getMissionsByStatus(MissionSubmissionStatus.resubmitted));
-    final revisionMissions = _getMissionsByStatus(MissionSubmissionStatus.needsRevision);
-    final approvedMissions = _getMissionsByStatus(MissionSubmissionStatus.approved);
-    final rejectedMissions = _getMissionsByStatus(MissionSubmissionStatus.rejected);
+
+  Widget _buildHeader() {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.assignment_turned_in, size: 24.w, color: Colors.blue),
+          SizedBox(width: 12.w),
+          Text(
+            '미션 승인 관리',
+            style: TextStyle(
+              fontSize: 20.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: () {
+              // TODO: Refresh functionality
+              ref.refresh(missionSubmissionsProvider(widget.providerId));
+            },
+            icon: const Icon(Icons.refresh),
+            tooltip: '새로고침',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      color: Colors.white,
+      child: TabBar(
+        controller: _tabController,
+        tabs: const [
+          Tab(text: '대기 중'),
+          Tab(text: '승인됨'),
+          Tab(text: '기타'),
+        ],
+        labelColor: Colors.blue,
+        unselectedLabelColor: Colors.grey[600],
+        indicatorColor: Colors.blue,
+      ),
+    );
+  }
+
+  Widget _buildTabBarView(List<SubmittedMission> allSubmissions) {
+    final pendingMissions = allSubmissions.where((m) => 
+      m.status == MissionSubmissionStatus.submitted || 
+      m.status == MissionSubmissionStatus.pending ||
+      m.status == MissionSubmissionStatus.resubmitted
+    ).toList();
     
-    return Column(
+    final approvedMissions = allSubmissions.where((m) => 
+      m.status == MissionSubmissionStatus.approved
+    ).toList();
+    
+    final otherMissions = allSubmissions.where((m) => 
+      m.status == MissionSubmissionStatus.rejected ||
+      m.status == MissionSubmissionStatus.needsRevision
+    ).toList();
+
+    return TabBarView(
+      controller: _tabController,
       children: [
-        Container(
-          color: Colors.grey[100],
-          child: TabBar(
-            controller: _tabController,
-            labelColor: Theme.of(context).colorScheme.primary,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: Theme.of(context).colorScheme.primary,
-            isScrollable: true,
-            tabs: [
-              Tab(
-                text: '승인 대기 (${submittedMissions.length})',
-                icon: const Icon(Icons.pending_actions),
-              ),
-              Tab(
-                text: '보완요청 (${revisionMissions.length})',
-                icon: const Icon(Icons.edit_note),
-              ),
-              Tab(
-                text: '승인 완료 (${approvedMissions.length})',
-                icon: const Icon(Icons.check_circle),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            children: [
-              _buildMissionList(submittedMissions, showApprovalButtons: true),
-              _buildMissionList(revisionMissions, showRevisionInfo: true),
-              _buildMissionList(approvedMissions),
-            ],
-          ),
-        ),
+        _buildMissionList(pendingMissions, showActions: true),
+        _buildMissionList(approvedMissions, showActions: false),
+        _buildMissionList(otherMissions, showActions: true),
       ],
     );
   }
-  
-  Widget _buildMissionList(List<SubmittedMission> missions, {bool showApprovalButtons = false, bool showRevisionInfo = false}) {
+
+  Widget _buildMissionList(List<SubmittedMission> missions, {bool showActions = true}) {
     if (missions.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.assignment_outlined,
-              size: 48.w,
-              color: Colors.grey[400],
-            ),
+            Icon(Icons.assignment_outlined, size: 64.w, color: Colors.grey[400]),
             SizedBox(height: 16.h),
             Text(
-              '미션이 없습니다',
+              '제출된 미션이 없습니다',
               style: TextStyle(
-                fontSize: 16.sp,
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w500,
                 color: Colors.grey[600],
               ),
             ),
@@ -442,313 +375,176 @@ class _MissionApprovalTabState extends State<MissionApprovalTab> with SingleTick
         ),
       );
     }
-    
+
     return ListView.builder(
       padding: EdgeInsets.all(16.w),
       itemCount: missions.length,
       itemBuilder: (context, index) {
-        final mission = missions[index];
-        return _buildMissionCard(mission, showApprovalButtons: showApprovalButtons, showRevisionInfo: showRevisionInfo);
+        return _buildMissionCard(missions[index], showActions: showActions);
       },
     );
   }
-  
-  Widget _buildMissionCard(SubmittedMission mission, {bool showApprovalButtons = false, bool showRevisionInfo = false}) {
-    return Card(
+
+  Widget _buildMissionCard(SubmittedMission mission, {bool showActions = true}) {
+    return Container(
       margin: EdgeInsets.only(bottom: 16.h),
-      elevation: 2,
-      shape: RoundedRectangleBorder(
+      decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.grey[200]!),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header with mission title and status
+            // Header
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(
-                    mission.missionTitle,
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(mission.status),
-                    borderRadius: BorderRadius.circular(20.r),
-                  ),
-                  child: Text(
-                    _getStatusText(mission.status),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            
-            SizedBox(height: 12.h),
-            
-            // Tester and app info
-            Row(
-              children: [
-                Icon(Icons.person, size: 16.w, color: Colors.grey[600]),
-                SizedBox(width: 4.w),
-                Text(
-                  mission.testerName,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Icon(Icons.apps, size: 16.w, color: Colors.grey[600]),
-                SizedBox(width: 4.w),
-                Text(
-                  mission.appName,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-            
-            SizedBox(height: 8.h),
-            
-            // Submission time and reward
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 16.w, color: Colors.grey[600]),
-                SizedBox(width: 4.w),
-                Text(
-                  '제출: ${_formatDateTime(mission.submissionTime)}',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Text(
-                    '${mission.rewardPoints}P',
-                    style: TextStyle(
-                      color: Colors.green.shade700,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            
-            SizedBox(height: 12.h),
-            
-            // Screenshots section
-            Text(
-              '스크린샷 (${mission.screenshots.length}개)',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Row(
-              children: mission.screenshots.map((screenshot) {
-                return Container(
-                  margin: EdgeInsets.only(right: 8.w),
-                  padding: EdgeInsets.all(8.w),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
-                        Icons.image,
-                        size: 24.w,
-                        color: Colors.grey[600],
+                      Text(
+                        mission.missionTitle,
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        _getScreenshotTypeText(screenshot.type),
+                        '${mission.testerName} • ${mission.appName}',
                         style: TextStyle(
-                          fontSize: 10.sp,
+                          fontSize: 12.sp,
                           color: Colors.grey[600],
                         ),
                       ),
                     ],
                   ),
-                );
-              }).toList(),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: _getStatusColor(mission.status).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    _getStatusText(mission.status),
+                    style: TextStyle(
+                      fontSize: 10.sp,
+                      fontWeight: FontWeight.w500,
+                      color: _getStatusColor(mission.status),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            
-            // Notes if available
-            if (mission.notes != null) ...[
+
+            SizedBox(height: 12.h),
+
+            // Mission info
+            Row(
+              children: [
+                Icon(Icons.schedule, size: 14.w, color: Colors.grey[600]),
+                SizedBox(width: 4.w),
+                Text(
+                  _formatDateTime(mission.submissionTime),
+                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                ),
+                SizedBox(width: 16.w),
+                Icon(Icons.monetization_on, size: 14.w, color: Colors.orange),
+                SizedBox(width: 4.w),
+                Text(
+                  '${mission.rewardPoints}P',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.orange,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+
+            if (mission.notes != null && mission.notes!.isNotEmpty) ...[
               SizedBox(height: 12.h),
               Container(
                 width: double.infinity,
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: Colors.grey[50],
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.blue.shade200),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '테스터 피드백',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      mission.notes!,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: Colors.blue.shade700,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  mission.notes!,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.grey[700],
+                  ),
                 ),
               ),
             ],
-            
-            // Revision request information
-            if (showRevisionInfo && mission.rejectionReason != null) ...[
+
+            // Screenshots info
+            if (mission.screenshots.isNotEmpty) ...[
               SizedBox(height: 12.h),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.red.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.warning, color: Colors.red.shade700, size: 16.w),
-                        SizedBox(width: 8.w),
-                        Text(
-                          '거부 이유',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red.shade700,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          mission.rejectionTime != null ? _formatDateTime(mission.rejectionTime!) : '',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            color: Colors.red.shade600,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      mission.rejectionReason!,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: Colors.red.shade700,
-                      ),
-                    ),
-                  ],
-                ),
+              Row(
+                children: [
+                  Icon(Icons.photo_camera, size: 14.w, color: Colors.grey[600]),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '스크린샷 ${mission.screenshots.length}개',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                  ),
+                ],
               ),
             ],
-            
-            if (showRevisionInfo && mission.revisionRequest != null) ...[
-              SizedBox(height: 8.h),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: Colors.orange.shade50,
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.orange.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.edit_note, color: Colors.orange.shade700, size: 16.w),
-                        SizedBox(width: 8.w),
-                        Text(
-                          '보완 요청사항',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      mission.revisionRequest!,
-                      style: TextStyle(
-                        fontSize: 13.sp,
-                        color: Colors.orange.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            
-            // Approval buttons for submitted missions
-            if (showApprovalButtons) ...[
+
+            // Action buttons
+            if (showActions && (mission.status == MissionSubmissionStatus.submitted || 
+                mission.status == MissionSubmissionStatus.resubmitted)) ...[
               SizedBox(height: 16.h),
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => _handleMissionApproval(mission, false),
-                      icon: const Icon(Icons.close),
+                      onPressed: () => _showRejectionDialog(mission),
+                      icon: Icon(Icons.close, size: 16.w),
                       label: const Text('거부'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
                         side: const BorderSide(color: Colors.red),
-                        padding: EdgeInsets.symmetric(vertical: 12.h),
                       ),
                     ),
                   ),
-                  SizedBox(width: 12.w),
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _showRevisionDialog(mission),
+                      icon: Icon(Icons.edit, size: 16.w),
+                      label: const Text('보완요청'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.orange,
+                        side: const BorderSide(color: Colors.orange),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _handleMissionApproval(mission, true),
-                      icon: const Icon(Icons.check),
+                      onPressed: () => _updateMissionStatus(mission.id, MissionSubmissionStatus.approved),
+                      icon: Icon(Icons.check, size: 16.w),
                       label: const Text('승인'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 12.h),
                       ),
                     ),
                   ),
@@ -760,66 +556,137 @@ class _MissionApprovalTabState extends State<MissionApprovalTab> with SingleTick
       ),
     );
   }
-  
+
+  void _showRejectionDialog(SubmittedMission mission) {
+    final controller = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('미션 거부'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${mission.missionTitle} 미션을 거부하시겠습니까?'),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: controller,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: '거부 사유',
+                hintText: '테스터에게 전달할 거부 사유를 입력해주세요',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _updateMissionStatus(mission.id, MissionSubmissionStatus.rejected, 
+                  reason: controller.text);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('거부', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRevisionDialog(SubmittedMission mission) {
+    final controller = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('보완 요청'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${mission.missionTitle} 미션에 보완을 요청하시겠습니까?'),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: controller,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: '보완 요청사항',
+                hintText: '테스터가 보완해야 할 내용을 구체적으로 입력해주세요',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _updateMissionStatus(mission.id, MissionSubmissionStatus.needsRevision, 
+                  reason: controller.text);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('요청', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   Color _getStatusColor(MissionSubmissionStatus status) {
     switch (status) {
-      case MissionSubmissionStatus.submitted:
-        return Colors.orange;
       case MissionSubmissionStatus.approved:
         return Colors.green;
       case MissionSubmissionStatus.rejected:
         return Colors.red;
-      case MissionSubmissionStatus.pending:
-        return Colors.blue;
       case MissionSubmissionStatus.needsRevision:
         return Colors.orange;
       case MissionSubmissionStatus.resubmitted:
+        return Colors.blue;
+      case MissionSubmissionStatus.pending:
         return Colors.purple;
+      default:
+        return Colors.grey;
     }
   }
-  
+
   String _getStatusText(MissionSubmissionStatus status) {
     switch (status) {
-      case MissionSubmissionStatus.submitted:
-        return '승인 대기';
       case MissionSubmissionStatus.approved:
-        return '승인 완료';
+        return '승인됨';
       case MissionSubmissionStatus.rejected:
         return '거부됨';
-      case MissionSubmissionStatus.pending:
-        return '처리 중';
       case MissionSubmissionStatus.needsRevision:
-        return '보완 요청';
+        return '보완요청';
       case MissionSubmissionStatus.resubmitted:
         return '재제출됨';
-    }
-  }
-  
-  String _getScreenshotTypeText(String type) {
-    switch (type) {
-      case 'start':
-        return '시작';
-      case 'middle':
-        return '중간';
-      case 'end':
-        return '종료';
+      case MissionSubmissionStatus.pending:
+        return '대기중';
       default:
-        return type;
+        return '제출됨';
     }
   }
-  
+
   String _formatDateTime(DateTime dateTime) {
     final now = DateTime.now();
-    final difference = now.difference(dateTime);
-    
-    if (difference.inDays > 0) {
-      return '${difference.inDays}일 전';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}시간 전';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}분 전';
+    final diff = now.difference(dateTime);
+
+    if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}분 전';
+    } else if (diff.inHours < 24) {
+      return '${diff.inHours}시간 전';
+    } else if (diff.inDays < 7) {
+      return '${diff.inDays}일 전';
     } else {
-      return '방금 전';
+      return '${dateTime.year}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
     }
   }
 }

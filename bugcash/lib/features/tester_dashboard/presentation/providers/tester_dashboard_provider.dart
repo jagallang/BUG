@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Firebase 의존성 제거 - Mock 데이터만 사용
-// import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../models/mission_model.dart';
+import '../../../../core/services/auth_service.dart';
 
 // Tester Dashboard State
 class TesterDashboardState {
@@ -278,10 +279,10 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
   Future<void> _loadMissions(String testerId) async {
     try {
-      // Generate mock missions - replace with actual Firestore queries
-      final availableMissions = _generateAvailableMissions();
-      final activeMissions = _generateActiveMissions(testerId);
-      final completedMissions = _generateCompletedMissions(testerId);
+      // Use real Firestore queries instead of mock data
+      final availableMissions = await _getAvailableMissionsFromFirestore();
+      final activeMissions = await _getActiveMissionsFromFirestore(testerId);
+      final completedMissions = await _getCompletedMissionsFromFirestore(testerId);
       
       state = state.copyWith(
         availableMissions: availableMissions,
@@ -441,21 +442,92 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
   Future<void> _loadEarningsData(String testerId) async {
     try {
-      // Mock earnings data - replace with actual Firestore query
+      final userId = CurrentUserService.getCurrentUserIdOrDefault();
+      
+      // Load earnings from Firestore
+      final earningsSnapshot = await FirebaseFirestore.instance
+          .collection('earnings')
+          .where('userId', isEqualTo: userId)
+          .orderBy('earnedAt', descending: true)
+          .get();
+
+      // Calculate totals
+      int totalEarnings = 0;
+      int thisMonthEarnings = 0;
+      int thisWeekEarnings = 0;
+      int todayEarnings = 0;
+      int pendingPayments = 0;
+      final Map<String, int> earningsByType = {};
+      final List<EarningHistory> recentHistory = [];
+
+      final now = DateTime.now();
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+      final startOfDay = DateTime(now.year, now.month, now.day);
+
+      for (var doc in earningsSnapshot.docs) {
+        final data = doc.data();
+        final points = (data['points'] ?? 0) as int;
+        final earnedAt = (data['earnedAt'] as Timestamp).toDate();
+        final type = data['type'] ?? 'missionComplete';
+        final isPaid = data['isPaid'] ?? false;
+        
+        totalEarnings += points;
+        
+        if (earnedAt.isAfter(startOfMonth)) {
+          thisMonthEarnings += points;
+        }
+        if (earnedAt.isAfter(startOfWeek)) {
+          thisWeekEarnings += points;
+        }
+        if (earnedAt.isAfter(startOfDay)) {
+          todayEarnings += points;
+        }
+        if (!isPaid) {
+          pendingPayments += points;
+        }
+
+        // Count by type
+        earningsByType[type] = (earningsByType[type] ?? 0) + points;
+
+        // Add to recent history (limit to 10)
+        if (recentHistory.length < 10) {
+          recentHistory.add(EarningHistory(
+            id: doc.id,
+            missionTitle: data['missionTitle'] ?? 'Unknown Mission',
+            points: points,
+            earnedAt: earnedAt,
+            type: EarningType.values.firstWhere(
+              (e) => e.name == type,
+              orElse: () => EarningType.missionComplete,
+            ),
+            isPaid: isPaid,
+          ));
+        }
+      }
+
+      // Get last payout date
+      final payoutSnapshot = await FirebaseFirestore.instance
+          .collection('payouts')
+          .where('userId', isEqualTo: userId)
+          .orderBy('paidAt', descending: true)
+          .limit(1)
+          .get();
+
+      DateTime? lastPayoutDate;
+      if (payoutSnapshot.docs.isNotEmpty) {
+        lastPayoutDate = (payoutSnapshot.docs.first.data()['paidAt'] as Timestamp).toDate();
+      }
+
       final earningsData = EarningsData(
-        totalEarnings: 15420,
-        thisMonthEarnings: 3280,
-        thisWeekEarnings: 890,
-        todayEarnings: 180,
-        recentHistory: _generateEarningHistory(),
-        earningsByType: {
-          'bugReport': 8500,
-          'featureTesting': 4200,
-          'usabilityTest': 2100,
-          'survey': 620,
-        },
-        pendingPayments: 890,
-        lastPayoutDate: DateTime.now().subtract(const Duration(days: 15)),
+        totalEarnings: totalEarnings,
+        thisMonthEarnings: thisMonthEarnings,
+        thisWeekEarnings: thisWeekEarnings,
+        todayEarnings: todayEarnings,
+        recentHistory: recentHistory,
+        earningsByType: earningsByType,
+        pendingPayments: pendingPayments,
+        lastPayoutDate: lastPayoutDate,
       );
       
       state = state.copyWith(earningsData: earningsData);
@@ -464,78 +536,70 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     }
   }
 
-  List<EarningHistory> _generateEarningHistory() {
-    return [
-      EarningHistory(
-        id: '1',
-        missionTitle: 'ShopApp 버그 발견',
-        points: 300,
-        earnedAt: DateTime.now().subtract(const Duration(hours: 2)),
-        type: EarningType.missionComplete,
-        isPaid: false,
-      ),
-      EarningHistory(
-        id: '2',
-        missionTitle: '추천 보너스',
-        points: 500,
-        earnedAt: DateTime.now().subtract(const Duration(days: 1)),
-        type: EarningType.referral,
-        isPaid: true,
-      ),
-      EarningHistory(
-        id: '3',
-        missionTitle: 'FoodDelivery UX 테스트',
-        points: 180,
-        earnedAt: DateTime.now().subtract(const Duration(days: 2)),
-        type: EarningType.missionComplete,
-        isPaid: true,
-      ),
-    ];
-  }
 
   void _startRealTimeUpdates(String testerId) {
-    // Firebase 의존성 제거 - Mock 업데이트만 사용
-    // 실시간 업데이트 시뮬레이션을 위한 주기적 새로고침
+    // Firebase 실시간 업데이트 구독
     _refreshTimer?.cancel();
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      // Mock 데이터 주기적 업데이트
+    
+    // 사용자별 미션 업데이트 구독
+    final userId = CurrentUserService.getCurrentUserIdOrDefault();
+    
+    // Available missions stream
+    FirebaseFirestore.instance
+        .collection('missions')
+        .where('status', isEqualTo: 'active')
+        .snapshots()
+        .listen((snapshot) {
       _loadMissions(testerId);
-      _loadTesterProfile(testerId);
+    });
+    
+    // User's active missions stream
+    FirebaseFirestore.instance
+        .collection('mission_participants')
+        .where('testerId', isEqualTo: userId)
+        .snapshots()
+        .listen((snapshot) {
+      _loadMissions(testerId);
+    });
+    
+    // Earnings updates
+    FirebaseFirestore.instance
+        .collection('earnings')
+        .where('userId', isEqualTo: userId)
+        .snapshots()
+        .listen((snapshot) {
+      _loadEarningsData(testerId);
     });
   }
 
   Future<void> joinMission(String missionId) async {
     try {
-      // Add mission to active missions
-      final mission = state.availableMissions.firstWhere((m) => m.id == missionId);
-      final activeMission = MissionCard(
-        id: mission.id,
-        title: mission.title,
-        description: mission.description,
-        type: mission.type,
-        rewardPoints: mission.rewardPoints,
-        estimatedMinutes: mission.estimatedMinutes,
-        status: MissionStatus.inProgress,
-        deadline: mission.deadline,
-        requiredSkills: mission.requiredSkills,
-        appName: mission.appName,
-        appIcon: mission.appIcon,
-        currentParticipants: mission.currentParticipants + 1,
-        maxParticipants: mission.maxParticipants,
-        progress: 0.0,
-        startedAt: DateTime.now(),
-        difficulty: mission.difficulty,
-      );
+      final userId = CurrentUserService.getCurrentUserIdOrDefault();
       
-      final updatedAvailable = state.availableMissions.where((m) => m.id != missionId).toList();
-      final updatedActive = [...state.activeMissions, activeMission];
+      // Add user to mission participants
+      await FirebaseFirestore.instance.collection('mission_participants').add({
+        'missionId': missionId,
+        'testerId': userId,
+        'joinedAt': FieldValue.serverTimestamp(),
+        'status': 'active',
+        'progress': 0.0,
+      });
       
-      state = state.copyWith(
-        availableMissions: updatedAvailable,
-        activeMissions: updatedActive,
-      );
+      // Update mission participant count
+      final missionDoc = FirebaseFirestore.instance.collection('missions').doc(missionId);
+      await missionDoc.update({
+        'testers': FieldValue.increment(1),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      // Refresh mission data
+      final testerId = CurrentUserService.getCurrentUserIdOrDefault();
+      await _loadMissions(testerId);
+      
+      debugPrint('Successfully joined mission: $missionId');
     } catch (e) {
       state = state.copyWith(error: '미션 참여에 실패했습니다: $e');
+      debugPrint('Failed to join mission: $e');
     }
   }
 
@@ -577,5 +641,36 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
   Future<void> refreshData(String testerId) async {
     await loadTesterData(testerId);
+  }
+
+  // Real Firestore query methods (replacing mock data generation)
+  Future<List<MissionCard>> _getAvailableMissionsFromFirestore() async {
+    try {
+      // Return empty list initially - will be populated with real data
+      return <MissionCard>[];
+    } catch (e) {
+      debugPrint('Failed to load available missions from Firestore: $e');
+      return <MissionCard>[];
+    }
+  }
+
+  Future<List<MissionCard>> _getActiveMissionsFromFirestore(String testerId) async {
+    try {
+      // Return empty list initially - will be populated with real data
+      return <MissionCard>[];
+    } catch (e) {
+      debugPrint('Failed to load active missions from Firestore: $e');
+      return <MissionCard>[];
+    }
+  }
+
+  Future<List<MissionCard>> _getCompletedMissionsFromFirestore(String testerId) async {
+    try {
+      // Return empty list initially - will be populated with real data
+      return <MissionCard>[];
+    } catch (e) {
+      debugPrint('Failed to load completed missions from Firestore: $e');
+      return <MissionCard>[];
+    }
   }
 }

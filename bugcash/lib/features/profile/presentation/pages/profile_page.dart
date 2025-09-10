@@ -8,6 +8,7 @@ import '../../../../core/utils/logger.dart';
 import '../../../points/presentation/pages/point_history_page.dart';
 import 'profile_edit_page.dart';
 import 'package:intl/intl.dart';
+import '../../../../core/services/auth_service.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -28,19 +29,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   Future<void> _loadUserProfile() async {
     try {
-      // TODO: Get actual user ID from auth provider
-      const userId = 'demo_user';
+      // Get actual user ID from auth provider
+      final userId = CurrentUserService.getCurrentUserIdOrDefault();
       final userData = await FirebaseService.getUserData(userId);
       
       if (mounted) {
         setState(() {
           userProfile = userData ?? {
-            'name': '데모 사용자',
-            'email': 'demo@bugcash.com',
-            'totalPoints': 15500,
-            'tier': 'GOLD',
-            'completedMissions': 12,
-            'joinedAt': DateTime.now().subtract(const Duration(days: 90)).toIso8601String(),
+            'name': '익명 사용자',
+            'email': 'anonymous@bugcash.com',
+            'totalPoints': 0,
+            'tier': 'BRONZE',
+            'completedMissions': 0,
+            'joinedAt': DateTime.now().toIso8601String(),
           };
           isLoading = false;
         });
@@ -51,12 +52,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         setState(() {
           isLoading = false;
           userProfile = {
-            'name': '데모 사용자',
-            'email': 'demo@bugcash.com',
-            'totalPoints': 15500,
-            'tier': 'GOLD',
-            'completedMissions': 12,
-            'joinedAt': DateTime.now().subtract(const Duration(days: 90)).toIso8601String(),
+            'name': '익명 사용자',
+            'email': 'anonymous@bugcash.com',
+            'totalPoints': 0,
+            'tier': 'BRONZE',
+            'completedMissions': 0,
+            'joinedAt': DateTime.now().toIso8601String(),
           };
         });
       }
@@ -172,7 +173,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           SizedBox(height: 16.h),
           Text(
-            userProfile?['name'] ?? '데모 사용자',
+            userProfile?['name'] ?? '익명 사용자',
             style: TextStyle(
               fontSize: 24.sp,
               fontWeight: FontWeight.bold,
@@ -181,7 +182,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           SizedBox(height: 8.h),
           Text(
-            userProfile?['email'] ?? 'demo@bugcash.com',
+            userProfile?['email'] ?? 'anonymous@bugcash.com',
             style: TextStyle(
               fontSize: 14.sp,
               color: AppColors.textSecondary,
@@ -275,7 +276,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const PointHistoryPage(
-                    userId: 'demo_user', // TODO: Get actual user ID
+                    userId: CurrentUserService.getCurrentUserIdOrDefault(), // Dynamic user ID
                   ),
                 ),
               );
@@ -404,7 +405,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               context,
               MaterialPageRoute(
                 builder: (context) => const PointHistoryPage(
-                  userId: 'demo_user', // TODO: Get actual user ID
+                  userId: CurrentUserService.getCurrentUserIdOrDefault(), // Dynamic user ID
                 ),
               ),
             );

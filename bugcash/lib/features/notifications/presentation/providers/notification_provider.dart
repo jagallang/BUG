@@ -4,6 +4,7 @@ import '../../domain/repositories/notification_repository.dart';
 import '../../data/repositories/notification_repository_impl.dart';
 import '../../data/services/fcm_service.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/services/auth_service.dart';
 
 // Repository Provider
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
@@ -42,7 +43,8 @@ final fcmTokenProvider = StateNotifierProvider<FCMTokenNotifier, AsyncValue<Stri
 
 class NotificationNotifier extends StateNotifier<AsyncValue<List<NotificationModel>>> {
   final NotificationRepository _repository;
-  static const String _currentUserId = 'demo_user'; // TODO: Get actual user ID
+  // Get current user ID dynamically
+  String get _currentUserId => CurrentUserService.getCurrentUserIdOrDefault();
 
   NotificationNotifier(this._repository) : super(const AsyncValue.loading()) {
     loadNotifications();
@@ -163,7 +165,8 @@ class NotificationNotifier extends StateNotifier<AsyncValue<List<NotificationMod
 
 class UnreadCountNotifier extends StateNotifier<AsyncValue<int>> {
   final NotificationRepository _repository;
-  static const String _currentUserId = 'demo_user'; // TODO: Get actual user ID
+  // Get current user ID dynamically
+  String get _currentUserId => CurrentUserService.getCurrentUserIdOrDefault();
 
   UnreadCountNotifier(this._repository) : super(const AsyncValue.loading()) {
     loadUnreadCount();
@@ -205,7 +208,8 @@ class UnreadCountNotifier extends StateNotifier<AsyncValue<int>> {
 
 class NotificationSettingsNotifier extends StateNotifier<AsyncValue<NotificationSettings>> {
   final NotificationRepository _repository;
-  static const String _currentUserId = 'demo_user'; // TODO: Get actual user ID
+  // Get current user ID dynamically
+  String get _currentUserId => CurrentUserService.getCurrentUserIdOrDefault();
 
   NotificationSettingsNotifier(this._repository) : super(const AsyncValue.loading()) {
     loadSettings();
@@ -278,7 +282,8 @@ class NotificationSettingsNotifier extends StateNotifier<AsyncValue<Notification
 class FCMTokenNotifier extends StateNotifier<AsyncValue<String?>> {
   final NotificationRepository _repository;
   final FCMService _fcmService;
-  static const String _currentUserId = 'demo_user'; // TODO: Get actual user ID
+  // Get current user ID dynamically
+  String get _currentUserId => CurrentUserService.getCurrentUserIdOrDefault();
 
   FCMTokenNotifier(this._repository, this._fcmService) : super(const AsyncValue.loading()) {
     initializeToken();
@@ -333,15 +338,18 @@ class FCMTokenNotifier extends StateNotifier<AsyncValue<String?>> {
 // Real-time stream providers
 final notificationStreamProvider = StreamProvider<List<NotificationModel>>((ref) {
   final repository = ref.watch(notificationRepositoryProvider);
-  return repository.watchNotifications('demo_user'); // TODO: Get actual user ID
+  final userId = CurrentUserService.getCurrentUserIdOrDefault();
+  return repository.watchNotifications(userId);
 });
 
 final unreadCountStreamProvider = StreamProvider<int>((ref) {
   final repository = ref.watch(notificationRepositoryProvider);
-  return repository.watchUnreadCount('demo_user'); // TODO: Get actual user ID
+  final userId = CurrentUserService.getCurrentUserIdOrDefault();
+  return repository.watchUnreadCount(userId);
 });
 
 final notificationSettingsStreamProvider = StreamProvider<NotificationSettings>((ref) {
   final repository = ref.watch(notificationRepositoryProvider);
-  return repository.watchNotificationSettings('demo_user'); // TODO: Get actual user ID
+  final userId = CurrentUserService.getCurrentUserIdOrDefault();
+  return repository.watchNotificationSettings(userId);
 });
