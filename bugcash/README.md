@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.01-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.04-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,31 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.01)
+## ✨ 주요 기능 (v1.4.04)
 
-### 🔥 NEW! Firebase 완전 통합 & 프로덕션 배포 준비 (v1.4.01)
+### 🎨 NEW! 테마 분리 & UI/UX 개선 (v1.4.04)
+- **🔵 앱공급자 인디고 테마**: 전체 Provider Dashboard를 진한 파란색(Indigo) 테마로 통일
+- **🟢 앱테스터 그린 테마 유지**: 기존 Tester 인터페이스의 녹색 테마 그대로 유지
+- **📱 하단 탭 네비게이션**: 미션 탭을 하단으로 이동하여 모바일 접근성 향상
+- **⚡ 동적 FAB 위치 조정**: 채팅 FAB가 탭 변경에 따라 자동으로 위치 조정
+- **🛡️ 시스템 UI 간격 조정**: 스마트폰 네비게이션 바와의 충돌 방지를 위한 MediaQuery 패딩
+- **🎯 조건부 UI 렌더링**: 탭 인덱스에 따른 동적 FloatingActionButton 위치 변경
+- **✨ 실시간 상태 업데이트**: TabController 리스너로 UI 변경사항 즉시 반영
+
+### 🚀 완전한 Firebase 백엔드 통합 & 하드코딩 데이터 제거 (v1.4.03)
+- **💥 모든 하드코딩 데이터 완전 제거**: 2,917줄의 Mock 데이터를 실제 Firebase 데이터로 교체
+- **🏢 공급자 대시보드 완전 Firebase 연동**: 5개 탭 모두 실시간 Firebase 데이터 사용
+  - **📱 앱 관리**: 실시간 앱 CRUD 및 상태 관리
+  - **👥 테스터 관리**: 라이브 테스터 통계, 검색, 필터링
+  - **✅ 미션 승인**: 실시간 제출 승인/거부/보완요청 시스템
+  - **💰 결제 관리**: Firebase 기반 결제 추적 및 포인트 지급
+  - **📊 대시보드 분석**: 실시간 Firebase 통계 및 차트
+- **🔐 인증 서비스 강화**: CurrentUserService로 사용자 프로필 관리 완성
+- **⚡ 실시간 스트림**: 모든 컴포넌트에서 Firestore 실시간 업데이트
+- **🛠️ 에러 처리 완성**: 로딩 상태, 에러 처리, 빈 상태 UI 구현
+- **🏗️ 프로덕션 준비**: MockDataSource 의존성 완전 제거로 실제 서비스 준비 완료
+
+### 🔥 Firebase 완전 통합 & 프로덕션 배포 준비 (v1.4.01)
 - **🚀 Firebase Web SDK 완전 통합**: Firebase v10.7.0 기반 실시간 연결 완료
 - **🔐 프로덕션 인증 시스템**: Google Sign-In과 Firebase Auth 완전 연동
 - **💾 실시간 데이터베이스**: Firestore 실시간 스트림으로 즉시 데이터 동기화
@@ -297,6 +319,26 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 - **1:1 채팅 시작**: 검색 결과에서 채팅 버튼 클릭하여 즉시 채팅 시작
 
 ## 🔧 주요 버전 정보
+
+### 🎨 v1.4.04 (2025-09-11) - 테마 분리 & UI/UX 개선
+
+#### ✨ 혁신적인 디자인 개선
+- **🎨 완전한 색상 테마 분리**: 앱테스터(녹색)와 앱공급자(인디고) 역할별 색상 체계 분리
+- **🔵 인디고 테마 Provider Dashboard**: AppBar, 버튼, 상태 표시, 네비게이션 모두 indigo[700-900] 통일
+- **🟢 그린 테마 Tester Interface**: 기존 green 테마 완전 유지로 역할별 시각적 구분 강화
+- **📱 모바일 친화적 하단 탭**: 미션 탭바를 상단에서 하단으로 이동하여 엄지 접근성 향상
+- **🛡️ 시스템 UI 충돌 해결**: MediaQuery 패딩으로 Android 네비게이션 바와의 겹침 방지
+- **⚡ 동적 FAB 위치**: 탭 변경 시 채팅 FloatingActionButton이 자동으로 위치 조정
+- **✨ 실시간 UI 업데이트**: TabController 리스너로 탭 변경에 따른 즉시 UI 반영
+
+#### 🛠️ 기술적 구현 세부사항
+- **7개 파일 동시 수정**: Provider Dashboard 전체 컴포넌트 색상 체계 통일
+- **조건부 FAB 렌더링**: `_tabController.index == 1 ? FloatingActionButtonLocation.endTop : FloatingActionButtonLocation.endFloat`
+- **MediaQuery 반응형 설계**: `height: 60.h + MediaQuery.of(context).padding.bottom`로 기기별 최적화
+- **Colors.indigo 완전 적용**: indigo[50], indigo[100], indigo[700], indigo[900] 단계적 색상 적용
+- **TabController 상태 관리**: addListener()로 탭 변경 시 setState() 호출하여 FAB 위치 동적 업데이트
+- **앱바 테마 통일**: backgroundColor: Colors.indigo[900], foregroundColor: Colors.white 일관성
+- **버튼 스타일 표준화**: ElevatedButton.styleFrom(backgroundColor: Colors.indigo[700]) 전체 적용
 
 ### 💬 v1.4.00 (2025-09-10) - 완전한 실시간 채팅 시스템
 

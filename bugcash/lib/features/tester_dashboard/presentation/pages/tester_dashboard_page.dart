@@ -32,6 +32,11 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     _tabController = TabController(length: 3, vsync: this);
     _scrollController = ScrollController();
     
+    // TabController 리스너 추가 (FAB 위치 조정을 위해)
+    _tabController.addListener(() {
+      setState(() {});
+    });
+    
     // 초기 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
@@ -278,6 +283,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       
       // Floating Action Button for chat
       floatingActionButton: _buildChatFAB(),
+      floatingActionButtonLocation: _tabController.index == 1 
+          ? FloatingActionButtonLocation.endTop 
+          : FloatingActionButtonLocation.endFloat,
     );
   }
 
@@ -454,7 +462,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     return Container(
       margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: isUnread ? Colors.blue.shade50 : Colors.transparent,
+        color: isUnread ? Colors.green.shade50 : Colors.transparent,
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: ListTile(
@@ -601,37 +609,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       length: 3,
       child: Column(
         children: [
-          Container(
-            height: 60.h, // 높이 줄임 (기본 72.h에서 60.h로)
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50, // 연한 파란색 배경
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.grey.shade200,
-                  width: 1,
-                ),
-              ),
-            ),
-            child: TabBar(
-              labelColor: Colors.blue.shade700,
-              unselectedLabelColor: Colors.grey.shade600,
-              indicatorColor: Colors.blue.shade700,
-              indicatorWeight: 3,
-              labelStyle: TextStyle(
-                fontSize: 13.sp, // 폰트 크기 조정
-                fontWeight: FontWeight.w600,
-              ),
-              unselectedLabelStyle: TextStyle(
-                fontSize: 13.sp,
-                fontWeight: FontWeight.normal,
-              ),
-              tabs: [
-                Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 18.w)),
-                Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 18.w)),
-                Tab(text: '완료', icon: Icon(Icons.check_circle, size: 18.w)),
-              ],
-            ),
-          ),
           Expanded(
             child: Container(
               color: Colors.grey.shade50, // 본문 배경색을 연한 회색으로
@@ -643,6 +620,40 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   _buildActiveMissionsTab(),
                   // 완료된 미션 탭
                   _buildCompletedMissionsTab(),
+                ],
+              ),
+            ),
+          ),
+          Container(
+            height: 60.h + MediaQuery.of(context).padding.bottom, // 시스템 내비게이션 바 높이 추가
+            decoration: BoxDecoration(
+              color: Colors.green.shade50, // 연한 녹색 배경
+              border: Border(
+                top: BorderSide(
+                  color: Colors.grey.shade200,
+                  width: 1,
+                ),
+              ),
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom), // 하단 세이프 에리어 패딩
+              child: TabBar(
+                labelColor: Colors.green.shade700,
+                unselectedLabelColor: Colors.grey.shade600,
+                indicatorColor: Colors.green.shade700,
+                indicatorWeight: 3,
+                labelStyle: TextStyle(
+                  fontSize: 13.sp, // 폰트 크기 조정
+                  fontWeight: FontWeight.w600,
+                ),
+                unselectedLabelStyle: TextStyle(
+                  fontSize: 13.sp,
+                  fontWeight: FontWeight.normal,
+                ),
+                tabs: [
+                  Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 18.w)),
+                  Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 18.w)),
+                  Tab(text: '완료', icon: Icon(Icons.check_circle, size: 18.w)),
                 ],
               ),
             ),
@@ -1081,7 +1092,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   ElevatedButton(
                     onPressed: () => _showSettlementInfo(mission),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Colors.green,
                       minimumSize: Size(80.w, 32.h),
                     ),
                     child: Text(
@@ -1107,7 +1118,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       case SettlementStatus.pending:
         return Colors.orange;
       case SettlementStatus.processing:
-        return Colors.blue;
+        return Colors.green;
       case SettlementStatus.settled:
         return Colors.green;
     }

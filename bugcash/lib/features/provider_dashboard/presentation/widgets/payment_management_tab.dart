@@ -161,7 +161,7 @@ class _PaymentManagementTabState extends ConsumerState<PaymentManagementTab> {
   Widget _buildHeader() {
     return Row(
       children: [
-        Icon(Icons.payment, size: 24.w, color: Colors.green),
+        Icon(Icons.payment, size: 24.w, color: Colors.indigo[700]),
         SizedBox(width: 12.w),
         Text(
           '결제 관리',
@@ -182,7 +182,7 @@ class _PaymentManagementTabState extends ConsumerState<PaymentManagementTab> {
           icon: Icon(Icons.add, size: 16.w),
           label: const Text('결제 추가'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
+            backgroundColor: Colors.indigo[700],
             foregroundColor: Colors.white,
           ),
         ),
@@ -202,7 +202,7 @@ class _PaymentManagementTabState extends ConsumerState<PaymentManagementTab> {
             '총 예산',
             '₩${_formatCurrency(totalBudget)}',
             Icons.account_balance_wallet,
-            Colors.blue,
+            Colors.indigo[600]!,
           ),
         ),
         SizedBox(width: 12.w),
@@ -220,7 +220,7 @@ class _PaymentManagementTabState extends ConsumerState<PaymentManagementTab> {
             '잔여 예산',
             '₩${_formatCurrency(remainingBudget)}',
             Icons.savings,
-            remainingBudget >= 0 ? Colors.green : Colors.red,
+            remainingBudget >= 0 ? Colors.indigo[600]! : Colors.red,
           ),
         ),
       ],
@@ -412,7 +412,7 @@ class _PaymentManagementTabState extends ConsumerState<PaymentManagementTab> {
               child: ElevatedButton(
                 onPressed: () => _processPayment(payment),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
+                  backgroundColor: Colors.indigo[600],
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('포인트 지급 처리'),
@@ -459,9 +459,9 @@ class _PaymentManagementTabState extends ConsumerState<PaymentManagementTab> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('포인트 지급 처리를 시작했습니다'),
-            backgroundColor: Colors.orange,
+          SnackBar(
+            content: const Text('포인트 지급 처리를 시작했습니다'),
+            backgroundColor: Colors.indigo[600],
           ),
         );
       }
@@ -480,11 +480,11 @@ class _PaymentManagementTabState extends ConsumerState<PaymentManagementTab> {
   Color _getStatusColor(PaymentStatus status) {
     switch (status) {
       case PaymentStatus.completed:
-        return Colors.blue;
+        return Colors.indigo[600]!;
       case PaymentStatus.processing:
         return Colors.orange;
       case PaymentStatus.distributed:
-        return Colors.green;
+        return Colors.indigo[700]!;
       case PaymentStatus.failed:
         return Colors.red;
       default:

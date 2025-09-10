@@ -475,15 +475,15 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     String text;
     switch (status) {
       case 'active':
-        color = Colors.green;
+        color = Colors.indigo[600]!;
         text = '활성';
         break;
       case 'paused':
-        color = Colors.orange;
+        color = Colors.indigo[400]!;
         text = '일시정지';
         break;
       case 'completed':
-        color = Colors.blue;
+        color = Colors.indigo[300]!;
         text = '완료';
         break;
       default:

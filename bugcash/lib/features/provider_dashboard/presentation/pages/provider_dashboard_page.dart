@@ -66,10 +66,10 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Colors.indigo[900],
         elevation: 1,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black87),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           tooltip: '테스터 모드로 전환',
           onPressed: () {
             // 테스터 대시보드로 이동
@@ -86,14 +86,14 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         title: Text(
           '공급자 대시보드',
           style: TextStyle(
-            color: Colors.black87,
+            color: Colors.white,
             fontWeight: FontWeight.w600,
             fontSize: 20.sp,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.black87),
+            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('알림 기능 (개발 중)')),
@@ -101,7 +101,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             },
           ),
           IconButton(
-            icon: const Icon(Icons.account_circle, color: Colors.black87),
+            icon: const Icon(Icons.account_circle, color: Colors.white),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('프로필 기능 (개발 중)')),
@@ -114,6 +114,9 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       floatingActionButton: _buildChatFAB(),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
+        backgroundColor: Colors.indigo[900],
+        selectedItemColor: Colors.white,
+        unselectedItemColor: Colors.indigo[300],
         currentIndex: _selectedIndex,
         onTap: (index) {
           debugPrint('BottomNavigationBar tapped: $index');
@@ -846,7 +849,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               ),
             );
           },
-          backgroundColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: Colors.indigo[700],
           child: const Icon(
             Icons.chat,
             color: Colors.white,

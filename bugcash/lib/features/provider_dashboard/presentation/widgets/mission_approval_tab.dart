@@ -288,7 +288,7 @@ class _MissionApprovalTabState extends ConsumerState<MissionApprovalTab> with Si
       ),
       child: Row(
         children: [
-          Icon(Icons.assignment_turned_in, size: 24.w, color: Colors.blue),
+          Icon(Icons.assignment_turned_in, size: 24.w, color: Colors.indigo[700]),
           SizedBox(width: 12.w),
           Text(
             '미션 승인 관리',
@@ -322,9 +322,9 @@ class _MissionApprovalTabState extends ConsumerState<MissionApprovalTab> with Si
           Tab(text: '승인됨'),
           Tab(text: '기타'),
         ],
-        labelColor: Colors.blue,
+        labelColor: Colors.indigo[700],
         unselectedLabelColor: Colors.grey[600],
-        indicatorColor: Colors.blue,
+        indicatorColor: Colors.indigo[700],
       ),
     );
   }
@@ -460,13 +460,13 @@ class _MissionApprovalTabState extends ConsumerState<MissionApprovalTab> with Si
                   style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
                 ),
                 SizedBox(width: 16.w),
-                Icon(Icons.monetization_on, size: 14.w, color: Colors.orange),
+                Icon(Icons.monetization_on, size: 14.w, color: Colors.indigo[600]),
                 SizedBox(width: 4.w),
                 Text(
                   '${mission.rewardPoints}P',
                   style: TextStyle(
                     fontSize: 12.sp,
-                    color: Colors.orange,
+                    color: Colors.indigo[600],
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -531,8 +531,8 @@ class _MissionApprovalTabState extends ConsumerState<MissionApprovalTab> with Si
                       icon: Icon(Icons.edit, size: 16.w),
                       label: const Text('보완요청'),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.orange,
-                        side: const BorderSide(color: Colors.orange),
+                        foregroundColor: Colors.indigo[600],
+                        side: BorderSide(color: Colors.indigo[600]!),
                       ),
                     ),
                   ),
@@ -543,7 +543,7 @@ class _MissionApprovalTabState extends ConsumerState<MissionApprovalTab> with Si
                       icon: Icon(Icons.check, size: 16.w),
                       label: const Text('승인'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: Colors.indigo[600],
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -633,7 +633,7 @@ class _MissionApprovalTabState extends ConsumerState<MissionApprovalTab> with Si
               _updateMissionStatus(mission.id, MissionSubmissionStatus.needsRevision, 
                   reason: controller.text);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo[700]),
             child: const Text('요청', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -644,13 +644,13 @@ class _MissionApprovalTabState extends ConsumerState<MissionApprovalTab> with Si
   Color _getStatusColor(MissionSubmissionStatus status) {
     switch (status) {
       case MissionSubmissionStatus.approved:
-        return Colors.green;
+        return Colors.indigo[600]!;
       case MissionSubmissionStatus.rejected:
         return Colors.red;
       case MissionSubmissionStatus.needsRevision:
-        return Colors.orange;
+        return Colors.indigo[400]!;
       case MissionSubmissionStatus.resubmitted:
-        return Colors.blue;
+        return Colors.indigo[300]!;
       case MissionSubmissionStatus.pending:
         return Colors.purple;
       default:

@@ -187,7 +187,7 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
       ),
       child: Row(
         children: [
-          Icon(Icons.people, size: 24.w, color: Colors.blue),
+          Icon(Icons.people, size: 24.w, color: Colors.indigo[700]),
           SizedBox(width: 12.w),
           Text(
             '테스터 관리',
@@ -238,7 +238,7 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
-                      borderSide: const BorderSide(color: Colors.blue),
+                      borderSide: BorderSide(color: Colors.indigo[700]!),
                     ),
                     filled: true,
                     fillColor: Colors.grey[50],
@@ -250,7 +250,7 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  color: Colors.indigo[700],
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Icon(Icons.tune, color: Colors.white, size: 20.w),
@@ -331,13 +331,13 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
       padding: EdgeInsets.all(16.w),
       child: Row(
         children: [
-          _buildStatCard('총 테스터', totalTesters.toString(), Icons.people, Colors.blue),
+          _buildStatCard('총 테스터', totalTesters.toString(), Icons.people, Colors.indigo[600]!),
           SizedBox(width: 12.w),
-          _buildStatCard('활성 테스터', activeTesters.toString(), Icons.person, Colors.green),
+          _buildStatCard('활성 테스터', activeTesters.toString(), Icons.person, Colors.indigo[500]!),
           SizedBox(width: 12.w),
-          _buildStatCard('평균 평점', avgRating.toStringAsFixed(1), Icons.star, Colors.orange),
+          _buildStatCard('평균 평점', avgRating.toStringAsFixed(1), Icons.star, Colors.indigo[400]!),
           SizedBox(width: 12.w),
-          _buildStatCard('평균 성공률', '${(avgSuccessRate * 100).toStringAsFixed(0)}%', Icons.check_circle, Colors.purple),
+          _buildStatCard('평균 성공률', '${(avgSuccessRate * 100).toStringAsFixed(0)}%', Icons.check_circle, Colors.indigo[300]!),
         ],
       ),
     );
@@ -411,12 +411,12 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
               children: [
                 CircleAvatar(
                   radius: 20.r,
-                  backgroundColor: tester.status == TesterStatus.active ? Colors.green[100] : Colors.grey[300],
+                  backgroundColor: tester.status == TesterStatus.active ? Colors.indigo[100] : Colors.grey[300],
                   child: Text(
                     tester.name.isNotEmpty ? tester.name[0] : '?',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: tester.status == TesterStatus.active ? Colors.green[800] : Colors.grey[600],
+                      color: tester.status == TesterStatus.active ? Colors.indigo[800] : Colors.grey[600],
                     ),
                   ),
                 ),
@@ -445,7 +445,7 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: tester.status == TesterStatus.active ? Colors.green[100] : Colors.grey[200],
+                    color: tester.status == TesterStatus.active ? Colors.indigo[100] : Colors.grey[200],
                     borderRadius: BorderRadius.circular(12.r),
                   ),
                   child: Text(
@@ -453,7 +453,7 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
                     style: TextStyle(
                       fontSize: 10.sp,
                       fontWeight: FontWeight.w500,
-                      color: tester.status == TesterStatus.active ? Colors.green[800] : Colors.grey[600],
+                      color: tester.status == TesterStatus.active ? Colors.indigo[800] : Colors.grey[600],
                     ),
                   ),
                 ),
@@ -468,15 +468,15 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
                 children: tester.specialties.map((specialty) => Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: Colors.indigo[50],
                     borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: Colors.blue[200]!),
+                    border: Border.all(color: Colors.indigo[200]!),
                   ),
                   child: Text(
                     specialty,
                     style: TextStyle(
                       fontSize: 10.sp,
-                      color: Colors.blue[700],
+                      color: Colors.indigo[700],
                     ),
                   ),
                 )).toList(),
