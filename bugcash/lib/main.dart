@@ -8,7 +8,6 @@ import 'generated/l10n/app_localizations.dart';
 import 'core/utils/logger.dart';
 import 'core/config/app_config.dart';
 import 'firebase_options.dart';
-import 'services/firebase_service.dart';
 import 'core/di/injection.dart';
 // import 'features/auth/presentation/widgets/auth_wrapper.dart';  // 임시 비활성화
 import 'features/provider_dashboard/presentation/pages/provider_dashboard_page.dart';  // Provider Dashboard

@@ -237,7 +237,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
           senderAvatar = userData['photoUrl'] ?? userData['avatar'];
         }
       } catch (e) {
-        print('Failed to get sender info: $e');
+        // Log error: Failed to get sender info
       }
       
       final messageData = {
@@ -337,7 +337,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
             .map((doc) => MessageModel.fromFirestore(doc))
             .toList())
         .handleError((error) {
-          print('Error watching chat room messages: $error');
+          // Log error: Error watching chat room messages
         });
   }
   
@@ -444,7 +444,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
         await typingRef.delete();
       }
     } catch (e) {
-      print('Error setting typing status: $e');
+      // Log error: Error setting typing status
     }
   }
   
@@ -472,7 +472,7 @@ class ChatRemoteDataSourceImpl implements ChatRemoteDataSource {
           return typingMap;
         })
         .handleError((error) {
-          print('Error watching typing status: $error');
+          // Log error: Error watching typing status
         });
   }
   

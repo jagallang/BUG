@@ -60,6 +60,7 @@ class SearchRepositoryImpl implements SearchRepository {
     int? maxDaysLeft,
     bool? hasAvailableSlots,
   }) async {
+    print('🚀 searchMissions called with query: "$query"');
     Query<Map<String, dynamic>> queryRef = _firestore.collection('missions');
     
     // Text search (simplified - Firebase doesn't have full-text search)
@@ -114,10 +115,15 @@ class SearchRepositoryImpl implements SearchRepository {
       }).toList();
     }
     
-    // Client-side text search fallback
+    // Client-side text search fallback (provider apps are already filtered)
     if (query.isNotEmpty) {
       final searchTerm = query.toLowerCase();
       results = results.where((mission) {
+        // Skip filtering for provider apps as they're already filtered
+        if (mission['isProviderApp'] == true) {
+          return true;
+        }
+        
         final title = (mission['title'] as String? ?? '').toLowerCase();
         final description = (mission['description'] as String? ?? '').toLowerCase();
         final company = (mission['company'] as String? ?? '').toLowerCase();
@@ -134,15 +140,20 @@ class SearchRepositoryImpl implements SearchRepository {
   // 공급자가 등록한 앱들을 검색 결과에 포함하는 메서드
   Future<void> _includeProviderApps(List<Map<String, dynamic>> results, String query) async {
     try {
+      print('🔍 Searching provider_apps collection for query: "$query"');
+      
       final providerAppsSnapshot = await _firestore
           .collection('provider_apps')
           .where('status', isEqualTo: 'active')
           .get();
       
+      print('📱 Found ${providerAppsSnapshot.docs.length} provider apps');
+      
       final providerApps = providerAppsSnapshot.docs
           .map((doc) {
             final data = doc.data();
             data['id'] = doc.id;
+            print('📝 Provider app: ${data['appName']} - ${data['description']}');
             return data;
           })
           .where((app) {
@@ -153,17 +164,21 @@ class SearchRepositoryImpl implements SearchRepository {
             final description = (app['description'] as String? ?? '').toLowerCase();
             final category = (app['category'] as String? ?? '').toLowerCase();
             
-            return appName.contains(searchTerm) ||
+            final matches = appName.contains(searchTerm) ||
                    description.contains(searchTerm) ||
                    category.contains(searchTerm);
+            
+            print('🔎 App "${app['appName']}" matches query "$query": $matches');
+            return matches;
           })
           .map((app) => _convertProviderAppToMissionFormat(app))
           .toList();
       
+      print('✅ Adding ${providerApps.length} provider apps to search results');
       results.addAll(providerApps);
     } catch (e) {
       // 에러가 발생해도 기존 검색 결과는 유지
-      print('Error including provider apps: $e');
+      print('❌ Error including provider apps: $e');
     }
   }
 

@@ -76,6 +76,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
   }
   
   Future<void> search(String query) async {
+    print('🔍 SearchNotifier.search called with: "$query"');
     if (query.trim().isEmpty) {
       state = state.copyWith(query: '', results: [], error: null);
       return;

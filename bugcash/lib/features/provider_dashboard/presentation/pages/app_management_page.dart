@@ -533,6 +533,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
   Widget _buildUploadDialog() {
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,  // 화면 높이의 85%로 제한
+      ),
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -545,10 +548,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+      child: SingleChildScrollView(  // ScrollView 추가
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -698,6 +702,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
         ],
+        ),
       ),
     );
   }

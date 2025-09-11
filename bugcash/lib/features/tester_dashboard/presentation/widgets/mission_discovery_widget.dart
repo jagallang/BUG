@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/tester_dashboard_provider.dart' as provider;
 import '../../../../models/mission_model.dart';
 import '../../../search/presentation/providers/search_provider.dart';
@@ -117,7 +118,16 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                       vertical: 12.h,
                     ),
                   ),
-                  onChanged: (value) => setState(() {}),
+                  onChanged: (value) {
+                    // 검색어가 입력되면 검색 실행
+                    if (value.isNotEmpty) {
+                      ref.read(searchProvider.notifier).search(value);
+                    } else {
+                      // 검색어가 비어있으면 검색 결과 초기화
+                      ref.read(searchProvider.notifier).clearResults();
+                    }
+                    setState(() {});
+                  },
                 ),
               ),
               SizedBox(width: 12.w),
@@ -418,6 +428,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                   
                   // Title and App Name
                   Expanded(
+                    flex: 3,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -426,6 +437,8 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 2.h),
                         Text(
@@ -434,30 +447,8 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                             fontSize: 12.sp,
                             color: Colors.grey.shade600,
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  // Reward
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20.r),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.monetization_on, color: Colors.green, size: 16.w),
-                        SizedBox(width: 4.w),
-                        Text(
-                          '${mission.rewardPoints}P',
-                          style: TextStyle(
-                            color: Colors.green.shade700,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -465,10 +456,43 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                   
                   SizedBox(width: 8.w),
                   
+                  // Reward - Flexible하게 변경
+                  Flexible(
+                    flex: 1,
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(16.r),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.monetization_on, color: Colors.green, size: 14.w),
+                          SizedBox(width: 2.w),
+                          Flexible(
+                            child: Text(
+                              '${mission.rewardPoints}P',
+                              style: TextStyle(
+                                color: Colors.green.shade700,
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  SizedBox(width: 4.w),
+                  
                   // 확장/접기 아이콘
                   Icon(
                     isExpanded ? Icons.expand_less : Icons.expand_more,
                     color: Colors.grey.shade600,
+                    size: 20.w,
                   ),
                 ],
               ),
@@ -489,50 +513,63 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                 Row(
                   children: [
                     // Difficulty
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                      decoration: BoxDecoration(
-                        color: _getDifficultyColor(mission.difficulty).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(10.r),
-                      ),
-                      child: Text(
-                        _getDifficultyText(mission.difficulty),
-                        style: TextStyle(
-                          color: _getDifficultyColor(mission.difficulty),
-                          fontSize: 11.sp,
-                          fontWeight: FontWeight.w600,
+                    Flexible(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 3.h),
+                        decoration: BoxDecoration(
+                          color: _getDifficultyColor(mission.difficulty).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8.r),
                         ),
+                        child: Text(
+                          _getDifficultyText(mission.difficulty),
+                          style: TextStyle(
+                            color: _getDifficultyColor(mission.difficulty),
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    
+                    // Duration
+                    Icon(Icons.schedule, size: 12.w, color: Colors.grey),
+                    SizedBox(width: 2.w),
+                    Flexible(
+                      child: Text(
+                        '${mission.estimatedMinutes}분',
+                        style: TextStyle(fontSize: 10.sp, color: Colors.grey),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     SizedBox(width: 8.w),
                     
-                    // Duration
-                    Icon(Icons.schedule, size: 14.w, color: Colors.grey),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '${mission.estimatedMinutes}분',
-                      style: TextStyle(fontSize: 11.sp, color: Colors.grey),
-                    ),
-                    SizedBox(width: 12.w),
-                    
                     // Participants
-                    Icon(Icons.people, size: 14.w, color: Colors.blue),
-                    SizedBox(width: 4.w),
-                    Text(
-                      '${mission.currentParticipants}/${mission.maxParticipants}',
-                      style: TextStyle(fontSize: 11.sp, color: Colors.blue),
+                    Icon(Icons.people, size: 12.w, color: Colors.blue),
+                    SizedBox(width: 2.w),
+                    Flexible(
+                      child: Text(
+                        '${mission.currentParticipants}/${mission.maxParticipants}',
+                        style: TextStyle(fontSize: 10.sp, color: Colors.blue),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     
                     const Spacer(),
                     
                     // Deadline
                     if (mission.deadline != null)
-                      Text(
-                        _formatDeadline(mission.deadline!),
-                        style: TextStyle(
-                          fontSize: 11.sp,
-                          color: _isUrgent(mission.deadline!) ? Colors.red : Colors.grey,
-                          fontWeight: _isUrgent(mission.deadline!) ? FontWeight.w600 : FontWeight.normal,
+                      Flexible(
+                        child: Text(
+                          _formatDeadline(mission.deadline!),
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            color: _isUrgent(mission.deadline!) ? Colors.red : Colors.grey,
+                            fontWeight: _isUrgent(mission.deadline!) ? FontWeight.w600 : FontWeight.normal,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
                         ),
                       ),
                   ],
@@ -655,7 +692,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                           padding: EdgeInsets.symmetric(vertical: 12.h),
                         ),
                         child: Text(
-                          '테스트',
+                          '상세보기',
                           style: TextStyle(
                             color: Colors.blue.shade700,
                             fontSize: 14.sp,
@@ -684,7 +721,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                         child: Text(
                           mission.currentParticipants >= mission.maxParticipants
                               ? '정원 마감'
-                              : '미션 신청하기',
+                              : '신청',
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
@@ -753,21 +790,49 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
       
       // 검색 결과가 Map인 경우 MissionCard로 변환
       if (result is Map<String, dynamic>) {
-        return provider.MissionCard(
-          id: result['id'] ?? '',
-          title: result['title'] ?? '',
-          description: result['description'] ?? '',
-          appName: result['appName'] ?? '',
-          type: _parseMissionType(result['type']),
-          difficulty: _parseMissionDifficulty(result['difficulty']),
-          rewardPoints: result['rewardPoints'] ?? 0,
-          estimatedMinutes: result['estimatedMinutes'] ?? 30,
-          currentParticipants: result['currentParticipants'] ?? 0,
-          maxParticipants: result['maxParticipants'] ?? 10,
-          requiredSkills: List<String>.from(result['requiredSkills'] ?? []),
-          deadline: result['deadline'] != null ? DateTime.parse(result['deadline']) : null,
-          status: MissionStatus.active,
-        );
+        // provider_apps 컬렉션에서 온 데이터인지 확인
+        final isProviderApp = result['isProviderApp'] == true;
+        
+        if (isProviderApp) {
+          // provider_apps 데이터를 미션 카드로 변환
+          final originalAppData = result['originalAppData'] as Map<String, dynamic>?;
+          return provider.MissionCard(
+            id: result['id'] ?? '',
+            title: result['title'] ?? '',
+            description: result['description'] ?? '',
+            appName: originalAppData?['appName'] ?? result['title'] ?? '',
+            type: MissionType.functional,
+            difficulty: _parseMissionDifficulty(result['difficulty']),
+            rewardPoints: result['reward'] ?? 5000,
+            estimatedMinutes: 120, // 앱 테스팅은 보통 2시간 정도
+            currentParticipants: result['currentParticipants'] ?? 0,
+            maxParticipants: result['maxParticipants'] ?? 50,
+            requiredSkills: List<String>.from(result['requirements'] ?? ['앱 설치 가능', '피드백 작성']),
+            deadline: result['endDate'] != null 
+                ? (result['endDate'] as Timestamp).toDate()
+                : DateTime.now().add(const Duration(days: 30)),
+            status: MissionStatus.active,
+          );
+        } else {
+          // 일반 미션 데이터 변환
+          return provider.MissionCard(
+            id: result['id'] ?? '',
+            title: result['title'] ?? '',
+            description: result['description'] ?? '',
+            appName: result['appName'] ?? result['company'] ?? '',
+            type: _parseMissionType(result['type']),
+            difficulty: _parseMissionDifficulty(result['difficulty']),
+            rewardPoints: result['reward'] ?? result['rewardPoints'] ?? 0,
+            estimatedMinutes: result['estimatedMinutes'] ?? 30,
+            currentParticipants: result['currentParticipants'] ?? 0,
+            maxParticipants: result['maxParticipants'] ?? 10,
+            requiredSkills: List<String>.from(result['requirements'] ?? result['requiredSkills'] ?? []),
+            deadline: result['endDate'] != null 
+                ? (result['endDate'] as Timestamp).toDate()
+                : (result['deadline'] != null ? DateTime.parse(result['deadline']) : null),
+            status: MissionStatus.active,
+          );
+        }
       }
       
       // 기본값 반환

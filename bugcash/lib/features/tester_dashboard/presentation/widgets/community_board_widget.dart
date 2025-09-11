@@ -22,6 +22,7 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
 
   String _selectedCategory = '전체';
   final List<String> _categories = ['전체', '모집중', '모집완료', '구인', '구직', '질문', '기타'];
+  String? _selectedTag; // For tag filtering
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +39,45 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
           // Category filter
           _buildCategoryFilter(),
           SizedBox(height: 16.h),
+          
+          // Active tag filter display
+          if (_selectedTag != null) ...[
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(12.w),
+              margin: EdgeInsets.only(bottom: 16.h),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '태그 필터: #${_selectedTag!}',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.blue[700],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () {
+                      setState(() {
+                        _selectedTag = null;
+                      });
+                    },
+                    child: Icon(
+                      Icons.close,
+                      size: 20.w,
+                      color: Colors.blue[700],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           
           // Posts list
           Expanded(
@@ -131,9 +171,14 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
             .map((doc) => CommunityPost.fromFirestore(doc))
             .toList();
 
-        final filteredPosts = _selectedCategory == '전체'
+        var filteredPosts = _selectedCategory == '전체'
             ? posts
             : posts.where((post) => post.category == _selectedCategory).toList();
+            
+        // Apply tag filter if selected
+        if (_selectedTag != null) {
+          filteredPosts = filteredPosts.where((post) => post.tags.contains(_selectedTag)).toList();
+        }
 
         if (filteredPosts.isEmpty) {
           return _buildEmptyState();
@@ -277,6 +322,37 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
                       height: 1.5,
                     ),
                   ),
+                  
+                  // Tags display
+                  if (post.tags.isNotEmpty) ...[
+                    SizedBox(height: 12.h),
+                    Wrap(
+                      spacing: 8.w,
+                      runSpacing: 4.h,
+                      children: post.tags.map((tag) {
+                        return InkWell(
+                          onTap: () => _filterByTag(tag),
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12.r),
+                              border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                            ),
+                            child: Text(
+                              '#$tag',
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                color: Colors.blue[700],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                  
                   SizedBox(height: 16.h),
                   Divider(color: Colors.grey[300]),
                   SizedBox(height: 8.h),
@@ -311,6 +387,33 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
                       ),
                     ],
                   ),
+                  
+                  // Edit/Delete buttons for author
+                  if (_isCurrentUserAuthor(post)) ...[
+                    SizedBox(height: 8.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () => _editPost(post),
+                          icon: Icon(Icons.edit, size: 16.w),
+                          label: Text('수정'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.orange,
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        TextButton.icon(
+                          onPressed: () => _deletePost(post),
+                          icon: Icon(Icons.delete, size: 16.w),
+                          label: Text('삭제'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ],
             ),
@@ -414,19 +517,30 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
   }
 
   void _showCreatePostDialog() {
+    print('💬 DIALOG: Opening create post dialog...');
     showDialog(
       context: context,
-      builder: (context) => _CreatePostDialog(
-        onPostCreated: (post) {
-          // Firebase streams automatically update the UI
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('게시글이 작성되었습니다!')),
-            );
-          }
-        },
-      ),
-    );
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
+        print('💬 DIALOG: Dialog builder called');
+        print('💬 DIALOG: Builder context: $dialogContext');
+        print('💬 DIALOG: Main context: $context');
+        return _CreatePostDialog(
+          onPostCreated: (post) {
+            print('💬 DIALOG: onPostCreated callback called for post: ${post.title}');
+            // Firebase streams automatically update the UI
+            Navigator.of(dialogContext).pop(); // 다이얼로그 닫기
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('게시글이 작성되었습니다!')),
+              );
+            }
+          },
+        );
+      },
+    ).then((result) {
+      print('💬 DIALOG: showDialog completed with result: $result');
+    });
   }
 
   void _openPostDetail(CommunityPost post) {
@@ -482,6 +596,7 @@ class CommunityPost {
   final int comments;
   final String category;
   final String authorId;
+  final List<String> tags;
 
   CommunityPost({
     required this.id,
@@ -493,6 +608,7 @@ class CommunityPost {
     required this.comments,
     required this.category,
     required this.authorId,
+    this.tags = const [],
   });
 
   factory CommunityPost.fromFirestore(QueryDocumentSnapshot doc) {
@@ -509,6 +625,7 @@ class CommunityPost {
       comments: data['comments'] ?? 0,
       category: data['category'] ?? '기타',
       authorId: data['authorId'] ?? '',
+      tags: List<String>.from(data['tags'] ?? []),
     );
   }
 
@@ -522,6 +639,7 @@ class CommunityPost {
       'comments': comments,
       'category': category,
       'authorId': authorId,
+      'tags': tags,
     };
   }
 }
@@ -538,28 +656,57 @@ class _CreatePostDialog extends StatefulWidget {
 class _CreatePostDialogState extends State<_CreatePostDialog> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
+  final _tagController = TextEditingController();
   String _selectedCategory = '모집중';
   final List<String> _categories = ['모집중', '모집완료', '구인', '구직', '질문', '기타'];
+  final List<String> _tags = [];
 
   @override
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
+    _tagController.dispose();
     super.dispose();
+  }
+
+  void _addTag(String tag) {
+    final trimmedTag = tag.trim();
+    if (trimmedTag.isNotEmpty && !_tags.contains(trimmedTag) && _tags.length < 5) {
+      setState(() {
+        _tags.add(trimmedTag);
+        _tagController.clear();
+      });
+    }
+  }
+
+  void _removeTag(String tag) {
+    setState(() {
+      _tags.remove(tag);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    print('💬 DIALOG_BUILD: Building _CreatePostDialog widget...');
+    final screenSize = MediaQuery.of(context).size;
+    print('💬 DIALOG_BUILD: Screen size: ${screenSize.width} x ${screenSize.height}');
+    
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
       ),
-      child: Padding(
+      insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
+      child: Container(
+        constraints: BoxConstraints(
+          maxHeight: screenSize.height * 0.85,
+          maxWidth: screenSize.width * 0.9,
+        ),
         padding: EdgeInsets.all(20.w),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Text(
               '새 게시글 작성',
               style: TextStyle(
@@ -643,6 +790,62 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
                 contentPadding: EdgeInsets.all(12.w),
               ),
             ),
+            SizedBox(height: 16.h),
+            
+            // Tags input
+            Text(
+              '태그',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _tagController,
+                    decoration: InputDecoration(
+                      hintText: '태그를 입력하세요 (예: 디자인, 개발)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                    ),
+                    onSubmitted: _addTag,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                IconButton(
+                  onPressed: () => _addTag(_tagController.text),
+                  icon: const Icon(Icons.add),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            
+            // Tags display
+            if (_tags.isNotEmpty)
+              Wrap(
+                spacing: 8.w,
+                runSpacing: 4.h,
+                children: _tags.map((tag) {
+                  return Chip(
+                    label: Text(
+                      tag,
+                      style: TextStyle(fontSize: 12.sp),
+                    ),
+                    deleteIcon: Icon(Icons.close, size: 16.w),
+                    onDeleted: () => _removeTag(tag),
+                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  );
+                }).toList(),
+              ),
             SizedBox(height: 20.h),
             
             // Buttons
@@ -661,13 +864,17 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
               ],
             ),
           ],
+          ),
         ),
       ),
     );
   }
 
   void _createPost() async {
+    print('📝 CREATE_POST: Starting post creation...');
+    
     if (_titleController.text.trim().isEmpty || _contentController.text.trim().isEmpty) {
+      print('❌ CREATE_POST: Title or content is empty');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('제목과 내용을 모두 입력해주세요')),
       );
@@ -676,8 +883,32 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
 
     try {
       final currentUserId = CurrentUserService.getCurrentUserIdOrDefault();
+      print('👤 CREATE_POST: Current user ID: $currentUserId');
+      
+      final postData = {
+        'author': '익명 사용자',
+        'title': _titleController.text.trim(),
+        'content': _contentController.text.trim(),
+        'timestamp': FieldValue.serverTimestamp(),
+        'likes': 0,
+        'comments': 0,
+        'category': _selectedCategory,
+        'authorId': currentUserId,
+        'tags': _tags,
+      };
+      
+      print('📄 CREATE_POST: Post data prepared: $postData');
+
+      // Firebase에 저장
+      print('🔥 CREATE_POST: Saving to Firestore...');
+      final docRef = await FirebaseFirestore.instance
+          .collection('community_posts')
+          .add(postData);
+          
+      print('✅ CREATE_POST: Successfully saved with ID: ${docRef.id}');
+
       final newPost = CommunityPost(
-        id: '',
+        id: docRef.id,
         author: '익명 사용자',
         title: _titleController.text.trim(),
         content: _contentController.text.trim(),
@@ -686,25 +917,359 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
         comments: 0,
         category: _selectedCategory,
         authorId: currentUserId,
+        tags: _tags,
       );
 
-      // Firebase에 저장
-      await FirebaseFirestore.instance
-          .collection('community_posts')
-          .add(newPost.toFirestore());
-
       widget.onPostCreated(newPost);
+      
       if (mounted) {
+        print('📱 CREATE_POST: Closing dialog and showing success message');
         Navigator.pop(context);
         
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('게시글이 작성되었습니다!')),
+          const SnackBar(
+            content: Text('게시글이 작성되었습니다!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('❌ CREATE_POST: Error occurred: $e');
+      print('❌ CREATE_POST: Error type: ${e.runtimeType}');
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('게시글 작성에 실패했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  bool _isCurrentUserAuthor(CommunityPost post) {
+    final currentUserId = CurrentUserService.getCurrentUserId();
+    return currentUserId != null && currentUserId == post.authorId;
+  }
+  
+  void _filterByTag(String tag) {
+    setState(() {
+      if (_selectedTag == tag) {
+        // If the same tag is clicked, clear the filter
+        _selectedTag = null;
+      } else {
+        _selectedTag = tag;
+        _selectedCategory = '전체'; // Reset category filter when filtering by tag
+      }
+    });
+  }
+  
+  void _editPost(CommunityPost post) {
+    showDialog(
+      context: context,
+      builder: (context) => _EditPostDialog(post: post),
+    );
+  }
+  
+  void _deletePost(CommunityPost post) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('게시글 삭제'),
+        content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await FirebaseFirestore.instance
+                    .collection('community_posts')
+                    .doc(post.id)
+                    .delete();
+                    
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('게시글이 삭제되었습니다.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('삭제에 실패했습니다: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('삭제', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+// Edit Post Dialog
+class _EditPostDialog extends StatefulWidget {
+  final CommunityPost post;
+
+  const _EditPostDialog({required this.post});
+
+  @override
+  State<_EditPostDialog> createState() => _EditPostDialogState();
+}
+
+class _EditPostDialogState extends State<_EditPostDialog> {
+  late TextEditingController _titleController;
+  late TextEditingController _contentController;
+  final _tagController = TextEditingController();
+  late String _selectedCategory;
+  late List<String> _tags;
+  final List<String> _categories = ['모집중', '모집완료', '구인', '구직', '질문', '기타'];
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.post.title);
+    _contentController = TextEditingController(text: widget.post.content);
+    _selectedCategory = widget.post.category;
+    _tags = List.from(widget.post.tags);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    _tagController.dispose();
+    super.dispose();
+  }
+
+  void _addTag(String tag) {
+    final trimmedTag = tag.trim();
+    if (trimmedTag.isNotEmpty && !_tags.contains(trimmedTag) && _tags.length < 5) {
+      setState(() {
+        _tags.add(trimmedTag);
+        _tagController.clear();
+      });
+    }
+  }
+
+  void _removeTag(String tag) {
+    setState(() {
+      _tags.remove(tag);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('게시글 수정'),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: 500.h,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Category dropdown
+              Text(
+                '카테고리',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                items: _categories.map((category) {
+                  return DropdownMenuItem(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategory = value!;
+                  });
+                },
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              
+              // Title field
+              Text(
+                '제목',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: _titleController,
+                decoration: InputDecoration(
+                  hintText: '게시글 제목을 입력하세요',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  contentPadding: EdgeInsets.all(12.w),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              
+              // Content field
+              Text(
+                '내용',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: _contentController,
+                maxLines: 5,
+                decoration: InputDecoration(
+                  hintText: '게시글 내용을 입력하세요',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  contentPadding: EdgeInsets.all(12.w),
+                ),
+              ),
+              SizedBox(height: 16.h),
+              
+              // Tags input
+              Text(
+                '태그',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              SizedBox(height: 8.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _tagController,
+                      decoration: InputDecoration(
+                        hintText: '태그를 입력하세요 (예: 디자인, 개발)',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      ),
+                      onSubmitted: _addTag,
+                    ),
+                  ),
+                  SizedBox(width: 8.w),
+                  IconButton(
+                    onPressed: () => _addTag(_tagController.text),
+                    icon: const Icon(Icons.add),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 8.h),
+              
+              // Tags display
+              if (_tags.isNotEmpty)
+                Wrap(
+                  spacing: 8.w,
+                  runSpacing: 4.h,
+                  children: _tags.map((tag) {
+                    return Chip(
+                      label: Text(
+                        tag,
+                        style: TextStyle(fontSize: 12.sp),
+                      ),
+                      deleteIcon: Icon(Icons.close, size: 16.w),
+                      onDeleted: () => _removeTag(tag),
+                      backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                    );
+                  }).toList(),
+                ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('취소'),
+        ),
+        ElevatedButton(
+          onPressed: _updatePost,
+          child: const Text('수정'),
+        ),
+      ],
+    );
+  }
+
+  void _updatePost() async {
+    if (_titleController.text.trim().isEmpty || _contentController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('제목과 내용을 입력해주세요.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('community_posts')
+          .doc(widget.post.id)
+          .update({
+        'title': _titleController.text.trim(),
+        'content': _contentController.text.trim(),
+        'category': _selectedCategory,
+        'tags': _tags,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('게시글이 수정되었습니다!'),
+            backgroundColor: Colors.green,
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('게시글 작성에 실패했습니다: $e')),
+          SnackBar(
+            content: Text('게시글 수정에 실패했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }

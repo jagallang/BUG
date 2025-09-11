@@ -365,7 +365,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     ];
   }
 
-  List<MissionCard> _generateCompletedMissions(String testerId) {
+  List<MissionCard> _generateCompletedMissions(String testerId) {  // ignore: unused_element
     return [
       MissionCard(
         id: 'completed_1',
@@ -646,11 +646,125 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   // Real Firestore query methods (replacing mock data generation)
   Future<List<MissionCard>> _getAvailableMissionsFromFirestore() async {
     try {
-      // Return empty list initially - will be populated with real data
-      return <MissionCard>[];
+      print('MISSION_DEBUG: 🔍 Loading available missions from Firestore...');
+      final missionCards = <MissionCard>[];
+      
+      // 1. 일반 미션들 가져오기
+      final missionsSnapshot = await FirebaseFirestore.instance
+          .collection('missions')
+          .where('status', isEqualTo: 'active')
+          .limit(10)
+          .get();
+      
+      print('📊 Found ${missionsSnapshot.docs.length} regular missions');
+      
+      for (final doc in missionsSnapshot.docs) {
+        try {
+          final data = doc.data();
+          final missionCard = MissionCard(
+            id: doc.id,
+            title: data['title'] ?? '미션 제목',
+            description: data['description'] ?? '미션 설명',
+            appName: data['company'] ?? '회사명',
+            type: _parseMissionType(data['type']),
+            rewardPoints: data['reward'] ?? 0,
+            estimatedMinutes: 60,
+            status: MissionStatus.active,
+            deadline: (data['endDate'] as Timestamp?)?.toDate() ?? DateTime.now().add(const Duration(days: 7)),
+            requiredSkills: (data['requirements'] as List<dynamic>?)?.cast<String>() ?? ['테스팅'],
+            currentParticipants: data['currentParticipants'] ?? 0,
+            maxParticipants: data['maxParticipants'] ?? 10,
+            progress: 0,
+            difficulty: MissionDifficulty.medium,
+          );
+          missionCards.add(missionCard);
+        } catch (e) {
+          print('❌ Error parsing mission ${doc.id}: $e');
+        }
+      }
+      
+      // 2. Provider Apps를 미션으로 변환해서 추가
+      final providerAppsSnapshot = await FirebaseFirestore.instance
+          .collection('provider_apps')
+          .where('status', isEqualTo: 'active')
+          .limit(20)
+          .get();
+      
+      print('📱 Found ${providerAppsSnapshot.docs.length} provider apps');
+      
+      for (final doc in providerAppsSnapshot.docs) {
+        try {
+          final data = doc.data();
+          final missionCard = MissionCard(
+            id: 'provider_app_${doc.id}',
+            title: '${data['appName'] ?? '앱'} 테스팅',
+            description: data['description'] ?? '앱 테스팅 및 피드백 제공',
+            appName: data['appName'] ?? '앱',
+            type: MissionType.functional,
+            rewardPoints: 5000,
+            estimatedMinutes: 30,
+            status: MissionStatus.active,
+            deadline: DateTime.now().add(const Duration(days: 30)),
+            requiredSkills: ['앱 테스팅', '피드백 작성'],
+            currentParticipants: data['activeTesters'] ?? 0,
+            maxParticipants: 50,
+            progress: 0,
+            difficulty: MissionDifficulty.medium,
+          );
+          missionCards.add(missionCard);
+        } catch (e) {
+          print('❌ Error parsing provider app ${doc.id}: $e');
+        }
+      }
+      
+      print('✅ Total missions loaded: ${missionCards.length}');
+      return missionCards;
     } catch (e) {
       debugPrint('Failed to load available missions from Firestore: $e');
       return <MissionCard>[];
+    }
+  }
+  
+  MissionType _parseMissionType(String? type) {
+    switch (type?.toLowerCase()) {
+      case 'functional':
+        return MissionType.functional;
+      case 'ui':
+      case 'uiux':
+        return MissionType.uiUx;
+      case 'performance':
+        return MissionType.performance;
+      case 'security':
+        return MissionType.security;
+      case 'usability':
+        return MissionType.usabilityTest;
+      case 'bug':
+      case 'bugreport':
+        return MissionType.bugReport;
+      case 'feature':
+      case 'featuretesting':
+        return MissionType.featureTesting;
+      case 'performancetest':
+        return MissionType.performanceTest;
+      case 'survey':
+        return MissionType.survey;
+      case 'feedback':
+        return MissionType.feedback;
+      default:
+        return MissionType.functional;
+    }
+  }
+  
+  MissionDifficulty _parseMissionDifficulty(String? difficulty) {
+    switch (difficulty?.toLowerCase()) {
+      case 'easy':
+        return MissionDifficulty.easy;
+      case 'medium':
+        return MissionDifficulty.medium;
+      case 'hard':
+        return MissionDifficulty.hard;
+      default:
+        return MissionDifficulty.medium;
     }
   }
 

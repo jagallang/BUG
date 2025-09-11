@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../models/mission_model.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../providers/tester_dashboard_provider.dart' as provider;
 
 class MissionApplicationDialog extends StatefulWidget {
@@ -407,8 +407,11 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
     });
 
     try {
-      // TODO: Replace with actual Firebase mission application API
-      await Future.delayed(const Duration(seconds: 2));
+      // 신청 데이터 생성
+      await _createMissionApplication();
+      
+      // 앱 공급자에게 알림 전송
+      await _sendNotificationToProvider();
 
       // 성공 처리
       if (mounted) {
@@ -459,6 +462,99 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
           _isSubmitting = false;
         });
       }
+    }
+  }
+
+  Future<void> _createMissionApplication() async {
+    // TODO: 현재 사용자 ID 가져오기 (실제 구현에서는 Authentication 서비스 사용)
+    const String currentUserId = 'current_user_id'; // 임시 사용자 ID
+    
+    // Firestore에 신청 정보 저장
+    await FirebaseFirestore.instance.collection('mission_applications').add({
+      'missionId': widget.mission.id,
+      'missionTitle': widget.mission.title,
+      'applicantId': currentUserId,
+      'message': _messageController.text.trim(),
+      'appliedAt': FieldValue.serverTimestamp(),
+      'status': 'pending', // pending, approved, rejected
+      'hasReadRequirements': _hasReadRequirements,
+      'hasInstalledApp': _hasInstalledApp,
+    });
+  }
+
+  Future<void> _sendNotificationToProvider() async {
+    try {
+      // 미션이 provider_apps에서 온 것인지 확인
+      final isProviderApp = widget.mission.id.startsWith('provider_app_');
+      
+      if (isProviderApp) {
+        // provider_apps ID 추출
+        final providerAppId = widget.mission.id.replaceFirst('provider_app_', '');
+        
+        // provider_apps 문서에서 공급자 정보 가져오기
+        final providerAppDoc = await FirebaseFirestore.instance
+            .collection('provider_apps')
+            .doc(providerAppId)
+            .get();
+            
+        if (providerAppDoc.exists) {
+          final providerData = providerAppDoc.data()!;
+          final providerId = providerData['providerId'];
+          
+          if (providerId != null) {
+            // 공급자에게 알림 생성
+            await FirebaseFirestore.instance.collection('notifications').add({
+              'recipientId': providerId,
+              'type': 'mission_application',
+              'title': '새로운 미션 신청',
+              'message': '${widget.mission.appName} 앱에 새로운 테스터가 신청했습니다.',
+              'data': {
+                'missionId': widget.mission.id,
+                'missionTitle': widget.mission.title,
+                'appName': widget.mission.appName,
+                'applicantMessage': _messageController.text.trim(),
+              },
+              'createdAt': FieldValue.serverTimestamp(),
+              'isRead': false,
+            });
+            
+            print('📧 Provider notification sent to: $providerId');
+          }
+        }
+      } else {
+        // 일반 미션의 경우 mission 문서에서 공급자 정보 가져오기
+        final missionDoc = await FirebaseFirestore.instance
+            .collection('missions')
+            .doc(widget.mission.id)
+            .get();
+            
+        if (missionDoc.exists) {
+          final missionData = missionDoc.data()!;
+          final providerId = missionData['providerId'] ?? missionData['createdBy'];
+          
+          if (providerId != null) {
+            // 공급자에게 알림 생성
+            await FirebaseFirestore.instance.collection('notifications').add({
+              'recipientId': providerId,
+              'type': 'mission_application',
+              'title': '새로운 미션 신청',
+              'message': '${widget.mission.title} 미션에 새로운 테스터가 신청했습니다.',
+              'data': {
+                'missionId': widget.mission.id,
+                'missionTitle': widget.mission.title,
+                'applicantMessage': _messageController.text.trim(),
+              },
+              'createdAt': FieldValue.serverTimestamp(),
+              'isRead': false,
+            });
+            
+            print('📧 Mission provider notification sent to: $providerId');
+          }
+        }
+      }
+    } catch (e) {
+      print('❌ Error sending notification to provider: $e');
+      // 알림 전송 실패해도 신청은 성공으로 처리
     }
   }
 }
