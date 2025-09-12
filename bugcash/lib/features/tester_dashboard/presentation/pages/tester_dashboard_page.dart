@@ -817,16 +817,22 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 children: [
                   Icon(Icons.access_time, size: 16.w, color: Colors.grey[600]),
                   SizedBox(width: 4.w),
-                  Text(
-                    deadline,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                  Flexible(
+                    child: Text(
+                      deadline,
+                      style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                   SizedBox(width: 16.w),
                   Icon(Icons.people, size: 16.w, color: Colors.grey[600]),
                   SizedBox(width: 4.w),
-                  Text(
-                    participants,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                  Flexible(
+                    child: Text(
+                      participants,
+                      style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),

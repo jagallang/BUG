@@ -517,29 +517,36 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
   }
 
   void _showCreatePostDialog() {
-    print('💬 DIALOG: Opening create post dialog...');
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext dialogContext) {
-        print('💬 DIALOG: Dialog builder called');
-        print('💬 DIALOG: Builder context: $dialogContext');
-        print('💬 DIALOG: Main context: $context');
-        return _CreatePostDialog(
-          onPostCreated: (post) {
-            print('💬 DIALOG: onPostCreated callback called for post: ${post.title}');
-            // Firebase streams automatically update the UI
-            Navigator.of(dialogContext).pop(); // 다이얼로그 닫기
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('게시글이 작성되었습니다!')),
-              );
-            }
-          },
-        );
-      },
+    print('💬 DIALOG: Opening create post page...');
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            title: const Text('새 게시글 작성'),
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            elevation: 1,
+          ),
+          body: _CreatePostDialog(
+            testerId: widget.testerId,
+            onPostCreated: (post) {
+              print('💬 DIALOG: onPostCreated callback called for post: ${post.title}');
+              // Firebase streams automatically update the UI
+              Navigator.pop(context); // 페이지 닫기
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('게시글이 작성되었습니다!')),
+                );
+              }
+            },
+          ),
+        ),
+        fullscreenDialog: true,
+      ),
     ).then((result) {
-      print('💬 DIALOG: showDialog completed with result: $result');
+      print('💬 DIALOG: Create post page completed with result: $result');
     });
   }
 
@@ -582,6 +589,78 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
   void _sharePost(CommunityPost post) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${post.title} 공유하기')),
+    );
+  }
+
+  bool _isCurrentUserAuthor(CommunityPost post) {
+    final currentUserId = CurrentUserService.getCurrentUserId();
+    return currentUserId != null && currentUserId == post.authorId;
+  }
+  
+  void _filterByTag(String tag) {
+    setState(() {
+      if (_selectedTag == tag) {
+        _selectedTag = null;
+      } else {
+        _selectedTag = tag;
+      }
+    });
+  }
+  
+  void _editPost(CommunityPost post) {
+    showDialog(
+      context: context,
+      builder: (context) => _EditPostDialog(post: post),
+    );
+  }
+  
+  void _deletePost(CommunityPost post) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('게시글 삭제'),
+        content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                await FirebaseFirestore.instance
+                    .collection('community_posts')
+                    .doc(post.id)
+                    .delete();
+                    
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('게시글이 삭제되었습니다.'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('삭제에 실패했습니다: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            child: const Text('삭제', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -646,8 +725,9 @@ class CommunityPost {
 
 class _CreatePostDialog extends StatefulWidget {
   final Function(CommunityPost) onPostCreated;
+  final String testerId;
 
-  const _CreatePostDialog({required this.onPostCreated});
+  const _CreatePostDialog({required this.onPostCreated, required this.testerId});
 
   @override
   State<_CreatePostDialog> createState() => _CreatePostDialogState();
@@ -691,30 +771,12 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
     final screenSize = MediaQuery.of(context).size;
     print('💬 DIALOG_BUILD: Screen size: ${screenSize.width} x ${screenSize.height}');
     
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      insetPadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 24.h),
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: screenSize.height * 0.85,
-          maxWidth: screenSize.width * 0.9,
-        ),
-        padding: EdgeInsets.all(20.w),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-            Text(
-              '새 게시글 작성',
-              style: TextStyle(
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 16.h),
+    return Padding(
+      padding: EdgeInsets.all(20.w),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             
             // Category selection
             Text(
@@ -864,7 +926,6 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
               ],
             ),
           ],
-          ),
         ),
       ),
     );
@@ -946,80 +1007,6 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
         );
       }
     }
-  }
-
-  bool _isCurrentUserAuthor(CommunityPost post) {
-    final currentUserId = CurrentUserService.getCurrentUserId();
-    return currentUserId != null && currentUserId == post.authorId;
-  }
-  
-  void _filterByTag(String tag) {
-    setState(() {
-      if (_selectedTag == tag) {
-        // If the same tag is clicked, clear the filter
-        _selectedTag = null;
-      } else {
-        _selectedTag = tag;
-        _selectedCategory = '전체'; // Reset category filter when filtering by tag
-      }
-    });
-  }
-  
-  void _editPost(CommunityPost post) {
-    showDialog(
-      context: context,
-      builder: (context) => _EditPostDialog(post: post),
-    );
-  }
-  
-  void _deletePost(CommunityPost post) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('게시글 삭제'),
-        content: const Text('정말로 이 게시글을 삭제하시겠습니까?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              try {
-                await FirebaseFirestore.instance
-                    .collection('community_posts')
-                    .doc(post.id)
-                    .delete();
-                    
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('게시글이 삭제되었습니다.'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('삭제에 실패했습니다: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('삭제', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 }
 

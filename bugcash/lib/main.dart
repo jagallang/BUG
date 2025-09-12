@@ -10,8 +10,8 @@ import 'core/config/app_config.dart';
 import 'firebase_options.dart';
 import 'core/di/injection.dart';
 // import 'features/auth/presentation/widgets/auth_wrapper.dart';  // 임시 비활성화
-import 'features/provider_dashboard/presentation/pages/provider_dashboard_page.dart';  // Provider Dashboard
-// import 'features/tester_dashboard/presentation/pages/tester_dashboard_page.dart';  // Tester Dashboard 직접 import
+// import 'features/provider_dashboard/presentation/pages/provider_dashboard_page.dart';  // Provider Dashboard
+import 'features/tester_dashboard/presentation/pages/tester_dashboard_page.dart';  // Tester Dashboard 직접 import
 import 'shared/theme/app_theme.dart';
 
 // 웹용 반응형 크기 헬퍼 - 깔끔한 크기로 조정
@@ -95,8 +95,8 @@ class BugCashWebApp extends StatelessWidget {
           ],
           locale: const Locale('ko', ''),  // 기본 언어를 한글로 설정
           // home: const AuthWrapper(),  // 임시 비활성화
-          home: const ProviderDashboardPage(
-            providerId: 'test_provider_001',  // 테스트용 Provider ID
+          home: const TesterDashboardPage(
+            testerId: 'test_tester_001',  // 테스트용 Tester ID
           ),
         );
       },

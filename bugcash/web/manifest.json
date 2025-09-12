@@ -3,12 +3,16 @@
     "short_name": "BugCash",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#00BFA5",
-    "theme_color": "#00BFA5",
+    "background_color": "#000000",
+    "theme_color": "#FFD700",
     "description": "버그를 찾고 캐시를 받자! 앱 테스트로 리워드를 받는 플랫폼",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
-    "categories": ["productivity", "business", "finance"],
+    "categories": [
+        "productivity",
+        "business",
+        "finance"
+    ],
     "screenshots": [
         {
             "src": "icons/Icon-512.png",
