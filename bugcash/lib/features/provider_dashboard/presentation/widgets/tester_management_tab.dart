@@ -3,67 +3,95 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../generated/l10n/app_localizations.dart';
+import '../../../../models/test_session_model.dart';
+import '../../../../core/utils/logger.dart';
 
-// Firebase Provider for testers associated with a provider
+// Firebase Provider for testers with test sessions associated with a provider
 final providerTestersProvider = StreamProvider.family<List<TesterInfo>, String>((ref, providerId) {
   return FirebaseFirestore.instance
-      .collection('mission_participants')
+      .collection('test_sessions')
       .where('providerId', isEqualTo: providerId)
       .snapshots()
       .asyncMap((snapshot) async {
     final List<TesterInfo> testers = [];
     final Set<String> uniqueTesters = {};
-    
+
     for (final doc in snapshot.docs) {
-      final testerId = doc.data()['testerId'] as String;
-      
+      final session = TestSession.fromFirestore(doc);
+      final testerId = session.testerId;
+
       if (uniqueTesters.contains(testerId)) continue;
       uniqueTesters.add(testerId);
-      
+
       // Get tester profile from users collection
       try {
         final testerDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(testerId)
             .get();
-        
+
         if (testerDoc.exists) {
           final testerData = testerDoc.data()!;
-          
-          // Calculate statistics for this tester
-          final missionStats = await FirebaseFirestore.instance
-              .collection('mission_participants')
+
+          // Calculate test session statistics for this tester
+          final testerSessions = await FirebaseFirestore.instance
+              .collection('test_sessions')
               .where('testerId', isEqualTo: testerId)
               .where('providerId', isEqualTo: providerId)
               .get();
-          
-          final completedMissions = missionStats.docs.where((doc) => 
-              doc.data()['status'] == 'completed').length;
-          final totalMissions = missionStats.docs.length;
-          final successRate = totalMissions > 0 ? completedMissions / totalMissions : 0.0;
-          
+
+          final completedSessions = testerSessions.docs.where((doc) {
+            final sessionData = doc.data();
+            return sessionData['status'] == TestSessionStatus.completed.name;
+          }).length;
+          final totalSessions = testerSessions.docs.length;
+          final successRate = totalSessions > 0 ? completedSessions / totalSessions : 0.0;
+
+          // Calculate active session info
+          final activeSessions = testerSessions.docs.where((doc) {
+            final sessionData = doc.data();
+            return sessionData['status'] == TestSessionStatus.active.name;
+          }).length;
+
           testers.add(TesterInfo(
             id: testerId,
             name: testerData['displayName'] ?? 'Unknown',
             email: testerData['email'] ?? '',
             joinDate: (testerData['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-            completedMissions: completedMissions,
+            completedMissions: completedSessions,
             successRate: successRate,
             rating: (testerData['rating'] as num?)?.toDouble() ?? 0.0,
-            status: testerData['isActive'] == true ? TesterStatus.active : TesterStatus.inactive,
+            status: activeSessions > 0 ? TesterStatus.active : TesterStatus.inactive,
             specialties: List<String>.from(testerData['skills'] ?? []),
             memo: testerData['memo'] ?? '',
             tags: List<String>.from(testerData['tags'] ?? []),
+            activeTestSessions: activeSessions,
+            pendingApplications: await _countPendingApplications(testerId, providerId),
           ));
         }
       } catch (e) {
-        print('Error fetching tester data for $testerId: $e');
+        AppLogger.error('Error fetching tester data', 'TesterManagementTab', e);
       }
     }
-    
+
     return testers;
   });
 });
+
+// Helper function to count pending applications
+Future<int> _countPendingApplications(String testerId, String providerId) async {
+  try {
+    final pendingSessions = await FirebaseFirestore.instance
+        .collection('test_sessions')
+        .where('testerId', isEqualTo: testerId)
+        .where('providerId', isEqualTo: providerId)
+        .where('status', isEqualTo: TestSessionStatus.pending.name)
+        .get();
+    return pendingSessions.docs.length;
+  } catch (e) {
+    return 0;
+  }
+}
 
 class TesterManagementTab extends ConsumerStatefulWidget {
   final String providerId;
@@ -120,6 +148,8 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
       filtered.sort((a, b) => b.successRate.compareTo(a.successRate));
     } else if (_selectedSort == '평점순') {
       filtered.sort((a, b) => b.rating.compareTo(a.rating));
+    } else if (_selectedSort == '진행중순') {
+      filtered.sort((a, b) => b.activeTestSessions.compareTo(a.activeTestSessions));
     }
 
     return filtered;
@@ -299,7 +329,7 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
                     ),
                     contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
                   ),
-                  items: ['가입일순', '완료미션순', '성공률순', '평점순'].map((String value) {
+                  items: ['가입일순', '완료미션순', '성공률순', '평점순', '진행중순'].map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value),
@@ -487,13 +517,27 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
             Row(
               children: [
                 Expanded(
-                  child: _buildInfoItem('완료 미션', tester.completedMissions.toString(), Icons.assignment_turned_in),
+                  child: _buildInfoItem('완료 세션', tester.completedMissions.toString(), Icons.assignment_turned_in),
                 ),
                 Expanded(
                   child: _buildInfoItem('성공률', '${(tester.successRate * 100).toStringAsFixed(0)}%', Icons.trending_up),
                 ),
                 Expanded(
                   child: _buildInfoItem('평점', tester.rating.toStringAsFixed(1), Icons.star),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildInfoItem('진행 중', tester.activeTestSessions.toString(), Icons.play_circle_outline),
+                ),
+                Expanded(
+                  child: _buildInfoItem('대기 중', tester.pendingApplications.toString(), Icons.hourglass_empty),
+                ),
+                Expanded(
+                  child: Container(), // Empty space for alignment
                 ),
               ],
             ),
@@ -568,7 +612,7 @@ class _TesterManagementTabState extends ConsumerState<TesterManagementTab> {
           ),
           SizedBox(height: 8.h),
           Text(
-            '미션을 생성하여 테스터를 모집해보세요',
+            '앱을 등록하고 테스트 세션을 시작하여\n테스터들의 참여를 유도해보세요',
             style: TextStyle(
               fontSize: 14.sp,
               color: Colors.grey[500],
@@ -595,6 +639,8 @@ class TesterInfo {
   final List<String> specialties;
   final String memo;
   final List<String> tags;
+  final int activeTestSessions;
+  final int pendingApplications;
 
   TesterInfo({
     required this.id,
@@ -608,5 +654,7 @@ class TesterInfo {
     required this.specialties,
     required this.memo,
     required this.tags,
+    this.activeTestSessions = 0,
+    this.pendingApplications = 0,
   });
 }

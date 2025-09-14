@@ -1,40 +1,20 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
-  static Future<void> initialize() async {
-    try {
-      await dotenv.load(fileName: '.env');
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('Warning: .env file not found. Using default configuration.');
-      }
-    }
-  }
-
-  // Firebase Configuration
-  static String get firebaseApiKey => 
-      dotenv.env['FIREBASE_API_KEY'] ?? 'AIzaSyA0hLevMSRKZpoMaF4Sb_YgvR7ED1VR6Xo';
-  
-  static String get firebaseProjectId => 
-      dotenv.env['FIREBASE_PROJECT_ID'] ?? 'bugcash';
-  
-  static String get firebaseMessagingSenderId => 
-      dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '335851774651';
-  
-  static String get firebaseAppId => 
-      dotenv.env['FIREBASE_APP_ID'] ?? '1:335851774651:android:9c485dd2a5f436ef0abf9e';
-  
-  static String get firebaseStorageBucket => 
-      dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? 'bugcash.firebasestorage.app';
-  
-  static String get firebaseAuthDomain => 
-      dotenv.env['FIREBASE_AUTH_DOMAIN'] ?? 'bugcash.firebaseapp.com';
-  
-  static String get firebaseMeasurementId => 
-      dotenv.env['FIREBASE_MEASUREMENT_ID'] ?? '';
-
-  // App Configuration
+  // App Configuration Only - Firebase config is handled by firebase_options.dart
   static bool get isProduction => kReleaseMode;
   static bool get enableLogging => !isProduction && kDebugMode;
+
+  // App-specific settings
+  static const String appName = 'BugCash';
+  static const String appVersion = '1.0.0';
+
+  // Feature flags
+  static bool get enableOfflineMode => true;
+  static bool get enablePushNotifications => true;
+  static bool get enableAnalytics => isProduction;
+
+  // Development settings
+  static bool get showDebugBanner => kDebugMode;
+  static bool get enableMockData => kDebugMode && false; // Disabled by default
 }

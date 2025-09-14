@@ -19,7 +19,7 @@ import 'apps_tab_test.dart';
 import 'missions_tab_test.dart';
 import '../widgets/tester_management_tab.dart';
 import '../widgets/payment_management_tab.dart';
-import '../widgets/mission_approval_tab.dart';
+import '../widgets/test_session_application_tab.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -54,7 +54,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       case 2:
         return _buildTesterManagementTab();
       case 3:
-        return _buildMissionApprovalTab();
+        return _buildTestSessionTab();
       case 4:
         return _buildPaymentTab();
       default:
@@ -137,7 +137,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment_turned_in),
-            label: '미션 승인',
+            label: '테스트 세션',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.payment),
@@ -233,8 +233,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     return TesterManagementTab(providerId: widget.providerId);
   }
 
-  Widget _buildMissionApprovalTab() {
-    return MissionApprovalTab(providerId: widget.providerId);
+  Widget _buildTestSessionTab() {
+    return TestSessionApplicationTab(providerId: widget.providerId);
   }
 
 

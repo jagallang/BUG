@@ -363,6 +363,8 @@ class _UserSearchPageState extends ConsumerState<UserSearchPage> {
         return Colors.blue;
       case UserType.tester:
         return Colors.green;
+      case UserType.admin:
+        return Colors.purple;
     }
   }
 
@@ -372,6 +374,8 @@ class _UserSearchPageState extends ConsumerState<UserSearchPage> {
         return '공급자';
       case UserType.tester:
         return '테스터';
+      case UserType.admin:
+        return '관리자';
     }
   }
 }

@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../widgets/earnings_summary_widget.dart';
 import '../widgets/community_board_widget.dart';
+import '../widgets/expandable_mission_card.dart';
+import '../widgets/active_test_session_card.dart';
 import '../providers/tester_dashboard_provider.dart';
+import '../../../../models/test_session_model.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 import '../../../chat/presentation/pages/chat_list_page.dart';
 import 'mission_detail_page.dart';
@@ -694,12 +697,12 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       itemCount: dashboardState.availableMissions.length,
       itemBuilder: (context, index) {
         final mission = dashboardState.availableMissions[index];
-        return _buildMissionCard(
-          title: mission.title,
-          description: mission.description,
-          reward: '${mission.rewardPoints}P',
-          deadline: '${mission.deadline ?? DateTime.now().add(Duration(days: 7)).day}일 남음',
-          participants: '${mission.currentParticipants}/${mission.maxParticipants}',
+        return Padding(
+          padding: EdgeInsets.only(bottom: 12.h),
+          child: ExpandableMissionCard(
+            mission: mission,
+            testerId: widget.testerId,
+          ),
         );
       },
     );
@@ -741,11 +744,33 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       itemCount: dashboardState.activeMissions.length,
       itemBuilder: (context, index) {
         final mission = dashboardState.activeMissions[index];
-        return _buildActiveMissionCard(
-          title: mission.title,
-          progress: mission.progress ?? 0.0,
-          status: mission.status.toString().split('.').last,
-          deadline: '${mission.deadline ?? DateTime.now().add(Duration(days: 7)).day}일 남음',
+        // Create a mock test session from mission data for now
+        final progressCount = ((mission.progress ?? 0.0) * 14).round();
+        final dailyProgressList = List.generate(14, (index) {
+          return DailyTestProgress(
+            day: index + 1,
+            scheduledDate: DateTime.now().add(Duration(days: index - 1)),
+            status: index < progressCount ? DailyTestStatus.approved : DailyTestStatus.pending,
+            submittedAt: index < progressCount ? DateTime.now().subtract(Duration(days: 14 - index)) : null,
+            approvedAt: index < progressCount ? DateTime.now().subtract(Duration(days: 14 - index)) : null,
+          );
+        });
+
+        final testSession = TestSession(
+          id: 'session_${mission.id}',
+          missionId: mission.id,
+          testerId: widget.testerId,
+          providerId: mission.providerId ?? 'unknown',
+          appId: mission.appName,
+          status: TestSessionStatus.approved,
+          totalRewardPoints: mission.rewardPoints,
+          startedAt: mission.startedAt ?? DateTime.now().subtract(const Duration(days: 1)),
+          createdAt: mission.startedAt ?? DateTime.now().subtract(const Duration(days: 1)),
+          dailyProgress: dailyProgressList,
+        );
+        return Padding(
+          padding: EdgeInsets.only(bottom: 12.h),
+          child: ActiveTestSessionCard(session: testSession),
         );
       },
     );

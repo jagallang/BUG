@@ -44,13 +44,16 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Firebase configuration files (security)
-android/app/google-services.json
-ios/Runner/GoogleService-Info.plist
-lib/firebase_options.dart
-.env
-.env.local
-.env.production
+# Firebase configuration files
+# Note: firebase_options.dart is now managed by FlutterFire CLI and should be committed
+# Only exclude google-services.json and GoogleService-Info.plist if they contain sensitive info
+# android/app/google-services.json
+# ios/Runner/GoogleService-Info.plist
 
-# Web Firebase config
-web/firebase-config.js
+# Environment files (no longer used)
+.env*
+
+# Firebase tools
+.firebase/
+firebase-debug.log
+firebase-debug.*.log

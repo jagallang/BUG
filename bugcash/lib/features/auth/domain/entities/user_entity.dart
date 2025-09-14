@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum UserType { tester, provider }
+enum UserType { tester, provider, admin }
 
 enum VerificationStatus { pending, verified, rejected }
 

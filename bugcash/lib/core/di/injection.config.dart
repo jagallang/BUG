@@ -12,8 +12,6 @@
 import 'package:bugcash_web_demo/core/di/injection.dart' as _i549;
 import 'package:bugcash_web_demo/features/auth/data/repositories/auth_repository_impl.dart'
     as _i380;
-import 'package:bugcash_web_demo/features/auth/presentation/bloc/auth_bloc.dart'
-    as _i323;
 import 'package:cloud_firestore/cloud_firestore.dart' as _i974;
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
 import 'package:firebase_storage/firebase_storage.dart' as _i457;
@@ -42,8 +40,6 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i974.FirebaseFirestore>(),
           gh<_i116.GoogleSignIn>(),
         ));
-    gh.factory<_i323.AuthBloc>(
-        () => _i323.AuthBloc(gh<_i380.AuthRepository>()));
     return this;
   }
 }

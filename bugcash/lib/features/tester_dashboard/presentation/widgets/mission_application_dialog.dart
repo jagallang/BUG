@@ -518,7 +518,7 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
               'isRead': false,
             });
             
-            print('📧 Provider notification sent to: $providerId');
+            // 📧 Provider notification sent to: $providerId
           }
         }
       } else {
@@ -548,12 +548,12 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
               'isRead': false,
             });
             
-            print('📧 Mission provider notification sent to: $providerId');
+            // 📧 Mission provider notification sent to: $providerId
           }
         }
       }
     } catch (e) {
-      print('❌ Error sending notification to provider: $e');
+      // ❌ Error sending notification to provider: $e
       // 알림 전송 실패해도 신청은 성공으로 처리
     }
   }
