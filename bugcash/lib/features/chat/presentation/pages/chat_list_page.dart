@@ -44,8 +44,9 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
       );
 
       // Set the mock user as current user
-      final authService = ref.read(firebaseAuthServiceProvider);
-      await authService.setMockUser(mockUser);
+      // HybridAuthService는 setMockUser를 지원하지 않음
+      // 대신 실제 테스트 계정으로 로그인하거나 다른 방법 사용
+      throw UnimplementedError('채팅 기능 테스트를 위해서는 실제 로그인이 필요합니다.');
 
       // Show success message
       if (mounted) {

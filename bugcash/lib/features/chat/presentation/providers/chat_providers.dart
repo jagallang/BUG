@@ -339,8 +339,8 @@ final userSearchProvider = FutureProvider.family<List<UserEntity>, String>((ref,
     return [];
   }
   
-  final authService = ref.read(firebaseAuthServiceProvider);
-  return await authService.searchUsers(query: query, limit: 10);
+  // HybridAuthService는 사용자 검색 기능을 제공하지 않음
+  throw UnimplementedError('사용자 검색 기능은 현재 지원되지 않습니다.');
 });
 
 // Current user provider from auth
