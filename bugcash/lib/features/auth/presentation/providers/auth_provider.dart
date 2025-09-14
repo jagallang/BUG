@@ -121,9 +121,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // HybridAuthService는 현재 회원가입 기능을 제공하지 않으므로
-      // Firebase Auth를 직접 사용하거나 별도 구현이 필요
-      throw UnimplementedError('회원가입 기능은 현재 미구현 상태입니다.');
+      // HybridAuthService를 통한 회원가입
+      final userCredential = await HybridAuthService.signUpWithEmailAndPassword(
+        email: email,
+        password: password,
+        displayName: displayName,
+        userType: userType,
+        country: country,
+        phoneNumber: phoneNumber,
+      );
+
+      if (userCredential?.user != null) {
+        final userData = await HybridAuthService.getUserData(userCredential!.user!.uid);
+        state = state.copyWith(user: userData, isLoading: false);
+      }
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

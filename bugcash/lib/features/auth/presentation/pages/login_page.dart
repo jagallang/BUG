@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
-import '../../data/services/hybrid_auth_service.dart';
-import '../../domain/entities/user_entity.dart';
 import 'signup_page.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
+import '../../../../services/firestore_service.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -56,36 +55,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  void _showTestAccountDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => _TestAccountDialog(
-        onAccountSelected: (email, password) {
-          // 이메일과 비밀번호를 UI에 표시하고 백엔드에서 직접 로그인 처리
-          _emailController.text = email;
-          _passwordController.text = password;
-          Navigator.of(context).pop();
-          _signInWithTestAccount(email);
-        },
-      ),
-    );
-  }
-
-  /// 테스트 계정으로 직접 로그인 (백엔드 처리)
-  Future<void> _signInWithTestAccount(String email) async {
-    try {
-      await ref.read(authProvider.notifier).signInWithTestAccount(email);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('테스트 계정 로그인 실패: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -322,63 +291,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
               const SizedBox(height: 24),
 
-              // Mock 계정 로그인 (개발용)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  border: Border.all(color: Colors.orange[200]!),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(Icons.bug_report, color: Colors.orange[700], size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          '개발용 테스트 계정',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange[700],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '개발 및 테스트용 계정입니다',
-                      style: TextStyle(
-                        color: Colors.orange[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showTestAccountDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange[400],
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        icon: const Icon(Icons.account_box, size: 18),
-                        label: const Text(
-                          '테스트 계정 선택',
-                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
               const SizedBox(height: 40),
 
               // Sign Up Link
@@ -422,22 +334,86 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               const SizedBox(height: 20),
               
               // Admin Function Button (for testing)
-              TextButton.icon(
-                onPressed: () {
-                  // 관리자 기능 - Provider Dashboard로 바로 이동
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => const ProviderDashboardPage(
-                        providerId: 'test_provider_001',
-                      ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton.icon(
+                    onPressed: () {
+                      // 관리자 기능 - Provider Dashboard로 바로 이동
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) => const ProviderDashboardPage(
+                            providerId: 'test_provider_001',
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.admin_panel_settings, size: 20),
+                    label: const Text('관리자 대시보드'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
                     ),
-                  );
-                },
-                icon: const Icon(Icons.admin_panel_settings, size: 20),
-                label: const Text('관리자 기능 (테스트용)'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.red,
-                ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () async {
+                      // 더미 데이터 삭제 확인 다이얼로그
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('⚠️ 경고'),
+                          content: const Text(
+                            'Firestore의 모든 더미 데이터(미션, 버그리포트, 제출물)를 삭제합니다.\n\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?'
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text('취소'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.red,
+                              ),
+                              child: const Text('삭제'),
+                            ),
+                          ],
+                        ),
+                      );
+
+                      if (confirmed == true) {
+                        try {
+                          final firestoreService = FirestoreService();
+                          await firestoreService.clearAllData();
+
+                          if (mounted) {
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text('✅ 모든 더미 데이터가 삭제되었습니다.'),
+                                backgroundColor: Colors.green,
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            final messenger = ScaffoldMessenger.of(context);
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('❌ 삭제 실패: ${e.toString()}'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      }
+                    },
+                    icon: const Icon(Icons.delete_forever, size: 20),
+                    label: const Text('더미 데이터 삭제'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.orange,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -546,157 +522,3 @@ class _ForgotPasswordDialogState extends ConsumerState<_ForgotPasswordDialog> {
   }
 }
 
-class _TestAccountDialog extends StatelessWidget {
-  final Function(String email, String password) onAccountSelected;
-
-  const _TestAccountDialog({required this.onAccountSelected});
-
-  // HybridAuthService의 테스트 계정 정보 사용
-  static final List<Map<String, String>> _testAccounts = HybridAuthService.testAccounts.map((account) {
-    return <String, String>{
-      'email': account.email,
-      'password': account.password,
-      'name': account.displayName,
-      'type': account.userType.name,
-      'description': account.userType == UserType.provider
-          ? (account.additionalData?['companyName'] as String?) ?? '앱 공급자'
-          : (account.additionalData?['specialization'] as String?) ?? '앱 테스터',
-    };
-  }).toList();
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Row(
-        children: [
-          Icon(Icons.bug_report, color: Colors.orange[600], size: 24),
-          const SizedBox(width: 8),
-          const Text(
-            '테스트 계정 선택',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue[200]!),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.blue[600], size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '관리자는 Provider Dashboard, 테스터는 Tester Dashboard로 이동합니다',
-                      style: TextStyle(
-                        color: Colors.blue[700],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: _testAccounts.length,
-                separatorBuilder: (context, index) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final account = _testAccounts[index];
-                  final isProvider = account['type'] == 'provider';
-                  
-                  return Card(
-                    elevation: 0,
-                    color: isProvider ? Colors.purple[50] : Colors.green[50],
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(
-                        color: isProvider ? Colors.purple[200]! : Colors.green[200]!,
-                        width: 1,
-                      ),
-                    ),
-                    child: ListTile(
-                      dense: true,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      leading: CircleAvatar(
-                        radius: 16,
-                        backgroundColor: isProvider ? Colors.purple[100] : Colors.green[100],
-                        child: Text(
-                          account['type']!.split(' ')[0],
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                      title: Text(
-                        account['name']!,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            account['email']!,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: isProvider ? Colors.purple[100] : Colors.green[100],
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              account['description']!,
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isProvider ? Colors.purple[700] : Colors.green[700],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      onTap: () {
-                        onAccountSelected(
-                          account['email']!,
-                          account['password']!,
-                        );
-                      },
-                      trailing: Icon(
-                        Icons.login,
-                        size: 18,
-                        color: isProvider ? Colors.purple[400] : Colors.green[400],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('취소'),
-        ),
-      ],
-    );
-  }
-}

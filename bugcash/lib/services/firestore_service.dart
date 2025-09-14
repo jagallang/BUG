@@ -141,76 +141,30 @@ class FirestoreService {
   }
 
   // Batch operations
-  Future<void> initializeDatabase() async {
-    // Check if data already exists
-    final missionsSnapshot = await _db.collection(missionsCollection).limit(1).get();
-    if (missionsSnapshot.docs.isNotEmpty) {
-      debugPrint('Database already initialized');
-      return;
+  Future<void> clearAllData() async {
+    debugPrint('🗑️ 모든 더미 데이터를 삭제합니다...');
+
+    // Delete all missions
+    final missionsSnapshot = await _db.collection(missionsCollection).get();
+    final batch = _db.batch();
+
+    for (var doc in missionsSnapshot.docs) {
+      batch.delete(doc.reference);
     }
 
-    // Add sample missions
-    final sampleMissions = [
-      {
-        'title': '쇼핑앱 결제 테스트',
-        'appName': 'ShopEasy',
-        'category': 'E-commerce',
-        'status': 'active',
-        'testers': 15,
-        'maxTesters': 20,
-        'reward': 8000,
-        'description': '결제 시스템의 다양한 시나리오를 테스트해주세요.',
-        'requirements': ['안드로이드 8.0 이상', '신용카드 등록', '앱스토어에서 다운로드'],
-        'duration': 14,
-        'createdAt': FieldValue.serverTimestamp(),
-        'createdBy': 'demo-provider',
-        'bugs': 3,
-        'isHot': true,
-        'isNew': false,
-      },
-      {
-        'title': '음식 주문 앱 UI 테스트',
-        'appName': 'FoodDelivery',
-        'category': 'Food & Drink',
-        'status': 'completed',
-        'testers': 25,
-        'maxTesters': 25,
-        'reward': 6000,
-        'description': '사용자 인터페이스의 직관성과 편의성을 평가해주세요.',
-        'requirements': ['iOS 14.0 이상', '위치 서비스 허용'],
-        'duration': 7,
-        'createdAt': FieldValue.serverTimestamp(),
-        'createdBy': 'demo-provider',
-        'bugs': 7,
-        'isHot': false,
-        'isNew': false,
-      },
-      {
-        'title': '게임 앱 성능 테스트',
-        'appName': 'PuzzleGame',
-        'category': 'Games',
-        'status': 'draft',
-        'testers': 0,
-        'maxTesters': 30,
-        'reward': 12000,
-        'description': '다양한 기기에서의 게임 성능을 확인해주세요.',
-        'requirements': ['RAM 4GB 이상', '저장공간 2GB 이상'],
-        'duration': 21,
-        'createdAt': FieldValue.serverTimestamp(),
-        'createdBy': 'demo-provider',
-        'bugs': 0,
-        'isHot': false,
-        'isNew': true,
-      },
-    ];
+    // Delete all bug reports
+    final bugReportsSnapshot = await _db.collection(bugReportsCollection).get();
+    for (var doc in bugReportsSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
 
-    final batch = _db.batch();
-    for (var mission in sampleMissions) {
-      final docRef = _db.collection(missionsCollection).doc();
-      batch.set(docRef, mission);
+    // Delete all submissions
+    final submissionsSnapshot = await _db.collection(submissionsCollection).get();
+    for (var doc in submissionsSnapshot.docs) {
+      batch.delete(doc.reference);
     }
 
     await batch.commit();
-    debugPrint('Sample data initialized successfully');
+    debugPrint('✅ 모든 더미 데이터가 삭제되었습니다.');
   }
 }

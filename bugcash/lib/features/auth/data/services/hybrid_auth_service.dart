@@ -137,7 +137,7 @@ class MockUser implements User {
 /// Mock UserMetadata
 class MockUserMetadata implements UserMetadata {
   @override
-  DateTime? get creationTime => DateTime.now().subtract(Duration(days: 30));
+  DateTime? get creationTime => DateTime.now().subtract(const Duration(days: 30));
 
   @override
   DateTime? get lastSignInTime => DateTime.now();
@@ -165,9 +165,9 @@ class HybridAuthService {
   static final FirebaseAuth _auth = FirebaseAuth.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// 테스트 계정 목록 (README.md와 동일)
+  /// 테스트 계정 목록 (관리자 계정만)
   static final List<TestAccount> _testAccounts = [
-    // Provider (앱 공급자) 계정들
+    // Admin (관리자) 계정만 유지
     TestAccount(
       email: 'admin@techcorp.com',
       password: 'admin123',
@@ -176,66 +176,6 @@ class HybridAuthService {
       additionalData: {
         'companyName': 'TechCorp Ltd.',
         'role': '관리자',
-      },
-    ),
-    TestAccount(
-      email: 'provider@gamedev.com',
-      password: 'provider123',
-      displayName: '이공급자',
-      userType: UserType.provider,
-      additionalData: {
-        'companyName': 'GameDev Studio',
-        'role': '개발팀',
-      },
-    ),
-    TestAccount(
-      email: 'company@fintech.com',
-      password: 'company123',
-      displayName: '박기업',
-      userType: UserType.provider,
-      additionalData: {
-        'companyName': 'FinTech Solutions',
-        'role': '기업',
-      },
-    ),
-    TestAccount(
-      email: 'developer@startup.com',
-      password: 'dev123',
-      displayName: '최개발자',
-      userType: UserType.provider,
-      additionalData: {
-        'companyName': 'Startup Inc.',
-        'role': '개발자',
-      },
-    ),
-    TestAccount(
-      email: 'qa@enterprise.com',
-      password: 'qa456',
-      displayName: '정QA',
-      userType: UserType.provider,
-      additionalData: {
-        'companyName': 'Enterprise Solutions',
-        'role': 'QA',
-      },
-    ),
-
-    // Tester (테스터) 계정들
-    TestAccount(
-      email: 'tester1@gmail.com',
-      password: 'tester123',
-      displayName: '김테스터',
-      userType: UserType.tester,
-      additionalData: {
-        'specialization': '일반 앱 테스터',
-      },
-    ),
-    TestAccount(
-      email: 'tester2@gmail.com',
-      password: 'test456',
-      displayName: '이사용자',
-      userType: UserType.tester,
-      additionalData: {
-        'specialization': 'UI/UX 전문 테스터',
       },
     ),
     TestAccount(
@@ -343,7 +283,7 @@ class HybridAuthService {
   static Future<bool> _shouldUseMockMode() async {
     try {
       // 간단한 Firebase 연결 테스트
-      await _auth.authStateChanges().first.timeout(Duration(seconds: 2));
+      await _auth.authStateChanges().first.timeout(const Duration(seconds: 2));
       return false;
     } catch (e) {
       if (e.toString().contains('CONFIGURATION_NOT_FOUND')) {
@@ -528,6 +468,64 @@ class HybridAuthService {
       case 'tester':
       default:
         return UserType.tester;
+    }
+  }
+
+  /// 이메일/비밀번호로 회원가입
+  static Future<UserCredential?> signUpWithEmailAndPassword({
+    required String email,
+    required String password,
+    required String displayName,
+    required UserType userType,
+    required String country,
+    String? phoneNumber,
+  }) async {
+    try {
+      // Firebase 설정 확인
+      if (await _shouldUseMockMode()) {
+        if (kDebugMode) {
+          debugPrint('🎭 Mock 모드에서는 회원가입을 지원하지 않습니다.');
+        }
+        throw Exception('Mock 모드에서는 회원가입을 지원하지 않습니다. Firebase를 설정해주세요.');
+      }
+
+      // Firebase Auth로 사용자 생성
+      final credential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      // 사용자 프로필 업데이트
+      await credential.user?.updateDisplayName(displayName);
+
+      // Firestore에 사용자 데이터 저장
+      if (credential.user != null) {
+        await _firestore.collection('users').doc(credential.user!.uid).set({
+          'email': email,
+          'displayName': displayName,
+          'userType': userType == UserType.tester ? 'tester' : 'provider',
+          'country': country,
+          'phoneNumber': phoneNumber,
+          'timezone': 'Asia/Seoul',
+          'createdAt': FieldValue.serverTimestamp(),
+          'updatedAt': FieldValue.serverTimestamp(),
+          'lastLoginAt': FieldValue.serverTimestamp(),
+          'totalPoints': 0,
+          'completedMissions': 0,
+          'level': 1,
+        });
+
+        if (kDebugMode) {
+          debugPrint('✅ 회원가입 성공: $email');
+        }
+      }
+
+      return credential;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ 회원가입 실패: ${e.toString()}');
+      }
+      rethrow;
     }
   }
 
