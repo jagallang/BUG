@@ -19,7 +19,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   final _phoneController = TextEditingController();
   final _countryController = TextEditingController();
 
-  UserType _selectedUserType = UserType.tester;
+  // 모든 신규 사용자는 기본적으로 테스터로 가입
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _agreeToTerms = false;
@@ -53,10 +53,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
         displayName: _displayNameController.text.trim(),
-        userType: _selectedUserType,
+        userType: UserType.tester, // 모든 신규 사용자는 테스터로 가입
         country: _countryController.text.trim(),
-        phoneNumber: _phoneController.text.trim().isEmpty 
-            ? null 
+        phoneNumber: _phoneController.text.trim().isEmpty
+            ? null
             : _phoneController.text.trim(),
       );
 
@@ -120,36 +120,42 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
                 const SizedBox(height: 40),
 
-                // 사용자 유형 선택
-                Text(
-                  '가입 유형',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
+                // 가입 안내
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue[200]!),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _UserTypeCard(
-                        title: '테스터',
-                        subtitle: '앱을 테스트하고 수익을 얻어보세요',
-                        icon: Icons.bug_report,
-                        isSelected: _selectedUserType == UserType.tester,
-                        onTap: () => setState(() => _selectedUserType = UserType.tester),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Colors.blue[600], size: 24),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '테스터로 시작하세요!',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Colors.blue[700],
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '가입 후 앱 테스트에 참여하고 리워드를 받으세요.\n나중에 앱 공급자로 업그레이드할 수 있습니다.',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue[600],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _UserTypeCard(
-                        title: '제공자',
-                        subtitle: '앱 테스팅 미션을 의뢰하세요',
-                        icon: Icons.business,
-                        isSelected: _selectedUserType == UserType.provider,
-                        onTap: () => setState(() => _selectedUserType = UserType.provider),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 32),
 
@@ -376,63 +382,3 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   }
 }
 
-class _UserTypeCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _UserTypeCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : Colors.grey[50],
-          border: Border.all(
-            color: isSelected ? Theme.of(context).primaryColor : Colors.grey[300]!,
-            width: isSelected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              icon,
-              size: 32,
-              color: isSelected ? Theme.of(context).primaryColor : Colors.grey[600],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Theme.of(context).primaryColor : Colors.black,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
