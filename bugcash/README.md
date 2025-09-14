@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.09-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.10-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,18 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.09)
+## ✨ 주요 기능 (v1.4.10)
 
-### 🔐 NEW! 통합 인증 시스템 & 공급자 신청 시스템 (v1.4.09)
+### 🔧 NEW! 인증 시스템 개선 & 사용자 데이터 통합 (v1.4.10)
+- **👤 실제 사용자 프로필 연동**: 하드코딩된 '김테스터' 완전 제거 및 Firestore 실제 데이터 연동
+- **🔄 동적 사용자 정보 로드**: `CurrentUserService.getUserProfile()` 기반 실시간 사용자 데이터 표시
+- **🚪 햄버거 메뉴 로그아웃 수정**: Mock 인증과 Firebase 인증 모두 지원하는 통합 로그아웃 시스템
+- **🔐 강화된 인증 상태 관리**: AuthProvider 경합 상태 해결 및 auth 상태 스트림 자동 처리
+- **🐛 포괄적인 디버그 로깅**: 인증 플로우 전체에 대한 상세 로깅 시스템 추가
+- **⚡ 안전한 null 처리**: 사용자 데이터 파싱 시 완벽한 null safety 및 fallback 처리
+- **🎯 테스터 레벨 자동 변환**: 문자열 기반 레벨을 enum으로 변환하는 헬퍼 메서드 추가
+
+### 🔐 통합 인증 시스템 & 공급자 신청 시스템 (v1.4.09)
 - **🎯 단일 회원가입 흐름**: 복잡한 사용자 타입 선택 제거로 간소화된 회원가입 경험
 - **👤 테스터 기본 모드**: 모든 신규 사용자가 테스터로 시작하여 즉시 앱 테스트 참여 가능
 - **🔒 보안 기반 공급자 신청**: 비밀번호 검증을 통한 안전한 공급자 모드 업그레이드 시스템
@@ -363,6 +372,28 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 - **1:1 채팅 시작**: 검색 결과에서 채팅 버튼 클릭하여 즉시 채팅 시작
 
 ## 🔧 주요 버전 정보
+
+### 🔧 v1.4.10 (2025-09-14) - 인증 시스템 개선 & 사용자 데이터 통합
+
+#### ✨ 핵심 개선 사항
+- **👤 하드코딩 데이터 완전 제거**: `tester_dashboard_provider.dart`에서 하드코딩된 '김테스터' 완전 제거
+- **🔄 실제 백엔드 데이터 연동**: `CurrentUserService.getUserProfile()` 기반 Firestore 실시간 사용자 데이터 로드
+- **🚪 로그아웃 기능 완전 수정**: Mock 사용자와 Firebase 사용자 모두 지원하는 통합 로그아웃 시스템
+- **🔐 인증 상태 관리 개선**: AuthProvider에서 경합 상태(race condition) 해결
+- **🐛 포괄적인 디버그 시스템**: 인증 플로우 전체에 대한 상세 로깅 시스템
+
+#### 🛠️ 기술적 구현 세부사항
+- **사용자 프로필 로드 개선**: `_loadTesterProfile` 메서드를 Firebase 연동으로 완전 교체
+- **HybridAuthService 로그아웃 개선**: Mock 사용자 감지 및 포괄적 로깅 시스템
+- **AuthProvider 상태 관리**: 수동 상태 설정 제거로 auth 스트림 자동 처리
+- **안전한 데이터 파싱**: null safety와 fallback 값을 통한 안정적 데이터 처리
+- **테스터 레벨 변환**: `_getTesterLevelFromString` 헬퍼 메서드로 문자열-enum 변환
+
+#### 🔍 해결된 주요 문제
+- **하드코딩 이슈**: 다른 사용자로 로그인 후에도 '김테스터'가 표시되던 문제 해결
+- **로그아웃 실패**: 햄버거 메뉴 로그아웃이 작동하지 않던 문제 완전 해결
+- **상태 동기화**: 인증 상태와 UI 상태 간 불일치 문제 해결
+- **Mock 인증 처리**: Mock 사용자 로그아웃 시 적절한 처리 로직 추가
 
 ### 🔐 v1.4.09 (2025-09-14) - 통합 인증 시스템 & 공급자 신청 시스템
 

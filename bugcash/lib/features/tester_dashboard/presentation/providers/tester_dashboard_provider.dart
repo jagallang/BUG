@@ -254,26 +254,84 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
   Future<void> _loadTesterProfile(String testerId) async {
     try {
-      // Mock tester profile - replace with actual Firestore query
-      final profile = TesterProfile(
-        id: testerId,
-        name: '김테스터',
-        email: 'tester@example.com',
-        totalPoints: 15420,
-        monthlyPoints: 3280,
-        completedMissions: 87,
-        successRate: 0.94,
-        averageRating: 4.7,
-        skills: ['UI/UX 테스트', '모바일 앱', '웹 테스트', '버그 발견'],
-        interests: ['게임', '소셜미디어', '쇼핑', '교육'],
-        level: TesterLevel.advanced,
-        experiencePoints: 4250,
-        joinedDate: DateTime.now().subtract(const Duration(days: 180)),
-      );
-      
-      state = state.copyWith(testerProfile: profile);
+      // Get user profile from Firestore
+      final userProfile = await CurrentUserService.getUserProfile(testerId);
+
+      if (userProfile != null) {
+        final profile = TesterProfile(
+          id: testerId,
+          name: userProfile['displayName'] ?? userProfile['name'] ?? '사용자',
+          email: userProfile['email'] ?? 'user@example.com',
+          totalPoints: userProfile['totalPoints']?.toInt() ?? 0,
+          monthlyPoints: userProfile['monthlyPoints']?.toInt() ?? 0,
+          completedMissions: userProfile['completedMissions']?.toInt() ?? 0,
+          successRate: (userProfile['successRate'] as num?)?.toDouble() ?? 0.0,
+          averageRating: (userProfile['averageRating'] as num?)?.toDouble() ?? 0.0,
+          skills: (userProfile['skills'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['일반 테스트'],
+          interests: (userProfile['interests'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['앱 테스트'],
+          level: _getTesterLevelFromString(userProfile['level'] as String?),
+          experiencePoints: userProfile['experiencePoints']?.toInt() ?? 0,
+          joinedDate: userProfile['createdAt'] != null
+            ? (userProfile['createdAt'] as Timestamp).toDate()
+            : DateTime.now().subtract(const Duration(days: 1)),
+        );
+
+        state = state.copyWith(testerProfile: profile);
+      } else {
+        // Fallback profile if user data not found
+        final profile = TesterProfile(
+          id: testerId,
+          name: '사용자',
+          email: 'user@example.com',
+          totalPoints: 0,
+          monthlyPoints: 0,
+          completedMissions: 0,
+          successRate: 0.0,
+          averageRating: 0.0,
+          skills: ['일반 테스트'],
+          interests: ['앱 테스트'],
+          level: TesterLevel.beginner,
+          experiencePoints: 0,
+          joinedDate: DateTime.now(),
+        );
+
+        state = state.copyWith(testerProfile: profile);
+      }
     } catch (e) {
       debugPrint('Failed to load tester profile: $e');
+
+      // Fallback profile in case of error
+      final profile = TesterProfile(
+        id: testerId,
+        name: '사용자',
+        email: 'user@example.com',
+        totalPoints: 0,
+        monthlyPoints: 0,
+        completedMissions: 0,
+        successRate: 0.0,
+        averageRating: 0.0,
+        skills: ['일반 테스트'],
+        interests: ['앱 테스트'],
+        level: TesterLevel.beginner,
+        experiencePoints: 0,
+        joinedDate: DateTime.now(),
+      );
+
+      state = state.copyWith(testerProfile: profile);
+    }
+  }
+
+  TesterLevel _getTesterLevelFromString(String? levelString) {
+    switch (levelString?.toLowerCase()) {
+      case 'expert':
+        return TesterLevel.expert;
+      case 'advanced':
+        return TesterLevel.advanced;
+      case 'intermediate':
+        return TesterLevel.intermediate;
+      case 'beginner':
+      default:
+        return TesterLevel.beginner;
     }
   }
 

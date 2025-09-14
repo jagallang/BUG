@@ -204,7 +204,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     try {
       await HybridAuthService.signOut();
-      state = state.copyWith(user: null, isLoading: false);
+      // Let the auth state stream handle the user: null update automatically
+      // This prevents race conditions and ensures proper state management
+      state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,

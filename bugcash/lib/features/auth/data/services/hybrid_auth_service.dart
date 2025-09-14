@@ -531,7 +531,41 @@ class HybridAuthService {
 
   /// 로그아웃
   static Future<void> signOut() async {
-    await _auth.signOut();
+    if (kDebugMode) {
+      debugPrint('🔴 HybridAuthService.signOut() 시작');
+    }
+
+    try {
+      // 현재 사용자 확인
+      final currentUser = _auth.currentUser;
+      if (currentUser != null) {
+        if (currentUser.uid.startsWith('mock_')) {
+          if (kDebugMode) {
+            debugPrint('🎭 Mock 사용자 로그아웃 처리: ${currentUser.email}');
+          }
+        } else {
+          if (kDebugMode) {
+            debugPrint('🔥 Firebase 사용자 로그아웃 처리: ${currentUser.email}');
+          }
+        }
+      } else {
+        if (kDebugMode) {
+          debugPrint('⚠️ 로그아웃할 사용자가 없음');
+        }
+      }
+
+      // Firebase Auth 로그아웃 (Mock 사용자도 Firebase Auth 상태를 사용하므로 항상 호출)
+      await _auth.signOut();
+
+      if (kDebugMode) {
+        debugPrint('✅ HybridAuthService.signOut() 완료');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ HybridAuthService.signOut() 실패: $e');
+      }
+      rethrow;
+    }
   }
 
   /// 테스트 계정 목록 가져오기

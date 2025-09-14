@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../widgets/earnings_summary_widget.dart';
 import '../widgets/community_board_widget.dart';
 import '../widgets/expandable_mission_card.dart';
@@ -9,6 +10,7 @@ import '../providers/tester_dashboard_provider.dart';
 import '../../../../models/test_session_model.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 import '../../../chat/presentation/pages/chat_list_page.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import 'mission_detail_page.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
@@ -116,18 +118,46 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  void _verifyPasswordAndSwitchToProvider(String password) {
-    // 실제로는 사용자의 실제 비밀번호와 비교해야 함
-    // 여기서는 간단하게 구현
-    if (password.isNotEmpty) {
-      // 공급자 대시보드로 전환
+  void _verifyPasswordAndSwitchToProvider(String password) async {
+    if (password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ 비밀번호를 입력해주세요'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // 현재 사용자 정보 가져오기
+      final currentUser = ref.read(authProvider).user;
+      if (currentUser == null) {
+        throw Exception('사용자 정보를 찾을 수 없습니다');
+      }
+
+      // 비밀번호 검증을 위해 재인증 시도
+      final credential = EmailAuthProvider.credential(
+        email: currentUser.email!,
+        password: password,
+      );
+
+      // 비밀번호 검증
+      await FirebaseAuth.instance.currentUser?.reauthenticateWithCredential(credential);
+
+      // mounted 체크 후 네비게이션
+      if (!mounted) return;
+
+      // 공급자 대시보드로 전환 (실제 사용자 ID 사용)
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (_) => const ProviderDashboardPage(
-            providerId: 'upgraded_provider',
+          builder: (_) => ProviderDashboardPage(
+            providerId: currentUser.uid,
           ),
         ),
       );
+
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -135,13 +165,124 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           backgroundColor: Colors.green,
         ),
       );
-    } else {
+    } catch (e) {
+      String errorMessage = '❌ 인증에 실패했습니다';
+
+      if (e.toString().contains('wrong-password') || e.toString().contains('invalid-credential')) {
+        errorMessage = '❌ 비밀번호가 올바르지 않습니다';
+      } else if (e.toString().contains('too-many-requests')) {
+        errorMessage = '❌ 너무 많은 시도로 인해 일시적으로 차단되었습니다';
+      } else if (e.toString().contains('network-request-failed')) {
+        errorMessage = '❌ 네트워크 연결을 확인해주세요';
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showLogoutConfirmation(BuildContext context) {
+    debugPrint('🟡 _showLogoutConfirmation 호출됨');
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.logout, color: Colors.red),
+            SizedBox(width: 12),
+            Text('로그아웃'),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '정말로 로그아웃 하시겠습니까?',
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '다시 로그인하려면 이메일과 비밀번호를 입력해야 합니다.',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              debugPrint('🟡 로그아웃 취소 버튼 클릭');
+              Navigator.pop(context);
+            },
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              debugPrint('🟡 로그아웃 확인 버튼 클릭');
+              Navigator.pop(context);
+              _performLogout(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('로그아웃'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _performLogout(BuildContext context) async {
+    debugPrint('🔴 _performLogout 시작');
+    try {
+      // 로그아웃 중 로딩 표시
+      debugPrint('🔴 로그아웃 스낵바 표시');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('❌ 비밀번호를 입력해주세요'),
-          backgroundColor: Colors.red,
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 12),
+              Text('로그아웃 중...'),
+            ],
+          ),
+          backgroundColor: Colors.blue,
+          duration: Duration(seconds: 1),
         ),
       );
+
+      // AuthProvider를 통한 로그아웃
+      debugPrint('🔴 AuthProvider signOut 호출');
+      await ref.read(authProvider.notifier).signOut();
+      debugPrint('🔴 AuthProvider signOut 완료');
+
+      // AuthWrapper가 자동으로 로그인 페이지로 이동시킴
+      // 따라서 명시적인 네비게이션이 필요 없음
+
+    } catch (e) {
+      debugPrint('🔴 로그아웃 오류: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ 로그아웃 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -280,12 +421,19 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 icon: const Icon(Icons.menu, color: Colors.white),
                 offset: Offset(0, 50.h),
                 onSelected: (String value) {
+                  debugPrint('🔵 PopupMenu 선택됨: $value');
                   switch (value) {
                     case 'provider':
+                      debugPrint('🔵 공급자 신청 메뉴 선택');
                       _showProviderApplicationDialog(context);
                       break;
                     case 'settings':
+                      debugPrint('🔵 설정 메뉴 선택');
                       _navigateToSettings(context);
+                      break;
+                    case 'logout':
+                      debugPrint('🔵 로그아웃 메뉴 선택 - _showLogoutConfirmation 호출');
+                      _showLogoutConfirmation(context);
                       break;
                   }
                 },
@@ -307,6 +455,16 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                         Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
                         SizedBox(width: 12.w),
                         const Text('설정'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    value: 'logout',
+                    child: Row(
+                      children: [
+                        Icon(Icons.logout, color: Colors.red[600]),
+                        SizedBox(width: 12.w),
+                        const Text('로그아웃', style: TextStyle(color: Colors.red)),
                       ],
                     ),
                   ),
