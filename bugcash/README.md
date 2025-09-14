@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.06-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.07-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,18 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.06)
+## ✨ 주요 기능 (v1.4.07)
 
-### 🎨 NEW! 앱 아이콘 업데이트 & 커뮤니티 게시판 강화 (v1.4.06)
+### 🚀 NEW! 완전한 14일 앱 테스트 워크플로우 시스템 (v1.4.07)
+- **📋 확장 가능한 미션 카드**: 탭으로 미션 상세 정보를 확인하고 "14일 테스트 신청하기" 버튼으로 즉시 신청
+- **🔄 테스터 신청 및 승인 시스템**: 테스터 신청 → 공급자 승인 → 진행중 탭 자동 이동의 완전한 워크플로우
+- **📱 일일 테스트 관리**: 매일 스크린샷과 메모를 제출하고 공급자가 승인하는 14일간 테스트 추적 시스템
+- **🎛️ 공급자 승인 대시보드**: 테스터 신청 관리, 일일 테스트 승인/거부, 벌크 처리 기능이 포함된 완전한 관리 시스템
+- **🏗️ TestSession 모델**: TestSessionStatus, DailyTestProgress를 통한 체계적인 테스트 진행 상황 추적
+- **✨ 실시간 UI 업데이트**: Firebase 연동으로 신청, 승인, 일일 테스트 제출의 실시간 동기화
+- **📊 진행률 시각화**: 14일간의 일일 테스트 완료 현황을 한눈에 볼 수 있는 대시보드
+
+### 🎨 앱 아이콘 업데이트 & 커뮤니티 게시판 강화 (v1.4.06)
 - **🎯 새로운 BugCash 브랜딩**: 모든 플랫폼(Android, iOS, macOS, Windows, Web)에 통일된 새 앱 아이콘 적용
 - **📱 플랫폼별 최적화**: 각 플랫폼 요구사항에 맞는 아이콘 크기 및 형식 지원
 - **🛠️ assets 폴더 추가**: 앱 아이콘 원본 파일을 포함한 체계적인 에셋 관리
@@ -334,6 +343,25 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 - **1:1 채팅 시작**: 검색 결과에서 채팅 버튼 클릭하여 즉시 채팅 시작
 
 ## 🔧 주요 버전 정보
+
+### 🚀 v1.4.07 (2025-09-14) - 완전한 14일 앱 테스트 워크플로우 시스템
+
+#### ✨ 혁신적인 새 기능
+- **📋 ExpandableMissionCard 시스템**: 미션 카드 탭 시 상세 정보 표시 및 애니메이션 전환
+- **🎯 완전한 테스터 신청 워크플로우**: "14일 테스트 신청하기" → 공급자 승인 → 진행중 탭 이동 전체 프로세스
+- **📱 ActiveTestSessionCard**: 14일간의 일일 테스트 진행 상황을 시각적으로 추적하는 카드 시스템
+- **🎛️ DailyTestApprovalWidget**: 공급자가 테스터의 일일 테스트를 승인/거부할 수 있는 완전한 관리 시스템
+- **🔄 실시간 상태 동기화**: TestSessionService를 통한 Firebase 실시간 데이터 동기화
+- **💬 사용자 친화적 다이얼로그**: 성공 확인, 오류 처리, 로딩 상태를 포함한 완전한 UX
+
+#### 🛠️ 기술적 구현 세부사항
+- **새로운 데이터 모델**: TestSession, DailyTestProgress, TestSessionStatus, DailyTestStatus enum
+- **서비스 레이어**: TestSessionService로 테스트 세션 생성, 일일 테스트 제출, 승인 처리
+- **UI 컴포넌트**: ExpandableMissionCard, ActiveTestSessionCard, DailyTestApprovalWidget 위젯
+- **애니메이션 시스템**: AnimationController 기반 smooth expand/collapse 전환
+- **Mock 데이터 지원**: 실제 Firebase 없이도 완전한 워크플로우 테스트 가능
+- **타입 안전 enum 처리**: MissionType, MissionDifficulty enum에 대한 완전한 한글 텍스트 변환
+- **상태 관리 개선**: Riverpod 기반 실시간 상태 업데이트 및 오류 처리
 
 ### 🎯 v1.4.05 (2025-09-11) - 일관된 FAB 위치 개선
 
