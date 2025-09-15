@@ -141,7 +141,48 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v1.4.11 (Latest) - Complete Mock Data Removal & Real Firebase Backend Integration
+### v1.4.12 (Latest) - Bidirectional Application Status Display System
+*Released: 2025-01-16*
+
+**🔄 Bidirectional Application Status Display:**
+- **Tester Dashboard Enhancement**: Added comprehensive "신청 현황" (Application Status) tab in mission section
+- **Real-time Status Tracking**: Live application status updates (pending, reviewing, accepted, rejected, cancelled)
+- **Provider-Tester Communication**: Complete bidirectional visibility of application status between both user types
+- **Status Management**: Real-time application state synchronization via Firebase Firestore streams
+
+**🎨 UI/UX Improvements:**
+- **Status Visualization**: Color-coded status indicators with intuitive icons for each application state
+- **Detailed Information**: Application messages and provider responses displayed with proper formatting
+- **Time Formatting**: Human-readable time-ago formatting (N일 전, N시간 전, N분 전) for application timestamps
+- **Empty State Handling**: Informative empty states for both tester and provider dashboards
+- **Responsive Design**: Optimized mobile interface with proper spacing and touch targets
+
+**🏗️ Technical Implementation:**
+- **Data Models**: Added MissionApplicationStatus model with comprehensive application state tracking
+- **Firebase Integration**: Enhanced Firestore queries for real-time application data synchronization
+- **Authentication Integration**: Seamless integration with actual Firebase user authentication data
+- **Collection Consistency**: Fixed collection naming consistency (missionApplications) across the codebase
+- **Stream Management**: Optimized real-time data streams for better performance and reliability
+
+**🗑️ Code Cleanup & Optimization:**
+- **Mock System Removal**: Deleted mock_auth_provider.dart completing the mock system elimination
+- **Production Architecture**: Full transition to production-ready Firebase backend integration
+- **Code Quality**: Enhanced error handling and debugging capabilities
+- **Performance Optimization**: Reduced unnecessary widget rebuilds and improved memory management
+
+**🤝 User Experience Enhancement:**
+- **For Testers**: Complete overview of all applied missions with detailed status information
+- **For Providers**: Real-time management of application requests with tester information and feedback
+- **Communication Loop**: End-to-end application-response communication system between testers and providers
+- **Status Transparency**: Clear visibility into application workflow for all stakeholders
+
+**📊 Data Architecture:**
+- **Real-time Queries**: Efficient Firestore queries for application status retrieval
+- **Bidirectional Sync**: Automatic data synchronization between tester and provider dashboards
+- **State Persistence**: Reliable application state management with proper error handling
+- **Scalable Design**: Database structure optimized for production-scale application management
+
+### v1.4.11 - Complete Mock Data Removal & Real Firebase Backend Integration
 *Released: 2025-01-16*
 
 **🗑️ Mock Data Elimination:**
