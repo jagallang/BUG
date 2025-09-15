@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../models/mission_model.dart';
 
 class MissionApplicationsWidget extends StatefulWidget {
@@ -15,110 +16,87 @@ class MissionApplicationsWidget extends StatefulWidget {
 }
 
 class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
-  List<MissionApplication> _applications = [];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  Stream<List<MissionApplication>>? _applicationsStream;
 
   @override
   void initState() {
     super.initState();
-    _initializeMockData();
+    _initializeApplicationsStream();
   }
 
-  void _initializeMockData() {
-    _applications = [
-      MissionApplication(
-        id: 'app_001',
-        missionId: 'mission_001',
-        testerId: 'tester_kim_001',
-        providerId: widget.providerId,
-        testerName: '김테스터',
-        testerEmail: 'kim.tester@example.com',
-        testerProfile: 'https://example.com/profile1.jpg',
-        status: MissionApplicationStatus.pending,
-        message: '안녕하세요! 모바일 앱 테스트 경험이 3년 있으며, 특히 채팅 앱 테스트에 전문성을 갖고 있습니다. 꼼꼼하게 테스트하여 품질 높은 피드백 제공하겠습니다.',
-        appliedAt: DateTime.now().subtract(const Duration(hours: 1)),
-        testerInfo: {
-          'experience': '3년',
-          'specialization': ['채팅앱', 'SNS앱', 'UI/UX'],
-          'completedMissions': 45,
-          'rating': 4.8,
-        },
-      ),
-      MissionApplication(
-        id: 'app_002',
-        missionId: 'mission_002',
-        testerId: 'tester_lee_002',
-        providerId: widget.providerId,
-        testerName: '이테스터',
-        testerEmail: 'lee.tester@example.com',
-        status: MissionApplicationStatus.pending,
-        message: '안드로이드와 iOS 양쪽 플랫폼 테스트 가능합니다. 버그 발견 및 상세한 리포트 작성에 강점이 있습니다.',
-        appliedAt: DateTime.now().subtract(const Duration(minutes: 30)),
-        testerInfo: {
-          'experience': '2년',
-          'specialization': ['크로스플랫폼', '버그리포트'],
-          'completedMissions': 28,
-          'rating': 4.6,
-        },
-      ),
-      MissionApplication(
-        id: 'app_003',
-        missionId: 'mission_003',
-        testerId: 'tester_park_003',
-        providerId: widget.providerId,
-        testerName: '박테스터',
-        testerEmail: 'park.tester@example.com',
-        status: MissionApplicationStatus.reviewing,
-        message: '게임 앱 테스트 전문가입니다. 성능 테스트와 사용성 테스트에 특화되어 있습니다.',
-        appliedAt: DateTime.now().subtract(const Duration(hours: 3)),
-        reviewedAt: DateTime.now().subtract(const Duration(minutes: 10)),
-        testerInfo: {
-          'experience': '4년',
-          'specialization': ['게임앱', '성능테스트'],
-          'completedMissions': 67,
-          'rating': 4.9,
-        },
-      ),
-      MissionApplication(
-        id: 'app_004',
-        missionId: 'mission_004',
-        testerId: 'tester_jung_004',
-        providerId: widget.providerId,
-        testerName: '정테스터',
-        testerEmail: 'jung.tester@example.com',
-        status: MissionApplicationStatus.accepted,
-        message: '이커머스 앱 테스트에 전문성이 있습니다. 결제 플로우와 사용자 경험 개선에 도움을 드릴 수 있습니다.',
-        appliedAt: DateTime.now().subtract(const Duration(hours: 5)),
-        reviewedAt: DateTime.now().subtract(const Duration(hours: 4)),
-        acceptedAt: DateTime.now().subtract(const Duration(hours: 4)),
-        responseMessage: '경험과 전문성을 인정하여 승인합니다. 좋은 결과 기대하겠습니다!',
-        testerInfo: {
-          'experience': '5년',
-          'specialization': ['이커머스', '결제시스템', 'UX/UI'],
-          'completedMissions': 89,
-          'rating': 4.9,
-        },
-      ),
-      MissionApplication(
-        id: 'app_005',
-        missionId: 'mission_005',
-        testerId: 'tester_choi_005',
-        providerId: widget.providerId,
-        testerName: '최테스터',
-        testerEmail: 'choi.tester@example.com',
-        status: MissionApplicationStatus.rejected,
-        message: '앱 테스트에 관심이 많습니다. 열심히 하겠습니다.',
-        appliedAt: DateTime.now().subtract(const Duration(hours: 8)),
-        reviewedAt: DateTime.now().subtract(const Duration(hours: 7)),
-        rejectedAt: DateTime.now().subtract(const Duration(hours: 7)),
-        responseMessage: '죄송하지만 해당 미션은 더 많은 경험이 필요합니다. 다른 미션에 도전해보세요.',
-        testerInfo: {
-          'experience': '신규',
-          'specialization': [],
-          'completedMissions': 2,
-          'rating': 4.0,
-        },
-      ),
-    ];
+  void _initializeApplicationsStream() {
+    _applicationsStream = _firestore
+        .collection('missionApplications')
+        .where('providerId', isEqualTo: widget.providerId)
+        .orderBy('appliedAt', descending: true)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final applications = <MissionApplication>[];
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+
+        // Get tester info
+        final testerDoc = await _firestore
+            .collection('testers')
+            .doc(data['testerId'])
+            .get();
+
+        final testerData = testerDoc.data() ?? {};
+
+        // Get tester stats
+        final statsDoc = await _firestore
+            .collection('testers')
+            .doc(data['testerId'])
+            .collection('stats')
+            .doc('summary')
+            .get();
+
+        final stats = statsDoc.data() ?? {};
+
+        applications.add(MissionApplication(
+          id: doc.id,
+          missionId: data['missionId'] ?? '',
+          testerId: data['testerId'] ?? '',
+          providerId: data['providerId'] ?? '',
+          testerName: testerData['name'] ?? 'Unknown',
+          testerEmail: testerData['email'] ?? '',
+          testerProfile: testerData['photoUrl'],
+          status: _parseApplicationStatus(data['status'] ?? 'pending'),
+          message: data['message'],
+          appliedAt: (data['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          reviewedAt: (data['reviewedAt'] as Timestamp?)?.toDate(),
+          acceptedAt: (data['acceptedAt'] as Timestamp?)?.toDate(),
+          rejectedAt: (data['rejectedAt'] as Timestamp?)?.toDate(),
+          responseMessage: data['responseMessage'],
+          testerInfo: {
+            'experience': testerData['experience'] ?? 'New',
+            'specialization': List<String>.from(testerData['skills'] ?? []),
+            'completedMissions': stats['completedMissions'] ?? 0,
+            'rating': (stats['averageRating'] ?? 0.0).toDouble(),
+          },
+        ));
+      }
+
+      return applications;
+    });
+  }
+
+  MissionApplicationStatus _parseApplicationStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'reviewing':
+        return MissionApplicationStatus.reviewing;
+      case 'accepted':
+        return MissionApplicationStatus.accepted;
+      case 'rejected':
+        return MissionApplicationStatus.rejected;
+      case 'cancelled':
+        return MissionApplicationStatus.cancelled;
+      case 'pending':
+      default:
+        return MissionApplicationStatus.pending;
+    }
   }
 
   @override
@@ -131,19 +109,38 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
           children: [
             // Header Stats
             _buildHeaderStats(),
-            
+
             SizedBox(height: 16.h),
-            
+
             // Application List
             Expanded(
-              child: _applications.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      itemCount: _applications.length,
-                      itemBuilder: (context, index) {
-                        return _buildApplicationCard(_applications[index]);
-                      },
-                    ),
+              child: StreamBuilder<List<MissionApplication>>(
+                stream: _applicationsStream,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(
+                      child: Text('Error: ${snapshot.error}'),
+                    );
+                  }
+
+                  final applications = snapshot.data ?? [];
+
+                  if (applications.isEmpty) {
+                    return _buildEmptyState();
+                  }
+
+                  return ListView.builder(
+                    itemCount: applications.length,
+                    itemBuilder: (context, index) {
+                      return _buildApplicationCard(applications[index]);
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -152,48 +149,54 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
   }
 
   Widget _buildHeaderStats() {
-    final pendingCount = _applications.where((app) => app.status == MissionApplicationStatus.pending).length;
-    final reviewingCount = _applications.where((app) => app.status == MissionApplicationStatus.reviewing).length;
-    final acceptedCount = _applications.where((app) => app.status == MissionApplicationStatus.accepted).length;
+    return StreamBuilder<List<MissionApplication>>(
+      stream: _applicationsStream,
+      builder: (context, snapshot) {
+        final applications = snapshot.data ?? [];
+        final pendingCount = applications.where((app) => app.status == MissionApplicationStatus.pending).length;
+        final reviewingCount = applications.where((app) => app.status == MissionApplicationStatus.reviewing).length;
+        final acceptedCount = applications.where((app) => app.status == MissionApplicationStatus.accepted).length;
 
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            '미션 신청 관리',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          SizedBox(height: 16.h),
-          Row(
-            children: [
-              Expanded(
-                child: _buildStatItem('대기 중', pendingCount, Colors.orange, Icons.hourglass_empty),
-              ),
-              Expanded(
-                child: _buildStatItem('검토 중', reviewingCount, Colors.blue, Icons.visibility),
-              ),
-              Expanded(
-                child: _buildStatItem('승인됨', acceptedCount, Colors.green, Icons.check_circle),
+        return Container(
+          padding: EdgeInsets.all(16.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.1),
+                spreadRadius: 1,
+                blurRadius: 5,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-        ],
-      ),
+          child: Column(
+            children: [
+              Text(
+                '미션 신청 관리',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildStatItem('대기 중', pendingCount, Colors.orange, Icons.hourglass_empty),
+                  ),
+                  Expanded(
+                    child: _buildStatItem('검토 중', reviewingCount, Colors.blue, Icons.visibility),
+                  ),
+                  Expanded(
+                    child: _buildStatItem('승인됨', acceptedCount, Colors.green, Icons.check_circle),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -202,9 +205,9 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
       margin: EdgeInsets.symmetric(horizontal: 4.w),
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Column(
         children: [
@@ -244,7 +247,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
                 // Tester Profile
                 CircleAvatar(
                   radius: 20.r,
-                  backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                   child: Text(
                     application.testerName[0],
                     style: TextStyle(
@@ -254,7 +257,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
                   ),
                 ),
                 SizedBox(width: 12.w),
-                
+
                 // Tester Info
                 Expanded(
                   child: Column(
@@ -274,7 +277,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 6.w, vertical: 2.h),
                               decoration: BoxDecoration(
-                                color: Colors.amber.withValues(alpha: 0.2),
+                                color: Colors.amber.withOpacity(0.2),
                                 borderRadius: BorderRadius.circular(8.r),
                               ),
                               child: Row(
@@ -305,14 +308,14 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
                     ],
                   ),
                 ),
-                
+
                 // Status Badge
                 _buildStatusBadge(application.status),
               ],
             ),
-            
+
             SizedBox(height: 12.h),
-            
+
             // Application Message
             if (application.message != null && application.message!.isNotEmpty) ...[
               Container(
@@ -332,7 +335,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
               ),
               SizedBox(height: 12.h),
             ],
-            
+
             // Tester Specializations
             if (application.testerInfo?['specialization'] != null) ...[
               Wrap(
@@ -342,7 +345,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
                     .map((spec) => Container(
                           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                           decoration: BoxDecoration(
-                            color: Colors.blue.withValues(alpha: 0.1),
+                            color: Colors.blue.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12.r),
                           ),
                           child: Text(
@@ -357,7 +360,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
               ),
               SizedBox(height: 12.h),
             ],
-            
+
             // Applied Time
             Row(
               children: [
@@ -380,7 +383,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
                 ),
               ],
             ),
-            
+
             // Response Message (if any)
             if (application.responseMessage != null && application.responseMessage!.isNotEmpty) ...[
               SizedBox(height: 12.h),
@@ -414,7 +417,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
                 ),
               ),
             ],
-            
+
             // Action Buttons
             if (application.status == MissionApplicationStatus.pending) ...[
               SizedBox(height: 16.h),
@@ -500,7 +503,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
@@ -577,7 +580,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
 
   Widget _buildAcceptDialog(MissionApplication application) {
     final messageController = TextEditingController();
-    
+
     return AlertDialog(
       title: const Text('미션 신청 승인'),
       content: Column(
@@ -604,27 +607,38 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
           child: const Text('취소'),
         ),
         ElevatedButton(
-          onPressed: () {
-            setState(() {
-              final index = _applications.indexOf(application);
-              _applications[index] = application.copyWith(
-                status: MissionApplicationStatus.accepted,
-                reviewedAt: DateTime.now(),
-                acceptedAt: DateTime.now(),
-                responseMessage: messageController.text.isNotEmpty 
-                    ? messageController.text 
+          onPressed: () async {
+            try {
+              await _firestore
+                  .collection('missionApplications')
+                  .doc(application.id)
+                  .update({
+                'status': 'accepted',
+                'reviewedAt': FieldValue.serverTimestamp(),
+                'acceptedAt': FieldValue.serverTimestamp(),
+                'responseMessage': messageController.text.isNotEmpty
+                    ? messageController.text
                     : '신청이 승인되었습니다. 미션을 시작해주세요!',
+              });
+
+              Navigator.of(context).pop();
+
+              // 알림 표시
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${application.testerName}님의 신청을 승인했습니다.'),
+                  backgroundColor: Colors.green,
+                ),
               );
-            });
-            Navigator.of(context).pop();
-            
-            // 알림 표시
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('${application.testerName}님의 신청을 승인했습니다.'),
-                backgroundColor: Colors.green,
-              ),
-            );
+            } catch (e) {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
           child: const Text('승인', style: TextStyle(color: Colors.white)),
@@ -635,7 +649,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
 
   Widget _buildRejectDialog(MissionApplication application) {
     final messageController = TextEditingController();
-    
+
     return AlertDialog(
       title: const Text('미션 신청 거부'),
       content: Column(
@@ -662,7 +676,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
           child: const Text('취소'),
         ),
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             if (messageController.text.trim().isEmpty) {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -672,25 +686,36 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
               );
               return;
             }
-            
-            setState(() {
-              final index = _applications.indexOf(application);
-              _applications[index] = application.copyWith(
-                status: MissionApplicationStatus.rejected,
-                reviewedAt: DateTime.now(),
-                rejectedAt: DateTime.now(),
-                responseMessage: messageController.text,
+
+            try {
+              await _firestore
+                  .collection('missionApplications')
+                  .doc(application.id)
+                  .update({
+                'status': 'rejected',
+                'reviewedAt': FieldValue.serverTimestamp(),
+                'rejectedAt': FieldValue.serverTimestamp(),
+                'responseMessage': messageController.text,
+              });
+
+              Navigator.of(context).pop();
+
+              // 알림 표시
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${application.testerName}님의 신청을 거부했습니다.'),
+                  backgroundColor: Colors.red,
+                ),
               );
-            });
-            Navigator.of(context).pop();
-            
-            // 알림 표시
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('${application.testerName}님의 신청을 거부했습니다.'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            } catch (e) {
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            }
           },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
           child: const Text('거부', style: TextStyle(color: Colors.white)),
@@ -702,7 +727,7 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
   String _formatDateTime(DateTime dateTime) {
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     if (difference.inDays > 0) {
       return '${difference.inDays}일 전';
     } else if (difference.inHours > 0) {

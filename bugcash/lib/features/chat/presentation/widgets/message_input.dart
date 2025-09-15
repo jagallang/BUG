@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/message.dart';
 import '../providers/chat_providers.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class MessageInput extends ConsumerStatefulWidget {
   final TextEditingController controller;

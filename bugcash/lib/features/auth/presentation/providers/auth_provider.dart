@@ -1,65 +1,41 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../data/services/hybrid_auth_service.dart';
+import '../../data/services/firebase_auth_service.dart';
 import '../../domain/entities/user_entity.dart';
 
-final hybridAuthServiceProvider = Provider<HybridAuthService>((ref) {
-  return HybridAuthService();
+final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
+  return FirebaseAuthService();
 });
 
-final authStateProvider = StateNotifierProvider<AuthStateNotifier, User?>((ref) {
-  return AuthStateNotifier();
+final authStateProvider = StreamProvider<User?>((ref) {
+  final authService = ref.watch(firebaseAuthServiceProvider);
+  return authService.authStateChanges;
 });
 
-final userDataProvider = StateNotifierProvider.family<UserDataNotifier, UserEntity?, String>((ref, uid) {
-  return UserDataNotifier(uid);
+final currentUserProvider = Provider<User?>((ref) {
+  final authState = ref.watch(authStateProvider);
+  return authState.when(
+    data: (user) => user,
+    loading: () => null,
+    error: (_, __) => null,
+  );
 });
 
-class AuthStateNotifier extends StateNotifier<User?> {
-  StreamSubscription<User?>? _authSubscription;
+final userDataProvider = FutureProvider.family<UserEntity?, String>((ref, uid) async {
+  final authService = ref.watch(firebaseAuthServiceProvider);
+  return await authService.getUserData(uid);
+});
 
-  AuthStateNotifier() : super(null) {
-    _initializeAuthState();
-  }
-
-  void _initializeAuthState() {
-    state = HybridAuthService.currentUser;
-    _authSubscription = HybridAuthService.authStateChanges().listen((user) {
-      state = user;
-    });
-  }
-
-  @override
-  void dispose() {
-    _authSubscription?.cancel();
-    super.dispose();
-  }
-}
-
-class UserDataNotifier extends StateNotifier<UserEntity?> {
-  final String _uid;
-
-  UserDataNotifier(this._uid) : super(null) {
-    _loadUserData();
-  }
-
-  void _loadUserData() async {
-    try {
-      final userData = await HybridAuthService.getUserData(_uid);
-      state = userData;
-    } catch (e) {
-      state = null;
-    }
-  }
-
-  void updateUser(UserEntity user) {
-    state = user;
-  }
-}
+final userStreamProvider = StreamProvider.family<UserEntity?, String>((ref, uid) {
+  final authService = ref.watch(firebaseAuthServiceProvider);
+  return authService.getUserStream(uid);
+});
 
 final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier();
+  final authService = ref.watch(firebaseAuthServiceProvider);
+  return AuthNotifier(authService);
 });
 
 class AuthState {
@@ -81,33 +57,64 @@ class AuthState {
     return AuthState(
       user: user ?? this.user,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: errorMessage,
     );
   }
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier() : super(const AuthState()) {
+  final FirebaseAuthService _authService;
+  StreamSubscription<User?>? _authSubscription;
+
+  AuthNotifier(this._authService) : super(const AuthState()) {
     _initializeAuthState();
   }
 
   void _initializeAuthState() {
-    HybridAuthService.authStateChanges().listen((user) async {
-      if (user != null) {
-        try {
-          final userData = await HybridAuthService.getUserData(user.uid);
-          state = state.copyWith(user: userData, isLoading: false);
-        } catch (e) {
-          state = state.copyWith(
-            user: null,
-            isLoading: false,
-            errorMessage: e.toString(),
-          );
+    if (kDebugMode) {
+      debugPrint('🟦 AuthProvider._initializeAuthState() - 초기화 시작');
+    }
+
+    _authSubscription = _authService.authStateChanges.listen(
+      (user) async {
+        if (kDebugMode) {
+          debugPrint('🔍 AuthProvider - Auth state changed: user=${user?.email ?? 'null'}');
         }
-      } else {
-        state = state.copyWith(user: null, isLoading: false);
-      }
-    });
+
+        if (user != null) {
+          try {
+            final userData = await _authService.getUserData(user.uid);
+            if (kDebugMode) {
+              debugPrint('✅ AuthProvider - User data loaded: ${userData?.email}');
+            }
+            state = state.copyWith(user: userData, isLoading: false);
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('❌ AuthProvider - Failed to load user data: $e');
+            }
+            state = state.copyWith(
+              user: null,
+              isLoading: false,
+              errorMessage: e.toString(),
+            );
+          }
+        } else {
+          if (kDebugMode) {
+            debugPrint('✅ AuthProvider - User logged out');
+          }
+          state = state.copyWith(user: null, isLoading: false);
+        }
+      },
+      onError: (error) {
+        if (kDebugMode) {
+          debugPrint('❌ AuthProvider - Auth state stream error: $error');
+        }
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: error.toString(),
+        );
+      },
+    );
   }
 
   Future<void> signUpWithEmailAndPassword({
@@ -121,8 +128,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // HybridAuthService를 통한 회원가입
-      final userCredential = await HybridAuthService.signUpWithEmailAndPassword(
+      final userCredential = await _authService.signUpWithEmailAndPassword(
         email: email,
         password: password,
         displayName: displayName,
@@ -131,8 +137,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         phoneNumber: phoneNumber,
       );
 
-      if (userCredential?.user != null) {
-        final userData = await HybridAuthService.getUserData(userCredential!.user!.uid);
+      if (userCredential.user != null) {
+        final userData = await _authService.getUserData(userCredential.user!.uid);
         state = state.copyWith(user: userData, isLoading: false);
       }
     } catch (e) {
@@ -151,13 +157,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final userCredential = await HybridAuthService.signInWithEmailAndPassword(
+      final userCredential = await _authService.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      if (userCredential?.user != null) {
-        final userData = await HybridAuthService.getUserData(userCredential!.user!.uid);
+      if (userCredential.user != null) {
+        final userData = await _authService.getUserData(userCredential.user!.uid);
         state = state.copyWith(user: userData, isLoading: false);
       }
     } catch (e) {
@@ -173,8 +179,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // HybridAuthService는 Google 로그인을 지원하지 않음
-      throw UnimplementedError('Google 로그인은 현재 지원되지 않습니다.');
+      final userCredential = await _authService.signInWithGoogle();
+
+      if (userCredential?.user != null) {
+        final userData = await _authService.getUserData(userCredential!.user!.uid);
+        state = state.copyWith(user: userData, isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -188,8 +200,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // HybridAuthService는 비밀번호 재설정을 지원하지 않음
-      throw UnimplementedError('비밀번호 재설정은 현재 지원되지 않습니다.');
+      await _authService.sendPasswordResetEmail(email);
+      state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -200,14 +212,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> signOut() async {
+    if (kDebugMode) {
+      debugPrint('🔴 AuthProvider.signOut() - 시작');
+    }
+
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      await HybridAuthService.signOut();
-      // Let the auth state stream handle the user: null update automatically
-      // This prevents race conditions and ensures proper state management
-      state = state.copyWith(isLoading: false);
+      await _authService.signOut();
+
+      if (kDebugMode) {
+        debugPrint('✅ AuthProvider.signOut() - 완료');
+      }
+
+      // Auth state stream will automatically update the state
+      state = state.copyWith(user: null, isLoading: false);
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ AuthProvider.signOut() - 실패: $e');
+      }
       state = state.copyWith(
         isLoading: false,
         errorMessage: e.toString(),
@@ -220,8 +243,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // HybridAuthService에서는 사용자 데이터 업데이트를 지원하지 않음
-      throw UnimplementedError('사용자 데이터 업데이트는 현재 지원되지 않습니다.');
+      await _authService.updateUserData(user);
+      state = state.copyWith(user: user, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -235,8 +258,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      // HybridAuthService에서는 계정 삭제를 지원하지 않음
-      throw UnimplementedError('계정 삭제는 현재 지원되지 않습니다.');
+      await _authService.deleteAccount();
+      state = state.copyWith(user: null, isLoading: false);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -246,30 +269,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// 테스트 계정으로 직접 로그인 (백엔드 처리)
-  Future<void> signInWithTestAccount(String email) async {
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
-    try {
-      // 이메일로 테스트 계정 찾기
-      final testAccount = HybridAuthService.findTestAccountByEmail(email);
-      if (testAccount == null) {
-        throw Exception('테스트 계정을 찾을 수 없습니다: $email');
-      }
-
-      // 테스트 계정으로 직접 로그인
-      final userCredential = await HybridAuthService.signInWithTestAccount(testAccount);
-
-      if (userCredential?.user != null) {
-        final userData = await HybridAuthService.getUserData(userCredential!.user!.uid);
-        state = state.copyWith(user: userData, isLoading: false);
-      }
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.toString(),
-      );
-      rethrow;
-    }
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/provider_dashboard_repository.dart';
 import '../providers/provider_dashboard_provider.dart';
 import '../../../../models/mission_model.dart';
@@ -47,6 +48,7 @@ enum DistributionStrategy {
 // Mission distribution notifier
 class MissionDistributionNotifier extends StateNotifier<MissionDistributionState> {
   final ProviderDashboardRepository _repository;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   MissionDistributionNotifier(this._repository) : super(const MissionDistributionState());
 
@@ -103,82 +105,68 @@ class MissionDistributionNotifier extends StateNotifier<MissionDistributionState
     state = state.copyWith(strategy: strategy);
   }
 
-  // Get available testers from repository
+  // Get available testers from Firestore
   Future<List<TesterProfile>> _getAvailableTesters() async {
-    // Simulate getting testers from repository
-    await Future.delayed(const Duration(milliseconds: 500));
-    
-    // Mock data - in real implementation, this would come from Firestore
-    return [
-      TesterProfile(
-        id: 'tester1',
-        name: '김테스터',
-        email: 'tester1@example.com',
-        level: TesterLevel.expert,
-        skills: ['UI/UX', '모바일 앱', '버그 분석', '성능 테스트'],
-        averageRating: 4.8,
-        completedMissions: 150,
-        successRate: 0.95,
-        avgResponseTime: 2.5, // hours
-        lastActiveAt: DateTime.now().subtract(const Duration(hours: 1)),
-        preferredCategories: ['생산성', '유틸리티'],
-        deviceTypes: ['Android', 'iOS'],
-        availabilityScore: 0.9,
-        qualityScore: 0.95,
-        speedScore: 0.85,
-      ),
-      TesterProfile(
-        id: 'tester2',
-        name: '박버그헌터',
-        email: 'tester2@example.com',
-        level: TesterLevel.advanced,
-        skills: ['버그 리포트', '게임 테스트', '사용성 평가'],
-        averageRating: 4.6,
-        completedMissions: 89,
-        successRate: 0.88,
-        avgResponseTime: 4.2,
-        lastActiveAt: DateTime.now().subtract(const Duration(hours: 3)),
-        preferredCategories: ['게임', '엔터테인먼트'],
-        deviceTypes: ['Android'],
-        availabilityScore: 0.75,
-        qualityScore: 0.88,
-        speedScore: 0.65,
-      ),
-      TesterProfile(
-        id: 'tester3',
-        name: '이UX전문가',
-        email: 'tester3@example.com',
-        level: TesterLevel.intermediate,
-        skills: ['사용성 테스트', 'UI 분석', '피드백 작성'],
-        averageRating: 4.3,
-        completedMissions: 45,
-        successRate: 0.82,
-        avgResponseTime: 6.1,
-        lastActiveAt: DateTime.now().subtract(const Duration(days: 1)),
-        preferredCategories: ['소셜', '쇼핑'],
-        deviceTypes: ['iOS'],
-        availabilityScore: 0.6,
-        qualityScore: 0.82,
-        speedScore: 0.55,
-      ),
-      TesterProfile(
-        id: 'tester4',
-        name: '신입테스터',
-        email: 'tester4@example.com',
-        level: TesterLevel.beginner,
-        skills: ['기본 테스트', '설문 응답'],
-        averageRating: 3.9,
-        completedMissions: 12,
-        successRate: 0.75,
-        avgResponseTime: 8.0,
-        lastActiveAt: DateTime.now().subtract(const Duration(hours: 12)),
-        preferredCategories: ['교육', '유틸리티'],
-        deviceTypes: ['Android'],
-        availabilityScore: 0.8,
-        qualityScore: 0.75,
-        speedScore: 0.45,
-      ),
-    ];
+    try {
+      final querySnapshot = await _firestore
+          .collection('testers')
+          .where('status', isEqualTo: 'active')
+          .limit(50)
+          .get();
+
+      final List<TesterProfile> testers = [];
+
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+
+        // Get tester stats
+        final statsDoc = await _firestore
+            .collection('testers')
+            .doc(doc.id)
+            .collection('stats')
+            .doc('summary')
+            .get();
+
+        final stats = statsDoc.data() ?? {};
+
+        testers.add(TesterProfile(
+          id: doc.id,
+          name: data['name'] ?? '',
+          email: data['email'] ?? '',
+          level: _parseTesterLevel(data['level'] ?? 'beginner'),
+          skills: List<String>.from(data['skills'] ?? []),
+          averageRating: (stats['averageRating'] ?? 0.0).toDouble(),
+          completedMissions: stats['completedMissions'] ?? 0,
+          successRate: (stats['successRate'] ?? 0.0).toDouble(),
+          avgResponseTime: (stats['avgResponseTime'] ?? 0.0).toDouble(),
+          lastActiveAt: (data['lastActiveAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          preferredCategories: List<String>.from(data['preferredCategories'] ?? []),
+          deviceTypes: List<String>.from(data['deviceTypes'] ?? []),
+          availabilityScore: (stats['availabilityScore'] ?? 0.0).toDouble(),
+          qualityScore: (stats['qualityScore'] ?? 0.0).toDouble(),
+          speedScore: (stats['speedScore'] ?? 0.0).toDouble(),
+        ));
+      }
+
+      return testers;
+    } catch (e) {
+      print('Error getting testers: $e');
+      return [];
+    }
+  }
+
+  TesterLevel _parseTesterLevel(String level) {
+    switch (level.toLowerCase()) {
+      case 'expert':
+        return TesterLevel.expert;
+      case 'advanced':
+        return TesterLevel.advanced;
+      case 'intermediate':
+        return TesterLevel.intermediate;
+      case 'beginner':
+      default:
+        return TesterLevel.beginner;
+    }
   }
 
   // Analyze mission requirements

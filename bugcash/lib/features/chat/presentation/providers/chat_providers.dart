@@ -343,8 +343,4 @@ final userSearchProvider = FutureProvider.family<List<UserEntity>, String>((ref,
   throw UnimplementedError('사용자 검색 기능은 현재 지원되지 않습니다.');
 });
 
-// Current user provider from auth
-final currentUserProvider = Provider<UserEntity?>((ref) {
-  final authState = ref.watch(authProvider);
-  return authState.user;
-});
+// Current user provider is already available in auth_provider.dart

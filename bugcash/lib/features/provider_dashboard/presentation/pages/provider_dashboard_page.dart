@@ -15,6 +15,7 @@ import '../widgets/apps_empty_state_widget.dart';
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import '../../../chat/presentation/pages/chat_list_page.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import 'apps_tab_test.dart';
 import 'missions_tab_test.dart';
 import '../widgets/tester_management_tab.dart';
