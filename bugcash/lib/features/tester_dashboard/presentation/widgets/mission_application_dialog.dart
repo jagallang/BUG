@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/tester_dashboard_provider.dart' as provider;
 
 class MissionApplicationDialog extends StatefulWidget {
@@ -466,19 +467,71 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
   }
 
   Future<void> _createMissionApplication() async {
-    // TODO: 현재 사용자 ID 가져오기 (실제 구현에서는 Authentication 서비스 사용)
-    const String currentUserId = 'current_user_id'; // 임시 사용자 ID
-    
-    // Firestore에 신청 정보 저장
-    await FirebaseFirestore.instance.collection('mission_applications').add({
+    // 현재 사용자 ID 가져오기
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      throw Exception('로그인이 필요합니다.');
+    }
+
+    // 사용자 정보 가져오기
+    final userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUser.uid)
+        .get();
+
+    final userData = userDoc.data();
+    if (userData == null) {
+      throw Exception('사용자 정보를 찾을 수 없습니다.');
+    }
+
+    // 테스터 상세 정보 가져오기
+    final testerDoc = await FirebaseFirestore.instance
+        .collection('testers')
+        .doc(currentUser.uid)
+        .get();
+
+    final testerData = testerDoc.data() ?? {};
+
+    // Provider ID 찾기
+    String? providerId;
+    if (widget.mission.id.startsWith('provider_app_')) {
+      // provider_apps에서 온 경우
+      final providerAppId = widget.mission.id.replaceFirst('provider_app_', '');
+      final providerAppDoc = await FirebaseFirestore.instance
+          .collection('provider_apps')
+          .doc(providerAppId)
+          .get();
+
+      if (providerAppDoc.exists) {
+        providerId = providerAppDoc.data()?['providerId'];
+      }
+    }
+
+    if (providerId == null) {
+      throw Exception('공급자 정보를 찾을 수 없습니다.');
+    }
+
+    // Firestore에 신청 정보 저장 (올바른 컬렉션 이름 사용)
+    await FirebaseFirestore.instance.collection('missionApplications').add({
       'missionId': widget.mission.id,
-      'missionTitle': widget.mission.title,
-      'applicantId': currentUserId,
+      'testerId': currentUser.uid,
+      'providerId': providerId,
+      'testerName': userData['displayName'] ?? testerData['name'] ?? 'Unknown',
+      'testerEmail': userData['email'] ?? '',
+      'testerProfile': userData['photoUrl'],
+      'status': 'pending', // pending, reviewing, accepted, rejected, cancelled
       'message': _messageController.text.trim(),
       'appliedAt': FieldValue.serverTimestamp(),
-      'status': 'pending', // pending, approved, rejected
-      'hasReadRequirements': _hasReadRequirements,
-      'hasInstalledApp': _hasInstalledApp,
+      'testerInfo': {
+        'experience': testerData['experience'] ?? 'New',
+        'specialization': List<String>.from(testerData['skills'] ?? []),
+        'completedMissions': testerData['completedMissions'] ?? 0,
+        'rating': (testerData['averageRating'] ?? 0.0).toDouble(),
+      },
+      'requirements': {
+        'hasReadRequirements': _hasReadRequirements,
+        'hasInstalledApp': _hasInstalledApp,
+      },
     });
   }
 

@@ -12,6 +12,7 @@ class TesterDashboardState {
   final List<MissionCard> availableMissions;
   final List<MissionCard> activeMissions;
   final List<MissionCard> completedMissions;
+  final List<MissionApplicationStatus> pendingApplications;
   final EarningsData? earningsData;
   final bool isLoading;
   final String? error;
@@ -23,6 +24,7 @@ class TesterDashboardState {
     required this.availableMissions,
     required this.activeMissions,
     required this.completedMissions,
+    required this.pendingApplications,
     this.earningsData,
     required this.isLoading,
     this.error,
@@ -35,6 +37,7 @@ class TesterDashboardState {
       availableMissions: [],
       activeMissions: [],
       completedMissions: [],
+      pendingApplications: [],
       isLoading: false,
       unreadNotifications: 0,
     );
@@ -45,6 +48,7 @@ class TesterDashboardState {
     List<MissionCard>? availableMissions,
     List<MissionCard>? activeMissions,
     List<MissionCard>? completedMissions,
+    List<MissionApplicationStatus>? pendingApplications,
     EarningsData? earningsData,
     bool? isLoading,
     String? error,
@@ -56,6 +60,7 @@ class TesterDashboardState {
       availableMissions: availableMissions ?? this.availableMissions,
       activeMissions: activeMissions ?? this.activeMissions,
       completedMissions: completedMissions ?? this.completedMissions,
+      pendingApplications: pendingApplications ?? this.pendingApplications,
       earningsData: earningsData ?? this.earningsData,
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -230,18 +235,22 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     try {
       // Load tester profile
       await _loadTesterProfile(testerId);
-      
+
       // Load missions
       await _loadMissions(testerId);
-      
+
       // Load earnings data
       await _loadEarningsData(testerId);
-      
+
+      // Load pending applications
+      final pendingApplications = await _getPendingApplications(testerId);
+
       // Start real-time subscriptions
       _startRealTimeUpdates(testerId);
-      
+
       state = state.copyWith(
         isLoading: false,
+        pendingApplications: pendingApplications,
         lastUpdated: DateTime.now(),
       );
     } catch (e) {
@@ -845,4 +854,83 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       return <MissionCard>[];
     }
   }
+
+  Future<List<MissionApplicationStatus>> _getPendingApplications(String testerId) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('missionApplications')
+          .where('testerId', isEqualTo: testerId)
+          .orderBy('appliedAt', descending: true)
+          .get();
+
+      final applications = <MissionApplicationStatus>[];
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        applications.add(MissionApplicationStatus(
+          id: doc.id,
+          missionId: data['missionId'] ?? '',
+          providerId: data['providerId'] ?? '',
+          status: _parseApplicationStatus(data['status'] ?? 'pending'),
+          appliedAt: (data['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          reviewedAt: (data['reviewedAt'] as Timestamp?)?.toDate(),
+          message: data['message'] ?? '',
+          responseMessage: data['responseMessage'],
+        ));
+      }
+
+      return applications;
+    } catch (e) {
+      debugPrint('Failed to load pending applications: $e');
+      return <MissionApplicationStatus>[];
+    }
+  }
+
+  ApplicationStatus _parseApplicationStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'reviewing':
+        return ApplicationStatus.reviewing;
+      case 'accepted':
+        return ApplicationStatus.accepted;
+      case 'rejected':
+        return ApplicationStatus.rejected;
+      case 'cancelled':
+        return ApplicationStatus.cancelled;
+      case 'pending':
+      default:
+        return ApplicationStatus.pending;
+    }
+  }
+}
+
+// Mission Application Status Model
+class MissionApplicationStatus {
+  final String id;
+  final String missionId;
+  final String providerId;
+  final ApplicationStatus status;
+  final DateTime appliedAt;
+  final DateTime? reviewedAt;
+  final String message;
+  final String? responseMessage;
+
+  MissionApplicationStatus({
+    required this.id,
+    required this.missionId,
+    required this.providerId,
+    required this.status,
+    required this.appliedAt,
+    this.reviewedAt,
+    required this.message,
+    this.responseMessage,
+  });
+}
+
+// Application Status Enum
+enum ApplicationStatus {
+  pending,
+  reviewing,
+  accepted,
+  rejected,
+  cancelled,
 }

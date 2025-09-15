@@ -837,7 +837,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
   Widget _buildMissionTab() {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Column(
         children: [
           Expanded(
@@ -847,10 +847,12 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 children: [
                   // 미션 찾기 간단 버전
                   _buildMissionDiscoveryTab(),
-                  // 진행 중인 미션 간단 버전  
+                  // 진행 중인 미션 간단 버전
                   _buildActiveMissionsTab(),
                   // 완료된 미션 탭
                   _buildCompletedMissionsTab(),
+                  // 신청 현황 탭
+                  _buildApplicationStatusTab(),
                 ],
               ),
             ),
@@ -874,17 +876,18 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 indicatorColor: Colors.green.shade700,
                 indicatorWeight: 3,
                 labelStyle: TextStyle(
-                  fontSize: 13.sp, // 폰트 크기 조정
+                  fontSize: 11.sp, // 폰트 크기 약간 줄임 (4개 탭을 위해)
                   fontWeight: FontWeight.w600,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: 13.sp,
+                  fontSize: 11.sp,
                   fontWeight: FontWeight.normal,
                 ),
                 tabs: [
-                  Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 18.w)),
-                  Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 18.w)),
-                  Tab(text: '완료', icon: Icon(Icons.check_circle, size: 18.w)),
+                  Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 16.w)),
+                  Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 16.w)),
+                  Tab(text: '완료', icon: Icon(Icons.check_circle, size: 16.w)),
+                  Tab(text: '신청 현황', icon: Icon(Icons.pending_actions, size: 16.w)),
                 ],
               ),
             ),
@@ -1459,6 +1462,221 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             child: const Text('확인'),
           ),
         ],
+      ),
+    );
+  }
+
+  String _formatTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}일 전';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}시간 전';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}분 전';
+    } else {
+      return '방금 전';
+    }
+  }
+
+  Widget _buildApplicationStatusTab() {
+    final dashboardState = ref.watch(testerDashboardProvider);
+
+    if (dashboardState.pendingApplications.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.pending_actions_outlined,
+              size: 64.w,
+              color: Colors.grey[400],
+            ),
+            SizedBox(height: 16.h),
+            Text(
+              '신청한 미션이 없습니다',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '관심있는 미션에 신청해보세요!',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: EdgeInsets.all(16.w),
+      itemCount: dashboardState.pendingApplications.length,
+      itemBuilder: (context, index) {
+        final application = dashboardState.pendingApplications[index];
+        return Padding(
+          padding: EdgeInsets.only(bottom: 12.h),
+          child: _buildApplicationStatusCard(application),
+        );
+      },
+    );
+  }
+
+  Widget _buildApplicationStatusCard(MissionApplicationStatus application) {
+    Color statusColor = Colors.orange;
+    IconData statusIcon = Icons.schedule;
+    String statusText = '대기 중';
+
+    switch (application.status) {
+      case ApplicationStatus.pending:
+        statusColor = Colors.orange;
+        statusIcon = Icons.schedule;
+        statusText = '검토 대기';
+        break;
+      case ApplicationStatus.reviewing:
+        statusColor = Colors.blue;
+        statusIcon = Icons.visibility;
+        statusText = '검토 중';
+        break;
+      case ApplicationStatus.accepted:
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle;
+        statusText = '승인됨';
+        break;
+      case ApplicationStatus.rejected:
+        statusColor = Colors.red;
+        statusIcon = Icons.cancel;
+        statusText = '거절됨';
+        break;
+      case ApplicationStatus.cancelled:
+        statusColor = Colors.grey;
+        statusIcon = Icons.block;
+        statusText = '취소됨';
+        break;
+    }
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(statusIcon, color: statusColor, size: 16.w),
+                      SizedBox(width: 4.w),
+                      Text(
+                        statusText,
+                        style: TextStyle(
+                          color: statusColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12.sp,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  _formatTimeAgo(application.appliedAt),
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12.sp,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              'Mission ID: ${application.missionId}',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            SizedBox(height: 8.h),
+            if (application.message.isNotEmpty)
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '신청 메시지:',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      application.message,
+                      style: TextStyle(fontSize: 14.sp),
+                    ),
+                  ],
+                ),
+              ),
+            if (application.responseMessage != null && application.responseMessage!.isNotEmpty) ...[
+              SizedBox(height: 8.h),
+              Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '공급자 응답:',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: statusColor,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      application.responseMessage!,
+                      style: TextStyle(fontSize: 14.sp),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
