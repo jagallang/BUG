@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.13-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.14-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,17 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.13)
+## ✨ 주요 기능 (v1.4.14)
+
+### 🔧 Firestore 인덱스 문제 해결 & 공급자 대시보드 데이터 로딩 수정 (v1.4.14)
+- **📊 누락된 Firestore 복합 인덱스 7개 추가**: test_sessions, provider_apps, activities, earnings, missionApplications, chat_rooms
+- **🎯 "제공자 ID '알려지지 않은'" 문제 완전 해결**: providerId 매칭 로직 개선 및 실시간 디버깅 시스템
+- **⚡ FAILED_PRECONDITION 오류 제거**: 모든 Firestore 쿼리가 정상 작동하도록 인덱스 최적화
+- **🔄 TestSession 워크플로우 완전 구현**: 테스터 미션 참여 → 공급자 승인 → 활성 테스트 전체 프로세스
+- **👤 인증 서비스 타입 안전성 강화**: phoneNumber 필드 안전한 타입 변환 및 null 처리
+- **🚪 로그아웃 프로세스 이중 보장**: Firebase Auth 강제 로그아웃 및 상태 초기화 개선
+- **📱 테스터 대시보드 실시간 연동**: Mock 데이터 제거하고 실제 Firebase TestSession 데이터 표시
+- **🐛 포괄적인 디버깅 로그**: 공급자 대시보드 데이터 로딩 전 과정 추적 가능
 
 ### 🔒 Critical Security Fixes & Code Quality Improvements (v1.4.13)
 - **🚨 Firebase Storage 보안 강화**: 인증 기반 접근 제어 구현, 역할별 권한 설정, 파일 크기 및 타입 검증
@@ -380,6 +390,28 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 - **1:1 채팅 시작**: 검색 결과에서 채팅 버튼 클릭하여 즉시 채팅 시작
 
 ## 🔧 주요 버전 정보
+
+### 🔧 v1.4.14 (2025-09-16) - Firestore 인덱스 문제 해결 & 공급자 대시보드 데이터 로딩 수정
+
+#### ✨ 핵심 문제 해결
+- **📊 Firestore 복합 인덱스 누락 문제**: `FAILED_PRECONDITION` 오류의 근본 원인 발견 및 해결
+- **🎯 "제공자 ID '알려지지 않은'" 이슈 완전 해결**: providerId 매칭 실패로 인한 데이터 로딩 실패 수정
+- **⚡ 7개 핵심 인덱스 추가**: test_sessions(providerId+createdAt, testerId+createdAt), provider_apps, activities, earnings, missionApplications, chat_rooms
+- **🔄 완전한 TestSession 워크플로우**: 미션 참여 → 공급자 승인 대기 → 활성 테스트 프로세스 구현
+
+#### 🛠️ 기술적 구현 세부사항
+- **Firebase 인덱스 배포**: `firestore.indexes.json`에 누락된 복합 인덱스 7개 추가 및 배포
+- **디버깅 시스템 구축**: TestSessionService, TestSessionApplicationTab에 포괄적 로깅 시스템
+- **임시 수정 로직**: currentUserId를 사용한 providerId 매칭 대안 로직 구현
+- **타입 안전성 강화**: phoneNumber 필드의 int→string 타입 변환 안전장치
+- **로그아웃 프로세스 개선**: Firebase Auth 이중 로그아웃 및 상태 초기화 보장
+- **실시간 데이터 연동**: 테스터 대시보드에서 Mock 데이터 제거하고 실제 Firebase 데이터 연동
+
+#### 🔍 해결된 주요 문제
+- **데이터 로딩 실패**: 공급자 대시보드에서 "제공자 ID 알려지지 않은" 오류로 TestSession 데이터 로딩 불가
+- **Firestore 쿼리 실패**: 복합 인덱스 누락으로 인한 모든 providerId 기반 쿼리 실패
+- **워크플로우 단절**: 테스터가 미션 신청해도 공급자 화면에 표시되지 않는 문제
+- **Mock 데이터 의존성**: 테스터 대시보드의 하드코딩된 데이터를 실제 Firebase 데이터로 교체
 
 ### 🔧 v1.4.10 (2025-09-14) - 인증 시스템 개선 & 사용자 데이터 통합
 
