@@ -7,7 +7,7 @@ import '../core/utils/logger.dart';
 class TestSessionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// 새로운 테스트 세션 생성 (승인 시)
+  /// 새로운 테스트 세션 생성 (pending 상태로 생성, 승인 대기)
   Future<String> createTestSession({
     required String missionId,
     required String testerId,
@@ -16,18 +16,15 @@ class TestSessionService {
     required int totalRewardPoints,
   }) async {
     try {
-      // 14일간의 일정 생성
-      final dailyProgress = _generateDailySchedule();
-
       final testSession = TestSession(
         id: '', // Firestore가 자동 생성
         missionId: missionId,
         testerId: testerId,
         providerId: providerId,
         appId: appId,
-        status: TestSessionStatus.approved,
+        status: TestSessionStatus.pending, // 승인 대기 상태
         createdAt: DateTime.now(),
-        dailyProgress: dailyProgress,
+        dailyProgress: const [], // 승인 후 일정 생성
         totalRewardPoints: totalRewardPoints,
       );
 
@@ -39,6 +36,41 @@ class TestSessionService {
       return docRef.id;
     } catch (e) {
       AppLogger.error('Failed to create test session', 'TestSessionService', e);
+      rethrow;
+    }
+  }
+
+  /// 테스트 세션 승인 (공급자가 승인)
+  Future<void> approveTestSession(String sessionId) async {
+    try {
+      // 14일간의 일정 생성
+      final dailyProgress = _generateDailySchedule();
+
+      await _firestore.collection('test_sessions').doc(sessionId).update({
+        'status': TestSessionStatus.approved.name,
+        'approvedAt': FieldValue.serverTimestamp(),
+        'dailyProgress': dailyProgress.map((progress) => progress.toFirestore()).toList(),
+      });
+
+      AppLogger.info('Test session approved: $sessionId', 'TestSessionService');
+    } catch (e) {
+      AppLogger.error('Failed to approve test session', 'TestSessionService', e);
+      rethrow;
+    }
+  }
+
+  /// 테스트 세션 거부 (공급자가 거부)
+  Future<void> rejectTestSession(String sessionId, {String? reason}) async {
+    try {
+      await _firestore.collection('test_sessions').doc(sessionId).update({
+        'status': TestSessionStatus.rejected.name,
+        'rejectedAt': FieldValue.serverTimestamp(),
+        'rejectionReason': reason ?? '공급자가 거부했습니다.',
+      });
+
+      AppLogger.info('Test session rejected: $sessionId', 'TestSessionService');
+    } catch (e) {
+      AppLogger.error('Failed to reject test session', 'TestSessionService', e);
       rethrow;
     }
   }
@@ -239,23 +271,87 @@ class TestSessionService {
     return _firestore
         .collection('test_sessions')
         .where('testerId', isEqualTo: testerId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TestSession.fromFirestore(doc))
-            .toList());
+        .map((snapshot) {
+          final sessions = snapshot.docs
+              .map((doc) => TestSession.fromFirestore(doc))
+              .toList();
+          // 클라이언트 측에서 정렬
+          sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return sessions;
+        });
   }
 
   /// 공급자의 테스트 세션들 조회
   Stream<List<TestSession>> getTestSessionsForProvider(String providerId) {
+    AppLogger.info('🔍 Querying test sessions for providerId: $providerId', 'TestSessionService');
+
     return _firestore
         .collection('test_sessions')
         .where('providerId', isEqualTo: providerId)
-        .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TestSession.fromFirestore(doc))
-            .toList());
+        .map((snapshot) {
+          AppLogger.info('📊 Firestore query result - Found ${snapshot.docs.length} documents', 'TestSessionService');
+
+          if (snapshot.docs.isNotEmpty) {
+            AppLogger.info('📄 First document data: ${snapshot.docs.first.data()}', 'TestSessionService');
+          }
+
+          final sessions = snapshot.docs
+              .map((doc) {
+                try {
+                  final session = TestSession.fromFirestore(doc);
+                  AppLogger.info('✅ Successfully parsed session: ${session.id} (status: ${session.status.name})', 'TestSessionService');
+                  return session;
+                } catch (e) {
+                  AppLogger.error('❌ Failed to parse session from doc ${doc.id}', 'TestSessionService', e);
+                  return null;
+                }
+              })
+              .where((session) => session != null)
+              .cast<TestSession>()
+              .toList();
+
+          // 클라이언트 측에서 정렬
+          sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+          AppLogger.info('🎯 Final result: ${sessions.length} valid sessions for providerId: $providerId', 'TestSessionService');
+          return sessions;
+        });
+  }
+
+  /// 공급자의 승인 대기 중인 테스트 세션들 조회
+  Stream<List<TestSession>> getPendingTestSessionsForProvider(String providerId) {
+    return _firestore
+        .collection('test_sessions')
+        .where('providerId', isEqualTo: providerId)
+        .where('status', isEqualTo: TestSessionStatus.pending.name)
+        .snapshots()
+        .map((snapshot) {
+          final sessions = snapshot.docs
+              .map((doc) => TestSession.fromFirestore(doc))
+              .toList();
+          // 클라이언트 측에서 정렬
+          sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return sessions;
+        });
+  }
+
+  /// 공급자의 활성 테스트 세션들 조회 (일일 승인이 필요한 세션들)
+  Stream<List<TestSession>> getActiveTestSessionsForProvider(String providerId) {
+    return _firestore
+        .collection('test_sessions')
+        .where('providerId', isEqualTo: providerId)
+        .where('status', whereIn: [TestSessionStatus.approved.name, TestSessionStatus.active.name])
+        .snapshots()
+        .map((snapshot) {
+          final sessions = snapshot.docs
+              .map((doc) => TestSession.fromFirestore(doc))
+              .toList();
+          // 클라이언트 측에서 정렬
+          sessions.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return sessions;
+        });
   }
 
   /// 특정 테스트 세션 조회
@@ -383,6 +479,22 @@ final providerTestSessionsProvider = StreamProvider.family<List<TestSession>, St
   (ref, providerId) {
     final service = ref.watch(testSessionServiceProvider);
     return service.getTestSessionsForProvider(providerId);
+  },
+);
+
+/// 공급자의 승인 대기 테스트 세션 목록 프로바이더
+final providerPendingTestSessionsProvider = StreamProvider.family<List<TestSession>, String>(
+  (ref, providerId) {
+    final service = ref.watch(testSessionServiceProvider);
+    return service.getPendingTestSessionsForProvider(providerId);
+  },
+);
+
+/// 공급자의 활성 테스트 세션 목록 프로바이더 (일일 승인이 필요한 세션들)
+final providerActiveTestSessionsProvider = StreamProvider.family<List<TestSession>, String>(
+  (ref, providerId) {
+    final service = ref.watch(testSessionServiceProvider);
+    return service.getActiveTestSessionsForProvider(providerId);
   },
 );
 

@@ -216,17 +216,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
       debugPrint('🔴 AuthProvider.signOut() - 시작');
     }
 
-    state = state.copyWith(isLoading: true, errorMessage: null);
-
     try {
+      // 즉시 상태를 null로 설정
+      state = state.copyWith(user: null, isLoading: false, errorMessage: null);
+
+      // Firebase Auth 스트림 구독 취소
+      await _authSubscription?.cancel();
+      _authSubscription = null;
+
+      // Firebase 로그아웃
       await _authService.signOut();
+
+      // 추가 안전장치: Firebase Auth 강제 로그아웃
+      await FirebaseAuth.instance.signOut();
 
       if (kDebugMode) {
         debugPrint('✅ AuthProvider.signOut() - 완료');
       }
 
-      // Auth state stream will automatically update the state
-      state = state.copyWith(user: null, isLoading: false);
+      // 스트림 구독 재시작 (null 상태로 재설정을 위해)
+      _initializeAuthState();
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ AuthProvider.signOut() - 실패: $e');

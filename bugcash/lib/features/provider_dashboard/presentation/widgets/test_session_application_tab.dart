@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../services/test_session_service.dart';
 import '../../../../models/test_session_model.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/services/auth_service.dart';
 import 'daily_test_approval_widget.dart';
 
 class TestSessionApplicationTab extends ConsumerStatefulWidget {
@@ -94,7 +95,19 @@ class _TestSessionApplicationTabState extends ConsumerState<TestSessionApplicati
   }
 
   Widget _buildTestSessionManagementTab() {
-    final testSessionsAsync = ref.watch(providerTestSessionsProvider(widget.providerId));
+    // 현재 로그인된 사용자 ID 확인
+    final currentUserId = CurrentUserService.getCurrentUserId();
+    final currentUser = CurrentUserService.getCurrentUser();
+
+    AppLogger.info('👤 Current logged-in user ID: $currentUserId', 'TestSessionApplicationTab');
+    AppLogger.info('📧 Current user email: ${currentUser?.email}', 'TestSessionApplicationTab');
+    AppLogger.info('🏢 Widget providerId: ${widget.providerId}', 'TestSessionApplicationTab');
+
+    // 🚨 임시 디버깅: 현재 로그인된 사용자 ID로 직접 쿼리
+    final actualProviderId = currentUserId ?? widget.providerId;
+    AppLogger.info('🎯 USING providerId: $actualProviderId (currentUser: $currentUserId, widget: ${widget.providerId})', 'TestSessionApplicationTab');
+
+    final testSessionsAsync = ref.watch(providerTestSessionsProvider(actualProviderId));
 
     return Column(
       children: [
@@ -103,12 +116,20 @@ class _TestSessionApplicationTabState extends ConsumerState<TestSessionApplicati
         Expanded(
           child: testSessionsAsync.when(
             data: (sessions) {
+              AppLogger.info('📋 Received ${sessions.length} test sessions from provider', 'TestSessionApplicationTab');
+              for (int i = 0; i < sessions.length && i < 3; i++) {
+                AppLogger.info('📝 Session $i: id=${sessions[i].id}, testerId=${sessions[i].testerId}, status=${sessions[i].status.name}', 'TestSessionApplicationTab');
+              }
+
               final filteredSessions = _getFilteredSessions(sessions);
+              AppLogger.info('🔽 After filtering: ${filteredSessions.length} sessions', 'TestSessionApplicationTab');
 
               if (filteredSessions.isEmpty) {
+                AppLogger.info('❌ No sessions to display - showing empty state', 'TestSessionApplicationTab');
                 return _buildEmptyState();
               }
 
+              AppLogger.info('✅ Displaying ${filteredSessions.length} sessions in UI', 'TestSessionApplicationTab');
               return Column(
                 children: [
                   _buildStatsCards(sessions),
@@ -116,8 +137,14 @@ class _TestSessionApplicationTabState extends ConsumerState<TestSessionApplicati
                 ],
               );
             },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, stack) => _buildErrorState(error),
+            loading: () {
+              AppLogger.info('⏳ Provider test sessions still loading...', 'TestSessionApplicationTab');
+              return const Center(child: CircularProgressIndicator());
+            },
+            error: (error, stack) {
+              AppLogger.error('💥 Provider test sessions error', 'TestSessionApplicationTab', error);
+              return _buildErrorState(error);
+            },
           ),
         ),
       ],
@@ -574,12 +601,15 @@ class _TestSessionApplicationTabState extends ConsumerState<TestSessionApplicati
   Future<void> _approveSession(String sessionId) async {
     try {
       final testSessionService = ref.read(testSessionServiceProvider);
+      // 승인하면서 14일 일정 생성
+      await testSessionService.approveTestSession(sessionId);
+      // 승인 후 활성 상태로 변경
       await testSessionService.startTestSession(sessionId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('테스트 세션이 승인되었습니다'),
+            content: Text('테스트 세션이 승인되었습니다! 14일 테스트가 시작됩니다.'),
             backgroundColor: Colors.green,
           ),
         );
@@ -642,22 +672,27 @@ class _TestSessionApplicationTabState extends ConsumerState<TestSessionApplicati
 
   Future<void> _rejectSession(String sessionId, String reason) async {
     try {
-      // For now, we'll update the session status directly
-      // In a real implementation, you might want to add a rejectTestSession method
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('테스트 세션이 거부되었습니다'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      final testSessionService = ref.read(testSessionServiceProvider);
+      await testSessionService.rejectTestSession(sessionId, reason: reason);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('테스트 세션이 거부되었습니다'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
       AppLogger.error('Failed to reject session', 'TestSessionApplicationTab', e);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('거부 실패: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('거부 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 }

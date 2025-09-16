@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../services/firebase_service.dart';
+import '../../../../services/test_session_service.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../bug_report/presentation/pages/bug_report_page.dart';
 
@@ -68,13 +70,42 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     });
 
     try {
-      // TODO: Implement actual participation logic
-      await Future.delayed(const Duration(seconds: 1));
-      
+      // 현재 사용자 정보 가져오기
+      final currentUserId = CurrentUserService.getCurrentUserId();
+      if (currentUserId == null) {
+        throw Exception('로그인이 필요합니다');
+      }
+
+      // TestSession 생성
+      final testSessionService = ref.read(testSessionServiceProvider);
+
+      // 미션 데이터에서 필요한 정보 추출
+      final missionId = widget.missionId;
+      final providerId = mission?['createdBy'] ?? mission?['providerId'] ?? 'default_provider';
+      final appId = mission?['appId'] ?? missionId;
+      final totalRewardPoints = mission?['reward'] ?? 2000;
+
+      AppLogger.info('🎯 Mission data: ${mission?.keys.toList()}', 'MissionDetail');
+      AppLogger.info('📍 createdBy: ${mission?['createdBy']}', 'MissionDetail');
+      AppLogger.info('📍 providerId: ${mission?['providerId']}', 'MissionDetail');
+      AppLogger.info('🆔 Final providerId selected: $providerId', 'MissionDetail');
+      AppLogger.info('Creating test session: missionId=$missionId, testerId=$currentUserId, providerId=$providerId', 'MissionDetail');
+
+      // TestSession 생성 (pending 상태로)
+      final sessionId = await testSessionService.createTestSession(
+        missionId: missionId,
+        testerId: currentUserId,
+        providerId: providerId,
+        appId: appId,
+        totalRewardPoints: totalRewardPoints,
+      );
+
+      AppLogger.info('Test session created successfully: $sessionId', 'MissionDetail');
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('미션 참여 신청이 완료되었습니다!'),
+            content: Text('미션 참여 신청이 완료되었습니다! 공급자의 승인을 기다려주세요.'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -84,8 +115,8 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
       AppLogger.error('Failed to participate in mission', 'MissionDetail', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('미션 참여에 실패했습니다. 다시 시도해주세요.'),
+          SnackBar(
+            content: Text('미션 참여에 실패했습니다: ${e.toString()}'),
             backgroundColor: AppColors.error,
           ),
         );

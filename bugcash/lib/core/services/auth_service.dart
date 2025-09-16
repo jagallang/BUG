@@ -59,9 +59,32 @@ class CurrentUserService {
           .collection('users')
           .doc(userId)
           .get();
-      
+
       if (doc.exists) {
-        return {'id': userId, ...doc.data()!};
+        final data = doc.data()!;
+        final processedData = <String, dynamic>{};
+
+        // Process each field with safe type conversion
+        data.forEach((key, value) {
+          if (key == 'phoneNumber') {
+            // Safe phoneNumber conversion
+            if (value != null) {
+              if (value is String) {
+                processedData[key] = value;
+              } else if (value is int) {
+                processedData[key] = value.toString();
+              } else {
+                processedData[key] = value.toString();
+              }
+            } else {
+              processedData[key] = null;
+            }
+          } else {
+            processedData[key] = value;
+          }
+        });
+
+        return {'id': userId, ...processedData};
       }
       return null;
     } catch (e) {

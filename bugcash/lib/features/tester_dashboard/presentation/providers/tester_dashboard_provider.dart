@@ -269,20 +269,20 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       if (userProfile != null) {
         final profile = TesterProfile(
           id: testerId,
-          name: userProfile['displayName'] ?? userProfile['name'] ?? '사용자',
-          email: userProfile['email'] ?? 'user@example.com',
-          totalPoints: userProfile['totalPoints']?.toInt() ?? 0,
-          monthlyPoints: userProfile['monthlyPoints']?.toInt() ?? 0,
-          completedMissions: userProfile['completedMissions']?.toInt() ?? 0,
-          successRate: (userProfile['successRate'] as num?)?.toDouble() ?? 0.0,
-          averageRating: (userProfile['averageRating'] as num?)?.toDouble() ?? 0.0,
-          skills: (userProfile['skills'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['일반 테스트'],
-          interests: (userProfile['interests'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? ['앱 테스트'],
-          level: _getTesterLevelFromString(userProfile['level'] as String?),
-          experiencePoints: userProfile['experiencePoints']?.toInt() ?? 0,
-          joinedDate: userProfile['createdAt'] != null
-            ? (userProfile['createdAt'] as Timestamp).toDate()
-            : DateTime.now().subtract(const Duration(days: 1)),
+          name: _getStringValue(userProfile['displayName']) ??
+                _getStringValue(userProfile['name']) ?? '사용자',
+          email: _getStringValue(userProfile['email']) ?? 'user@example.com',
+          totalPoints: _getIntValue(userProfile['totalPoints']) ?? 0,
+          monthlyPoints: _getIntValue(userProfile['monthlyPoints']) ?? 0,
+          completedMissions: _getIntValue(userProfile['completedMissions']) ?? 0,
+          successRate: _getDoubleValue(userProfile['successRate']) ?? 0.0,
+          averageRating: _getDoubleValue(userProfile['averageRating']) ?? 0.0,
+          skills: _getStringListValue(userProfile['skills']) ?? ['일반 테스트'],
+          interests: _getStringListValue(userProfile['interests']) ?? ['앱 테스트'],
+          level: _getTesterLevelFromString(_getStringValue(userProfile['level'])),
+          experiencePoints: _getIntValue(userProfile['experiencePoints']) ?? 0,
+          joinedDate: _getDateTimeValue(userProfile['createdAt']) ??
+                     DateTime.now().subtract(const Duration(days: 1)),
         );
 
         state = state.copyWith(testerProfile: profile);
@@ -900,6 +900,50 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       default:
         return ApplicationStatus.pending;
     }
+  }
+
+  // Safe type conversion helper methods
+  String? _getStringValue(dynamic value) {
+    if (value == null) return null;
+    if (value is String) return value;
+    if (value is int) return value.toString();
+    if (value is double) return value.toString();
+    return value.toString();
+  }
+
+  int? _getIntValue(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value);
+    if (value is num) return value.toInt();
+    return null;
+  }
+
+  double? _getDoubleValue(dynamic value) {
+    if (value == null) return null;
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    if (value is String) return double.tryParse(value);
+    if (value is num) return value.toDouble();
+    return null;
+  }
+
+  List<String>? _getStringListValue(dynamic value) {
+    if (value == null) return null;
+    if (value is List<dynamic>) {
+      return value.map((e) => e.toString()).toList();
+    }
+    if (value is List<String>) return value;
+    return null;
+  }
+
+  DateTime? _getDateTimeValue(dynamic value) {
+    if (value == null) return null;
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
   }
 }
 
