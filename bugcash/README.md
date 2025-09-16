@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.10-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.13-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,15 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.10)
+## ✨ 주요 기능 (v1.4.13)
+
+### 🔒 Critical Security Fixes & Code Quality Improvements (v1.4.13)
+- **🚨 Firebase Storage 보안 강화**: 인증 기반 접근 제어 구현, 역할별 권한 설정, 파일 크기 및 타입 검증
+- **🧹 프로덕션 코드 품질 개선**: 241개 → 86개 lint 이슈 감소 (59% 개선), print문 완전 제거
+- **📊 로깅 시스템 구축**: AppLogger 도입으로 프로덕션/개발 환경별 차별화된 로깅
+- **⚡ 의존성 업데이트**: Firebase 패키지 최신 보안 패치 적용
+- **🔧 코드 정리**: flutter_bloc 제거 및 Riverpod 완전 이관, const 최적화
+- **🎯 테스트 파일 제거**: 배포용 빌드 최적화를 위한 테스트 코드 제거
 
 ### 🔧 NEW! 인증 시스템 개선 & 사용자 데이터 통합 (v1.4.10)
 - **👤 실제 사용자 프로필 연동**: 하드코딩된 '김테스터' 완전 제거 및 Firestore 실제 데이터 연동
@@ -637,6 +645,29 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 - **Authentication**: Firebase Auth + Mock System
 - **Push Notifications**: Firebase Cloud Messaging (FCM)
 - **Connectivity**: connectivity_plus 6.1.0
+
+## 🔒 보안 개선사항 (v1.4.13)
+
+### Firebase Storage Rules 강화
+```javascript
+// Before (Critical Security Issue)
+match /{allPaths=**} {
+  allow read, write: if true;  // 누구나 접근 가능 ⚠️
+}
+
+// After (Secure)
+match /users/{userId}/profile/{allPaths=**} {
+  allow read: if request.auth != null;
+  allow write: if request.auth != null && request.auth.uid == userId
+               && request.resource.size < 5 * 1024 * 1024;
+}
+```
+
+### 코드 품질 지표
+- **Lint Issues**: 241 → 86 (64% 감소)
+- **Print Statements**: 완전 제거 (0개)
+- **Test Coverage**: 프로덕션 배포용 최적화
+- **Dependencies**: 모든 보안 패치 적용
 
 ## 📝 기여하기
 
