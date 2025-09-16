@@ -156,7 +156,7 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
                           ? SizedBox(
                               height: 20.h,
                               width: 20.w,
-                              child: CircularProgressIndicator(
+                              child: const CircularProgressIndicator(
                                 strokeWidth: 2,
                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
@@ -424,9 +424,9 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.check_circle, color: Colors.white),
+                const Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 8.w),
-                Expanded(
+                const Expanded(
                   child: Text('미션 신청이 완료되었습니다!\n공급자의 승인을 기다려주세요.'),
                 ),
               ],
@@ -448,9 +448,9 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
           SnackBar(
             content: Row(
               children: [
-                Icon(Icons.error, color: Colors.white),
+                const Icon(Icons.error, color: Colors.white),
                 SizedBox(width: 8.w),
-                Text('신청 중 오류가 발생했습니다. 다시 시도해주세요.'),
+                const Text('신청 중 오류가 발생했습니다. 다시 시도해주세요.'),
               ],
             ),
             backgroundColor: Colors.red,

@@ -392,7 +392,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               LinearProgressIndicator(
                 value: app.progressPercentage / 100,
                 backgroundColor: Colors.grey[200],
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
                 minHeight: 6.h,
               ),
             ],
@@ -424,7 +424,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                       );
                     },
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppColors.primary),
+                      side: const BorderSide(color: AppColors.primary),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),

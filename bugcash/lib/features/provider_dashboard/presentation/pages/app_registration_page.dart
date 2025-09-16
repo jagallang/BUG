@@ -47,7 +47,7 @@ class _AppRegistrationPageState extends ConsumerState<AppRegistrationPage>
   
   // File uploads
   File? _appIconFile;
-  List<File> _screenshotFiles = [];
+  final List<File> _screenshotFiles = [];
   File? _appBinaryFile;
 
   @override
@@ -781,8 +781,8 @@ class _AppRegistrationPageState extends ConsumerState<AppRegistrationPage>
                 SizedBox(height: 8.h),
                 Text(
                   file != null 
-                      ? '${fileType} 업로드 완료'
-                      : '${fileType} 업로드하기',
+                      ? '$fileType 업로드 완료'
+                      : '$fileType 업로드하기',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     color: file != null ? Colors.green : Colors.grey.shade600,
                     fontWeight: FontWeight.w600,
@@ -814,9 +814,9 @@ class _AppRegistrationPageState extends ConsumerState<AppRegistrationPage>
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w600,
             ),
-            children: [
-              const TextSpan(text: '스크린샷'),
-              const TextSpan(
+            children: const [
+              TextSpan(text: '스크린샷'),
+              TextSpan(
                 text: ' *',
                 style: TextStyle(color: Colors.red),
               ),

@@ -84,7 +84,7 @@ class MissionChatService {
       );
 
       if (chatRoom == null) {
-        return Left(ValidationFailure(message: 'Mission chat room not found'));
+        return const Left(ValidationFailure(message: 'Mission chat room not found'));
       }
 
       // 시스템 메시지 전송
@@ -151,7 +151,7 @@ class MissionChatService {
       );
 
       if (chatRoom == null) {
-        return Left(ValidationFailure(message: 'Mission chat room not found'));
+        return const Left(ValidationFailure(message: 'Mission chat room not found'));
       }
 
       final content = description ?? fileName;

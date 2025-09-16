@@ -131,11 +131,11 @@ class ErrorHandler {
   static String getUserFriendlyMessage(AppError error) {
     // 사용자에게 표시할 친화적인 메시지 반환
     switch (error.runtimeType) {
-      case NetworkError:
+      case NetworkError _:
         return '인터넷 연결을 확인해주세요';
-      case FirebaseError:
+      case FirebaseError _:
         return error.message;
-      case ValidationError:
+      case ValidationError _:
         return error.message;
       default:
         return '오류가 발생했습니다. 잠시 후 다시 시도해주세요';

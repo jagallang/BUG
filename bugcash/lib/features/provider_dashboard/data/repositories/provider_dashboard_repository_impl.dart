@@ -1,11 +1,9 @@
 // Provider Dashboard Repository Firebase Implementation
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../domain/repositories/provider_dashboard_repository.dart';
 import '../../domain/models/provider_model.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../../core/services/auth_service.dart';
 
 class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

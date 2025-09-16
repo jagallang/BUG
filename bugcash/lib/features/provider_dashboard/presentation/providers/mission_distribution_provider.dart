@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/repositories/provider_dashboard_repository.dart';
 import '../providers/provider_dashboard_provider.dart';
 import '../../../../models/mission_model.dart';
+import '../../../../core/utils/logger.dart';
 
 // Mission distribution state
 class MissionDistributionState {
@@ -150,7 +151,7 @@ class MissionDistributionNotifier extends StateNotifier<MissionDistributionState
 
       return testers;
     } catch (e) {
-      print('Error getting testers: $e');
+      AppLogger.error('Error getting testers', 'MissionDistribution', e);
       return [];
     }
   }

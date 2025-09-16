@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/models/search_history.dart';
 import '../../domain/repositories/search_repository.dart';
 import '../../data/repositories/search_repository_impl.dart';
+import '../../../../core/utils/logger.dart';
 
 // Repository provider
 final searchRepositoryProvider = FutureProvider<SearchRepository>((ref) async {
@@ -76,7 +77,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
   }
   
   Future<void> search(String query) async {
-    print('🔍 SearchNotifier.search called with: "$query"');
+    AppLogger.debug('🔍 SearchNotifier.search called with: "$query"', 'SearchProvider');
     if (query.trim().isEmpty) {
       state = state.copyWith(query: '', results: [], error: null);
       return;

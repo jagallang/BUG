@@ -36,12 +36,10 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
     final picker = ImagePicker();
     final pickedFiles = await picker.pickMultiImage();
 
-    if (pickedFiles != null) {
-      setState(() {
-        _screenshots.addAll(pickedFiles.map((xFile) => File(xFile.path)));
-      });
+    setState(() {
+      _screenshots.addAll(pickedFiles.map((xFile) => File(xFile.path)));
+    });
     }
-  }
 
   Future<void> _submitDailyTest() async {
     if (_isSubmitting) return;
@@ -241,7 +239,7 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
                       LinearProgressIndicator(
                         value: session.progressPercentage,
                         backgroundColor: Colors.grey[200],
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
                       ),
                     ],
                   ),

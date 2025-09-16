@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/mission_card.dart';
-import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../../core/services/auth_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -259,20 +259,20 @@ class WalletView extends StatelessWidget {
                     SizedBox(height: 16.h),
                     Expanded(
                       child: ListView(
-                        children: [
-                          const _PointHistoryItem(
+                        children: const [
+                          _PointHistoryItem(
                             title: '쇼핑앱 A - Day 7 완료',
                             points: '+5,000',
                             date: '2024-01-15',
                             isPositive: true,
                           ),
-                          const _PointHistoryItem(
+                          _PointHistoryItem(
                             title: '버그 발견 보너스',
                             points: '+2,000',
                             date: '2024-01-14',
                             isPositive: true,
                           ),
-                          const _PointHistoryItem(
+                          _PointHistoryItem(
                             title: '게임앱 B - Day 3 완료',
                             points: '+5,000',
                             date: '2024-01-13',
@@ -347,20 +347,21 @@ class _PointHistoryItem extends StatelessWidget {
   }
 }
 
-class ProfileView extends StatelessWidget {
+class ProfileView extends ConsumerWidget {
   const ProfileView({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authService = ref.watch(authServiceProvider);
+    final currentUser = authService.currentUser;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('프로필'),
       ),
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is AuthAuthenticated) {
-            return Padding(
+      body: currentUser != null
+          ? Padding(
               padding: EdgeInsets.all(16.w),
               child: Column(
                 children: [
@@ -375,16 +376,16 @@ class ProfileView extends StatelessWidget {
                       children: [
                         CircleAvatar(
                           radius: 40.r,
-                          backgroundImage: state.user.photoUrl != null
-                              ? NetworkImage(state.user.photoUrl!)
+                          backgroundImage: currentUser.photoURL != null
+                              ? NetworkImage(currentUser.photoURL!)
                               : null,
-                          child: state.user.photoUrl == null
+                          child: currentUser.photoURL == null
                               ? Icon(Icons.person, size: 40.sp)
                               : null,
                         ),
                         SizedBox(height: 16.h),
                         Text(
-                          state.user.displayName,
+                          currentUser.displayName ?? 'User',
                           style: TextStyle(
                             fontSize: 20.sp,
                             fontWeight: FontWeight.bold,
@@ -401,7 +402,7 @@ class ProfileView extends StatelessWidget {
                             borderRadius: BorderRadius.circular(16.r),
                           ),
                           child: Text(
-                            '${state.user.level} 테스터',
+                            'Silver 테스터',
                             style: TextStyle(
                               fontSize: 12.sp,
                               fontWeight: FontWeight.w600,
@@ -424,19 +425,19 @@ class ProfileView extends StatelessWidget {
                       children: [
                         _StatItem(
                           label: '완료한 미션',
-                          value: '${state.user.completedMissions}개',
+                          value: '0개',
                         ),
                         Divider(height: 32.h),
                         _StatItem(
                           label: '총 적립 포인트',
-                          value: '${state.user.points} P',
+                          value: '0 P',
                         ),
                         Divider(height: 32.h),
                         ListTile(
                           leading: const Icon(Icons.logout, color: AppColors.error),
                           title: const Text('로그아웃'),
-                          onTap: () {
-                            context.read<AuthBloc>().add(const SignOut());
+                          onTap: () async {
+                            await authService.signOut();
                           },
                         ),
                       ],
@@ -444,11 +445,8 @@ class ProfileView extends StatelessWidget {
                   ),
                 ],
               ),
-            );
-          }
-          return const Center(child: CircularProgressIndicator());
-        },
-      ),
+            )
+          : const Center(child: CircularProgressIndicator()),
     );
   }
 }

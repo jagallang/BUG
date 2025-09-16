@@ -120,7 +120,7 @@ class MissionAnalyticsWidget extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            '${performanceScore.toStringAsFixed(0)}',
+                            performanceScore.toStringAsFixed(0),
                             style: TextStyle(
                               fontSize: 28.sp,
                               fontWeight: FontWeight.bold,

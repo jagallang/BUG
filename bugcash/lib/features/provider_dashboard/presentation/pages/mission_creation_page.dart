@@ -46,8 +46,8 @@ class _MissionCreationPageState extends ConsumerState<MissionCreationPage>
   bool _requiresApproval = true;
   bool _allowMultipleSubmissions = false;
   DateTime? _deadline;
-  List<String> _requiredSkills = [];
-  List<String> _tags = [];
+  final List<String> _requiredSkills = [];
+  final List<String> _tags = [];
 
   @override
   void initState() {
@@ -923,7 +923,7 @@ class _MissionCreationPageState extends ConsumerState<MissionCreationPage>
                     SizedBox(width: 12.w),
                     Icon(Icons.schedule, size: 14.w, color: Colors.blue),
                     SizedBox(width: 4.w),
-                    Text('${_estimatedMinutes}분', style: TextStyle(fontSize: 12.sp)),
+                    Text('$_estimatedMinutes분', style: TextStyle(fontSize: 12.sp)),
                     SizedBox(width: 12.w),
                     Icon(Icons.people, size: 14.w, color: Colors.green),
                     SizedBox(width: 4.w),
@@ -1369,7 +1369,7 @@ class _MissionCreationPageState extends ConsumerState<MissionCreationPage>
     } else if (difference == 1) {
       return '내일 (${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')})';
     } else {
-      return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')} (${difference}일 후)';
+      return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')} ($difference일 후)';
     }
   }
 

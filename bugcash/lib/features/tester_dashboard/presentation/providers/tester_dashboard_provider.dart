@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/utils/logger.dart';
 
 // Tester Dashboard State
 class TesterDashboardState {
@@ -713,7 +713,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   // Real Firestore query methods (replacing mock data generation)
   Future<List<MissionCard>> _getAvailableMissionsFromFirestore() async {
     try {
-      print('MISSION_DEBUG: 🔍 Loading available missions from Firestore...');
+      AppLogger.debug('🔍 Loading available missions from Firestore...', 'TesterDashboard');
       final missionCards = <MissionCard>[];
       
       // 1. 일반 미션들 가져오기
@@ -723,7 +723,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           .limit(10)
           .get();
       
-      print('📊 Found ${missionsSnapshot.docs.length} regular missions');
+      AppLogger.info('📊 Found ${missionsSnapshot.docs.length} regular missions', 'TesterDashboard');
       
       for (final doc in missionsSnapshot.docs) {
         try {
@@ -746,7 +746,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           );
           missionCards.add(missionCard);
         } catch (e) {
-          print('❌ Error parsing mission ${doc.id}: $e');
+          AppLogger.error('❌ Error parsing mission ${doc.id}', 'TesterDashboard', e);
         }
       }
       
@@ -757,7 +757,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           .limit(20)
           .get();
       
-      print('📱 Found ${providerAppsSnapshot.docs.length} provider apps');
+      AppLogger.info('📱 Found ${providerAppsSnapshot.docs.length} provider apps', 'TesterDashboard');
       
       for (final doc in providerAppsSnapshot.docs) {
         try {
@@ -780,11 +780,11 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           );
           missionCards.add(missionCard);
         } catch (e) {
-          print('❌ Error parsing provider app ${doc.id}: $e');
+          AppLogger.error('❌ Error parsing provider app ${doc.id}', 'TesterDashboard', e);
         }
       }
       
-      print('✅ Total missions loaded: ${missionCards.length}');
+      AppLogger.info('✅ Total missions loaded: ${missionCards.length}', 'TesterDashboard');
       return missionCards;
     } catch (e) {
       debugPrint('Failed to load available missions from Firestore: $e');

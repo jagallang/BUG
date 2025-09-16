@@ -291,7 +291,7 @@ class TestSessionService {
         'recipientId': providerId,
         'type': 'daily_test_submitted',
         'title': '일일 테스트 제출됨',
-        'message': '테스터가 ${day}일차 테스트를 제출했습니다.',
+        'message': '테스터가 $day일차 테스트를 제출했습니다.',
         'data': {
           'sessionId': sessionId,
           'day': day,
@@ -317,7 +317,7 @@ class TestSessionService {
       final title = isCompleted ? '테스트 완료!' : '일일 테스트 승인됨';
       final message = isCompleted
           ? '14일 테스트를 성공적으로 완료했습니다!'
-          : '${day}일차 테스트가 승인되었습니다. +${earnedPoints}P';
+          : '$day일차 테스트가 승인되었습니다. +${earnedPoints}P';
 
       await _firestore.collection('notifications').add({
         'recipientId': testerId,
@@ -350,7 +350,7 @@ class TestSessionService {
         'recipientId': testerId,
         'type': 'daily_test_rejected',
         'title': '재제출 요청',
-        'message': '${day}일차 테스트 재제출이 필요합니다.',
+        'message': '$day일차 테스트 재제출이 필요합니다.',
         'data': {
           'sessionId': sessionId,
           'day': day,

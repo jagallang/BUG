@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/utils/logger.dart';
 
 class CommunityBoardWidget extends ConsumerStatefulWidget {
   final String testerId;
@@ -397,7 +398,7 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
                         TextButton.icon(
                           onPressed: () => _editPost(post),
                           icon: Icon(Icons.edit, size: 16.w),
-                          label: Text('수정'),
+                          label: const Text('수정'),
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.orange,
                           ),
@@ -406,7 +407,7 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
                         TextButton.icon(
                           onPressed: () => _deletePost(post),
                           icon: Icon(Icons.delete, size: 16.w),
-                          label: Text('삭제'),
+                          label: const Text('삭제'),
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.red,
                           ),
@@ -517,7 +518,7 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
   }
 
   void _showCreatePostDialog() {
-    print('💬 DIALOG: Opening create post page...');
+    AppLogger.debug('💬 Opening create post page...', 'CommunityBoard');
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -532,7 +533,7 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
           body: _CreatePostDialog(
             testerId: widget.testerId,
             onPostCreated: (post) {
-              print('💬 DIALOG: onPostCreated callback called for post: ${post.title}');
+              AppLogger.debug('💬 onPostCreated callback called for post: ${post.title}', 'CommunityBoard');
               // Firebase streams automatically update the UI
               Navigator.pop(context); // 페이지 닫기
               if (mounted) {
@@ -546,7 +547,7 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
         fullscreenDialog: true,
       ),
     ).then((result) {
-      print('💬 DIALOG: Create post page completed with result: $result');
+      AppLogger.debug('💬 Create post page completed with result: $result', 'CommunityBoard');
     });
   }
 
@@ -767,9 +768,9 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
 
   @override
   Widget build(BuildContext context) {
-    print('💬 DIALOG_BUILD: Building _CreatePostDialog widget...');
+    AppLogger.debug('💬 Building _CreatePostDialog widget...', 'CommunityBoard');
     final screenSize = MediaQuery.of(context).size;
-    print('💬 DIALOG_BUILD: Screen size: ${screenSize.width} x ${screenSize.height}');
+    AppLogger.debug('💬 Screen size: ${screenSize.width} x ${screenSize.height}', 'CommunityBoard');
     
     return Padding(
       padding: EdgeInsets.all(20.w),
@@ -932,10 +933,10 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
   }
 
   void _createPost() async {
-    print('📝 CREATE_POST: Starting post creation...');
+    AppLogger.debug('📝 Starting post creation...', 'CommunityBoard');
     
     if (_titleController.text.trim().isEmpty || _contentController.text.trim().isEmpty) {
-      print('❌ CREATE_POST: Title or content is empty');
+      AppLogger.warning('❌ Title or content is empty', 'CommunityBoard');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('제목과 내용을 모두 입력해주세요')),
       );
@@ -944,7 +945,7 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
 
     try {
       final currentUserId = CurrentUserService.getCurrentUserIdOrDefault();
-      print('👤 CREATE_POST: Current user ID: $currentUserId');
+      AppLogger.debug('👤 Current user ID: $currentUserId', 'CommunityBoard');
       
       final postData = {
         'author': '익명 사용자',
@@ -958,15 +959,15 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
         'tags': _tags,
       };
       
-      print('📄 CREATE_POST: Post data prepared: $postData');
+      AppLogger.debug('📄 Post data prepared: $postData', 'CommunityBoard');
 
       // Firebase에 저장
-      print('🔥 CREATE_POST: Saving to Firestore...');
+      AppLogger.debug('🔥 Saving to Firestore...', 'CommunityBoard');
       final docRef = await FirebaseFirestore.instance
           .collection('community_posts')
           .add(postData);
           
-      print('✅ CREATE_POST: Successfully saved with ID: ${docRef.id}');
+      AppLogger.info('✅ Successfully saved with ID: ${docRef.id}', 'CommunityBoard');
 
       final newPost = CommunityPost(
         id: docRef.id,
@@ -984,7 +985,7 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
       widget.onPostCreated(newPost);
       
       if (mounted) {
-        print('📱 CREATE_POST: Closing dialog and showing success message');
+        AppLogger.debug('📱 Closing dialog and showing success message', 'CommunityBoard');
         Navigator.pop(context);
         
         ScaffoldMessenger.of(context).showSnackBar(
@@ -995,8 +996,8 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
         );
       }
     } catch (e) {
-      print('❌ CREATE_POST: Error occurred: $e');
-      print('❌ CREATE_POST: Error type: ${e.runtimeType}');
+      AppLogger.error('❌ Error occurred', 'CommunityBoard', e);
+      AppLogger.error('❌ Error type: ${e.runtimeType}', 'CommunityBoard');
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

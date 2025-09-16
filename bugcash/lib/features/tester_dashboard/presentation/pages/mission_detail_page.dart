@@ -543,7 +543,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
                             ],
                           ),
                         );
-                      }).toList(),
+                      }),
                     ],
                   ),
                 ),
@@ -692,7 +692,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
                           ],
                         ),
                       ),
-                    ).toList(),
+                    ),
                   ],
                 ),
               ),
@@ -720,7 +720,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
                         padding: EdgeInsets.only(bottom: 6.h),
                         child: Text(instruction),
                       ),
-                    ).toList(),
+                    ),
                   ],
                 ),
               ),
@@ -786,7 +786,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
                   borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
-              child: Text('중간 스크린샷 촬영'),
+              child: const Text('중간 스크린샷 촬영'),
             ),
             SizedBox(height: 8.h),
             OutlinedButton(
@@ -881,7 +881,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
                   borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
-              child: Text('새 스크린샷 촬영'),
+              child: const Text('새 스크린샷 촬영'),
             ),
             SizedBox(height: 8.h),
             ElevatedButton(
@@ -894,7 +894,7 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
                   borderRadius: BorderRadius.circular(12.r),
                 ),
               ),
-              child: Text('보완 완료 - 재승인 요청'),
+              child: const Text('보완 완료 - 재승인 요청'),
             ),
           ],
         );

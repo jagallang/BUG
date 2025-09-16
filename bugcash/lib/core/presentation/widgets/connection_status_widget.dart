@@ -10,12 +10,12 @@ class ConnectionStatusWidget extends ConsumerWidget {
   final Color? reconnectingColor;
 
   const ConnectionStatusWidget({
-    Key? key,
+    super.key,
     this.showLabel = true,
     this.onlineColor,
     this.offlineColor,
     this.reconnectingColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -87,7 +87,7 @@ class ConnectionStatusWidget extends ConsumerWidget {
 }
 
 class ConnectionStatusBanner extends ConsumerWidget {
-  const ConnectionStatusBanner({Key? key}) : super(key: key);
+  const ConnectionStatusBanner({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -138,7 +138,7 @@ class ConnectionStatusBanner extends ConsumerWidget {
                 ),
                 if (reconnectAttempts > 0)
                   Text(
-                    'Attempt ${reconnectAttempts}',
+                    'Attempt $reconnectAttempts',
                     style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,
@@ -162,7 +162,7 @@ class ConnectionStatusBanner extends ConsumerWidget {
 }
 
 class SyncStatusIndicator extends ConsumerWidget {
-  const SyncStatusIndicator({Key? key}) : super(key: key);
+  const SyncStatusIndicator({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -252,7 +252,7 @@ class SyncStatusIndicator extends ConsumerWidget {
 }
 
 class NetworkQualityIndicator extends ConsumerStatefulWidget {
-  const NetworkQualityIndicator({Key? key}) : super(key: key);
+  const NetworkQualityIndicator({super.key});
 
   @override
   ConsumerState<NetworkQualityIndicator> createState() => _NetworkQualityIndicatorState();
@@ -295,13 +295,13 @@ class ConnectionStatusAppBar extends ConsumerWidget implements PreferredSizeWidg
   final Color? backgroundColor;
 
   const ConnectionStatusAppBar({
-    Key? key,
+    super.key,
     required this.title,
     this.actions,
     this.leading,
     this.centerTitle = true,
     this.backgroundColor,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

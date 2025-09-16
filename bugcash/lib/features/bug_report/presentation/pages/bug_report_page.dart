@@ -32,7 +32,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
 
   String _selectedSeverity = '보통';
   String _selectedCategory = '기능 오류';
-  List<File> _attachedFiles = [];
+  final List<File> _attachedFiles = [];
   bool _isSubmitting = false;
 
   final List<String> _severityOptions = ['낮음', '보통', '높음', '매우 높음'];
@@ -50,7 +50,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text('버그 리포트 작성'),
+        title: const Text('버그 리포트 작성'),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -162,7 +162,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: AppColors.primary),
+                  borderSide: const BorderSide(color: AppColors.primary),
                 ),
               ),
               validator: (value) {
@@ -259,7 +259,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: AppColors.primary),
+                  borderSide: const BorderSide(color: AppColors.primary),
                 ),
               ),
               validator: (value) {
@@ -281,7 +281,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: AppColors.primary),
+                  borderSide: const BorderSide(color: AppColors.primary),
                 ),
               ),
             ),
@@ -297,7 +297,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: AppColors.primary),
+                  borderSide: const BorderSide(color: AppColors.primary),
                 ),
               ),
             ),
@@ -313,7 +313,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
-                  borderSide: BorderSide(color: AppColors.primary),
+                  borderSide: const BorderSide(color: AppColors.primary),
                 ),
               ),
             ),
@@ -349,7 +349,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
                   child: ElevatedButton.icon(
                     onPressed: _pickImage,
                     icon: Icon(Icons.photo_camera, size: 20.sp),
-                    label: Text('사진 촬영'),
+                    label: const Text('사진 촬영'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.info,
                       foregroundColor: Colors.white,
@@ -364,7 +364,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
                   child: ElevatedButton.icon(
                     onPressed: _pickFromGallery,
                     icon: Icon(Icons.photo_library, size: 20.sp),
-                    label: Text('갤러리'),
+                    label: const Text('갤러리'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.success,
                       foregroundColor: Colors.white,
@@ -493,7 +493,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
             ? SizedBox(
                 height: 20.h,
                 width: 20.h,
-                child: CircularProgressIndicator(
+                child: const CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   strokeWidth: 2,
                 ),
@@ -551,7 +551,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
     });
 
     try {
-      final reportId = Uuid().v4();
+      final reportId = const Uuid().v4();
       List<String> attachmentUrls = [];
 
       // 첨부 파일 업로드
@@ -596,7 +596,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('버그 리포트가 제출되었습니다! +500P 적립'),
             backgroundColor: AppColors.success,
           ),
@@ -607,7 +607,7 @@ class _BugReportPageState extends ConsumerState<BugReportPage> {
       AppLogger.error('Failed to submit bug report', 'BugReport', e);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('버그 리포트 제출에 실패했습니다. 다시 시도해주세요.'),
             backgroundColor: AppColors.error,
           ),

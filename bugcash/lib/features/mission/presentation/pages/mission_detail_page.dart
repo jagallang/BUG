@@ -359,7 +359,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                   ),
                 ],
               ),
-            )).toList(),
+            )),
           ],
         ),
       ),

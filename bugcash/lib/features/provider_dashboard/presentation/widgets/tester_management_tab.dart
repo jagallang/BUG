@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../generated/l10n/app_localizations.dart';
 import '../../../../models/test_session_model.dart';
 import '../../../../core/utils/logger.dart';
 

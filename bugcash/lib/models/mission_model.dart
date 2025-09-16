@@ -504,11 +504,11 @@ class DailyMissionProgress {
   }
   
   String get dayLabel {
-    return '${dayNumber}일차';
+    return '$dayNumber일차';
   }
   
   String get fullLabel {
-    return '$formattedDate ${dayLabel}';
+    return '$formattedDate $dayLabel';
   }
   
   DailyMissionProgress copyWith({

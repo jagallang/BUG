@@ -384,7 +384,7 @@ class BugReportsOverviewWidget extends ConsumerWidget {
     } else if (difference == 1) {
       return '1일 전';
     } else if (difference < 7) {
-      return '${difference}일 전';
+      return '$difference일 전';
     } else if (difference < 30) {
       return '${difference ~/ 7}주 전';
     } else {
@@ -491,8 +491,8 @@ class BugReportsOverviewWidget extends ConsumerWidget {
           children: [
             Text('${report['title'] ?? '버그 리포트'}에 응답하시겠습니까?'),
             SizedBox(height: 16.h),
-            TextField(
-              decoration: const InputDecoration(
+            const TextField(
+              decoration: InputDecoration(
                 hintText: '응답 내용을 입력하세요...',
                 border: OutlineInputBorder(),
               ),

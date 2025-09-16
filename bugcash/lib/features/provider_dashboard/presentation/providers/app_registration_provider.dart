@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
-import '../../data/repositories/provider_dashboard_repository_impl.dart';
 import '../providers/provider_dashboard_provider.dart';
 import '../../domain/models/provider_model.dart';
 import '../../domain/repositories/provider_dashboard_repository.dart';

@@ -239,7 +239,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
       }
       
       // Return default settings if none exist
-      final defaultSettings = const NotificationSettings();
+      const defaultSettings = NotificationSettings();
       await updateNotificationSettings(userId, defaultSettings);
       return defaultSettings;
     } catch (e) {
@@ -434,7 +434,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
         type: NotificationType.mission,
         priority: NotificationPriority.high,
         createdAt: now.subtract(const Duration(hours: 1)),
-        data: {'missionId': 'demo_mission_1'},
+        data: const {'missionId': 'demo_mission_1'},
       ),
       NotificationModel(
         id: 'demo_2',

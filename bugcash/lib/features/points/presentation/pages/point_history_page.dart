@@ -209,8 +209,8 @@ class _PointHistoryPageState extends ConsumerState<PointHistoryPage> {
 
   Widget _buildTransactionList() {
     if (isLoading) {
-      return Center(
-        child: const CircularProgressIndicator(
+      return const Center(
+        child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
         ),
       );

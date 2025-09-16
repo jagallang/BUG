@@ -282,7 +282,7 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
     
     if (_minReward > 0 || _maxReward < 1000) {
       activeFilters.add(_buildActiveFilterChip(
-        '${_minReward}-${_maxReward}P',
+        '$_minReward-${_maxReward}P',
         () => setState(() {
           _minReward = 0;
           _maxReward = 1000;

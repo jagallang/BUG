@@ -496,14 +496,14 @@ class _DailyTestApprovalWidgetState extends ConsumerState<DailyTestApprovalWidge
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('${day}일차 테스트 승인'),
+          title: Text('$day일차 테스트 승인'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('이 테스트를 승인하시겠습니까?'),
+              const Text('이 테스트를 승인하시겠습니까?'),
               SizedBox(height: 16.h),
               TextField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: '피드백 (선택사항)',
                   hintText: '테스터에게 전달할 메시지를 입력해주세요',
                   border: OutlineInputBorder(),
@@ -516,7 +516,7 @@ class _DailyTestApprovalWidgetState extends ConsumerState<DailyTestApprovalWidge
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('취소'),
+              child: const Text('취소'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -524,7 +524,7 @@ class _DailyTestApprovalWidgetState extends ConsumerState<DailyTestApprovalWidge
                 _approveDailyTest(sessionId, day, feedback);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-              child: Text('승인', style: TextStyle(color: Colors.white)),
+              child: const Text('승인', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -539,14 +539,14 @@ class _DailyTestApprovalWidgetState extends ConsumerState<DailyTestApprovalWidge
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('${day}일차 테스트 거부'),
+          title: Text('$day일차 테스트 거부'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('이 테스트를 거부하시겠습니까?'),
+              const Text('이 테스트를 거부하시겠습니까?'),
               SizedBox(height: 16.h),
               TextField(
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: '거부 사유 (필수)',
                   hintText: '거부 사유를 입력해주세요',
                   border: OutlineInputBorder(),
@@ -559,13 +559,13 @@ class _DailyTestApprovalWidgetState extends ConsumerState<DailyTestApprovalWidge
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('취소'),
+              child: const Text('취소'),
             ),
             ElevatedButton(
               onPressed: () {
                 if (reason == null || reason!.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('거부 사유를 입력해주세요')),
+                    const SnackBar(content: Text('거부 사유를 입력해주세요')),
                   );
                   return;
                 }
@@ -573,7 +573,7 @@ class _DailyTestApprovalWidgetState extends ConsumerState<DailyTestApprovalWidge
                 _rejectDailyTest(sessionId, day, reason!);
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              child: Text('거부', style: TextStyle(color: Colors.white)),
+              child: const Text('거부', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -593,7 +593,7 @@ class _DailyTestApprovalWidgetState extends ConsumerState<DailyTestApprovalWidge
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${day}일차 테스트가 승인되었습니다'),
+            content: Text('$day일차 테스트가 승인되었습니다'),
             backgroundColor: Colors.green,
           ),
         );
@@ -623,7 +623,7 @@ class _DailyTestApprovalWidgetState extends ConsumerState<DailyTestApprovalWidge
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${day}일차 테스트가 거부되었습니다'),
+            content: Text('$day일차 테스트가 거부되었습니다'),
             backgroundColor: Colors.red,
           ),
         );

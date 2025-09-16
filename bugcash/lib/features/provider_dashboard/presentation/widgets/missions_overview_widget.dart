@@ -339,7 +339,7 @@ class MissionsOverviewWidget extends ConsumerWidget {
     } else if (difference == 1) {
       return '내일';
     } else if (difference < 7) {
-      return '${difference}일 남음';
+      return '$difference일 남음';
     } else {
       return '${difference ~/ 7}주 남음';
     }

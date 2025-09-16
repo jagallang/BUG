@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import '../../../../core/utils/logger.dart';
 import '../../domain/entities/user_entity.dart';
 
 class FirebaseAuthService {
@@ -35,7 +36,7 @@ class FirebaseAuthService {
         lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       );
     } catch (e) {
-      print('Error getting user data: $e');
+      AppLogger.error('Error getting user data', 'FirebaseAuthService', e);
       return null;
     }
   }
@@ -208,7 +209,7 @@ class FirebaseAuthService {
 
       return userCredential;
     } catch (e) {
-      print('Error during Google sign in: $e');
+      AppLogger.error('Error during Google sign in', 'FirebaseAuthService', e);
       return null;
     }
   }
@@ -259,7 +260,7 @@ class FirebaseAuthService {
       final nameQuery = await _firestore
           .collection('users')
           .where('displayName', isGreaterThanOrEqualTo: query)
-          .where('displayName', isLessThan: query + '\uf8ff')
+          .where('displayName', isLessThan: '$query\uf8ff')
           .limit(limit)
           .get();
 
@@ -267,7 +268,7 @@ class FirebaseAuthService {
       final emailQuery = await _firestore
           .collection('users')
           .where('email', isGreaterThanOrEqualTo: query)
-          .where('email', isLessThan: query + '\uf8ff')
+          .where('email', isLessThan: '$query\uf8ff')
           .limit(limit)
           .get();
 
@@ -297,7 +298,7 @@ class FirebaseAuthService {
 
       return users.values.toList();
     } catch (e) {
-      print('Error searching users: $e');
+      AppLogger.error('Error searching users', 'FirebaseAuthService', e);
       return [];
     }
   }

@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../domain/repositories/search_repository.dart';
+import '../../../../core/utils/logger.dart';
 
 class SearchRepositoryImpl implements SearchRepository {
   final FirebaseFirestore _firestore;
@@ -60,7 +61,7 @@ class SearchRepositoryImpl implements SearchRepository {
     int? maxDaysLeft,
     bool? hasAvailableSlots,
   }) async {
-    print('🚀 searchMissions called with query: "$query"');
+    AppLogger.debug('🚀 searchMissions called with query: "$query"', 'SearchRepository');
     Query<Map<String, dynamic>> queryRef = _firestore.collection('missions');
     
     // Text search (simplified - Firebase doesn't have full-text search)
@@ -140,20 +141,20 @@ class SearchRepositoryImpl implements SearchRepository {
   // 공급자가 등록한 앱들을 검색 결과에 포함하는 메서드
   Future<void> _includeProviderApps(List<Map<String, dynamic>> results, String query) async {
     try {
-      print('🔍 Searching provider_apps collection for query: "$query"');
+      AppLogger.debug('🔍 Searching provider_apps collection for query: "$query"', 'SearchRepository');
       
       final providerAppsSnapshot = await _firestore
           .collection('provider_apps')
           .where('status', isEqualTo: 'active')
           .get();
       
-      print('📱 Found ${providerAppsSnapshot.docs.length} provider apps');
+      AppLogger.info('📱 Found ${providerAppsSnapshot.docs.length} provider apps', 'SearchRepository');
       
       final providerApps = providerAppsSnapshot.docs
           .map((doc) {
             final data = doc.data();
             data['id'] = doc.id;
-            print('📝 Provider app: ${data['appName']} - ${data['description']}');
+            AppLogger.debug('📝 Provider app: ${data['appName']} - ${data['description']}', 'SearchRepository');
             return data;
           })
           .where((app) {
@@ -168,17 +169,17 @@ class SearchRepositoryImpl implements SearchRepository {
                    description.contains(searchTerm) ||
                    category.contains(searchTerm);
             
-            print('🔎 App "${app['appName']}" matches query "$query": $matches');
+            AppLogger.debug('🔎 App "${app['appName']}" matches query "$query": $matches', 'SearchRepository');
             return matches;
           })
           .map((app) => _convertProviderAppToMissionFormat(app))
           .toList();
       
-      print('✅ Adding ${providerApps.length} provider apps to search results');
+      AppLogger.info('✅ Adding ${providerApps.length} provider apps to search results', 'SearchRepository');
       results.addAll(providerApps);
     } catch (e) {
       // 에러가 발생해도 기존 검색 결과는 유지
-      print('❌ Error including provider apps: $e');
+      AppLogger.error('❌ Error including provider apps', 'SearchRepository', e);
     }
   }
 

@@ -138,7 +138,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
       // 비밀번호 검증을 위해 재인증 시도
       final credential = EmailAuthProvider.credential(
-        email: currentUser.email!,
+        email: currentUser.email,
         password: password,
       );
 
@@ -544,7 +544,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           _buildStatDivider(),
           _buildStatItem(
             '평균 평점',
-            '${profile.averageRating.toStringAsFixed(1)}',
+            profile.averageRating.toStringAsFixed(1),
             Icons.star,
           ),
           _buildStatDivider(),
@@ -670,7 +670,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   ],
                 ),
               ),
-              Expanded(
+              const Expanded(
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,

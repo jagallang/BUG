@@ -55,19 +55,19 @@ class SyncSettingsPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
-                const Icon(Icons.signal_wifi_4_bar, color: Colors.blue),
-                const SizedBox(width: 8),
-                const Text(
+                Icon(Icons.signal_wifi_4_bar, color: Colors.blue),
+                SizedBox(width: 8),
+                Text(
                   '연결 상태',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Spacer(),
-                const ConnectionStatusWidget(),
+                Spacer(),
+                ConnectionStatusWidget(),
               ],
             ),
             const SizedBox(height: 16),
