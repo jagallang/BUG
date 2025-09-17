@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.17-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.18-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,22 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.17)
+## ✨ 주요 기능 (v1.4.18)
+
+### 🔍 테스터 미션 디스커버리 시스템 강화 (v1.4.18)
+- **🐛 무한 로딩 문제 해결**: Riverpod provider 생명주기 오류 수정
+  - `initState`에서 provider 수정 시도로 인한 "Provider modification during widget tree building" 에러 해결
+  - Widget lifecycle과 state management 분리를 통한 안정성 향상
+- **📊 상세한 디버그 로깅 시스템 추가**:
+  - **🔍 Provider Apps 추적**: Firestore에서 가져온 모든 앱 데이터 상세 로깅
+  - **📱 앱별 상태 분석**: 각 앱의 `isActive` 상태, `appName`, `metadata` 정보 추적
+  - **✅ 미션 생성 과정 모니터링**: 어떤 앱이 미션으로 변환되는지 실시간 추적
+- **🎯 미션 필터링 로직 개선**:
+  - **🚫 비활성화 앱 제외**: `isActive: false`인 앱들 자동 필터링
+  - **📝 빈 앱 이름 검증**: `appName`이 null 또는 빈 문자열인 앱들 제외
+  - **🔄 실시간 데이터 동기화**: Provider dashboard에서 앱 상태 변경 시 즉시 반영
+
+## ✨ 이전 버전 기능 (v1.4.17)
 
 ### 🧹 대규모 코드 정리 및 유지보수성 개선 (v1.4.17)
 - **📊 파일 수 최적화**: 166개 → 160개 파일로 6개 파일 제거하여 프로젝트 구조 간소화

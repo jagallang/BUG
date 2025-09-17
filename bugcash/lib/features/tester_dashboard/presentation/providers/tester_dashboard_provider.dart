@@ -621,17 +621,33 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           .collection('provider_apps')
           .limit(20)
           .get();
-      
+
       AppLogger.info('📱 Found ${providerAppsSnapshot.docs.length} provider apps', 'TesterDashboard');
-      
+      AppLogger.info('📱 Document IDs: ${providerAppsSnapshot.docs.map((doc) => doc.id).toList()}', 'TesterDashboard');
+
       for (final doc in providerAppsSnapshot.docs) {
         try {
           final data = doc.data();
-          final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
+          final appName = data['appName'] ?? 'Unknown App';
+          AppLogger.info('🔍 Processing app: ${doc.id}, name: $appName', 'TesterDashboard');
+          AppLogger.info('📱 Full data for $appName: ${data.toString()}', 'TesterDashboard');
 
-          // 활성화된 앱만 표시
-          final isActive = metadata['isActive'] ?? true;
-          if (!isActive) continue;
+          final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
+          AppLogger.info('📊 Metadata for $appName: ${metadata.toString()}', 'TesterDashboard');
+
+          // 활성화된 앱만 표시 (기본값은 true)
+          final isActive = metadata['isActive'];
+          AppLogger.info('✅ App $appName (${doc.id}) - isActive: $isActive', 'TesterDashboard');
+          if (isActive == false) {
+            AppLogger.info('❌ Skipping app $appName (${doc.id}) because isActive is false', 'TesterDashboard');
+            continue;
+          }
+
+          // appName이 null이거나 비어있는지 확인
+          if (data['appName'] == null || data['appName'].toString().isEmpty) {
+            AppLogger.info('⚠️ App ${doc.id} has null or empty appName, skipping', 'TesterDashboard');
+            continue;
+          }
 
           // 메타데이터에서 단가 정보 가져오기
           final price = metadata['price'] ?? 0;
@@ -655,6 +671,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
             originalAppData: data,
           );
           missionCards.add(missionCard);
+          AppLogger.info('✅ Successfully added mission for app $appName (${doc.id})', 'TesterDashboard');
         } catch (e) {
           AppLogger.error('❌ Error parsing provider app ${doc.id}', 'TesterDashboard', e);
         }
