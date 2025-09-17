@@ -128,7 +128,7 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
               const Text('미션 신청이 완료되었습니다!'),
               SizedBox(height: 8.h),
               Text(
-                '공급자의 승인을 기다린 후 14일간의 테스트를 시작할 수 있습니다.',
+                '공급자의 승인을 기다린 후 ${_getTestPeriod(widget.mission)}일간의 테스트를 시작할 수 있습니다.',
                 style: TextStyle(
                   fontSize: 12.sp,
                   color: Colors.grey[600],
@@ -219,17 +219,17 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
                     children: [
                       _buildInfoItem(
                         Icons.people,
-                        '${mission.currentParticipants}/${mission.maxParticipants}',
+                        '${mission.currentParticipants}/${_getMaxParticipants(mission)}',
                         '참여자',
                       ),
                       _buildInfoItem(
-                        Icons.schedule,
-                        '${mission.deadline != null ? mission.deadline!.difference(DateTime.now()).inDays : 7}일',
-                        '남은 기간',
+                        Icons.monetization_on,
+                        '${mission.rewardPoints}P',
+                        '보상',
                       ),
                       _buildInfoItem(
                         Icons.calendar_today,
-                        '14일',
+                        '${_getTestPeriod(mission)}일',
                         '테스트 기간',
                       ),
                     ],
@@ -287,24 +287,24 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
                   // Mission details
                   _buildDetailSection('📱 앱 정보', [
                     _buildDetailItem('앱 이름', mission.appName),
-                    _buildDetailItem('카테고리', _getMissionTypeText(mission.type)),
-                    _buildDetailItem('테스트 유형', '기능 테스트'),
+                    _buildDetailItem('카테고리', _getAppCategory(mission)),
+                    _buildDetailItem('테스트 유형', _getMissionTypeText(mission.type)),
                   ]),
 
                   SizedBox(height: 16.h),
 
                   _buildDetailSection('📋 테스트 요구사항', [
-                    _buildDetailItem('난이도', _getDifficultyText(mission.difficulty)),
-                    _buildDetailItem('필요 기기', 'Android/iOS'),
-                    _buildDetailItem('예상 소요시간', '${(mission.estimatedMinutes / 60).ceil()}시간/일'),
+                    _buildDetailItem('테스트 기간', '${_getTestPeriod(mission)}일'),
+                    _buildDetailItem('일일 테스트 시간', '${_getTestTime(mission)}분'),
+                    _buildDetailItem('참여자 수', '${_getMaxParticipants(mission)}명'),
                   ]),
 
                   SizedBox(height: 16.h),
 
                   _buildDetailSection('💰 보상 정보', [
                     _buildDetailItem('총 보상', '${mission.rewardPoints} 포인트'),
-                    _buildDetailItem('일일 보상', '${(mission.rewardPoints / 14).round()} 포인트'),
-                    _buildDetailItem('완료 보너스', '${(mission.rewardPoints * 0.1).round()} 포인트'),
+                    _buildDetailItem('일일 보상', '${(mission.rewardPoints / _getTestPeriod(mission)).round()} 포인트'),
+                    _buildDetailItem('완료 보너스', '${_getCompletionBonus(mission)} 포인트'),
                   ]),
 
                   SizedBox(height: 24.h),
@@ -344,7 +344,7 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
                               children: [
                                 const Icon(Icons.play_arrow, size: 20),
                                 SizedBox(width: 8.w),
-                                const Text('14일 테스트 신청하기'),
+                                Text('${_getTestPeriod(mission)}일 테스트 신청하기'),
                               ],
                             ),
                     ),
@@ -366,7 +366,7 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
                         SizedBox(width: 8.w),
                         Expanded(
                           child: Text(
-                            '신청 후 공급자의 승인을 받으면 14일간의 일일 테스트가 시작됩니다.',
+                            '신청 후 공급자의 승인을 받으면 ${_getTestPeriod(mission)}일간의 일일 테스트가 시작됩니다.',
                             style: TextStyle(
                               fontSize: 11.sp,
                               color: Colors.blue.shade700,
@@ -508,6 +508,51 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
       default:
         return '보통';
     }
+  }
+
+  // 백엔드 데이터에서 테스트 기간 가져오기
+  int _getTestPeriod(MissionCard mission) {
+    if (mission.isProviderApp && mission.originalAppData != null) {
+      final metadata = mission.originalAppData!['metadata'] as Map<String, dynamic>?;
+      return metadata?['testPeriod'] ?? 14;
+    }
+    return 14; // 기본값
+  }
+
+  // 백엔드 데이터에서 일일 테스트 시간 가져오기
+  int _getTestTime(MissionCard mission) {
+    if (mission.isProviderApp && mission.originalAppData != null) {
+      final metadata = mission.originalAppData!['metadata'] as Map<String, dynamic>?;
+      return metadata?['testTime'] ?? 30;
+    }
+    return 30; // 기본값
+  }
+
+  // 백엔드 데이터에서 최대 참여자 수 가져오기
+  int _getMaxParticipants(MissionCard mission) {
+    if (mission.isProviderApp && mission.originalAppData != null) {
+      final metadata = mission.originalAppData!['metadata'] as Map<String, dynamic>?;
+      return metadata?['participantCount'] ?? mission.maxParticipants;
+    }
+    return mission.maxParticipants;
+  }
+
+  // 백엔드 데이터에서 앱 카테고리 가져오기
+  String _getAppCategory(MissionCard mission) {
+    if (mission.isProviderApp && mission.originalAppData != null) {
+      final metadata = mission.originalAppData!['metadata'] as Map<String, dynamic>?;
+      return metadata?['category'] ?? mission.originalAppData!['category'] ?? '기타';
+    }
+    return _getMissionTypeText(mission.type);
+  }
+
+  // 백엔드 데이터에서 완료 보너스 가져오기
+  int _getCompletionBonus(MissionCard mission) {
+    if (mission.isProviderApp && mission.originalAppData != null) {
+      final metadata = mission.originalAppData!['metadata'] as Map<String, dynamic>?;
+      return metadata?['completionBonus'] ?? (mission.rewardPoints * 0.1).round();
+    }
+    return (mission.rewardPoints * 0.1).round();
   }
 
 }

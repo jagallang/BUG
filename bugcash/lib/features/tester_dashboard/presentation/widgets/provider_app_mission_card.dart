@@ -74,7 +74,9 @@ class ProviderAppMissionCard extends StatelessWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                mission['title'] ?? '제목 없음',
+                                isProviderApp && originalAppData != null
+                                    ? '${originalAppData['appName'] ?? '앱'} 테스팅'
+                                    : mission['title'] ?? '제목 없음',
                                 style: TextStyle(
                                   fontSize: 16.sp,
                                   fontWeight: FontWeight.w600,
@@ -106,7 +108,9 @@ class ProviderAppMissionCard extends StatelessWidget {
                         ),
                         SizedBox(height: 4.h),
                         Text(
-                          mission['company'] ?? '회사 정보 없음',
+                          isProviderApp && originalAppData != null
+                              ? _getCategory(originalAppData)
+                              : mission['company'] ?? '회사 정보 없음',
                           style: TextStyle(
                             fontSize: 14.sp,
                             color: Colors.grey[600],
@@ -122,7 +126,9 @@ class ProviderAppMissionCard extends StatelessWidget {
               
               // Description
               Text(
-                mission['description'] ?? '설명 없음',
+                isProviderApp && originalAppData != null
+                    ? originalAppData['description'] ?? '앱 테스팅 및 피드백 제공'
+                    : mission['description'] ?? '설명 없음',
                 style: TextStyle(
                   fontSize: 14.sp,
                   color: Colors.grey[700],
@@ -313,7 +319,7 @@ class ProviderAppMissionCard extends StatelessWidget {
               ),
               SizedBox(height: 16.h),
               
-              _buildDetailRow('카테고리', appData['category'] ?? '정보 없음'),
+              _buildDetailRow('카테고리', _getCategory(appData)),
               SizedBox(height: 8.h),
               _buildDetailRow('설치 방식', _getInstallTypeText(appData['installType'])),
               SizedBox(height: 8.h),
@@ -582,5 +588,10 @@ class ProviderAppMissionCard extends StatelessWidget {
   int _getTestTime(Map<String, dynamic> appData) {
     final metadata = appData['metadata'] as Map<String, dynamic>?;
     return metadata?['testTime'] ?? 30;
+  }
+
+  String _getCategory(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    return metadata?['category'] ?? appData['category'] ?? '정보 없음';
   }
 }

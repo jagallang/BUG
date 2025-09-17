@@ -836,6 +836,7 @@ class MissionNotification {
 class MissionCard {
   final String id;
   final String title;
+  final String description;
   final String appName;
   final MissionType type;
   final int rewardPoints;
@@ -843,10 +844,21 @@ class MissionCard {
   final DateTime? deadline;
   final DateTime? startedAt;
   final double? progress;
-  
+  final MissionStatus status;
+  final List<String> requiredSkills;
+  final int currentParticipants;
+  final int maxParticipants;
+  final MissionDifficulty difficulty;
+  final bool isProviderApp;
+  final Map<String, dynamic>? originalAppData;
+  final String? providerId;
+  final DateTime? completedAt;
+  final double? averageRating;
+
   const MissionCard({
     required this.id,
     required this.title,
+    required this.description,
     required this.appName,
     required this.type,
     required this.rewardPoints,
@@ -854,5 +866,15 @@ class MissionCard {
     this.deadline,
     this.startedAt,
     this.progress,
+    required this.status,
+    required this.requiredSkills,
+    required this.currentParticipants,
+    required this.maxParticipants,
+    required this.difficulty,
+    required this.isProviderApp,
+    this.originalAppData,
+    this.providerId,
+    this.completedAt,
+    this.averageRating,
   });
 }

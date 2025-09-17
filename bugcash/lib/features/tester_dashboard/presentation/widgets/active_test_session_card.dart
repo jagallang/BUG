@@ -24,12 +24,19 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
   bool _isSubmitting = false;
   final TextEditingController _feedbackController = TextEditingController();
   final List<File> _screenshots = [];
-  int _testDurationMinutes = 30;
+  int _testDurationMinutes = 30; // Default from session metadata
 
   @override
   void dispose() {
     _feedbackController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize test duration from session metadata
+    _testDurationMinutes = _getDefaultTestTime();
   }
 
   Future<void> _pickImages() async {
@@ -197,7 +204,7 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
                               ),
                             ),
                             Text(
-                              '14일 테스트 (${session.completedDays}/14일 완료)',
+                              '${_getTestPeriod()}일 테스트 (${session.completedDays}/${_getTestPeriod()}일 완료)',
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: Colors.grey[600],
@@ -361,10 +368,10 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
                         Expanded(
                           child: Slider(
                             value: _testDurationMinutes.toDouble(),
-                            min: 10,
-                            max: 120,
-                            divisions: 11,
-                            label: '$_testDurationMinutes분',
+                            min: _getMinTestTime().toDouble(),
+                            max: _getMaxTestTime().toDouble(),
+                            divisions: _getTestTimeDivisions(),
+                            label: '$_testDurationMinutes${_getTimeUnit()}',
                             onChanged: (value) {
                               setState(() {
                                 _testDurationMinutes = value.round();
@@ -373,7 +380,7 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
                           ),
                         ),
                         Text(
-                          '$_testDurationMinutes분',
+                          '$_testDurationMinutes${_getTimeUnit()}',
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontWeight: FontWeight.bold,
@@ -493,7 +500,7 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
                                   Text('제출 중...'),
                                 ],
                               )
-                            : const Text('오늘의 테스트 제출하기'),
+                            : Text(_getSubmitButtonText()),
                       ),
                     ),
                   ] else if (isWaitingForApproval) ...[
@@ -516,7 +523,7 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            '공급자가 검토 후 승인해드립니다',
+                            _getApprovalWaitingMessage(),
                             style: TextStyle(
                               fontSize: 12.sp,
                               color: Colors.grey[600],
@@ -529,7 +536,7 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
                     // Other states
                     Center(
                       child: Text(
-                        '현재 제출 가능한 테스트가 없습니다',
+                        _getNoTestAvailableMessage(),
                         style: TextStyle(
                           fontSize: 14.sp,
                           color: Colors.grey[600],
@@ -667,5 +674,57 @@ class _ActiveTestSessionCardState extends ConsumerState<ActiveTestSessionCard> {
       default:
         return '${todayTest.day}일차 테스트 상태를 확인할 수 없습니다';
     }
+  }
+
+  // 동적 데이터 메서드들
+  int _getTestPeriod() {
+    // 세션 메타데이터에서 테스트 기간 가져오기
+    return widget.session.sessionMetadata['testPeriod'] as int? ?? 14;
+  }
+
+  int _getDefaultTestTime() {
+    // 세션 메타데이터에서 기본 테스트 시간 가져오기
+    return widget.session.sessionMetadata['defaultTestTime'] as int? ?? 30;
+  }
+
+  int _getMinTestTime() {
+    // 세션 메타데이터에서 최소 테스트 시간 가져오기
+    return widget.session.sessionMetadata['minTestTime'] as int? ?? 10;
+  }
+
+  int _getMaxTestTime() {
+    // 세션 메타데이터에서 최대 테스트 시간 가져오기
+    return widget.session.sessionMetadata['maxTestTime'] as int? ?? 120;
+  }
+
+  int _getTestTimeDivisions() {
+    // 세션 메타데이터에서 슬라이더 구간 수 가져오기
+    final min = _getMinTestTime();
+    final max = _getMaxTestTime();
+    return widget.session.sessionMetadata['testTimeDivisions'] as int? ??
+           ((max - min) / 10).round();
+  }
+
+  String _getTimeUnit() {
+    // 세션 메타데이터에서 시간 단위 가져오기
+    return widget.session.sessionMetadata['timeUnit'] as String? ?? '분';
+  }
+
+  String _getSubmitButtonText() {
+    // 세션 메타데이터에서 제출 버튼 텍스트 가져오기
+    return widget.session.sessionMetadata['submitButtonText'] as String? ??
+           '오늘의 테스트 제출하기';
+  }
+
+  String _getApprovalWaitingMessage() {
+    // 세션 메타데이터에서 승인 대기 메시지 가져오기
+    return widget.session.sessionMetadata['approvalWaitingMessage'] as String? ??
+           '공급자가 검토 후 승인해드립니다';
+  }
+
+  String _getNoTestAvailableMessage() {
+    // 세션 메타데이터에서 빈 상태 메시지 가져오기
+    return widget.session.sessionMetadata['noTestAvailableMessage'] as String? ??
+           '현재 제출 가능한 테스트가 없습니다';
   }
 }

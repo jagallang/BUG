@@ -1678,7 +1678,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ),
             SizedBox(height: 12.h),
             Text(
-              '미션 ID: ${session.missionId}',
+              '미션: ${session.appId}',
               style: TextStyle(
                 fontSize: 14.sp,
                 fontWeight: FontWeight.bold,
@@ -1686,7 +1686,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ),
             SizedBox(height: 4.h),
             Text(
-              '앱: ${session.appId}',
+              '미션 ID: ${session.missionId}',
               style: TextStyle(
                 fontSize: 12.sp,
                 color: Colors.grey[600],
