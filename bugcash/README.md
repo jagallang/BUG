@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.16-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.17-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,28 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.16)
+## ✨ 주요 기능 (v1.4.17)
+
+### 🧹 대규모 코드 정리 및 유지보수성 개선 (v1.4.17)
+- **📊 파일 수 최적화**: 166개 → 160개 파일로 6개 파일 제거하여 프로젝트 구조 간소화
+- **🗑️ 미사용 기능 완전 제거**:
+  - **💬 미완성 채팅 시스템**: chat/ 디렉토리 전체 제거 (26개 파일)
+  - **📡 복잡한 오프라인 기능**: offline_data_cache.dart, offline_sync_service.dart
+  - **🧪 테스트 파일들**: missions_tab_test.dart, apps_tab_test.dart
+  - **🔧 동기화 관련 위젯**: connection_status_widget.dart, sync_management_widget.dart
+- **🔄 중복 코드 통합 및 리팩토링**:
+  - **🛠️ TypeConverter 유틸리티**: 안전한 타입 변환을 위한 공통 클래스 추가
+  - **👤 UserEntity 생성 로직**: 3곳의 중복 코드를 팩토리 메소드로 통합
+  - **🔗 FirebaseAuthService 최적화**: 중복된 타입 변환 로직 제거
+- **🚫 하드코딩 완전 제거**:
+  - **🆔 demo_user → 실제 인증**: currentUserIdProvider를 통한 실제 사용자 ID 사용
+  - **🔐 auth_provider.dart 추가**: 중앙화된 인증 상태 관리
+- **📦 의존성 최적화**:
+  - **🗂️ dartz 라이브러리 제거**: 미사용 함수형 프로그래밍 라이브러리
+  - **🧽 DI 모듈 정리**: 주석처리된 의존성 주입 코드 제거
+  - **📋 pubspec.yaml 간소화**: 불필요한 의존성 정리
+- **⚡ 성능 향상**: 7,534줄 → 212줄로 코드 대폭 감소, 빌드 속도 및 앱 성능 향상
+- **🔧 유지보수성 대폭 향상**: 깔끔한 코드 구조로 향후 기능 추가 및 버그 수정 용이성 확보
 
 ### 🏢 공급자 앱 상세 관리 시스템 & 하드코딩 데이터 완전 제거 (v1.4.16)
 - **📱 완전한 앱 상세 관리 페이지**: 앱 관리 탭의 "상세보기" 버튼 클릭 시 종합적인 앱 관리 인터페이스 제공
