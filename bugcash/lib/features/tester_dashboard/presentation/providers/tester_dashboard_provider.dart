@@ -132,6 +132,8 @@ class MissionCard {
   final DateTime? startedAt; // For active missions
   final String? providerId;
   final MissionDifficulty difficulty;
+  final bool isProviderApp; // Provider 앱 여부
+  final Map<String, dynamic>? originalAppData; // 원본 앱 데이터
 
   MissionCard({
     required this.id,
@@ -151,6 +153,8 @@ class MissionCard {
     this.startedAt,
     this.providerId,
     required this.difficulty,
+    this.isProviderApp = false,
+    this.originalAppData,
   });
 }
 
@@ -361,151 +365,9 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     }
   }
 
-  List<MissionCard> _generateAvailableMissions() {
-    final missions = <MissionCard>[];
-    // 앱테스터 모집을 주미션으로 변경
-    final missionTypes = [MissionType.featureTesting, MissionType.usabilityTest, MissionType.bugReport];
-    final appNames = ['ShopApp', 'FoodDelivery', 'FitnessTracker', 'SocialChat', 'NewsReader'];
-    final difficulties = [MissionDifficulty.easy, MissionDifficulty.medium, MissionDifficulty.hard];
-    
-    for (int i = 0; i < 10; i++) {
-      final type = missionTypes[i % missionTypes.length];
-      final difficulty = difficulties[i % difficulties.length];
-      final rewardPoints = _getRewardByDifficulty(difficulty);
-      
-      missions.add(MissionCard(
-        id: 'mission_$i',
-        title: _getMissionTitle(type, i),
-        description: _getMissionDescription(type, i),
-        type: type,
-        rewardPoints: rewardPoints,
-        estimatedMinutes: 10, // 10분 테스트 기준으로 통일
-        status: MissionStatus.active,
-        deadline: DateTime.now().add(Duration(days: 3 + (i % 7))),
-        requiredSkills: _getSkillsForType(type),
-        appName: appNames[i % appNames.length],
-        currentParticipants: i % 15,
-        maxParticipants: 20,
-        difficulty: difficulty,
-      ));
-    }
-    
-    return missions;
-  }
 
-  List<MissionCard> _generateActiveMissions(String testerId) {
-    return [
-      MissionCard(
-        id: 'active_1',
-        title: 'ShopApp 결제 기능 테스트',
-        description: '새로운 결제 시스템의 안정성을 검증해주세요',
-        type: MissionType.featureTesting,
-        rewardPoints: 250,
-        estimatedMinutes: 45,
-        status: MissionStatus.inProgress,
-        deadline: DateTime.now().add(const Duration(days: 2)),
-        requiredSkills: ['결제 시스템', 'UI 테스트'],
-        appName: 'ShopApp',
-        currentParticipants: 5,
-        maxParticipants: 10,
-        progress: 0.65,
-        startedAt: DateTime.now().subtract(const Duration(hours: 8)),
-        difficulty: MissionDifficulty.medium,
-      ),
-      MissionCard(
-        id: 'active_2',
-        title: 'FoodDelivery 앱 사용성 개선',
-        description: '주문 과정의 사용자 경험을 평가해주세요',
-        type: MissionType.usabilityTest,
-        rewardPoints: 180,
-        estimatedMinutes: 30,
-        status: MissionStatus.inProgress,
-        deadline: DateTime.now().add(const Duration(days: 1)),
-        requiredSkills: ['UX 평가', '모바일 앱'],
-        appName: 'FoodDelivery',
-        currentParticipants: 8,
-        maxParticipants: 15,
-        progress: 0.35,
-        startedAt: DateTime.now().subtract(const Duration(hours: 4)),
-        difficulty: MissionDifficulty.easy,
-      ),
-    ];
-  }
 
-  List<MissionCard> _generateCompletedMissions(String testerId) {  // ignore: unused_element
-    return [
-      MissionCard(
-        id: 'completed_1',
-        title: 'SocialChat 알림 버그 찾기',
-        description: '알림이 제대로 표시되지 않는 문제를 발견했습니다',
-        type: MissionType.bugReport,
-        rewardPoints: 300,
-        estimatedMinutes: 25,
-        status: MissionStatus.completed,
-        requiredSkills: ['버그 발견', '알림 시스템'],
-        appName: 'SocialChat',
-        currentParticipants: 12,
-        maxParticipants: 15,
-        difficulty: MissionDifficulty.medium,
-      ),
-    ];
-  }
 
-  String _getMissionTitle(MissionType type, int index) {
-    final appNames = ['ShopApp', 'FoodDelivery', 'FitnessTracker', 'SocialChat', 'NewsReader'];
-    final appName = appNames[index % appNames.length];
-    
-    switch (type) {
-      case MissionType.featureTesting:
-        return '$appName 앱테스터 모집 - 기능 테스트';
-      case MissionType.usabilityTest:
-        return '$appName 앱테스터 모집 - 사용성 평가';
-      case MissionType.bugReport:
-        return '$appName 앱테스터 모집 - 버그 리포트';
-      default:
-        return '$appName 앱테스터 모집';
-    }
-  }
-
-  String _getMissionDescription(MissionType type, int index) {
-    switch (type) {
-      case MissionType.featureTesting:
-        return '10분 내외로 앱 기능을 테스트하고 피드백을 제공해주세요. 2000포인트 지급';
-      case MissionType.usabilityTest:
-        return '10분 내외로 앱 사용성을 평가하고 개선 아이디어를 제공해주세요. 2000포인트 지급';
-      case MissionType.bugReport:
-        return '10분 내외로 앱 버그를 발견하고 상세한 리포트를 작성해주세요. 2000포인트 지급';
-      default:
-        return '10분 내외로 앱 테스트를 완료해주세요. 2000포인트 지급';
-    }
-  }
-
-  List<String> _getSkillsForType(MissionType type) {
-    switch (type) {
-      case MissionType.featureTesting:
-        return ['앱 테스트', '기능 검증', '모바일 경험'];
-      case MissionType.usabilityTest:
-        return ['앱 테스트', 'UX 평가', '사용성 분석'];
-      case MissionType.bugReport:
-        return ['앱 테스트', '버그 발견', '리포트 작성'];
-      default:
-        return ['앱 테스트', '일반 테스트'];
-    }
-  }
-
-  int _getRewardByDifficulty(MissionDifficulty difficulty) {
-    // 기본 2000포인트를 베이스로 난이도별 추가 보상
-    switch (difficulty) {
-      case MissionDifficulty.easy:
-        return 2000;
-      case MissionDifficulty.medium:
-        return 2500;
-      case MissionDifficulty.hard:
-        return 3000;
-      case MissionDifficulty.expert:
-        return 4000;
-    }
-  }
 
   Future<void> _loadEarningsData(String testerId) async {
     try {
@@ -691,6 +553,8 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
             progress: progress,
             startedAt: mission.startedAt,
             difficulty: mission.difficulty,
+            isProviderApp: mission.isProviderApp,
+            originalAppData: mission.originalAppData,
           );
         }
         return mission;
@@ -743,6 +607,8 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
             maxParticipants: data['maxParticipants'] ?? 10,
             progress: 0,
             difficulty: MissionDifficulty.medium,
+            isProviderApp: false,
+            originalAppData: null,
           );
           missionCards.add(missionCard);
         } catch (e) {
@@ -750,10 +616,9 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
         }
       }
       
-      // 2. Provider Apps를 미션으로 변환해서 추가
+      // 2. Provider Apps를 미션으로 변환해서 추가 (활성화된 앱만)
       final providerAppsSnapshot = await FirebaseFirestore.instance
           .collection('provider_apps')
-          .where('status', isEqualTo: 'active')
           .limit(20)
           .get();
       
@@ -762,13 +627,22 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       for (final doc in providerAppsSnapshot.docs) {
         try {
           final data = doc.data();
+          final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
+
+          // 활성화된 앱만 표시
+          final isActive = metadata['isActive'] ?? true;
+          if (!isActive) continue;
+
+          // 메타데이터에서 단가 정보 가져오기
+          final price = metadata['price'] ?? 0;
+
           final missionCard = MissionCard(
             id: 'provider_app_${doc.id}',
             title: '${data['appName'] ?? '앱'} 테스팅',
             description: data['description'] ?? '앱 테스팅 및 피드백 제공',
             appName: data['appName'] ?? '앱',
             type: MissionType.functional,
-            rewardPoints: 5000,
+            rewardPoints: price is int ? price : (price is double ? price.toInt() : 5000),
             estimatedMinutes: 30,
             status: MissionStatus.active,
             deadline: DateTime.now().add(const Duration(days: 30)),
@@ -777,6 +651,8 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
             maxParticipants: 50,
             progress: 0,
             difficulty: MissionDifficulty.medium,
+            isProviderApp: true,
+            originalAppData: data,
           );
           missionCards.add(missionCard);
         } catch (e) {
@@ -822,18 +698,6 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     }
   }
   
-  MissionDifficulty _parseMissionDifficulty(String? difficulty) {
-    switch (difficulty?.toLowerCase()) {
-      case 'easy':
-        return MissionDifficulty.easy;
-      case 'medium':
-        return MissionDifficulty.medium;
-      case 'hard':
-        return MissionDifficulty.hard;
-      default:
-        return MissionDifficulty.medium;
-    }
-  }
 
   Future<List<MissionCard>> _getActiveMissionsFromFirestore(String testerId) async {
     try {

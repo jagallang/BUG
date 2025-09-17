@@ -301,6 +301,52 @@ class ProviderAppMissionCard extends StatelessWidget {
               
               SizedBox(height: 16.h),
               
+              // 앱공지가 있으면 표시
+              if (_hasAnnouncement(appData)) ...[
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.amber[50],
+                    border: Border.all(color: Colors.amber[300]!),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.campaign,
+                            color: Colors.amber[700],
+                            size: 16.sp,
+                          ),
+                          SizedBox(width: 6.w),
+                          Text(
+                            '📢 앱 공지사항',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.amber[800],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        _getAnnouncement(appData),
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          color: Colors.amber[800],
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 16.h),
+              ],
+
               Text(
                 '설명',
                 style: TextStyle(
@@ -318,6 +364,69 @@ class ProviderAppMissionCard extends StatelessWidget {
                   height: 1.4,
                 ),
               ),
+
+              // 단가 정보 표시
+              if (_hasPrice(appData)) ...[
+                SizedBox(height: 12.h),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    border: Border.all(color: Colors.green[300]!),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.monetization_on,
+                        color: Colors.green[700],
+                        size: 16.sp,
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '테스팅 보상: ${_getPrice(appData)}P',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green[800],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              // 추가 요구사항 표시
+              if (_hasRequirements(appData)) ...[
+                SizedBox(height: 12.h),
+                Text(
+                  '📋 추가 요구사항',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    border: Border.all(color: Colors.blue[300]!),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Text(
+                    _getRequirements(appData),
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      color: Colors.blue[800],
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
               
               SizedBox(height: 24.h),
               
@@ -392,5 +501,44 @@ class ProviderAppMissionCard extends StatelessWidget {
       default:
         return '알 수 없음';
     }
+  }
+
+  // 앱공지 관련 헬퍼 메서드들
+  bool _hasAnnouncement(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    if (metadata == null) return false;
+    final hasAnnouncement = metadata['hasAnnouncement'] ?? false;
+    final announcement = metadata['announcement'] as String?;
+    return hasAnnouncement && announcement != null && announcement.isNotEmpty;
+  }
+
+  String _getAnnouncement(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    return metadata?['announcement'] ?? '';
+  }
+
+  bool _hasPrice(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    if (metadata == null) return false;
+    final price = metadata['price'];
+    return price != null && price > 0;
+  }
+
+  String _getPrice(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    final price = metadata?['price'] ?? 0;
+    return price.toString();
+  }
+
+  bool _hasRequirements(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    if (metadata == null) return false;
+    final requirements = metadata['requirements'] as String?;
+    return requirements != null && requirements.isNotEmpty;
+  }
+
+  String _getRequirements(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    return metadata?['requirements'] ?? '';
   }
 }

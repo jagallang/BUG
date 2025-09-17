@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
+import 'app_detail_page.dart';
 
 // Provider for managing apps
 final providerAppsProvider = StreamProvider.family<List<ProviderAppModel>, String>((ref, providerId) {
@@ -447,11 +448,18 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                 child: SizedBox(
                   height: 36.h,
                   child: OutlinedButton(
-                    onPressed: () {
-                      // View details
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${app.appName} 상세 정보')),
+                    onPressed: () async {
+                      // Navigate to app detail page
+                      final result = await Navigator.of(context).push<bool>(
+                        MaterialPageRoute(
+                          builder: (context) => AppDetailPage(app: app),
+                        ),
                       );
+
+                      // Refresh the list if changes were made
+                      if (result == true && mounted) {
+                        ref.refresh(providerAppsProvider(widget.providerId));
+                      }
                     },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: AppColors.primary),

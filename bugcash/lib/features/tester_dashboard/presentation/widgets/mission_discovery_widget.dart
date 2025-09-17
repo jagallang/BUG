@@ -6,6 +6,7 @@ import '../providers/tester_dashboard_provider.dart' as provider;
 import '../../../../models/mission_model.dart';
 import '../../../search/presentation/providers/search_provider.dart';
 import 'mission_application_dialog.dart';
+import 'provider_app_mission_card.dart';
 
 class MissionDiscoveryWidget extends ConsumerStatefulWidget {
   final String testerId;
@@ -72,7 +73,27 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
                 : ListView.builder(
                     itemCount: filteredMissions.length,
                     itemBuilder: (context, index) {
-                      return _buildMissionCard(filteredMissions[index]);
+                      final mission = filteredMissions[index];
+                      if (mission.isProviderApp && mission.originalAppData != null) {
+                        // Provider 앱 미션인 경우 ProviderAppMissionCard 사용
+                        return ProviderAppMissionCard(
+                          mission: {
+                            'title': mission.title,
+                            'description': mission.description,
+                            'company': mission.appName,
+                            'reward': mission.rewardPoints,
+                            'currentParticipants': mission.currentParticipants,
+                            'maxParticipants': mission.maxParticipants,
+                            'difficulty': _getDifficultyText(mission.difficulty),
+                            'isProviderApp': true,
+                            'originalAppData': mission.originalAppData,
+                          },
+                          onTap: () => _showApplicationDialog(mission),
+                        );
+                      } else {
+                        // 일반 미션인 경우 기존 미션 카드 사용
+                        return _buildMissionCard(mission);
+                      }
                     },
                   ),
           ),
@@ -808,10 +829,12 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
             currentParticipants: result['currentParticipants'] ?? 0,
             maxParticipants: result['maxParticipants'] ?? 50,
             requiredSkills: List<String>.from(result['requirements'] ?? ['앱 설치 가능', '피드백 작성']),
-            deadline: result['endDate'] != null 
+            deadline: result['endDate'] != null
                 ? (result['endDate'] as Timestamp).toDate()
                 : DateTime.now().add(const Duration(days: 30)),
             status: MissionStatus.active,
+            isProviderApp: true,
+            originalAppData: originalAppData,
           );
         } else {
           // 일반 미션 데이터 변환
@@ -827,10 +850,12 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
             currentParticipants: result['currentParticipants'] ?? 0,
             maxParticipants: result['maxParticipants'] ?? 10,
             requiredSkills: List<String>.from(result['requirements'] ?? result['requiredSkills'] ?? []),
-            deadline: result['endDate'] != null 
+            deadline: result['endDate'] != null
                 ? (result['endDate'] as Timestamp).toDate()
                 : (result['deadline'] != null ? DateTime.parse(result['deadline']) : null),
             status: MissionStatus.active,
+            isProviderApp: false,
+            originalAppData: null,
           );
         }
       }
@@ -850,6 +875,8 @@ class _MissionDiscoveryWidgetState extends ConsumerState<MissionDiscoveryWidget>
         requiredSkills: [],
         deadline: null,
         status: MissionStatus.active,
+        isProviderApp: false,
+        originalAppData: null,
       );
     }).toList();
   }
