@@ -608,6 +608,9 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
         ),
         ElevatedButton(
           onPressed: () async {
+            final navigator = Navigator.of(context);
+            final scaffoldMessenger = ScaffoldMessenger.of(context);
+
             try {
               await _firestore
                   .collection('missionApplications')
@@ -621,23 +624,27 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
                     : '신청이 승인되었습니다. 미션을 시작해주세요!',
               });
 
-              Navigator.of(context).pop();
+              if (mounted) {
+                navigator.pop();
 
-              // 알림 표시
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${application.testerName}님의 신청을 승인했습니다.'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+                // 알림 표시
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text('${application.testerName}님의 신청을 승인했습니다.'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
             } catch (e) {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              if (mounted) {
+                navigator.pop();
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Error: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -677,8 +684,11 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
         ),
         ElevatedButton(
           onPressed: () async {
+            final navigator = Navigator.of(context);
+            final scaffoldMessenger = ScaffoldMessenger.of(context);
+
             if (messageController.text.trim().isEmpty) {
-              ScaffoldMessenger.of(context).showSnackBar(
+              scaffoldMessenger.showSnackBar(
                 const SnackBar(
                   content: Text('거부 이유를 입력해주세요.'),
                   backgroundColor: Colors.red,
@@ -698,23 +708,27 @@ class _MissionApplicationsWidgetState extends State<MissionApplicationsWidget> {
                 'responseMessage': messageController.text,
               });
 
-              Navigator.of(context).pop();
+              if (mounted) {
+                navigator.pop();
 
-              // 알림 표시
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${application.testerName}님의 신청을 거부했습니다.'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+                // 알림 표시
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text('${application.testerName}님의 신청을 거부했습니다.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             } catch (e) {
-              Navigator.of(context).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error: $e'),
-                  backgroundColor: Colors.red,
-                ),
-              );
+              if (mounted) {
+                navigator.pop();
+                scaffoldMessenger.showSnackBar(
+                  SnackBar(
+                    content: Text('Error: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
             }
           },
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),

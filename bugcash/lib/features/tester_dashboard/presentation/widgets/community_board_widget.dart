@@ -628,15 +628,18 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
           ),
           ElevatedButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+
               try {
                 await FirebaseFirestore.instance
                     .collection('community_posts')
                     .doc(post.id)
                     .delete();
-                    
+
                 if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
                     const SnackBar(
                       content: Text('게시글이 삭제되었습니다.'),
                       backgroundColor: Colors.green,
@@ -645,8 +648,8 @@ class _CommunityBoardWidgetState extends ConsumerState<CommunityBoardWidget> {
                 }
               } catch (e) {
                 if (mounted) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  navigator.pop();
+                  scaffoldMessenger.showSnackBar(
                     SnackBar(
                       content: Text('삭제에 실패했습니다: $e'),
                       backgroundColor: Colors.red,

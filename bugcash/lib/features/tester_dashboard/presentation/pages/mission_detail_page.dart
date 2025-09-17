@@ -293,9 +293,11 @@ class _MissionDetailPageState extends State<MissionDetailPage> {
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('스크린샷 촬영 중 오류가 발생했습니다: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('스크린샷 촬영 중 오류가 발생했습니다: $e')),
+        );
+      }
     }
   }
   

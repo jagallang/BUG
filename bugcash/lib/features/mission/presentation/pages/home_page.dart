@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/mission_card.dart';
-import '../../../../core/services/auth_service.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -352,8 +352,8 @@ class ProfileView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authService = ref.watch(authServiceProvider);
-    final currentUser = authService.currentUser;
+    final authState = ref.watch(authProvider);
+    final currentUser = authState.user;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -376,10 +376,10 @@ class ProfileView extends ConsumerWidget {
                       children: [
                         CircleAvatar(
                           radius: 40.r,
-                          backgroundImage: currentUser.photoURL != null
-                              ? NetworkImage(currentUser.photoURL!)
+                          backgroundImage: currentUser.photoUrl != null
+                              ? NetworkImage(currentUser.photoUrl!)
                               : null,
-                          child: currentUser.photoURL == null
+                          child: currentUser.photoUrl == null
                               ? Icon(Icons.person, size: 40.sp)
                               : null,
                         ),
@@ -423,12 +423,12 @@ class ProfileView extends ConsumerWidget {
                     ),
                     child: Column(
                       children: [
-                        _StatItem(
+                        const _StatItem(
                           label: '완료한 미션',
                           value: '0개',
                         ),
                         Divider(height: 32.h),
-                        _StatItem(
+                        const _StatItem(
                           label: '총 적립 포인트',
                           value: '0 P',
                         ),
@@ -437,7 +437,7 @@ class ProfileView extends ConsumerWidget {
                           leading: const Icon(Icons.logout, color: AppColors.error),
                           title: const Text('로그아웃'),
                           onTap: () async {
-                            await authService.signOut();
+                            await ref.read(authProvider.notifier).signOut();
                           },
                         ),
                       ],

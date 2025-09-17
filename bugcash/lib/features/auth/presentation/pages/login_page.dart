@@ -385,9 +385,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           final firestoreService = FirestoreService();
                           await firestoreService.clearAllData();
 
-                          if (mounted) {
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.showSnackBar(
+                          if (mounted && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                 content: Text('✅ 모든 더미 데이터가 삭제되었습니다.'),
                                 backgroundColor: Colors.green,
@@ -395,9 +394,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             );
                           }
                         } catch (e) {
-                          if (mounted) {
-                            final messenger = ScaffoldMessenger.of(context);
-                            messenger.showSnackBar(
+                          if (mounted && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('❌ 삭제 실패: ${e.toString()}'),
                                 backgroundColor: Colors.red,
