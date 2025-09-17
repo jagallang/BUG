@@ -135,25 +135,47 @@ class ProviderAppMissionCard extends StatelessWidget {
               SizedBox(height: 12.h),
               
               // Mission info
-              Row(
+              Column(
                 children: [
-                  _buildInfoChip(
-                    icon: Icons.monetization_on,
-                    label: '${mission['reward'] ?? 0}원',
-                    color: Colors.green,
+                  Row(
+                    children: [
+                      _buildInfoChip(
+                        icon: Icons.monetization_on,
+                        label: isProviderApp && originalAppData != null
+                            ? '${_getPrice(originalAppData)}P'
+                            : '${mission['reward'] ?? 0}원',
+                        color: Colors.green,
+                      ),
+                      SizedBox(width: 8.w),
+                      _buildInfoChip(
+                        icon: Icons.people,
+                        label: isProviderApp && originalAppData != null
+                            ? '${mission['currentParticipants'] ?? 0}/${_getParticipantCount(originalAppData)}'
+                            : '${mission['currentParticipants'] ?? 0}/${mission['maxParticipants'] ?? 0}',
+                        color: Colors.blue,
+                      ),
+                      SizedBox(width: 8.w),
+                      _buildInfoChip(
+                        icon: Icons.schedule,
+                        label: isProviderApp && originalAppData != null
+                            ? '${_getTestPeriod(originalAppData)}일'
+                            : mission['difficulty'] ?? 'medium',
+                        color: Colors.orange,
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 8.w),
-                  _buildInfoChip(
-                    icon: Icons.people,
-                    label: '${mission['currentParticipants'] ?? 0}/${mission['maxParticipants'] ?? 0}',
-                    color: Colors.blue,
-                  ),
-                  SizedBox(width: 8.w),
-                  _buildInfoChip(
-                    icon: Icons.schedule,
-                    label: mission['difficulty'] ?? 'medium',
-                    color: Colors.orange,
-                  ),
+                  if (isProviderApp && originalAppData != null) ...[
+                    SizedBox(height: 8.h),
+                    Row(
+                      children: [
+                        _buildInfoChip(
+                          icon: Icons.access_time,
+                          label: '${_getTestTime(originalAppData)}분/일',
+                          color: Colors.purple,
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
               
@@ -295,7 +317,11 @@ class ProviderAppMissionCard extends StatelessWidget {
               SizedBox(height: 8.h),
               _buildDetailRow('설치 방식', _getInstallTypeText(appData['installType'])),
               SizedBox(height: 8.h),
-              _buildDetailRow('참여 테스터', '${appData['activeTesters'] ?? 0}/${appData['totalTesters'] ?? 0}'),
+              _buildDetailRow('참여 테스터', '${appData['activeTesters'] ?? 0}/${_getParticipantCount(appData)}'),
+              SizedBox(height: 8.h),
+              _buildDetailRow('테스트 기간', '${_getTestPeriod(appData)}일'),
+              SizedBox(height: 8.h),
+              _buildDetailRow('일일 테스트 시간', '${_getTestTime(appData)}분'),
               SizedBox(height: 8.h),
               _buildDetailRow('진행률', '${(appData['progressPercentage'] ?? 0).toInt()}%'),
               
@@ -540,5 +566,21 @@ class ProviderAppMissionCard extends StatelessWidget {
   String _getRequirements(Map<String, dynamic> appData) {
     final metadata = appData['metadata'] as Map<String, dynamic>?;
     return metadata?['requirements'] ?? '';
+  }
+
+  // 새로 추가된 테스트 설정 관련 헬퍼 메서드들
+  int _getParticipantCount(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    return metadata?['participantCount'] ?? 1;
+  }
+
+  int _getTestPeriod(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    return metadata?['testPeriod'] ?? 14;
+  }
+
+  int _getTestTime(Map<String, dynamic> appData) {
+    final metadata = appData['metadata'] as Map<String, dynamic>?;
+    return metadata?['testTime'] ?? 30;
   }
 }

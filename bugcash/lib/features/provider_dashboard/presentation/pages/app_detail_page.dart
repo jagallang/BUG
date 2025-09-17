@@ -24,6 +24,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   late TextEditingController _announcementController;
   late TextEditingController _priceController;
   late TextEditingController _requirementsController;
+  late TextEditingController _participantCountController;
+  late TextEditingController _testPeriodController;
+  late TextEditingController _testTimeController;
 
   late String _selectedCategory;
   bool _hasAnnouncement = false;
@@ -63,6 +66,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _announcementController = TextEditingController(text: metadata['announcement'] ?? '');
     _priceController = TextEditingController(text: (metadata['price'] ?? 0).toString());
     _requirementsController = TextEditingController(text: metadata['requirements'] ?? '');
+    _participantCountController = TextEditingController(text: (metadata['participantCount'] ?? 1).toString());
+    _testPeriodController = TextEditingController(text: (metadata['testPeriod'] ?? 14).toString());
+    _testTimeController = TextEditingController(text: (metadata['testTime'] ?? 30).toString());
   }
 
   @override
@@ -73,13 +79,19 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _announcementController.dispose();
     _priceController.dispose();
     _requirementsController.dispose();
+    _participantCountController.dispose();
+    _testPeriodController.dispose();
+    _testTimeController.dispose();
     super.dispose();
   }
 
   Future<void> _saveChanges() async {
     if (_appNameController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
-        _priceController.text.isEmpty) {
+        _priceController.text.isEmpty ||
+        _participantCountController.text.isEmpty ||
+        _testPeriodController.text.isEmpty ||
+        _testTimeController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('필수 필드를 모두 입력해주세요')),
       );
@@ -97,6 +109,24 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         throw Exception('올바른 가격을 입력해주세요');
       }
 
+      // 참여자 수 검증
+      final participantCount = int.tryParse(_participantCountController.text);
+      if (participantCount == null || participantCount < 1) {
+        throw Exception('참여자 수는 1명 이상이어야 합니다');
+      }
+
+      // 테스트 기간 검증
+      final testPeriod = int.tryParse(_testPeriodController.text);
+      if (testPeriod == null || testPeriod < 1) {
+        throw Exception('테스트 기간은 1일 이상이어야 합니다');
+      }
+
+      // 테스트 시간 검증
+      final testTime = int.tryParse(_testTimeController.text);
+      if (testTime == null || testTime < 1) {
+        throw Exception('테스트 시간은 1분 이상이어야 합니다');
+      }
+
       final updatedData = {
         'appName': _appNameController.text,
         'appUrl': _appUrlController.text,
@@ -109,6 +139,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           'announcement': _hasAnnouncement ? _announcementController.text : '',
           'price': price,
           'requirements': _requirementsController.text,
+          'participantCount': participantCount,
+          'testPeriod': testPeriod,
+          'testTime': testTime,
           'isActive': _isActive,
         },
       };
@@ -181,6 +214,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   _buildAnnouncementSection(),
                   SizedBox(height: 24.h),
                   _buildPricingSection(),
+                  SizedBox(height: 24.h),
+                  _buildTestConfigSection(),
                   SizedBox(height: 24.h),
                   _buildRequirementsSection(),
                   SizedBox(height: 32.h),
@@ -423,6 +458,107 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 prefixIcon: const Icon(Icons.monetization_on),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTestConfigSection() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '⚙️ 테스트 설정',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.indigo[900],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '테스트 참여자 수, 기간, 시간을 설정하세요',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _participantCountController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '참여자 수 *',
+                      hintText: '예: 5',
+                      suffix: Text(
+                        '명',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.indigo[700],
+                        ),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      prefixIcon: const Icon(Icons.people),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: TextField(
+                    controller: _testPeriodController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '테스트 기간 *',
+                      hintText: '예: 14',
+                      suffix: Text(
+                        '일',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.indigo[700],
+                        ),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      prefixIcon: const Icon(Icons.calendar_today),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: _testTimeController,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: '일일 테스트 시간 *',
+                hintText: '예: 30',
+                suffix: Text(
+                  '분',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.indigo[700],
+                  ),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                prefixIcon: const Icon(Icons.access_time),
               ),
             ),
           ],
