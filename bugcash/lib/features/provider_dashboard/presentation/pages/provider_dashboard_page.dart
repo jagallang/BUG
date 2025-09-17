@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../providers/provider_dashboard_provider.dart';
-import '../../domain/models/provider_model.dart';
-import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/auth_service.dart';
 import 'app_management_page.dart' hide ProviderAppModel;
@@ -11,9 +9,7 @@ import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart'
 import '../../../chat/presentation/pages/chat_list_page.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../widgets/tester_management_tab.dart';
 import '../widgets/payment_management_tab.dart';
-import '../widgets/test_session_application_tab.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -46,10 +42,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       case 1:
         return _buildAppsTab();
       case 2:
-        return _buildTesterManagementTab();
-      case 3:
-        return _buildTestSessionTab();
-      case 4:
         return _buildPaymentTab();
       default:
         return _buildDashboardTab();
@@ -124,14 +116,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.apps),
             label: '앱 관리',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people),
-            label: '테스터 관리',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_turned_in),
-            label: '테스트 세션',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.payment),
@@ -223,13 +207,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     return AppManagementPage(providerId: widget.providerId);
   }
 
-  Widget _buildTesterManagementTab() {
-    return TesterManagementTab(providerId: widget.providerId);
-  }
-
-  Widget _buildTestSessionTab() {
-    return TestSessionApplicationTab(providerId: widget.providerId);
-  }
 
 
   Widget _buildPaymentTab() {
@@ -501,329 +478,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     }
   }
 
-  // App Card Widget
-  Widget _buildAppCard(AppModel app) {
-    final statusColor = _getAppStatusColor(app.status);
-    final statusText = _getAppStatusText(app.status);
-    
-    return Card(
-      margin: EdgeInsets.only(bottom: 12.h),
-      child: ListTile(
-        leading: Container(
-          width: 48.w,
-          height: 48.w,
-          decoration: BoxDecoration(
-            color: Colors.blue.shade50,
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: Icon(
-            Icons.phone_android,
-            color: Colors.blue,
-            size: 24.sp,
-          ),
-        ),
-        title: Text(
-          app.appName,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16.sp,
-          ),
-        ),
-        subtitle: Text('버전 ${app.version ?? '1.0.0'} • 미션 ${app.totalMissions}개'),
-        trailing: Container(
-          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-          decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12.r),
-          ),
-          child: Text(
-            statusText,
-            style: TextStyle(
-              color: statusColor,
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        onTap: () {
-          debugPrint('앱 카드 클릭됨: ${app.appName}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${app.appName} 상세 정보 (개발 중)')),
-          );
-        },
-      ),
-    );
-  }
 
-  Color _getAppStatusColor(AppStatus status) {
-    switch (status) {
-      case AppStatus.active:
-        return Colors.green;
-      case AppStatus.review:
-        return Colors.orange;
-      case AppStatus.paused:
-        return Colors.grey;
-      case AppStatus.draft:
-        return Colors.blue;
-      case AppStatus.completed:
-        return Colors.blue;
-      case AppStatus.cancelled:
-        return Colors.red;
-    }
-  }
-
-  String _getAppStatusText(AppStatus status) {
-    switch (status) {
-      case AppStatus.active:
-        return '활성';
-      case AppStatus.review:
-        return '검토중';
-      case AppStatus.paused:
-        return '일시정지';
-      case AppStatus.draft:
-        return '초안';
-      case AppStatus.completed:
-        return '완료';
-      case AppStatus.cancelled:
-        return '취소됨';
-    }
-  }
-
-  Widget _buildMissionCard(MissionModel mission) {
-    final statusColor = _getMissionStatusColor(mission.status);
-    final statusText = _getMissionStatusText(mission.status);
-    
-    return Card(
-      margin: EdgeInsets.only(bottom: 16.h),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    mission.title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Text(
-                    statusText,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              mission.description,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14.sp,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            SizedBox(height: 12.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '참여자: ${mission.testers}/${mission.maxTesters}',
-                  style: TextStyle(fontSize: 12.sp),
-                ),
-                Text(
-                  '보상: ${mission.reward}P',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.green,
-                  ),
-                ),
-                Text(
-                  mission.createdAt != null 
-                      ? _formatReportTime(mission.createdAt!)
-                      : '날짜 없음',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getMissionStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return Colors.green;
-      case 'draft':
-        return Colors.orange;
-      case 'completed':
-        return Colors.blue;
-      case 'cancelled':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _getMissionStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'active':
-        return '활성';
-      case 'draft':
-        return '초안';
-      case 'completed':
-        return '완료';
-      case 'cancelled':
-        return '취소됨';
-      default:
-        return '알 수 없음';
-    }
-  }
-
-  Widget _buildReportCard(Map<String, dynamic> report) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 16.h),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    report['title'] as String,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16.sp,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: _getSeverityColor(report['severity'] as String).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Text(
-                    report['severity'] as String,
-                    style: TextStyle(
-                      color: _getSeverityColor(report['severity'] as String),
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '${report['appName'] ?? 'Unknown App'} • ${report['testerName'] ?? 'Unknown Tester'}님',
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 14.sp,
-              ),
-            ),
-            SizedBox(height: 12.h),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Text(
-                    report['status'] as String? ?? '확인중',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                Text(
-                  _formatReportTime(report['createdAt']),
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getSeverityColor(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return Colors.red;
-      case 'medium':
-        return Colors.orange;
-      case 'low':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  String _formatReportTime(dynamic createdAt) {
-    if (createdAt is DateTime) {
-      final now = DateTime.now();
-      final difference = now.difference(createdAt);
-      
-      if (difference.inDays > 0) {
-        return '${difference.inDays}일 전';
-      } else if (difference.inHours > 0) {
-        return '${difference.inHours}시간 전';
-      } else if (difference.inMinutes > 0) {
-        return '${difference.inMinutes}분 전';
-      } else {
-        return '방금 전';
-      }
-    }
-    return createdAt?.toString() ?? '알 수 없음';
-  }
-
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = date.difference(now);
-    
-    if (difference.inDays > 0) {
-      return '${difference.inDays}일 남음';
-    } else if (difference.inDays == 0) {
-      return '오늘 마감';
-    } else {
-      return '${(-difference.inDays)}일 지남';
-    }
-  }
 
   Widget _buildChatFAB() {
     final currentUser = ref.watch(currentUserProvider);

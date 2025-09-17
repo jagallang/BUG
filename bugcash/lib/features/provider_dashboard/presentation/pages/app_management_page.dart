@@ -129,6 +129,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void dispose() {
     _appNameController.dispose();
     _appUrlController.dispose();
@@ -178,15 +183,19 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           _selectedCategory = 'Productivity';
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('앱이 성공적으로 등록되었습니다')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('앱이 성공적으로 등록되었습니다')),
+          );
+        }
       }
     } catch (e) {
       AppLogger.error('Failed to upload app', e.toString());
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('앱 등록 실패: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('앱 등록 실패: ${e.toString()}')),
+        );
+      }
     }
   }
 
@@ -204,70 +213,91 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   }
 
   Widget _buildContent(List<ProviderAppModel> apps) {
-
     return Scaffold(
-      body: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with Add button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '내 앱 관리',
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(
-                  width: 120.w, // Fixed width
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        _showUploadDialog = true;
-                      });
-                    },
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('앱 등록'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
+      body: Column(
+        children: [
+          // Header with tabs
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
               ],
             ),
-            SizedBox(height: 16.h),
-
-            // Apps List
-            Expanded(
-              child: apps.isEmpty
-                  ? _buildEmptyState()
-                  : ListView.builder(
-                      itemCount: apps.length,
-                      itemBuilder: (context, index) {
-                        final app = apps[index];
-                        return _buildAppCard(app);
-                      },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Title and Add button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '앱 관리',
+                      style: TextStyle(
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
                     ),
+                    SizedBox(
+                        width: 120.w,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _showUploadDialog = true;
+                            });
+                          },
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('앱 등록'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                SizedBox(height: 16.h),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
 
+          // App content
+          Expanded(
+            child: _buildAppsTab(apps),
+          ),
+        ],
+      ),
       // Upload Dialog
       floatingActionButton: _showUploadDialog ? null : null,
       bottomSheet: _showUploadDialog ? _buildUploadDialog() : null,
     );
   }
+
+  Widget _buildAppsTab(List<ProviderAppModel> apps) {
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: apps.isEmpty
+          ? _buildEmptyState()
+          : ListView.builder(
+              itemCount: apps.length,
+              itemBuilder: (context, index) {
+                final app = apps[index];
+                return _buildAppCard(app);
+              },
+            ),
+    );
+  }
+
 
   Widget _buildEmptyState() {
     return Center(
@@ -739,20 +769,29 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
   Widget _buildErrorContent(Object error) {
     return Scaffold(
-      body: Stack(
+      body: Column(
         children: [
-          // Main error content
-          Padding(
+          // Header with tabs (same as success state)
+          Container(
             padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header with Add button (same as success state)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '내 앱 관리',
+                      '앱 관리',
                       style: TextStyle(
                         fontSize: 24.sp,
                         fontWeight: FontWeight.bold,
@@ -760,95 +799,87 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                       ),
                     ),
                     SizedBox(
-                      width: 120.w,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          setState(() {
-                            _showUploadDialog = true;
-                          });
-                        },
-                        icon: const Icon(Icons.add, size: 18),
-                        label: const Text('앱 등록'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 24.h),
-                
-                // Error state content
-                Expanded(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          size: 64.w,
-                          color: Colors.red[300],
-                        ),
-                        SizedBox(height: 16.h),
-                        Text(
-                          '앱 목록을 불러올 수 없습니다',
-                          style: TextStyle(
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                        SizedBox(height: 8.h),
-                        Text(
-                          error.toString(),
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.grey[500],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 24.h),
-                        ElevatedButton.icon(
+                        width: 120.w,
+                        child: ElevatedButton.icon(
                           onPressed: () {
-                            // Refresh the provider
-                            ref.refresh(providerAppsProvider(widget.providerId));
+                            setState(() {
+                              _showUploadDialog = true;
+                            });
                           },
-                          icon: const Icon(Icons.refresh),
-                          label: const Text('다시 시도'),
+                          icon: const Icon(Icons.add, size: 18),
+                          label: const Text('앱 등록'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                  ],
                 ),
+                SizedBox(height: 16.h),
               ],
             ),
           ),
-          
-          // Upload dialog overlay
-          if (_showUploadDialog)
-            Container(
-              color: Colors.black54,
-              child: Center(
-                child: Container(
-                  margin: EdgeInsets.all(20.w),
-                  padding: EdgeInsets.all(24.w),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: _buildUploadDialog(),
-                ),
-              ),
+
+          // Error content
+          Expanded(
+            child: _buildAppsErrorTab(error),
+          ),
+        ],
+      ),
+      // Upload dialog overlay
+      floatingActionButton: _showUploadDialog ? null : null,
+      bottomSheet: _showUploadDialog ? _buildUploadDialog() : null,
+    );
+  }
+
+  Widget _buildAppsErrorTab(Object error) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.error_outline,
+            size: 64.w,
+            color: Colors.red[300],
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            '앱 목록을 불러올 수 없습니다',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[600],
             ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            error.toString(),
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: Colors.grey[500],
+            ),
+            textAlign: TextAlign.center,
+          ),
+          SizedBox(height: 24.h),
+          ElevatedButton.icon(
+            onPressed: () {
+              ref.refresh(providerAppsProvider(widget.providerId));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('새로고침 중...')),
+              );
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('다시 시도'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+            ),
+          ),
         ],
       ),
     );
