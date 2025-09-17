@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.19-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.20-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,25 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.19)
+## ✨ 주요 기능 (v1.4.20)
+
+### ⚙️ 앱 상세 관리 테스트 설정 필드 복원 (v1.4.20)
+- **📝 테스트 설정 입력 복원**: 이전에 삭제된 핵심 기능 완전 복원
+  - **👥 참여자 수 설정**: 테스트에 참여할 사용자 수 지정 (최소 1명)
+  - **📅 테스트 기간 설정**: 전체 테스트 진행 기간 설정 (최소 1일)
+  - **⏰ 일일 테스트 시간**: 하루당 필요한 테스트 시간 설정 (최소 1분)
+- **🎨 직관적인 UI 디자인**:
+  - **🗂️ 카드형 테스트 설정 섹션**: 명확한 구분과 가독성 향상
+  - **🎯 아이콘 및 단위 표시**: 각 입력 필드에 적절한 아이콘과 단위 표시
+  - **✅ 실시간 유효성 검증**: 잘못된 값 입력 시 즉시 피드백 제공
+- **🔗 완벽한 데이터 연동**:
+  - **💾 Firestore 메타데이터 저장**: 모든 테스트 설정이 안전하게 저장
+  - **📱 테스터 미션 카드 표시**: 설정된 정보가 실시간으로 테스터에게 표시
+  - **📊 상세 정보 다이얼로그**: 테스터가 전체 테스트 조건을 상세히 확인 가능
+- **⚡ 성능 최적화**:
+  - **🔧 TextEditingController 관리**: 메모리 누수 방지를 위한 적절한 생명주기 관리
+  - **🎯 헬퍼 메서드 구현**: 데이터 조회 최적화 및 코드 재사용성 향상
+  - **🛡️ 기존 기능 호환성**: 모든 기존 기능과 완벽한 호환성 보장
 
 ### 🛠️ 코드 품질 대폭 개선 & 아키텍처 안정화 (v1.4.19)
 - **🔧 의존성 관리 개선**: dartz ^0.10.1 (함수형 프로그래밍), flutter_bloc ^8.1.3 (상태 관리) 추가
