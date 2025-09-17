@@ -27,35 +27,4 @@ abstract class AppModule {
   GoogleSignIn get googleSignIn => GoogleSignIn();
 }
 
-// Repository module for dependency injection
-@module
-abstract class RepositoryModule {
-  // Payment Repository
-  // @LazySingleton(as: PaymentRepository)
-  // PaymentRepositoryImpl get paymentRepository => PaymentRepositoryImpl(
-  //   firestore: getIt<FirebaseFirestore>(),
-  // );
-  
-  // Chat Repository  
-  // @LazySingleton(as: ChatRepository)
-  // ChatRepositoryImpl get chatRepository => ChatRepositoryImpl(
-  //   firestore: getIt<FirebaseFirestore>(),
-  //   storage: getIt<FirebaseStorage>(),
-  // );
-}
-
-// Use cases module
-@module
-abstract class UseCaseModule {
-  // Payment Use Cases
-  // @injectable
-  // ProcessPayment get processPayment => ProcessPayment(
-  //   repository: getIt<PaymentRepository>(),
-  // );
-  
-  // Chat Use Cases
-  // @injectable
-  // SendMessage get sendMessage => SendMessage(
-  //   repository: getIt<ChatRepository>(),
-  // );
-}
+// 미사용 모듈들 제거됨 - 필요시 추가

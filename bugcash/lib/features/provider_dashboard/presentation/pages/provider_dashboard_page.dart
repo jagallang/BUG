@@ -6,8 +6,7 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/services/auth_service.dart';
 import 'app_management_page.dart' hide ProviderAppModel;
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
-import '../../../chat/presentation/pages/chat_list_page.dart';
-import '../../../chat/presentation/providers/chat_providers.dart';
+// 채팅 기능 제거됨
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/payment_management_tab.dart';
 
@@ -483,7 +482,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   Widget _buildChatFAB() {
     final currentUser = ref.watch(currentUserProvider);
     final unreadCount = currentUser != null 
-        ? ref.watch(unreadMessagesCountProvider(currentUser.uid))
+        ? 0 // 채팅 기능 제거됨
         : 0;
         
     return Stack(
@@ -494,7 +493,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const ChatListPage(),
+                // 채팅 기능 제거됨
+                builder: (context) => Container(),
               ),
             );
           },

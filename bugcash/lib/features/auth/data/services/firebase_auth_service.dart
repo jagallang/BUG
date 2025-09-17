@@ -3,12 +3,32 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/utils/type_converter.dart';
 import '../../domain/entities/user_entity.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+
+  /// UserEntity 생성을 위한 팩토리 메소드
+  UserEntity _createUserEntityFromData(String uid, Map<String, dynamic> data) {
+    return UserEntity(
+      uid: uid,
+      email: data['email'] ?? '',
+      displayName: data['displayName'] ?? '',
+      photoUrl: data['photoUrl'] as String?,
+      userType: data['userType'] == 'provider'
+          ? UserType.provider
+          : UserType.tester,
+      country: data['country'] ?? '',
+      timezone: data['timezone'] ?? 'UTC',
+      phoneNumber: TypeConverter.safeStringConversion(data['phoneNumber']),
+      createdAt: TypeConverter.safeDateTimeConversion(data['createdAt']) ?? DateTime.now(),
+      updatedAt: TypeConverter.safeDateTimeConversion(data['updatedAt']) ?? DateTime.now(),
+      lastLoginAt: TypeConverter.safeDateTimeConversion(data['lastLoginAt']) ?? DateTime.now(),
+    );
+  }
 
   User? get currentUser => _auth.currentUser;
 
@@ -20,35 +40,7 @@ class FirebaseAuthService {
       if (!doc.exists) return null;
 
       final data = doc.data()!;
-
-      // Safe type conversion for phoneNumber
-      String? phoneNumber;
-      final phoneData = data['phoneNumber'];
-      if (phoneData != null) {
-        if (phoneData is String) {
-          phoneNumber = phoneData;
-        } else if (phoneData is int) {
-          phoneNumber = phoneData.toString();
-        } else {
-          phoneNumber = phoneData.toString();
-        }
-      }
-
-      return UserEntity(
-        uid: uid,
-        email: data['email'] ?? '',
-        displayName: data['displayName'] ?? '',
-        photoUrl: data['photoUrl'] as String?,
-        userType: data['userType'] == 'provider'
-            ? UserType.provider
-            : UserType.tester,
-        country: data['country'] ?? '',
-        timezone: data['timezone'] ?? 'UTC',
-        phoneNumber: phoneNumber,
-        createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      );
+      return _createUserEntityFromData(uid, data);
     } catch (e) {
       AppLogger.error('Error getting user data', 'FirebaseAuthService', e);
       return null;
@@ -64,35 +56,7 @@ class FirebaseAuthService {
       if (!snapshot.exists) return null;
 
       final data = snapshot.data()!;
-
-      // Safe type conversion for phoneNumber
-      String? phoneNumber;
-      final phoneData = data['phoneNumber'];
-      if (phoneData != null) {
-        if (phoneData is String) {
-          phoneNumber = phoneData;
-        } else if (phoneData is int) {
-          phoneNumber = phoneData.toString();
-        } else {
-          phoneNumber = phoneData.toString();
-        }
-      }
-
-      return UserEntity(
-        uid: uid,
-        email: data['email'] ?? '',
-        displayName: data['displayName'] ?? '',
-        photoUrl: data['photoUrl'] as String?,
-        userType: data['userType'] == 'provider'
-            ? UserType.provider
-            : UserType.tester,
-        country: data['country'] ?? '',
-        timezone: data['timezone'] ?? 'UTC',
-        phoneNumber: phoneNumber,
-        createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-        lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      );
+      return _createUserEntityFromData(uid, data);
     });
   }
 
@@ -306,35 +270,7 @@ class FirebaseAuthService {
       for (final doc in [...nameQuery.docs, ...emailQuery.docs]) {
         if (!users.containsKey(doc.id)) {
           final data = doc.data();
-
-          // Safe type conversion for phoneNumber
-          String? phoneNumber;
-          final phoneData = data['phoneNumber'];
-          if (phoneData != null) {
-            if (phoneData is String) {
-              phoneNumber = phoneData;
-            } else if (phoneData is int) {
-              phoneNumber = phoneData.toString();
-            } else {
-              phoneNumber = phoneData.toString();
-            }
-          }
-
-          users[doc.id] = UserEntity(
-            uid: doc.id,
-            email: data['email'] ?? '',
-            displayName: data['displayName'] ?? '',
-            photoUrl: data['photoUrl'] as String?,
-            userType: data['userType'] == 'provider'
-                ? UserType.provider
-                : UserType.tester,
-            country: data['country'] ?? '',
-            timezone: data['timezone'] ?? 'UTC',
-            phoneNumber: phoneNumber,
-            createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-            updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-            lastLoginAt: (data['lastLoginAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          );
+          users[doc.id] = _createUserEntityFromData(doc.id, data);
         }
       }
 

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/services/realtime_mission_service.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/providers/auth_provider.dart';
 
 // Realtime Mission Service Provider
 final realtimeMissionServiceProvider = Provider<RealtimeMissionService>((ref) {
@@ -63,10 +64,9 @@ final missionStatsStreamProvider = StreamProvider<Map<String, int>>((ref) {
 // Realtime Mission Notifier for managing mission state
 class RealtimeMissionNotifier extends StateNotifier<AsyncValue<List<MissionModel>>> {
   final RealtimeMissionService _service;
-  
-  static const String _currentUserId = 'demo_user'; // TODO: Get actual user ID
+  final Ref _ref;
 
-  RealtimeMissionNotifier(this._service) : super(const AsyncValue.loading()) {
+  RealtimeMissionNotifier(this._service, this._ref) : super(const AsyncValue.loading()) {
     _initializeListeners();
   }
 
@@ -117,7 +117,11 @@ class RealtimeMissionNotifier extends StateNotifier<AsyncValue<List<MissionModel
   // Update user mission progress
   Future<void> updateProgress(String missionId, Map<String, dynamic> progressData) async {
     try {
-      await _service.updateUserMissionProgress(_currentUserId, missionId, progressData);
+      final currentUserId = _ref.read(currentUserIdProvider);
+      if (currentUserId == null) {
+        throw Exception('User not authenticated');
+      }
+      await _service.updateUserMissionProgress(currentUserId, missionId, progressData);
       AppLogger.info('Mission progress updated: $missionId', 'RealtimeMissionNotifier');
     } catch (e) {
       AppLogger.error('Failed to update mission progress', 'RealtimeMissionNotifier', e);
@@ -141,7 +145,7 @@ class RealtimeMissionNotifier extends StateNotifier<AsyncValue<List<MissionModel
 // Realtime Mission Provider
 final realtimeMissionProvider = StateNotifierProvider<RealtimeMissionNotifier, AsyncValue<List<MissionModel>>>((ref) {
   final service = ref.watch(realtimeMissionServiceProvider);
-  return RealtimeMissionNotifier(service);
+  return RealtimeMissionNotifier(service, ref);
 });
 
 // Connection Status Notifier
@@ -318,5 +322,9 @@ final completedMissionsProvider = Provider<AsyncValue<List<MissionModel>>>((ref)
 });
 
 final currentUserMissionsProvider = Provider<AsyncValue<List<MissionModel>>>((ref) {
-  return ref.watch(userMissionsStreamProvider('demo_user')); // TODO: Get actual user ID
+  final currentUserId = ref.watch(currentUserIdProvider);
+  if (currentUserId == null) {
+    return const AsyncValue.data([]);
+  }
+  return ref.watch(userMissionsStreamProvider(currentUserId));
 });

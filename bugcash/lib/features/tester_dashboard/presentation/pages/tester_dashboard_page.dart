@@ -10,7 +10,7 @@ import '../providers/tester_dashboard_provider.dart';
 import '../../../../models/test_session_model.dart';
 import '../../../../services/test_session_service.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
-import '../../../chat/presentation/pages/chat_list_page.dart';
+// 채팅 기능 제거됨
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/auth_wrapper.dart';
 import 'mission_detail_page.dart';
@@ -809,7 +809,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const ChatListPage()),
+              // 채팅 기능 제거됨
+              MaterialPageRoute(builder: (context) => Container()),
             );
           },
           backgroundColor: Theme.of(context).colorScheme.primary,

@@ -12,9 +12,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   
-  # State Management (Unified with Riverpod)
+  # Core
   equatable: ^2.0.5
-  dartz: ^0.10.1
   
   # UI
   flutter_screenutil: ^5.9.0

@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.15-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.16-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,20 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.15)
+## ✨ 주요 기능 (v1.4.16)
+
+### 🏢 공급자 앱 상세 관리 시스템 & 하드코딩 데이터 완전 제거 (v1.4.16)
+- **📱 완전한 앱 상세 관리 페이지**: 앱 관리 탭의 "상세보기" 버튼 클릭 시 종합적인 앱 관리 인터페이스 제공
+- **🔧 4가지 핵심 관리 기능**:
+  - **📝 앱 정보 수정**: 이름, URL, 설명, 카테고리 실시간 수정
+  - **📢 앱 공지사항 관리**: 체크박스 토글로 공지 활성화 및 내용 작성/수정
+  - **💰 테스터 단가 설정**: 포인트 기반 테스팅 보상 금액 설정
+  - **📋 추가 요구사항**: 테스터에게 전달할 특별 지시사항 입력
+- **🎯 앱 게시 상태 관리**: "활성/비활성" 토글로 테스터에게 노출 여부 제어
+- **🔗 실시간 공급자-테스터 연동**: 공급자가 설정한 모든 정보가 테스터 미션 탭에 즉시 반영
+- **🚀 하드코딩 데이터 완전 제거**: 모든 가짜 미션 생성 메서드 삭제로 실제 Firestore 데이터만 사용
+- **💾 Firebase 메타데이터 활용**: provider_apps 컬렉션의 metadata 필드에 모든 추가 정보 저장
+- **📱 향상된 테스터 경험**: 앱 공지사항, 테스팅 보상, 요구사항이 미션 카드에 명확히 표시
 
 ### 🎨 공급자 대시보드 UI 단순화 & 테스터관리/테스트세션 기능 제거 (v1.4.15)
 - **🗑️ 불필요한 기능 완전 제거**: 공급자 대시보드에서 "테스터관리" 및 "테스트세션" 탭 완전 삭제
@@ -399,6 +412,34 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 - **1:1 채팅 시작**: 검색 결과에서 채팅 버튼 클릭하여 즉시 채팅 시작
 
 ## 🔧 주요 버전 정보
+
+### 🏢 v1.4.16 (2025-09-17) - 공급자 앱 상세 관리 시스템 & 하드코딩 데이터 완전 제거
+
+#### ✨ 핵심 신규 기능
+- **📱 새로운 앱 상세 관리 페이지**: `app_detail_page.dart` 생성으로 공급자의 종합적인 앱 관리 인터페이스 제공
+- **🔧 4개 섹션 완전 관리 시스템**:
+  - **📝 앱 기본 정보 관리**: 이름, URL, 설명, 카테고리 실시간 수정
+  - **🎯 앱 게시 상태 토글**: "활성/비활성" 스위치로 테스터 노출 여부 제어
+  - **📢 앱 공지사항 시스템**: 체크박스 토글 + 공지 내용 작성으로 테스터 알림 관리
+  - **💰 단가 설정 + 요구사항**: 포인트 기반 보상 설정 및 특별 지시사항 입력
+- **🔗 실시간 공급자-테스터 연동**: 모든 설정이 즉시 테스터 미션 탭에 반영되는 완전한 워크플로우
+- **🚀 하드코딩 데이터 완전 제거**: `_generateAvailableMissions`, `_generateActiveMissions`, `_generateCompletedMissions` 등 모든 가짜 데이터 생성 메서드 삭제
+- **💾 Firebase 메타데이터 확장**: `metadata` 필드에 `hasAnnouncement`, `announcement`, `price`, `requirements`, `isActive` 저장
+
+#### 🛠️ 기술적 구현 세부사항
+- **새로운 파일**: `app_detail_page.dart` (477줄) - 완전한 앱 관리 인터페이스
+- **네비게이션 개선**: `app_management_page.dart`의 "상세보기" 버튼에 `Navigator.push` 및 결과 처리 로직
+- **데이터 모델 확장**: `MissionCard` 클래스에 `isProviderApp`, `originalAppData` 필드 추가
+- **UI 컴포넌트 분화**: `ProviderAppMissionCard` 사용으로 일반 미션과 공급자 앱 구분 표시
+- **헬퍼 메서드 추가**: `_hasAnnouncement`, `_getAnnouncement`, `_hasPrice`, `_getPrice`, `_hasRequirements`, `_getRequirements`
+- **상태 관리**: Riverpod `ref.refresh()` 활용으로 앱 목록 실시간 업데이트
+- **Firebase 쿼리 최적화**: `isActive` 필드 기반 활성 앱만 테스터에게 노출
+
+#### 🔍 해결된 주요 문제
+- **하드코딩 의존성**: 테스터 미션 탭의 모든 가짜 데이터를 실제 공급자 데이터로 교체
+- **공급자-테스터 단절**: 공급자 설정이 테스터에게 반영되지 않던 문제 완전 해결
+- **앱 관리 한계**: 기본적인 앱 정보만 수정 가능했던 것을 포괄적 관리 시스템으로 확장
+- **사용자 경험**: 테스터가 공급자의 공지사항, 보상, 요구사항을 명확히 확인 가능
 
 ### 🎨 v1.4.15 (2025-09-17) - 공급자 대시보드 UI 단순화 및 Firestore 인덱스 최적화
 
