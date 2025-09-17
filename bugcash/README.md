@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.14-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.15-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,16 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.14)
+## ✨ 주요 기능 (v1.4.15)
+
+### 🎨 공급자 대시보드 UI 단순화 & 테스터관리/테스트세션 기능 제거 (v1.4.15)
+- **🗑️ 불필요한 기능 완전 제거**: 공급자 대시보드에서 "테스터관리" 및 "테스트세션" 탭 완전 삭제
+- **🎯 앱 관리 중심 UI**: 복잡한 탭 시스템을 제거하고 "앱 관리" 기능에만 집중하는 단순화된 인터페이스
+- **🏗️ TabController 구조 제거**: TabBarView에서 단일 위젯 구조로 변경하여 성능 및 유지보수성 향상
+- **📝 페이지 타이틀 명확화**: "통합 관리"에서 "앱 관리"로 변경하여 기능 목적 명시
+- **🧹 코드 정리**: 1,841줄의 불필요한 코드 제거 및 184줄로 최적화
+- **⚡ Firestore 인덱스 최적화**: payouts 컬렉션 인덱스 추가로 앱 크래시 문제 해결
+- **📱 모바일 사용성 향상**: 불필요한 탭 네비게이션 제거로 더 직관적인 사용자 경험
 
 ### 🔧 Firestore 인덱스 문제 해결 & 공급자 대시보드 데이터 로딩 수정 (v1.4.14)
 - **📊 누락된 Firestore 복합 인덱스 7개 추가**: test_sessions, provider_apps, activities, earnings, missionApplications, chat_rooms
@@ -390,6 +399,29 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 - **1:1 채팅 시작**: 검색 결과에서 채팅 버튼 클릭하여 즉시 채팅 시작
 
 ## 🔧 주요 버전 정보
+
+### 🎨 v1.4.15 (2025-09-17) - 공급자 대시보드 UI 단순화 및 Firestore 인덱스 최적화
+
+#### ✨ 핵심 개선 사항
+- **🗑️ 테스터관리/테스트세션 탭 완전 제거**: 공급자 대시보드에서 불필요한 기능 2개 완전 삭제
+- **🎯 앱 관리 중심 UI 재설계**: 복잡한 3-탭 시스템을 단일 앱 관리 페이지로 단순화
+- **🏗️ 아키텍처 최적화**: TabController, TabBar, TabBarView 구조 완전 제거로 성능 향상
+- **📝 명확한 페이지 타이틀**: "통합 관리" → "앱 관리"로 변경하여 기능 명시
+- **⚡ Firestore 인덱스 추가**: payouts 컬렉션 인덱스 배포로 앱 크래시 문제 해결
+
+#### 🛠️ 기술적 구현 세부사항
+- **파일 삭제**: `tester_management_tab.dart`, `test_session_application_tab.dart` 완전 제거
+- **UI 구조 변경**: `TabBarView` → `Expanded(child: _buildAppsTab(apps))` 단일 위젯화
+- **상태 관리 최적화**: `TickerProviderStateMixin` 및 `TabController` 제거
+- **Import 정리**: 삭제된 탭 파일들의 import 문 제거
+- **Firestore 인덱스**: `firestore.indexes.json`에 payouts 컬렉션 복합 인덱스 추가
+- **Firebase 배포**: `firebase deploy --only firestore:indexes`로 누락 인덱스 배포
+
+#### 🔍 해결된 주요 문제
+- **복잡한 UI 구조**: 불필요한 3-탭 네비게이션으로 인한 사용자 혼란 해결
+- **코드 복잡성**: 1,841줄의 불필요한 코드 제거로 유지보수성 대폭 향상
+- **앱 크래시**: Firestore payouts 쿼리 인덱스 누락으로 인한 FAILED_PRECONDITION 오류 해결
+- **성능 이슈**: TabController 및 관련 상태 관리 오버헤드 제거
 
 ### 🔧 v1.4.14 (2025-09-16) - Firestore 인덱스 문제 해결 & 공급자 대시보드 데이터 로딩 수정
 
