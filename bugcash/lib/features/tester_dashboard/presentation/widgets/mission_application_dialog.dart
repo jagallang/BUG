@@ -512,25 +512,29 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
     }
 
     // Firestore에 신청 정보 저장 (올바른 컬렉션 이름 사용)
-    await FirebaseFirestore.instance.collection('missionApplications').add({
+    await FirebaseFirestore.instance.collection('tester_applications').add({
+      'appId': widget.mission.id, // appId 필드 추가 (공급자가 필터링할 때 사용)
       'missionId': widget.mission.id,
       'testerId': currentUser.uid,
       'providerId': providerId,
       'testerName': userData['displayName'] ?? testerData['name'] ?? 'Unknown',
       'testerEmail': userData['email'] ?? '',
       'testerProfile': userData['photoUrl'],
-      'status': 'pending', // pending, reviewing, accepted, rejected, cancelled
-      'message': _messageController.text.trim(),
+      'status': 'pending', // pending, approved, rejected (공급자가 사용하는 상태)
+      'experience': testerData['experience'] ?? 'New', // 직접 필드로 추가
+      'motivation': _messageController.text.trim(), // message -> motivation 으로 변경
       'appliedAt': FieldValue.serverTimestamp(),
-      'testerInfo': {
-        'experience': testerData['experience'] ?? 'New',
-        'specialization': List<String>.from(testerData['skills'] ?? []),
-        'completedMissions': testerData['completedMissions'] ?? 0,
-        'rating': (testerData['averageRating'] ?? 0.0).toDouble(),
-      },
-      'requirements': {
-        'hasReadRequirements': _hasReadRequirements,
-        'hasInstalledApp': _hasInstalledApp,
+      'processedAt': null,
+      'metadata': {
+        'testerInfo': {
+          'specialization': List<String>.from(testerData['skills'] ?? []),
+          'completedMissions': testerData['completedMissions'] ?? 0,
+          'rating': (testerData['averageRating'] ?? 0.0).toDouble(),
+        },
+        'requirements': {
+          'hasReadRequirements': _hasReadRequirements,
+          'hasInstalledApp': _hasInstalledApp,
+        },
       },
     });
   }

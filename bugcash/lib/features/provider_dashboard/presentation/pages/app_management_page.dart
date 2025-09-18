@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
 import 'app_detail_page.dart';
+import 'tester_management_page.dart';
 
 // Provider for managing apps
 final providerAppsProvider = StreamProvider.family<List<ProviderAppModel>, String>((ref, providerId) {
@@ -483,9 +484,12 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                   height: 36.h,
                   child: ElevatedButton(
                     onPressed: () {
-                      // Manage app
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('${app.appName} 관리')),
+                      // Navigate to tester management page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TesterManagementPage(app: app),
+                        ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
