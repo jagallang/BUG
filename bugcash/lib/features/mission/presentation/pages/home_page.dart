@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/mission_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/widgets/auth_wrapper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -437,7 +439,95 @@ class ProfileView extends ConsumerWidget {
                           leading: const Icon(Icons.logout, color: AppColors.error),
                           title: const Text('로그아웃'),
                           onTap: () async {
-                            await ref.read(authProvider.notifier).signOut();
+                            // 로그아웃 확인 다이얼로그 표시
+                            final shouldLogout = await showDialog<bool>(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('로그아웃'),
+                                content: const Text('정말로 로그아웃 하시겠습니까?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context, false),
+                                    child: const Text('취소'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(context, true),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red,
+                                      foregroundColor: Colors.white,
+                                    ),
+                                    child: const Text('로그아웃'),
+                                  ),
+                                ],
+                              ),
+                            );
+
+                            if (shouldLogout == true) {
+                              try {
+                                debugPrint('🔴 HOME 로그아웃 시작');
+
+                                // 로그아웃 중 로딩 표시
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          SizedBox(width: 12),
+                                          Text('로그아웃 중...'),
+                                        ],
+                                      ),
+                                      backgroundColor: Colors.blue,
+                                      duration: Duration(seconds: 1),
+                                    ),
+                                  );
+                                }
+
+                                // AuthProvider를 통한 로그아웃
+                                debugPrint('🔴 HOME AuthProvider 로그아웃 호출');
+                                await ref.read(authProvider.notifier).signOut();
+                                debugPrint('🔴 HOME AuthProvider 로그아웃 완료');
+
+                                // Firebase Auth 직접 로그아웃 (이중 보장)
+                                debugPrint('🔴 HOME Firebase Auth 로그아웃 호출');
+                                await FirebaseAuth.instance.signOut();
+                                debugPrint('🔴 HOME Firebase Auth 로그아웃 완료');
+
+                                // 약간의 지연 후 상태 새로고침 강제
+                                await Future.delayed(const Duration(milliseconds: 500));
+
+                                // AuthProvider 상태 강제 새로고침
+                                debugPrint('🔴 HOME AuthProvider 상태 무효화');
+                                ref.invalidate(authProvider);
+
+                                // AuthWrapper로 직접 이동하여 로그인 화면 표시
+                                await Future.delayed(const Duration(milliseconds: 100));
+                                if (context.mounted) {
+                                  debugPrint('🔴 HOME Navigator로 AuthWrapper 이동');
+                                  Navigator.of(context).pushAndRemoveUntil(
+                                    MaterialPageRoute(builder: (context) => const AuthWrapper()),
+                                    (route) => false,
+                                  );
+                                  debugPrint('🔴 HOME Navigator 이동 완료');
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('❌ 로그아웃 실패: $e'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              }
+                            }
                           },
                         ),
                       ],

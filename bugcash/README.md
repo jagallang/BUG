@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.21-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.22-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,21 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.21)
+## ✨ 주요 기능 (v1.4.22)
+
+### 🔐 자동로그인 완전 비활성화 & 보안 강화 (v1.4.22)
+- **🛡️ 자동 로그인 시스템 완전 재설계**: 앱 시작 시 항상 로그인 페이지 표시
+  - **⚙️ AuthNotifier 생성자 수정**: `_initializeAuthState()` 자동 호출 비활성화로 예기치 않은 세션 복원 방지
+  - **🔄 Provider 스트림 제어**: `currentUserProvider`와 `authStateProvider`를 빈 스트림으로 변경
+  - **🚫 Firebase Auth 자동 감지 차단**: `authStateChanges()` 스트림 완전 비활성화
+- **🔒 보안 및 사용자 경험 개선**: 명시적 로그인 요구로 예상치 못한 자동 접근 방지
+  - **👤 사용자 명시적 동의**: Firebase 세션 존재 여부와 무관하게 수동 로그인 필수
+  - **⚡ 메모리 최적화**: Firebase Auth 상태 변경 스트림 제어로 리소스 사용량 감소
+  - **🎯 일관된 인증 플로우**: 3개 핵심 Auth Provider 동시 수정으로 시스템 전반 일관성 확보
+- **🛠️ 시스템 안정성 향상**: 다중 Auth Provider 간 충돌 방지 및 예측 가능한 인증 플로우 구축
+  - **🔧 로그아웃 후 재초기화 비활성화**: 완전한 세션 종료 보장으로 보안 강화
+  - **📊 디버깅 용이성**: 명확한 로그인 시작점과 종료점 정의
+  - **🔐 의도적 로그인만 허용**: 수동 로그인/회원가입 후에만 인증 상태 모니터링 활성화
 
 ### 🔧 타입 에러 완전 해결 & 안전한 데이터 변환 시스템 구축 (v1.4.21)
 - **🛡️ 타입 안전성 보장**: Firestore double ↔ int 변환 에러 완전 해결

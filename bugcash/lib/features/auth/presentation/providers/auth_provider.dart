@@ -67,13 +67,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
   StreamSubscription<User?>? _authSubscription;
 
   AuthNotifier(this._authService) : super(const AuthState()) {
-    // 자동 로그인 비활성화 - 수동으로 초기화해야 함
-    // _initializeAuthState();
+    // 자동 로그인 방지를 위해 현재 상태만 확인 (감시하지 않음)
+    _checkCurrentAuthState();
+  }
+
+  Future<void> _checkCurrentAuthState() async {
+    // 현재 Firebase 인증 상태만 확인 (자동 로그인 방지를 위해 감시하지 않음)
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (kDebugMode) {
+      debugPrint('🟦 AuthProvider._checkCurrentAuthState() - Current user: ${currentUser?.email ?? 'null'}');
+    }
+
+    if (currentUser != null) {
+      // 현재 사용자가 있다면 상태를 업데이트하지 않음 (자동 로그인 방지)
+      if (kDebugMode) {
+        debugPrint('🟦 AuthProvider._checkCurrentAuthState() - 자동 로그인 방지: 로그인 상태 무시');
+      }
+      // state는 초기 상태(user: null)로 유지하여 로그인 화면 표시
+    } else {
+      // 사용자가 없으면 로그인 화면 표시
+      state = state.copyWith(user: null, isLoading: false);
+    }
   }
 
   void _initializeAuthState() {
     if (kDebugMode) {
       debugPrint('🟦 AuthProvider._initializeAuthState() - 초기화 시작');
+    }
+
+    // 기존 subscription이 있으면 취소
+    if (_authSubscription != null) {
+      if (kDebugMode) {
+        debugPrint('🟦 AuthProvider._initializeAuthState() - 기존 subscription 취소');
+      }
+      _authSubscription?.cancel();
+      _authSubscription = null;
     }
 
     _authSubscription = _authService.authStateChanges.listen(

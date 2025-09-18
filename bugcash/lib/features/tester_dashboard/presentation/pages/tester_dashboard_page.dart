@@ -267,19 +267,16 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         ),
       );
 
-      // AuthProvider를 통한 로그아웃
-      debugPrint('🔴 AuthProvider signOut 호출');
-      await ref.read(authProvider.notifier).signOut();
-      debugPrint('🔴 AuthProvider signOut 완료');
-
-      // Firebase Auth 직접 로그아웃 (이중 보장)
+      // Firebase Auth 직접 로그아웃
       debugPrint('🔴 Firebase Auth 직접 signOut 호출');
       await FirebaseAuth.instance.signOut();
       debugPrint('🔴 Firebase Auth 직접 signOut 완료');
 
-      // 약간의 지연 후 강제로 앱 재시작하여 로그인 페이지로 이동
-      await Future.delayed(const Duration(milliseconds: 500));
+      // AuthProvider 상태 초기화
+      debugPrint('🔴 AuthProvider 상태 초기화');
+      ref.invalidate(authProvider);
 
+      // 즉시 로그인 페이지로 이동 - Navigator 스택 모두 제거
       if (mounted && context.mounted) {
         debugPrint('🔴 Navigator를 통한 강제 이동');
         Navigator.of(context).pushAndRemoveUntil(
@@ -289,14 +286,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           ),
           (route) => false,
         );
-
-        // 추가적인 상태 새로고침 강제
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            debugPrint('🔴 상태 새로고침 강제 실행');
-            ref.invalidate(authProvider);
-          }
-        });
+        debugPrint('🔴 Navigator 이동 완료');
       }
 
     } catch (e) {

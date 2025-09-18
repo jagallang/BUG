@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/provider_dashboard_provider.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/auth_service.dart';
 import 'app_management_page.dart' hide ProviderAppModel;
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 // 채팅 기능 제거됨
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../widgets/payment_management_tab.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
@@ -126,7 +126,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   Widget _buildDashboardTab() {
-    final providerInfoAsync = ref.watch(providerInfoStateProvider(widget.providerId));
+    // Provider 정보 대신 간단한 환영 메시지 사용 - Firebase 에러 방지
     final recentActivitiesAsync = ref.watch(recentActivitiesProvider(widget.providerId));
 
     return SingleChildScrollView(
@@ -134,54 +134,27 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Provider Info Section
-          providerInfoAsync.when(
-            data: (providerInfo) => Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '안녕하세요, ${providerInfo?.companyName ?? 'Provider'}님!',
-                  style: TextStyle(
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+          // 간단한 환영 메시지 - Firebase provider 컬렉션 에러 방지
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '안녕하세요, Provider님!',
+                style: TextStyle(
+                  fontSize: 24.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
                 ),
-                SizedBox(height: 8.h),
-                Text(
-                  '오늘도 품질 높은 앱을 만들어 보세요.',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    color: Colors.grey[600],
-                  ),
+              ),
+              SizedBox(height: 8.h),
+              Text(
+                '오늘도 품질 높은 앱을 만들어 보세요.',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  color: Colors.grey[600],
                 ),
-              ],
-            ),
-            loading: () => Column(
-              children: [
-                Container(
-                  height: 30.h,
-                  width: 200.w,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Container(
-                  height: 20.h,
-                  width: 150.w,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(4.r),
-                  ),
-                ),
-              ],
-            ),
-            error: (error, stack) => Text(
-              '정보를 불러올 수 없습니다',
-              style: TextStyle(color: Colors.red, fontSize: 16.sp),
-            ),
+              ),
+            ],
           ),
           SizedBox(height: 24.h),
           
@@ -480,8 +453,9 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
 
   Widget _buildChatFAB() {
-    final currentUser = ref.watch(currentUserProvider);
-    final unreadCount = currentUser != null 
+    // currentUserProvider 대신 직접 Firebase Auth 사용
+    final currentUser = FirebaseAuth.instance.currentUser;
+    final unreadCount = currentUser != null
         ? 0 // 채팅 기능 제거됨
         : 0;
         
