@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.22-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.23-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,20 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.22)
+## ✨ 주요 기능 (v1.4.23)
+
+### 🔄 햄버거 메뉴 로그아웃 기능 완전 수정 (v1.4.23)
+- **🛠️ 로그아웃 플로우 간소화**: 복잡한 AuthProvider 호출 제거 및 Firebase Auth 직접 사용
+  - **⚡ Firebase Auth 직접 로그아웃**: `FirebaseAuth.instance.signOut()` 직접 호출로 안정성 향상
+  - **🔄 즉시 상태 무효화**: `ref.invalidate(authProvider)` 호출로 UI 즉시 반응
+  - **🚫 타이밍 이슈 해결**: 불필요한 지연과 콜백 제거로 로그아웃 속도 개선
+- **🎯 테스터 대시보드 햄버거 메뉴 수정**: PopupMenuButton의 로그아웃 옵션 완전히 동작
+  - **📱 확인 다이얼로그**: 로그아웃 전 사용자 확인 과정 유지
+  - **🔄 로딩 인디케이터**: 로그아웃 진행 상황 시각적 피드백 제공
+  - **🏠 AuthWrapper 이동**: 로그아웃 완료 후 로그인 화면으로 즉시 전환
+- **🔧 공급자 대시보드 빨간 화면 오류 해결**: Firebase 컬렉션 접근 최적화
+  - **📊 하드코딩 환영 메시지**: `providerInfoStateProvider` 대신 정적 메시지 사용
+  - **⚡ 성능 최적화**: 불필요한 Firestore 조회 제거로 앱 시작 속도 향상
 
 ### 🔐 자동로그인 완전 비활성화 & 보안 강화 (v1.4.22)
 - **🛡️ 자동 로그인 시스템 완전 재설계**: 앱 시작 시 항상 로그인 페이지 표시
@@ -524,6 +537,24 @@ curl http://localhost:3001/api/apps/provider/mock-provider-123
 - **1:1 채팅 시작**: 검색 결과에서 채팅 버튼 클릭하여 즉시 채팅 시작
 
 ## 🔧 주요 버전 정보
+
+### 🛠️ v1.4.23 (2025-09-19) - 햄버거 메뉴 로그아웃 기능 완전 수정
+
+#### 🔄 로그아웃 시스템 완전 재구축
+- **🛠️ 테스터 대시보드 햄버거 메뉴 수정**: `TesterDashboardPage`의 `PopupMenuButton` 로그아웃 기능 완전히 작동
+- **⚡ Firebase Auth 직접 사용**: `FirebaseAuth.instance.signOut()` 직접 호출로 복잡한 AuthProvider 호출 제거
+- **🔄 즉시 상태 무효화**: `ref.invalidate(authProvider)` 호출로 UI 즉시 반응하도록 개선
+- **🚫 타이밍 이슈 해결**: 불필요한 지연과 콜백 제거로 로그아웃 속도 및 안정성 향상
+
+#### 🎯 공급자 대시보드 최적화
+- **📊 빨간 화면 오류 해결**: `providerInfoStateProvider`의 Firebase `providers` 컬렉션 접근 오류 수정
+- **💬 하드코딩 환영 메시지**: 동적 데이터 대신 정적 환영 메시지로 교체하여 성능 향상
+- **⚡ Firestore 조회 최적화**: 불필요한 컬렉션 접근 제거로 앱 시작 속도 개선
+
+#### 🔧 기술적 개선 사항
+- **🏗️ 로그아웃 플로우 간소화**: 5단계 복잡한 과정을 3단계로 단순화
+- **🎨 사용자 경험 개선**: 로딩 인디케이터와 확인 다이얼로그 유지하며 응답성 향상
+- **🛡️ Navigator 스택 관리**: `pushAndRemoveUntil`로 완전한 화면 전환 보장
 
 ### 🛠️ v1.4.19 (2025-09-17) - 코드 품질 대폭 개선 & 아키텍처 안정화
 
