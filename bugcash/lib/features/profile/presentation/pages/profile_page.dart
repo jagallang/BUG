@@ -275,7 +275,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const PointHistoryPage(
+                  builder: (context) => PointHistoryPage(
                     userId: CurrentUserService.getCurrentUserIdOrDefault(), // Dynamic user ID
                   ),
                 ),
@@ -404,7 +404,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const PointHistoryPage(
+                builder: (context) => PointHistoryPage(
                   userId: CurrentUserService.getCurrentUserIdOrDefault(), // Dynamic user ID
                 ),
               ),

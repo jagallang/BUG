@@ -1,13 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'firebase_options.dart';
-import 'core/di/injection.dart';
 import 'shared/theme/app_theme.dart';
-import 'features/auth/presentation/bloc/auth_bloc.dart';
-import 'features/auth/presentation/pages/splash_page.dart';
+import 'features/auth/presentation/widgets/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,12 +26,6 @@ void main() async {
     }
   }
   
-  configureDependencies();
-  
-  if (kDebugMode) {
-    Bloc.observer = AppBlocObserver();
-  }
-  
   runApp(const BugCashApp());
 }
 
@@ -48,38 +39,14 @@ class BugCashApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider(
-              create: (_) => getIt<AuthBloc>()..add(const CheckAuth()),
-            ),
-          ],
-          child: MaterialApp(
-            title: 'BugCash',
-            debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            home: const SplashPage(),
-          ),
+        return MaterialApp(
+          title: 'BugCash',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          home: const AuthWrapper(),
         );
       },
     );
   }
 }
 
-class AppBlocObserver extends BlocObserver {
-  @override
-  void onChange(BlocBase bloc, Change change) {
-    super.onChange(bloc, change);
-    if (kDebugMode) {
-      debugPrint('${bloc.runtimeType} $change');
-    }
-  }
-
-  @override
-  void onError(BlocBase bloc, Object error, StackTrace stackTrace) {
-    if (kDebugMode) {
-      debugPrint('${bloc.runtimeType} $error $stackTrace');
-    }
-    super.onError(bloc, error, stackTrace);
-  }
-}

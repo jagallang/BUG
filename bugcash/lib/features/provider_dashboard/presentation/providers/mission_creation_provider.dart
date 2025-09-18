@@ -202,6 +202,7 @@ class MissionCreationNotifier extends StateNotifier<MissionCreationState> {
         return '기능 테스트';
       case MissionType.usabilityTest:
         return '사용성 테스트';
+      case MissionType.performance:
       case MissionType.performanceTest:
         return '성능 테스트';
       case MissionType.survey:
@@ -363,6 +364,7 @@ MissionTemplate _getMissionTemplate(MissionType type) {
         suggestedReward: 300,
         suggestedComplexity: MissionComplexity.hard,
       );
+    case MissionType.performance:
     case MissionType.performanceTest:
       return const MissionTemplate(
         titleSuggestion: '[앱명] 성능 테스트',

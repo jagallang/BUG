@@ -1,7 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/repositories/provider_dashboard_repository.dart';
-import '../providers/provider_dashboard_provider.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
 
@@ -48,10 +46,9 @@ enum DistributionStrategy {
 
 // Mission distribution notifier
 class MissionDistributionNotifier extends StateNotifier<MissionDistributionState> {
-  final ProviderDashboardRepository _repository;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  MissionDistributionNotifier(this._repository) : super(const MissionDistributionState());
+  MissionDistributionNotifier() : super(const MissionDistributionState());
 
   // Generate tester recommendations for a mission
   Future<void> generateRecommendations({
@@ -634,8 +631,7 @@ enum TesterLevel {
 
 // Providers
 final missionDistributionProvider = StateNotifierProvider<MissionDistributionNotifier, MissionDistributionState>((ref) {
-  final repository = ref.watch(providerDashboardRepositoryProvider);
-  return MissionDistributionNotifier(repository);
+  return MissionDistributionNotifier();
 });
 
 // Distribution strategies provider

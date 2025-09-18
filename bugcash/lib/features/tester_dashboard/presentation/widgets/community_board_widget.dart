@@ -908,7 +908,7 @@ class _CreatePostDialogState extends State<_CreatePostDialog> {
                     ),
                     deleteIcon: Icon(Icons.close, size: 16.w),
                     onDeleted: () => _removeTag(tag),
-                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   );
                 }).toList(),
               ),

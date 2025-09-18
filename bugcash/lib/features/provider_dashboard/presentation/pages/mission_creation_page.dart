@@ -71,7 +71,6 @@ class _MissionCreationPageState extends ConsumerState<MissionCreationPage>
 
   @override
   Widget build(BuildContext context) {
-    final creationState = ref.watch(missionCreationProvider);
     final appListAsync = ref.watch(providerAppsProvider(widget.providerId));
 
     return Scaffold(

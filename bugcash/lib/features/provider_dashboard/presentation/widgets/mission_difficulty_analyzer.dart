@@ -351,28 +351,28 @@ class MissionDifficultyAnalyzerWidget extends ConsumerWidget {
   }
 
   // Helper methods
-  String _getMissionComplexityText(MissionComplexity complexity) {
+  String _getMissionComplexityText(models.MissionComplexity complexity) {
     switch (complexity) {
-      case MissionComplexity.easy:
+      case models.MissionComplexity.easy:
         return '쉬움';
-      case MissionComplexity.medium:
+      case models.MissionComplexity.medium:
         return '보통';
-      case MissionComplexity.hard:
+      case models.MissionComplexity.hard:
         return '어려움';
-      case MissionComplexity.expert:
+      case models.MissionComplexity.expert:
         return '전문가';
     }
   }
 
-  Color _getMissionComplexityColor(MissionComplexity complexity) {
+  Color _getMissionComplexityColor(models.MissionComplexity complexity) {
     switch (complexity) {
-      case MissionComplexity.easy:
+      case models.MissionComplexity.easy:
         return Colors.green;
-      case MissionComplexity.medium:
+      case models.MissionComplexity.medium:
         return Colors.blue;
-      case MissionComplexity.hard:
+      case models.MissionComplexity.hard:
         return Colors.orange;
-      case MissionComplexity.expert:
+      case models.MissionComplexity.expert:
         return Colors.red;
     }
   }

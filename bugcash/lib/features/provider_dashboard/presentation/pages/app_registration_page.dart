@@ -75,8 +75,6 @@ class _AppRegistrationPageState extends ConsumerState<AppRegistrationPage>
 
   @override
   Widget build(BuildContext context) {
-    final registrationState = ref.watch(appRegistrationProvider);
-
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(

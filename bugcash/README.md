@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.20-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.21-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,22 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.20)
+## ✨ 주요 기능 (v1.4.21)
+
+### 🔗 하드코딩 요소 완전 제거 & 백엔드 데이터 연동 강화 (v1.4.21)
+- **📊 동적 데이터 표시**: 모든 하드코딩된 값을 백엔드 데이터로 대체
+  - **⏱️ 테스트 기간**: sessionMetadata에서 실시간 로드 (기본값: 14일)
+  - **👥 참여자 수**: originalAppData의 metadata에서 동적 표시
+  - **💰 완료 보너스**: 하드코딩된 10% 계산을 백엔드 설정값으로 변경
+  - **🎯 일일 테스트 시간**: 슬라이더 범위와 기본값 모두 동적으로 설정
+- **🛠️ MissionCard 모델 확장**: 20개 필드로 대폭 확장하여 완전한 백엔드 연동 지원
+  - `isProviderApp`, `originalAppData`, `description`, `status` 등 핵심 필드 추가
+  - Provider 앱과 일반 미션의 데이터 차별화를 통한 정확한 정보 표시
+- **🎨 UI 컴포넌트 개선**:
+  - **📱 Active Test Session Card**: 8개 하드코딩 요소 제거 및 동적 데이터 연동
+  - **📋 Expandable Mission Card**: 테스트 조건 모든 정보를 백엔드에서 실시간 로드
+  - **🏠 Tester Dashboard**: 미션 표시 정보 동적화 및 개인화된 인사말 제거
+- **⚡ 성능 최적화**: 하드코딩 제거로 앱 유연성 및 확장성 대폭 향상
 
 ### ⚙️ 앱 상세 관리 테스트 설정 필드 복원 (v1.4.20)
 - **📝 테스트 설정 입력 복원**: 이전에 삭제된 핵심 기능 완전 복원

@@ -149,18 +149,17 @@ class TesterPerformance {
 }
 
 // Mission Monitoring Provider
-final missionMonitoringProvider = 
+final missionMonitoringProvider =
     StateNotifierProvider<MissionMonitoringNotifier, MissionMonitoringState>((ref) {
-  return MissionMonitoringNotifier(ref);
+  return MissionMonitoringNotifier();
 });
 
 class MissionMonitoringNotifier extends StateNotifier<MissionMonitoringState> {
-  final Ref _ref;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   Timer? _refreshTimer;
   StreamSubscription? _missionSubscription;
 
-  MissionMonitoringNotifier(this._ref) : super(MissionMonitoringState.initial()) {
+  MissionMonitoringNotifier() : super(MissionMonitoringState.initial()) {
     _startAutoRefresh();
   }
 

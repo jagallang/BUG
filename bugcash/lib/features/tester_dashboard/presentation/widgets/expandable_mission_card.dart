@@ -510,11 +510,21 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
     }
   }
 
+  // 안전한 int 변환 헬퍼
+  int _toInt(dynamic value, int defaultValue) {
+    if (value == null) return defaultValue;
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? defaultValue;
+    if (value is num) return value.toInt();
+    return defaultValue;
+  }
+
   // 백엔드 데이터에서 테스트 기간 가져오기
   int _getTestPeriod(MissionCard mission) {
     if (mission.isProviderApp && mission.originalAppData != null) {
       final metadata = mission.originalAppData!['metadata'] as Map<String, dynamic>?;
-      return metadata?['testPeriod'] ?? 14;
+      return _toInt(metadata?['testPeriod'], 14);
     }
     return 14; // 기본값
   }
@@ -523,7 +533,7 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
   int _getTestTime(MissionCard mission) {
     if (mission.isProviderApp && mission.originalAppData != null) {
       final metadata = mission.originalAppData!['metadata'] as Map<String, dynamic>?;
-      return metadata?['testTime'] ?? 30;
+      return _toInt(metadata?['testTime'], 30);
     }
     return 30; // 기본값
   }
@@ -532,7 +542,7 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
   int _getMaxParticipants(MissionCard mission) {
     if (mission.isProviderApp && mission.originalAppData != null) {
       final metadata = mission.originalAppData!['metadata'] as Map<String, dynamic>?;
-      return metadata?['participantCount'] ?? mission.maxParticipants;
+      return _toInt(metadata?['participantCount'], mission.maxParticipants);
     }
     return mission.maxParticipants;
   }
@@ -550,7 +560,7 @@ class _ExpandableMissionCardState extends ConsumerState<ExpandableMissionCard>
   int _getCompletionBonus(MissionCard mission) {
     if (mission.isProviderApp && mission.originalAppData != null) {
       final metadata = mission.originalAppData!['metadata'] as Map<String, dynamic>?;
-      return metadata?['completionBonus'] ?? (mission.rewardPoints * 0.1).round();
+      return _toInt(metadata?['completionBonus'], (mission.rewardPoints * 0.1).round());
     }
     return (mission.rewardPoints * 0.1).round();
   }

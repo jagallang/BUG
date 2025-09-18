@@ -442,6 +442,7 @@ class MissionTemplateSelectorWidget extends ConsumerWidget {
         return '기능 테스트';
       case MissionType.usabilityTest:
         return '사용성 테스트';
+      case MissionType.performance:
       case MissionType.performanceTest:
         return '성능 테스트';
       case MissionType.survey:
@@ -484,6 +485,7 @@ class MissionTemplateSelectorWidget extends ConsumerWidget {
         return Colors.blue;
       case MissionType.usabilityTest:
         return Colors.green;
+      case MissionType.performance:
       case MissionType.performanceTest:
         return Colors.orange;
       case MissionType.survey:

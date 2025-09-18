@@ -18,10 +18,7 @@ extension ResponsiveText on num {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // 앱 설정 초기화
-  await AppConfig.initialize();
-  
+
   bool isFirebaseAvailable = false;
   
   try {
