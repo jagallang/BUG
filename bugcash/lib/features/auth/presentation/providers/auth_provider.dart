@@ -67,7 +67,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   StreamSubscription<User?>? _authSubscription;
 
   AuthNotifier(this._authService) : super(const AuthState()) {
-    _initializeAuthState();
+    // 자동 로그인 비활성화 - 수동으로 초기화해야 함
+    // _initializeAuthState();
   }
 
   void _initializeAuthState() {
@@ -140,6 +141,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (userCredential.user != null) {
         final userData = await _authService.getUserData(userCredential.user!.uid);
         state = state.copyWith(user: userData, isLoading: false);
+        // 로그인 후 인증 상태 모니터링 시작
+        _initializeAuthState();
       }
     } catch (e) {
       state = state.copyWith(
@@ -165,6 +168,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (userCredential.user != null) {
         final userData = await _authService.getUserData(userCredential.user!.uid);
         state = state.copyWith(user: userData, isLoading: false);
+        // 로그인 후 인증 상태 모니터링 시작
+        _initializeAuthState();
       }
     } catch (e) {
       state = state.copyWith(
@@ -184,6 +189,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (userCredential?.user != null) {
         final userData = await _authService.getUserData(userCredential!.user!.uid);
         state = state.copyWith(user: userData, isLoading: false);
+        // 로그인 후 인증 상태 모니터링 시작
+        _initializeAuthState();
       } else {
         state = state.copyWith(isLoading: false);
       }
@@ -234,8 +241,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         debugPrint('✅ AuthProvider.signOut() - 완료');
       }
 
-      // 스트림 구독 재시작 (null 상태로 재설정을 위해)
-      _initializeAuthState();
+      // 스트림 구독 재시작 비활성화 - 자동 로그인 방지
+      // _initializeAuthState();
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ AuthProvider.signOut() - 실패: $e');

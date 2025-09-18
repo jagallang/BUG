@@ -15,7 +15,27 @@ BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의
 
 ## ✨ 주요 기능 (v1.4.21)
 
-### 🔗 하드코딩 요소 완전 제거 & 백엔드 데이터 연동 강화 (v1.4.21)
+### 🔧 타입 에러 완전 해결 & 안전한 데이터 변환 시스템 구축 (v1.4.21)
+- **🛡️ 타입 안전성 보장**: Firestore double ↔ int 변환 에러 완전 해결
+  - **🔄 안전한 변환 헬퍼**: `_toInt()`, `_getIntValue()` 메서드로 런타임 타입 에러 방지
+  - **📊 모든 숫자 필드 보호**: rewardPoints, estimatedMinutes, currentParticipants, maxParticipants 등
+  - **🎯 다양한 타입 지원**: int, double, String, num 타입 모두에서 안전한 int 변환
+- **🚫 하드코딩 요소 완전 제거**: 테스터 미션 탭의 모든 정적 데이터를 동적 백엔드 연동으로 교체
+  - **⏱️ 테스트 기간**: sessionMetadata에서 실시간 로드 (기본값: 14일)
+  - **👥 참여자 수**: originalAppData의 metadata에서 동적 표시
+  - **💰 완료 보너스**: 하드코딩된 10% 계산을 백엔드 설정값으로 변경
+  - **🎯 일일 테스트 시간**: 슬라이더 범위와 기본값 모두 동적으로 설정
+- **🛠️ MissionCard 모델 확장**: 20개 필드로 대폭 확장하여 완전한 백엔드 연동 지원
+  - `isProviderApp`, `originalAppData`, `description`, `status` 등 핵심 필드 추가
+  - Provider 앱과 일반 미션의 데이터 차별화를 통한 정확한 정보 표시
+- **🎨 UI 컴포넌트 개선**:
+  - **📱 Active Test Session Card**: 8개 하드코딩 요소 제거 및 동적 데이터 연동
+  - **📋 Expandable Mission Card**: 타입 안전한 테스트 조건 정보 표시
+  - **🏠 Tester Dashboard**: 미션 표시 정보 동적화 및 개인화된 인사말 제거
+- **🔍 55개 컴파일 에러 완전 해결**: MissionType enum, MissionComplexity 클래스, const 평가 에러 등
+- **⚡ 성능 최적화**: 타입 에러 제거로 앱 안정성 및 확장성 대폭 향상
+
+### 🔗 하드코딩 요소 완전 제거 & 백엔드 데이터 연동 강화
 - **📊 동적 데이터 표시**: 모든 하드코딩된 값을 백엔드 데이터로 대체
   - **⏱️ 테스트 기간**: sessionMetadata에서 실시간 로드 (기본값: 14일)
   - **👥 참여자 수**: originalAppData의 metadata에서 동적 표시

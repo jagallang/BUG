@@ -140,7 +140,8 @@ final currentUserIdWithDefaultProvider = Provider<String>((ref) {
   return CurrentUserService.getCurrentUserIdOrDefault();
 });
 
-/// Stream provider for auth state changes
+/// Stream provider for auth state changes - 자동 로그인 비활성화
 final authStateProvider = StreamProvider<User?>((ref) {
-  return FirebaseAuth.instance.authStateChanges();
+  // return FirebaseAuth.instance.authStateChanges();
+  return const Stream<User?>.empty(); // 빈 스트림 반환으로 자동 로그인 방지
 });
