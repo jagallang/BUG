@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.24-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.26-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,43 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.24)
+## ✨ 주요 기능 (v1.4.26)
+
+### 🚨 테스터 미션 신청 → 공급자 표시 시스템 완전 수정 (v1.4.26)
+- **🔧 핵심 문제 해결**: appId 빈 문자열 저장 문제 발견 및 완전 수정
+  - **🎯 문제 원인 발견**: Chrome 디버깅으로 Firestore에 빈 appId 저장되는 이슈 확인
+  - **💡 actualAppId 처리 강화**: `mission_application_dialog.dart`에서 빈 ID 감지 시 앱명 기반 fallback 로직
+  - **🔍 상세 디버그 로깅**: `🔍 MISSION_ID_DEBUG`, `🔍 PROVIDER_ID_DEBUG`로 전 과정 추적 가능
+- **🧹 데이터 정리 시스템**: 기존 잘못된 데이터 자동 정리 기능 추가
+  - **⚡ cleanupInvalidMissions()**: 빈 appId/testerName/testerEmail 데이터 일괄 삭제
+  - **🎨 UI 정리 버튼**: 공급자 대시보드 AppBar에 🧹 아이콘 추가로 원클릭 정리
+  - **📊 정리 결과 표시**: SnackBar로 삭제된 문서 수 즉시 확인
+- **🔍 고도화된 디버깅 시스템**: 문제 진단을 위한 포괄적 로깅
+  - **📱 실시간 추적**: `🔍 COLLECTION_SAMPLE`로 전체 컬렉션 상태 확인
+  - **🎯 매칭 감지**: `🎯 POTENTIAL_MATCH`로 후보 데이터 자동 발견
+  - **🔄 다양한 검색**: appId 변형 패턴으로 유연한 데이터 매칭
+- **✅ 완전한 워크플로우 복구**: 이제 테스터 신청 시 공급자 모드에서 즉시 확인 가능
+  - **📲 실시간 연동**: 테스터 "앱123" 신청 → 공급자 "앱관리 → 관리 → 미션 관리"에 즉시 표시
+  - **🔄 양방향 동기화**: 승인/거부 처리 시 실시간 상태 업데이트
+  - **🛡️ 안정성 보장**: 빈 데이터 방지로 시스템 신뢰성 대폭 향상
+
+### 🔄 통합 상태관리 시스템 구현 & Firestore 쿼리 최적화 (v1.4.25)
+- **🎯 UnifiedMissionModel 통합 상태관리**: 분산된 상태관리 시스템을 하나로 통합
+  - **📦 단일 데이터 모델**: `UnifiedMissionModel`로 모든 미션 관련 데이터 표준화
+  - **🔗 unified_mission_provider**: 중앙 집중식 Provider로 실시간 데이터 동기화
+  - **⚡ StreamProvider 기반**: Firebase Firestore 실시간 스트림으로 즉시 반응
+- **🔧 Firestore 쿼리 최적화**: 인덱스 의존성 문제 완전 해결
+  - **❌ orderBy 제거**: 복합 인덱스 요구사항 우회로 즉시 데이터 로드
+  - **📊 단순 쿼리**: `where('appId', isEqualTo: appId)` 만으로 안정적 조회
+  - **🚀 성능 향상**: 인덱스 생성 없이도 빠른 데이터 접근 보장
+- **🎨 공급자 대시보드 미션 관리 개선**: 테스터 신청 실시간 표시 및 관리
+  - **📱 실시간 신청 목록**: 테스터가 신청하면 즉시 공급자 화면에 표시
+  - **🔄 상태 동기화**: 승인/거부 처리 시 양방향 실시간 업데이트
+  - **📋 미션 자동 생성**: 테스터 신청 기반으로 자동 미션 카드 생성
+- **🛠️ 디버그 시스템 강화**: 문제 진단을 위한 포괄적 로깅 시스템
+  - **🔍 상세 디버그 로그**: appId 매칭, 데이터 흐름 추적 로그 추가
+  - **📊 쿼리 모니터링**: Firestore 쿼리 실행 상태 실시간 확인
+  - **⚠️ 에러 추적**: 데이터 로딩 실패 원인 상세 로깅
 
 ### 🎯 테스터 관리 시스템 구현 & 미션 신청 워크플로우 완성 (v1.4.24)
 - **📊 종합 테스터 관리 시스템**: 앱 공급자를 위한 완전한 테스터 관리 대시보드 구축
