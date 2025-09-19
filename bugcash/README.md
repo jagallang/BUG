@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.30-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.31-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -147,6 +147,29 @@ BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의
   - **🔄 Provider 스트림 제어**: `currentUserProvider`와 `authStateProvider`를 빈 스트림으로 변경
   - **🚫 Firebase Auth 자동 감지 차단**: `authStateChanges()` 스트림 완전 비활성화
 - **🔒 보안 및 사용자 경험 개선**: 명시적 로그인 요구로 예상치 못한 자동 접근 방지
+
+### 🔐 환경변수 기반 API 키 관리 시스템 (v1.4.31)
+- **🔒 보안 강화**: 실제 Firebase API 키가 GitHub에 노출되지 않도록 완전 개선
+  - **🌍 환경변수 시스템**: `flutter_dotenv` 패키지를 활용한 안전한 키 관리
+  - **📁 .env 파일**: 로컬 개발용 실제 키 저장 (`.gitignore`로 GitHub 제외)
+  - **📋 .env.example**: 팀 협업을 위한 템플릿 파일 (GitHub 포함)
+- **🛠️ ApiKeyService 완전 재구현**:
+  - **📡 동적 환경변수 로딩**: 플랫폼별 API 키 자동 선택 (Web/Android/iOS/macOS)
+  - **🔄 Fallback 시스템**: 환경변수 로드 실패 시 안전한 플레이스홀더 반환
+  - **🔧 디버그 모드**: 모든 설정값 확인 가능한 `getAllConfig()` 메서드 추가
+- **🚀 Firebase Options 동적 설정**:
+  - **⚡ 비동기 키 로딩**: `currentPlatformWithApiKey`에서 환경변수 기반 동적 설정
+  - **🎯 플랫폼별 최적화**: 각 플랫폼에 맞는 Firebase 설정 자동 구성
+- **💻 개발자 경험 개선**:
+  - **📚 상세 사용법 가이드**: 로컬 개발, GitHub Actions, 프로덕션 배포 시나리오별 안내
+  - **⚠️ 보안 주의사항**: API 키 관리 모범 사례 문서화
+  - **🔄 GitHub Actions 지원**: CI/CD 파이프라인에서 환경변수 주입 가능
+
+### 🎨 프로바이더 대시보드 UI 간소화 (v1.4.31)
+- **🗂️ 탭 구조 단순화**: 테스터관리, 통계 탭 제거하고 미션관리만 유지
+  - **🎯 핵심 기능 집중**: 복잡한 관리 기능을 제거하고 미션 관리에 특화
+  - **🧹 코드 정리**: 300+ 라인의 불필요한 코드 제거로 유지보수성 향상
+  - **📱 사용자 경험 개선**: 단순하고 직관적인 인터페이스 제공
   - **👤 사용자 명시적 동의**: Firebase 세션 존재 여부와 무관하게 수동 로그인 필수
   - **⚡ 메모리 최적화**: Firebase Auth 상태 변경 스트림 제어로 리소스 사용량 감소
   - **🎯 일관된 인증 플로우**: 3개 핵심 Auth Provider 동시 수정으로 시스템 전반 일관성 확보
