@@ -616,7 +616,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
         }
       }
       
-      // 2. Provider Apps를 미션으로 변환해서 추가 (활성화된 앱만)
+      // 2. Provider Apps를 미션으로 변환해서 추가
       final providerAppsSnapshot = await FirebaseFirestore.instance
           .collection('provider_apps')
           .limit(20)
@@ -628,43 +628,56 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       for (final doc in providerAppsSnapshot.docs) {
         try {
           final data = doc.data();
-          final appName = data['appName'] ?? 'Unknown App';
+
+          // 다양한 필드에서 앱 이름 찾기
+          final appName = data['appName'] ??
+                         data['name'] ??
+                         data['title'] ??
+                         data['company'] ??
+                         'Unknown App';
+
           AppLogger.info('🔍 Processing app: ${doc.id}, name: $appName', 'TesterDashboard');
           AppLogger.info('📱 Full data for $appName: ${data.toString()}', 'TesterDashboard');
 
+          // 메타데이터 확인 (선택적)
           final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
           AppLogger.info('📊 Metadata for $appName: ${metadata.toString()}', 'TesterDashboard');
 
-          // 활성화된 앱만 표시 (기본값은 true)
-          final isActive = metadata['isActive'];
+          // 활성화 상태 확인 (더 관대하게)
+          final isActive = data['isActive'] ??
+                          data['active'] ??
+                          metadata['isActive'] ??
+                          (data['status'] == 'active') ??
+                          true; // 기본값 true
+
           AppLogger.info('✅ App $appName (${doc.id}) - isActive: $isActive', 'TesterDashboard');
-          if (isActive == false) {
-            AppLogger.info('❌ Skipping app $appName (${doc.id}) because isActive is false', 'TesterDashboard');
-            continue;
-          }
 
-          // appName이 null이거나 비어있는지 확인
-          if (data['appName'] == null || data['appName'].toString().isEmpty) {
-            AppLogger.info('⚠️ App ${doc.id} has null or empty appName, skipping', 'TesterDashboard');
-            continue;
-          }
-
-          // 메타데이터에서 단가 정보 가져오기
-          final price = metadata['price'] ?? 0;
+          // 메타데이터에서 단가 정보 가져오기 (여러 필드 확인)
+          final price = metadata['price'] ??
+                       data['price'] ??
+                       data['reward'] ??
+                       data['cost'] ??
+                       5000; // 기본값
 
           final missionCard = MissionCard(
             id: 'provider_app_${doc.id}',
-            title: '${data['appName'] ?? '앱'} 테스팅',
-            description: data['description'] ?? '앱 테스팅 및 피드백 제공',
-            appName: data['appName'] ?? '앱',
+            title: '$appName 테스팅',
+            description: data['description'] ??
+                        data['summary'] ??
+                        '$appName 앱 테스팅 및 피드백 제공',
+            appName: appName,
             type: MissionType.functional,
             rewardPoints: _getIntValue(price) ?? 5000,
-            estimatedMinutes: _getIntValue(metadata['testTime']) ?? 30,
+            estimatedMinutes: _getIntValue(metadata['testTime']) ??
+                             _getIntValue(data['testTime']) ?? 30,
             status: MissionStatus.active,
             deadline: DateTime.now().add(const Duration(days: 30)),
             requiredSkills: ['앱 테스팅', '피드백 작성'],
-            currentParticipants: _getIntValue(data['activeTesters']) ?? 0,
-            maxParticipants: _getIntValue(metadata['participantCount']) ?? 50,
+            currentParticipants: _getIntValue(data['activeTesters']) ??
+                               _getIntValue(data['currentTesters']) ?? 0,
+            maxParticipants: _getIntValue(metadata['participantCount']) ??
+                            _getIntValue(data['maxTesters']) ??
+                            _getIntValue(data['participantCount']) ?? 50,
             progress: 0,
             difficulty: MissionDifficulty.medium,
             isProviderApp: true,

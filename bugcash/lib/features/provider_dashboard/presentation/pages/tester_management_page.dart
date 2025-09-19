@@ -556,30 +556,41 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     final cleanAppId = _getCleanAppId();
     debugPrint('🚀 Clean App ID for queries: $cleanAppId');
 
-    // 🚀 Provider 호출 시작 (통합 Provider 사용 - 단순화)
+    // 🚀 Provider 호출 시작 - 테스터와 미션 둘 다 가져오기
     debugPrint('🚀 Calling ref.watch(appTestersStreamProvider($cleanAppId))');
     final testersAsync = ref.watch(appTestersStreamProvider(cleanAppId));
 
-    return testersAsync.when(
-      data: (testers) {
-        debugPrint('🚀 TESTERS_DATA_DEBUG:');
-        debugPrint('🚀 testersAsync.data received: ${testers.length} testers found');
-        for (var tester in testers) {
-          debugPrint('🚀 Tester: ${tester.testerName}, appId: ${tester.appId}, status: ${tester.status}');
-        }
+    debugPrint('🚀 Calling ref.watch(appMissionsProvider($cleanAppId))');
+    final missionsAsync = ref.watch(appMissionsProvider(cleanAppId));
 
-        debugPrint('🚀 Building missions list with ${testers.length} testers');
-        return _buildMissionsList([], testers);
-      },
-      loading: () {
-        debugPrint('🚀 TESTERS_LOADING_DEBUG: testersAsync is loading');
-        return const Center(child: CircularProgressIndicator());
-      },
-      error: (error, stack) {
-        debugPrint('🚀 TESTERS_ERROR_DEBUG: $error');
-        return _buildErrorWidget('데이터를 불러올 수 없습니다');
-      },
-    );
+    // 두 데이터 모두 처리
+    if (testersAsync.isLoading || missionsAsync.isLoading) {
+      debugPrint('🚀 LOADING_DEBUG: testers or missions is loading');
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (testersAsync.hasError) {
+      debugPrint('🚀 TESTERS_ERROR_DEBUG: ${testersAsync.error}');
+      return _buildErrorWidget('테스터 데이터를 불러올 수 없습니다');
+    }
+
+    if (missionsAsync.hasError) {
+      debugPrint('🚀 MISSIONS_ERROR_DEBUG: ${missionsAsync.error}');
+      return _buildErrorWidget('미션 데이터를 불러올 수 없습니다');
+    }
+
+    final testers = testersAsync.valueOrNull ?? [];
+    final missions = missionsAsync.valueOrNull ?? [];
+
+    debugPrint('🚀 DATA_DEBUG:');
+    debugPrint('🚀 Testers loaded: ${testers.length}');
+    debugPrint('🚀 Missions loaded: ${missions.length}');
+
+    for (var mission in missions) {
+      debugPrint('🚀 Mission: ${mission.title}, status: ${mission.status}, appId: ${mission.appId}');
+    }
+
+    return _buildMissionsList(missions, testers);
   }
 
   Widget _buildMissionsList(List<TestMissionModel> missions, List<UnifiedMissionModel> testers) {
@@ -592,22 +603,6 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 미션 생성 버튼
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _showCreateMissionDialog,
-              icon: const Icon(Icons.add),
-              label: const Text('새 미션 생성'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 12.h),
-              ),
-            ),
-          ),
-          SizedBox(height: 24.h),
-
           // 테스터 신청 기반 미션 상태
           if (pendingTesters.isNotEmpty || approvedTesters.isNotEmpty) ...[
             Text(
@@ -1043,13 +1038,6 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     }
   }
 
-  void _showCreateMissionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => CreateMissionDialog(appId: widget.app.id),
-    );
-  }
-
   void _viewMissionDetails(TestMissionModel mission) {
     // 미션 상세보기 구현
     showDialog(
@@ -1128,129 +1116,6 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
         );
       }
     }
-  }
-}
-
-// 미션 생성 다이얼로그
-class CreateMissionDialog extends ConsumerStatefulWidget {
-  final String appId;
-
-  const CreateMissionDialog({super.key, required this.appId});
-
-  @override
-  ConsumerState<CreateMissionDialog> createState() => _CreateMissionDialogState();
-}
-
-class _CreateMissionDialogState extends ConsumerState<CreateMissionDialog> {
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
-  DateTime _selectedDate = DateTime.now().add(const Duration(days: 7));
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('새 미션 생성'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: '미션 제목',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: _descriptionController,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                labelText: '미션 설명',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            SizedBox(height: 16.h),
-            ListTile(
-              title: const Text('마감일'),
-              subtitle: Text(_formatDate(_selectedDate)),
-              trailing: const Icon(Icons.calendar_today),
-              onTap: _selectDate,
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('취소'),
-        ),
-        ElevatedButton(
-          onPressed: _createMission,
-          child: const Text('생성'),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _selectDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (date != null) {
-      setState(() => _selectedDate = date);
-    }
-  }
-
-  Future<void> _createMission() async {
-    if (_titleController.text.isEmpty || _descriptionController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('제목과 설명을 입력해주세요')),
-      );
-      return;
-    }
-
-    try {
-      await ref.read(testerManagementProvider.notifier).createMission(
-        appId: widget.appId,
-        title: _titleController.text,
-        description: _descriptionController.text,
-        dueDate: _selectedDate,
-      );
-
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('미션이 생성되었습니다'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('미션 생성 실패: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 }
 
