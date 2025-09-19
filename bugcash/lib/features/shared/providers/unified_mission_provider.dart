@@ -11,7 +11,7 @@ final unifiedMissionsStreamProvider = StreamProvider<List<UnifiedMissionModel>>(
   debugPrint('🌟 UNIFIED_PROVIDER: 전체 미션 스트림 시작');
 
   return FirebaseFirestore.instance
-      .collection('tester_applications')
+      .collection('test_sessions')
       .orderBy('appliedAt', descending: true)
       .snapshots()
       .map((snapshot) {
@@ -46,7 +46,7 @@ final providerMissionsProvider = StreamProvider.family<List<UnifiedMissionModel>
   debugPrint('🏢 UNIFIED_PROVIDER: 공급자($providerId) 미션 필터링');
 
   return FirebaseFirestore.instance
-      .collection('tester_applications')
+      .collection('test_sessions')
       .where('providerId', isEqualTo: providerId)
       .orderBy('appliedAt', descending: true)
       .snapshots()
@@ -64,7 +64,7 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
   debugPrint('🔍 현재 시간: ${DateTime.now()}');
 
   return FirebaseFirestore.instance
-      .collection('tester_applications')
+      .collection('app_testers')
       .where('appId', isEqualTo: appId)
       .snapshots()
       .map((snapshot) {
@@ -86,7 +86,7 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
 
           // 전체 컬렉션에서 샘플 확인
           FirebaseFirestore.instance
-              .collection('tester_applications')
+              .collection('app_testers')
               .limit(10)
               .get()
               .then((allDocs) {
@@ -95,7 +95,14 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
                   final data = doc.data();
                   final storedAppId = data['appId']?.toString() ?? '';
                   final isMatch = searchVariants.any((variant) => storedAppId.contains(variant) || variant.contains(storedAppId));
-                  debugPrint('🔍 SAMPLE_DOC: ID=${doc.id}, appId="${data['appId']}", tester=${data['testerName']}, ${isMatch ? "🎯 POTENTIAL_MATCH" : ""}');
+                  debugPrint('🔍 SAMPLE_DOC: ID=${doc.id}');
+                  debugPrint('🔍   - appId="${data['appId']}"');
+                  debugPrint('🔍   - testerId="${data['testerId']}"');
+                  debugPrint('🔍   - status="${data['status']}"');
+                  debugPrint('🔍   - joinedAt="${data['joinedAt']}"');
+                  debugPrint('🔍   - deviceInfo="${data['deviceInfo']}"');
+                  debugPrint('🔍   - ${isMatch ? "🎯 POTENTIAL_MATCH" : "❌ NO_MATCH"}');
+                  debugPrint('🔍   ---');
                 }
               });
         } else {
@@ -103,11 +110,11 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
             final data = doc.data();
             debugPrint('📱 문서 ID: ${doc.id}');
             debugPrint('📱 저장된 appId: "${data['appId']}"');
-            debugPrint('📱 테스터: ${data['testerName']}, 상태: ${data['status']}, 신청일: ${data['appliedAt']}');
+            debugPrint('📱 테스터ID: ${data['testerId']}, 상태: ${data['status']}, 가입일: ${data['joinedAt']}');
           }
         }
 
-        return snapshot.docs.map((doc) => UnifiedMissionModel.fromFirestore(doc)).toList();
+        return snapshot.docs.map((doc) => UnifiedMissionModel.fromAppTesters(doc)).toList();
       });
 });
 
@@ -116,7 +123,7 @@ final testerMissionsProvider = StreamProvider.family<List<UnifiedMissionModel>, 
   debugPrint('👤 UNIFIED_PROVIDER: 테스터($testerId) 미션 조회');
 
   return FirebaseFirestore.instance
-      .collection('tester_applications')
+      .collection('test_sessions')
       .where('testerId', isEqualTo: testerId)
       .orderBy('appliedAt', descending: true)
       .snapshots()
@@ -236,7 +243,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         appliedAt: DateTime.now(),
       );
 
-      await _firestore.collection('tester_applications').add(mission.toFirestore());
+      await _firestore.collection('app_testers').add(mission.toFirestore());
 
       debugPrint('✅ UNIFIED_PROVIDER: 미션 신청 성공 - $appName');
       state = state.copyWith(isLoading: false);
@@ -268,7 +275,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         updateData['startedAt'] = FieldValue.serverTimestamp();
       }
 
-      await _firestore.collection('tester_applications').doc(missionId).update(updateData);
+      await _firestore.collection('app_testers').doc(missionId).update(updateData);
 
       debugPrint('✅ UNIFIED_PROVIDER: 상태 업데이트 성공 - $missionId');
       state = state.copyWith(isLoading: false);
@@ -307,7 +314,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         updateData['status'] = 'in_progress';
       }
 
-      await _firestore.collection('tester_applications').doc(missionId).update(updateData);
+      await _firestore.collection('app_testers').doc(missionId).update(updateData);
 
       debugPrint('✅ UNIFIED_PROVIDER: 진행률 업데이트 성공');
       state = state.copyWith(isLoading: false);
@@ -326,7 +333,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
     try {
       debugPrint('🗑️ UNIFIED_PROVIDER: 미션 삭제 - $missionId');
 
-      await _firestore.collection('tester_applications').doc(missionId).delete();
+      await _firestore.collection('app_testers').doc(missionId).delete();
 
       debugPrint('✅ UNIFIED_PROVIDER: 미션 삭제 성공');
       state = state.copyWith(isLoading: false);
@@ -345,7 +352,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
     try {
       debugPrint('🧹 UNIFIED_PROVIDER: 잘못된 미션 데이터 정리 시작');
 
-      final querySnapshot = await _firestore.collection('tester_applications').get();
+      final querySnapshot = await _firestore.collection('app_testers').get();
       int deletedCount = 0;
 
       for (var doc in querySnapshot.docs) {

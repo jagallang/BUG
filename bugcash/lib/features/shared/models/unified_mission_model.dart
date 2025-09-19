@@ -54,7 +54,7 @@ class UnifiedMissionModel {
     this.rating,
   });
 
-  // Firestore에서 데이터 읽기
+  // Firestore에서 데이터 읽기 (tester_applications 컬렉션용)
   factory UnifiedMissionModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return UnifiedMissionModel(
@@ -82,6 +82,37 @@ class UnifiedMissionModel {
       requirements: List<String>.from(data['requirements'] ?? []),
       feedback: data['feedback'],
       rating: data['rating'],
+    );
+  }
+
+  // app_testers 컬렉션에서 데이터 읽기
+  factory UnifiedMissionModel.fromAppTesters(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return UnifiedMissionModel(
+      id: doc.id,
+      appId: data['appId'] ?? '',
+      appName: '앱 정보 로딩 중...', // 앱 정보는 별도로 조회 필요
+      testerId: data['testerId'] ?? '',
+      testerName: '테스터 정보 로딩 중...', // 테스터 정보는 별도로 조회 필요
+      testerEmail: '', // app_testers에 없음
+      providerId: '', // app_testers에 없음
+      status: data['status'] ?? 'active',
+      experience: '',
+      motivation: '',
+      appliedAt: (data['joinedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      processedAt: null,
+      startedAt: (data['joinedAt'] as Timestamp?)?.toDate(),
+      completedAt: null,
+      dailyPoints: 5000,
+      totalPoints: data['testingProgress']?['bugsReported'] ?? 0,
+      currentDay: data['testingProgress']?['sessionsCompleted'] ?? 0,
+      totalDays: 14,
+      progressPercentage: 0.0,
+      todayCompleted: false,
+      metadata: Map<String, dynamic>.from(data['deviceInfo'] ?? {}),
+      requirements: const [],
+      feedback: null,
+      rating: null,
     );
   }
 

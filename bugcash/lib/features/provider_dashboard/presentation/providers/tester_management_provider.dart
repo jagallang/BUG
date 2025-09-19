@@ -203,11 +203,17 @@ final appMissionsProvider = StreamProvider.family<List<TestMissionModel>, String
   return FirebaseFirestore.instance
       .collection('test_missions')
       .where('appId', isEqualTo: appId)
-      .orderBy('createdAt', descending: true)
       .snapshots()
-      .map((snapshot) => snapshot.docs
-          .map((doc) => TestMissionModel.fromFirestore(doc))
-          .toList());
+      .map((snapshot) {
+        final docs = snapshot.docs
+            .map((doc) => TestMissionModel.fromFirestore(doc))
+            .toList();
+
+        // 클라이언트 측에서 정렬
+        docs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+        return docs;
+      });
 });
 
 // 앱별 통계 Provider

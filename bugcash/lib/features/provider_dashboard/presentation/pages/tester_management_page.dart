@@ -228,143 +228,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     );
   }
 
-  Widget _buildTesterBasedMissionCard(List<UnifiedMissionModel> pendingTesters, List<UnifiedMissionModel> approvedTesters) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.people, color: AppColors.primary, size: 20.sp),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: Text(
-                  '${widget.app.appName} 테스터 미션',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(4.r),
-                ),
-                child: Text(
-                  '자동 생성',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.blue,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 12.h),
-          Text(
-            '이 앱에 신청한 테스터들의 미션 상태입니다. 테스터를 승인하여 테스트를 시작하세요.',
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey[700],
-            ),
-          ),
-          SizedBox(height: 16.h),
 
-          // 미션 상태 통계
-          Container(
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(8.r),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildMissionStatItem('신청 대기', pendingTesters.length, Colors.orange),
-                _buildMissionStatItem('진행 중', approvedTesters.length, Colors.green),
-                _buildMissionStatItem('완료', 0, Colors.blue),
-              ],
-            ),
-          ),
-          SizedBox(height: 16.h),
-
-          // 액션 버튼들
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    // 테스터 관리 탭으로 이동
-                    DefaultTabController.of(context)?.animateTo(0);
-                  },
-                  icon: Icon(Icons.people_outline, size: 16.sp),
-                  label: const Text('테스터 관리'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primary,
-                    side: BorderSide(color: AppColors.primary),
-                  ),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: approvedTesters.isNotEmpty
-                    ? () => _sendDailyMissionToApprovedTesters(approvedTesters)
-                    : null,
-                  icon: Icon(Icons.send, size: 16.sp),
-                  label: const Text('일일 미션 전송'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMissionStatItem(String label, int count, Color color) {
-    return Column(
-      children: [
-        Text(
-          count.toString(),
-          style: TextStyle(
-            fontSize: 18.sp,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.sp,
-            color: Colors.grey[600],
-          ),
-        ),
-      ],
-    );
-  }
 
   Widget _buildStatCard(String label, int count, Color color) {
     return Column(
@@ -547,7 +411,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     );
   }
 
-  // 미션 관리 탭
+  // 미션 관리 탭 (테스터 신청 관리)
   Widget _buildMissionManagementTab() {
     // 🚀 CRITICAL DEBUG: Mission Management Tab
     debugPrint('🚀 MISSION_MANAGEMENT_TAB_DEBUG:');
@@ -556,57 +420,76 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     final cleanAppId = _getCleanAppId();
     debugPrint('🚀 Clean App ID for queries: $cleanAppId');
 
-    // 🚀 Provider 호출 시작 - 테스터와 미션 둘 다 가져오기
+    // 🚀 테스터 신청 데이터만 가져오기
     debugPrint('🚀 Calling ref.watch(appTestersStreamProvider($cleanAppId))');
     final testersAsync = ref.watch(appTestersStreamProvider(cleanAppId));
 
-    debugPrint('🚀 Calling ref.watch(appMissionsProvider($cleanAppId))');
-    final missionsAsync = ref.watch(appMissionsProvider(cleanAppId));
+    return testersAsync.when(
+      data: (testers) {
+        debugPrint('🚀 TESTERS_DATA_DEBUG:');
+        debugPrint('🚀 testersAsync.data received: ${testers.length} testers found');
+        for (var tester in testers) {
+          debugPrint('🚀 Tester: ${tester.testerName}, appId: ${tester.appId}, status: ${tester.status}');
+        }
 
-    // 두 데이터 모두 처리
-    if (testersAsync.isLoading || missionsAsync.isLoading) {
-      debugPrint('🚀 LOADING_DEBUG: testers or missions is loading');
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (testersAsync.hasError) {
-      debugPrint('🚀 TESTERS_ERROR_DEBUG: ${testersAsync.error}');
-      return _buildErrorWidget('테스터 데이터를 불러올 수 없습니다');
-    }
-
-    if (missionsAsync.hasError) {
-      debugPrint('🚀 MISSIONS_ERROR_DEBUG: ${missionsAsync.error}');
-      return _buildErrorWidget('미션 데이터를 불러올 수 없습니다');
-    }
-
-    final testers = testersAsync.valueOrNull ?? [];
-    final missions = missionsAsync.valueOrNull ?? [];
-
-    debugPrint('🚀 DATA_DEBUG:');
-    debugPrint('🚀 Testers loaded: ${testers.length}');
-    debugPrint('🚀 Missions loaded: ${missions.length}');
-
-    for (var mission in missions) {
-      debugPrint('🚀 Mission: ${mission.title}, status: ${mission.status}, appId: ${mission.appId}');
-    }
-
-    return _buildMissionsList(missions, testers);
+        debugPrint('🚀 Building tester applications list with ${testers.length} testers');
+        return _buildTesterApplicationsList(testers);
+      },
+      loading: () {
+        debugPrint('🚀 TESTERS_LOADING_DEBUG: testersAsync is loading');
+        return const Center(child: CircularProgressIndicator());
+      },
+      error: (error, stack) {
+        debugPrint('🚀 TESTERS_ERROR_DEBUG: $error');
+        return _buildErrorWidget('테스터 데이터를 불러올 수 없습니다');
+      },
+    );
   }
 
-  Widget _buildMissionsList(List<TestMissionModel> missions, List<UnifiedMissionModel> testers) {
-    // 승인된 테스터들의 미션 신청을 기반으로 가상 미션 목록 생성
-    final approvedTesters = testers.where((t) => t.status == 'approved').toList();
+  // 테스터 신청 목록을 표시하는 메서드
+  Widget _buildTesterApplicationsList(List<UnifiedMissionModel> testers) {
+    if (testers.isEmpty) {
+      return _buildEmptyTestersState();
+    }
+
     final pendingTesters = testers.where((t) => t.status == 'pending').toList();
+    final approvedTesters = testers.where((t) => t.status == 'approved').toList();
+    final rejectedTesters = testers.where((t) => t.status == 'rejected').toList();
 
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 테스터 신청 기반 미션 상태
-          if (pendingTesters.isNotEmpty || approvedTesters.isNotEmpty) ...[
+          // 요약 카드
+          Container(
+            padding: EdgeInsets.all(16.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildStatCard('신청', pendingTesters.length, Colors.orange),
+                _buildStatCard('승인', approvedTesters.length, Colors.green),
+                _buildStatCard('거부', rejectedTesters.length, Colors.red),
+              ],
+            ),
+          ),
+          SizedBox(height: 24.h),
+
+          // 신청 대기 중인 테스터
+          if (pendingTesters.isNotEmpty) ...[
             Text(
-              '테스터 신청 기반 미션',
+              '신청 대기 중인 테스터',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -614,14 +497,14 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
               ),
             ),
             SizedBox(height: 12.h),
-            _buildTesterBasedMissionCard(pendingTesters, approvedTesters),
+            ...pendingTesters.map((tester) => _buildTesterCard(tester)),
             SizedBox(height: 24.h),
           ],
 
-          // 정식 미션 목록
-          if (missions.isNotEmpty) ...[
+          // 승인된 테스터
+          if (approvedTesters.isNotEmpty) ...[
             Text(
-              '생성된 미션',
+              '승인된 테스터',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -629,27 +512,40 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
               ),
             ),
             SizedBox(height: 12.h),
-            ...missions.map((mission) => _buildMissionCard(mission)),
-          ] else if (pendingTesters.isEmpty && approvedTesters.isEmpty)
-            _buildEmptyMissionsState(),
+            ...approvedTesters.map((tester) => _buildTesterCard(tester)),
+            SizedBox(height: 24.h),
+          ],
+
+          // 거부된 테스터 (접힌 상태로)
+          if (rejectedTesters.isNotEmpty)
+            ExpansionTile(
+              title: Text(
+                '거부된 테스터 (${rejectedTesters.length}명)',
+                style: TextStyle(
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              children: rejectedTesters.map((tester) => _buildTesterCard(tester)).toList(),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildEmptyMissionsState() {
+  Widget _buildEmptyTestersState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.assignment,
+            Icons.people_outline,
             size: 64.sp,
             color: Colors.grey[300],
           ),
           SizedBox(height: 16.h),
           Text(
-            '등록된 미션이 없습니다',
+            '등록된 테스터 신청이 없습니다',
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.w600,
@@ -658,7 +554,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
           ),
           SizedBox(height: 8.h),
           Text(
-            '새 미션을 생성하여 테스터들에게 과제를 할당하세요',
+            '테스터들이 앱에 신청하면 여기에 표시됩니다',
             style: TextStyle(
               fontSize: 14.sp,
               color: Colors.grey[500],
@@ -670,141 +566,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     );
   }
 
-  Widget _buildMissionCard(TestMissionModel mission) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12.h),
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  mission.title,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              _buildMissionStatusBadge(mission.status),
-            ],
-          ),
-          SizedBox(height: 8.h),
-          Text(
-            mission.description,
-            style: TextStyle(
-              fontSize: 14.sp,
-              color: Colors.grey[700],
-            ),
-          ),
-          SizedBox(height: 12.h),
 
-          Row(
-            children: [
-              Icon(Icons.calendar_today, size: 14.sp, color: Colors.grey[600]),
-              SizedBox(width: 4.w),
-              Text(
-                '기한: ${_formatDate(mission.dueDate)}',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
-              SizedBox(width: 16.w),
-              Icon(Icons.people, size: 14.sp, color: Colors.grey[600]),
-              SizedBox(width: 4.w),
-              Text(
-                '참여: ${mission.completedCount}/${mission.assignedCount}',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 12.h),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _viewMissionDetails(mission),
-                  child: const Text('상세보기'),
-                ),
-              ),
-              SizedBox(width: 8.w),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: mission.status == 'active'
-                    ? () => _pauseMission(mission.id)
-                    : () => _activateMission(mission.id),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: mission.status == 'active'
-                      ? Colors.orange
-                      : AppColors.primary,
-                  ),
-                  child: Text(mission.status == 'active' ? '일시정지' : '활성화'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMissionStatusBadge(String status) {
-    Color color;
-    String text;
-    switch (status) {
-      case 'active':
-        color = Colors.green;
-        text = '진행중';
-        break;
-      case 'paused':
-        color = Colors.orange;
-        text = '일시정지';
-        break;
-      case 'completed':
-        color = Colors.blue;
-        text = '완료';
-        break;
-      default:
-        color = Colors.grey;
-        text = '대기';
-        break;
-    }
-
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4.r),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
-      ),
-    );
-  }
 
   // 통계 탭
   Widget _buildStatisticsTab() {
@@ -1038,124 +800,8 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     }
   }
 
-  void _viewMissionDetails(TestMissionModel mission) {
-    // 미션 상세보기 구현
-    showDialog(
-      context: context,
-      builder: (context) => MissionDetailsDialog(mission: mission),
-    );
-  }
 
-  Future<void> _pauseMission(String missionId) async {
-    await ref.read(testerManagementProvider.notifier)
-        .updateMissionStatus(missionId, 'paused');
-  }
 
-  Future<void> _activateMission(String missionId) async {
-    await ref.read(testerManagementProvider.notifier)
-        .updateMissionStatus(missionId, 'active');
-  }
 
-  Future<void> _sendDailyMissionToApprovedTesters(List<UnifiedMissionModel> approvedTesters) async {
-    try {
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('일일 미션 전송'),
-          content: Text('승인된 테스터 ${approvedTesters.length}명에게 일일 미션을 전송하시겠습니까?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('취소'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-              child: const Text('전송'),
-            ),
-          ],
-        ),
-      );
-
-      if (confirmed == true) {
-        // 일일 미션 생성 및 전송
-        final dailyMissionTitle = '${widget.app.appName} 일일 테스트 (${DateTime.now().month}/${DateTime.now().day})';
-        const dailyMissionDescription = '''
-앱을 사용하면서 다음 사항들을 확인해주세요:
-• 앱의 주요 기능들이 정상적으로 작동하는지 확인
-• 사용자 인터페이스에 문제가 없는지 확인
-• 앱 사용 중 발생하는 버그나 오류 신고
-• 사용성 개선 사항 제안
-
-테스트 완료 후 리포트를 작성해주세요.
-        ''';
-
-        await ref.read(testerManagementProvider.notifier).createMission(
-          appId: widget.app.id,
-          title: dailyMissionTitle,
-          description: dailyMissionDescription,
-          dueDate: DateTime.now().add(const Duration(days: 1)),
-        );
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${approvedTesters.length}명의 테스터에게 일일 미션을 전송했습니다'),
-              backgroundColor: Colors.green,
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('미션 전송 실패: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
 }
 
-// 미션 상세보기 다이얼로그
-class MissionDetailsDialog extends StatelessWidget {
-  final TestMissionModel mission;
-
-  const MissionDetailsDialog({super.key, required this.mission});
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(mission.title),
-      content: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('설명: ${mission.description}'),
-            SizedBox(height: 8.h),
-            Text('마감일: ${_formatDate(mission.dueDate)}'),
-            SizedBox(height: 8.h),
-            Text('상태: ${mission.status}'),
-            SizedBox(height: 8.h),
-            Text('참여자: ${mission.assignedCount}명'),
-            SizedBox(height: 8.h),
-            Text('완료자: ${mission.completedCount}명'),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('닫기'),
-        ),
-      ],
-    );
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-  }
-}
