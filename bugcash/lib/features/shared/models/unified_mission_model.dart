@@ -85,35 +85,115 @@ class UnifiedMissionModel {
     );
   }
 
-  // app_testers 컬렉션에서 데이터 읽기
-  factory UnifiedMissionModel.fromAppTesters(DocumentSnapshot doc) {
+  // tester_applications 컬렉션에서 데이터 읽기 (새로운 구조)
+  factory UnifiedMissionModel.fromTesterApplications(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    final testerInfo = data['testerInfo'] as Map<String, dynamic>? ?? {};
+    final missionInfo = data['missionInfo'] as Map<String, dynamic>? ?? {};
+    final progress = data['progress'] as Map<String, dynamic>? ?? {};
+
     return UnifiedMissionModel(
       id: doc.id,
       appId: data['appId'] ?? '',
-      appName: '앱 정보 로딩 중...', // 앱 정보는 별도로 조회 필요
+      appName: missionInfo['appName'] ?? testerInfo['appName'] ?? '앱 정보 로딩 중...',
       testerId: data['testerId'] ?? '',
-      testerName: '테스터 정보 로딩 중...', // 테스터 정보는 별도로 조회 필요
-      testerEmail: '', // app_testers에 없음
-      providerId: '', // app_testers에 없음
-      status: data['status'] ?? 'active',
-      experience: '',
-      motivation: '',
-      appliedAt: (data['joinedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      processedAt: null,
+      testerName: testerInfo['name'] ?? '테스터 정보 로딩 중...',
+      testerEmail: testerInfo['email'] ?? '',
+      providerId: data['providerId'] ?? '',
+      status: data['status'] ?? 'pending',
+      experience: testerInfo['experience'] ?? '',
+      motivation: testerInfo['motivation'] ?? '',
+      appliedAt: (data['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      processedAt: (data['statusUpdatedAt'] as Timestamp?)?.toDate(),
+      startedAt: (data['startedAt'] as Timestamp?)?.toDate(),
+      completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
+      dailyPoints: (missionInfo['dailyReward'] as int?) ?? 5000,
+      totalPoints: (progress['totalPoints'] as int?) ?? 0,
+      currentDay: (progress['currentDay'] as int?) ?? 0,
+      totalDays: (missionInfo['totalDays'] as int?) ?? 14,
+      progressPercentage: (progress['progressPercentage'] as num?)?.toDouble() ?? 0.0,
+      todayCompleted: (progress['todayCompleted'] as bool?) ?? false,
+      metadata: Map<String, dynamic>.from(testerInfo),
+      requirements: List<String>.from(missionInfo['requirements'] ?? []),
+      feedback: progress['latestFeedback'] as String?,
+      rating: (progress['averageRating'] as num?)?.toInt(),
+    );
+  }
+
+  // app_testers 컬렉션에서 데이터 읽기 (확장된 구조 - 기존 호환성)
+  factory UnifiedMissionModel.fromAppTesters(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final testerInfo = data['testerInfo'] as Map<String, dynamic>? ?? {};
+    final testingProgress = data['testingProgress'] as Map<String, dynamic>? ?? {};
+    final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
+
+    return UnifiedMissionModel(
+      id: doc.id,
+      appId: data['appId'] ?? '',
+      appName: metadata['appName'] ?? '앱 정보 로딩 중...',
+      testerId: data['testerId'] ?? '',
+      testerName: testerInfo['name'] ?? '테스터 정보 로딩 중...',
+      testerEmail: testerInfo['email'] ?? '',
+      providerId: data['providerId'] ?? '',
+      status: data['status'] ?? 'pending',
+      experience: testerInfo['experience'] ?? '',
+      motivation: testerInfo['motivation'] ?? '',
+      appliedAt: (data['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      processedAt: (data['approvedAt'] as Timestamp?)?.toDate(),
       startedAt: (data['joinedAt'] as Timestamp?)?.toDate(),
-      completedAt: null,
-      dailyPoints: 5000,
-      totalPoints: data['testingProgress']?['bugsReported'] ?? 0,
-      currentDay: data['testingProgress']?['sessionsCompleted'] ?? 0,
-      totalDays: 14,
-      progressPercentage: 0.0,
-      todayCompleted: false,
+      completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
+      dailyPoints: (metadata['reward'] as int?) ?? 5000,
+      totalPoints: (testingProgress['bugsReported'] as int?) ?? 0,
+      currentDay: (testingProgress['currentDay'] as int?) ?? 0,
+      totalDays: (testingProgress['totalDays'] as int?) ?? 14,
+      progressPercentage: _calculateProgress(testingProgress),
+      todayCompleted: _checkTodayCompleted(data['dailyInteractions']),
       metadata: Map<String, dynamic>.from(data['deviceInfo'] ?? {}),
       requirements: const [],
-      feedback: null,
-      rating: null,
+      feedback: _getLatestFeedback(data['dailyInteractions']),
+      rating: (metadata['finalRating'] as num?)?.toInt(),
     );
+  }
+
+  // 진행률 계산 도우미
+  static double _calculateProgress(Map<String, dynamic> testingProgress) {
+    final currentDay = (testingProgress['currentDay'] as int?) ?? 0;
+    final totalDays = (testingProgress['totalDays'] as int?) ?? 14;
+    return totalDays > 0 ? (currentDay / totalDays * 100).clamp(0.0, 100.0) : 0.0;
+  }
+
+  // 오늘 완료 여부 확인
+  static bool _checkTodayCompleted(dynamic dailyInteractions) {
+    if (dailyInteractions is! List) return false;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+
+    for (var interaction in dailyInteractions) {
+      if (interaction is Map<String, dynamic> &&
+          interaction['date'] == today) {
+        return interaction['testerSubmitted'] == true;
+      }
+    }
+    return false;
+  }
+
+  // 최신 피드백 가져오기
+  static String? _getLatestFeedback(dynamic dailyInteractions) {
+    if (dailyInteractions is! List || dailyInteractions.isEmpty) return null;
+
+    // 최신순으로 정렬하여 가장 최근 피드백 반환
+    final interactions = dailyInteractions
+        .whereType<Map<String, dynamic>>()
+        .toList();
+
+    interactions.sort((a, b) => (b['date'] as String).compareTo(a['date'] as String));
+
+    for (var interaction in interactions) {
+      final feedback = interaction['feedback'] as String?;
+      if (feedback != null && feedback.isNotEmpty) {
+        return feedback;
+      }
+    }
+    return null;
   }
 
   // Firestore에 데이터 저장

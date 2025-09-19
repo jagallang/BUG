@@ -64,7 +64,7 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
   debugPrint('🔍 현재 시간: ${DateTime.now()}');
 
   return FirebaseFirestore.instance
-      .collection('app_testers')
+      .collection('tester_applications')
       .where('appId', isEqualTo: appId)
       .snapshots()
       .map((snapshot) {
@@ -86,7 +86,7 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
 
           // 전체 컬렉션에서 샘플 확인
           FirebaseFirestore.instance
-              .collection('app_testers')
+              .collection('tester_applications')
               .limit(10)
               .get()
               .then((allDocs) {
@@ -114,7 +114,7 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
           }
         }
 
-        return snapshot.docs.map((doc) => UnifiedMissionModel.fromAppTesters(doc)).toList();
+        return snapshot.docs.map((doc) => UnifiedMissionModel.fromTesterApplications(doc)).toList();
       });
 });
 
@@ -243,7 +243,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         appliedAt: DateTime.now(),
       );
 
-      await _firestore.collection('app_testers').add(mission.toFirestore());
+      await _firestore.collection('tester_applications').add(mission.toFirestore());
 
       debugPrint('✅ UNIFIED_PROVIDER: 미션 신청 성공 - $appName');
       state = state.copyWith(isLoading: false);
@@ -275,7 +275,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         updateData['startedAt'] = FieldValue.serverTimestamp();
       }
 
-      await _firestore.collection('app_testers').doc(missionId).update(updateData);
+      await _firestore.collection('tester_applications').doc(missionId).update(updateData);
 
       debugPrint('✅ UNIFIED_PROVIDER: 상태 업데이트 성공 - $missionId');
       state = state.copyWith(isLoading: false);
@@ -314,7 +314,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         updateData['status'] = 'in_progress';
       }
 
-      await _firestore.collection('app_testers').doc(missionId).update(updateData);
+      await _firestore.collection('tester_applications').doc(missionId).update(updateData);
 
       debugPrint('✅ UNIFIED_PROVIDER: 진행률 업데이트 성공');
       state = state.copyWith(isLoading: false);
@@ -333,7 +333,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
     try {
       debugPrint('🗑️ UNIFIED_PROVIDER: 미션 삭제 - $missionId');
 
-      await _firestore.collection('app_testers').doc(missionId).delete();
+      await _firestore.collection('tester_applications').doc(missionId).delete();
 
       debugPrint('✅ UNIFIED_PROVIDER: 미션 삭제 성공');
       state = state.copyWith(isLoading: false);
@@ -352,7 +352,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
     try {
       debugPrint('🧹 UNIFIED_PROVIDER: 잘못된 미션 데이터 정리 시작');
 
-      final querySnapshot = await _firestore.collection('app_testers').get();
+      final querySnapshot = await _firestore.collection('tester_applications').get();
       int deletedCount = 0;
 
       for (var doc in querySnapshot.docs) {

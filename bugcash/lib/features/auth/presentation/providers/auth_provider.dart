@@ -67,28 +67,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
   StreamSubscription<User?>? _authSubscription;
 
   AuthNotifier(this._authService) : super(const AuthState()) {
-    // 자동 로그인 방지를 위해 현재 상태만 확인 (감시하지 않음)
-    _checkCurrentAuthState();
-  }
-
-  Future<void> _checkCurrentAuthState() async {
-    // 현재 Firebase 인증 상태만 확인 (자동 로그인 방지를 위해 감시하지 않음)
-    final currentUser = FirebaseAuth.instance.currentUser;
-
-    if (kDebugMode) {
-      debugPrint('🟦 AuthProvider._checkCurrentAuthState() - Current user: ${currentUser?.email ?? 'null'}');
-    }
-
-    if (currentUser != null) {
-      // 현재 사용자가 있다면 상태를 업데이트하지 않음 (자동 로그인 방지)
-      if (kDebugMode) {
-        debugPrint('🟦 AuthProvider._checkCurrentAuthState() - 자동 로그인 방지: 로그인 상태 무시');
-      }
-      // state는 초기 상태(user: null)로 유지하여 로그인 화면 표시
-    } else {
-      // 사용자가 없으면 로그인 화면 표시
-      state = state.copyWith(user: null, isLoading: false);
-    }
+    // Auth state 모니터링 시작
+    _initializeAuthState();
   }
 
   void _initializeAuthState() {
@@ -168,10 +148,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
 
       if (userCredential.user != null) {
-        final userData = await _authService.getUserData(userCredential.user!.uid);
-        state = state.copyWith(user: userData, isLoading: false);
-        // 로그인 후 인증 상태 모니터링 시작
-        _initializeAuthState();
+        // Auth stream listener가 자동으로 사용자 데이터를 로드할 것이므로 여기서는 loading 상태만 해제
+        state = state.copyWith(isLoading: false);
       }
     } catch (e) {
       state = state.copyWith(
@@ -186,6 +164,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String email,
     required String password,
   }) async {
+    if (kDebugMode) {
+      debugPrint('🔵 AuthProvider.signInWithEmailAndPassword() - 시작: $email');
+    }
+
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
@@ -194,13 +176,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
       );
 
+      if (kDebugMode) {
+        debugPrint('🔵 AuthProvider.signInWithEmailAndPassword() - Firebase 로그인 성공: ${userCredential.user?.email}');
+      }
+
       if (userCredential.user != null) {
-        final userData = await _authService.getUserData(userCredential.user!.uid);
-        state = state.copyWith(user: userData, isLoading: false);
-        // 로그인 후 인증 상태 모니터링 시작
-        _initializeAuthState();
+        // Auth stream listener가 자동으로 사용자 데이터를 로드할 것이므로 여기서는 loading 상태만 해제
+        state = state.copyWith(isLoading: false);
+
+        if (kDebugMode) {
+          debugPrint('🔵 AuthProvider.signInWithEmailAndPassword() - 완료, Auth stream이 사용자 로드 중...');
+        }
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ AuthProvider.signInWithEmailAndPassword() - 실패: $e');
+      }
+
       state = state.copyWith(
         isLoading: false,
         errorMessage: e.toString(),
@@ -216,10 +208,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final userCredential = await _authService.signInWithGoogle();
 
       if (userCredential?.user != null) {
-        final userData = await _authService.getUserData(userCredential!.user!.uid);
-        state = state.copyWith(user: userData, isLoading: false);
-        // 로그인 후 인증 상태 모니터링 시작
-        _initializeAuthState();
+        // Auth stream listener가 자동으로 사용자 데이터를 로드할 것이므로 여기서는 loading 상태만 해제
+        state = state.copyWith(isLoading: false);
       } else {
         state = state.copyWith(isLoading: false);
       }
@@ -256,22 +246,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       // 즉시 상태를 null로 설정
       state = state.copyWith(user: null, isLoading: false, errorMessage: null);
 
-      // Firebase Auth 스트림 구독 취소
-      await _authSubscription?.cancel();
-      _authSubscription = null;
-
       // Firebase 로그아웃
       await _authService.signOut();
-
-      // 추가 안전장치: Firebase Auth 강제 로그아웃
-      await FirebaseAuth.instance.signOut();
 
       if (kDebugMode) {
         debugPrint('✅ AuthProvider.signOut() - 완료');
       }
 
-      // 스트림 구독 재시작 비활성화 - 자동 로그인 방지
-      // _initializeAuthState();
+      // Auth stream listener가 자동으로 상태를 업데이트할 것임
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ AuthProvider.signOut() - 실패: $e');

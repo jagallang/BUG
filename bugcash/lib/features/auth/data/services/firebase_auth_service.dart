@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -36,12 +37,39 @@ class FirebaseAuthService {
 
   Future<UserEntity?> getUserData(String uid) async {
     try {
+      if (kDebugMode) {
+        debugPrint('🔍 FirebaseAuthService.getUserData() - 시작: $uid');
+      }
+
       final doc = await _firestore.collection('users').doc(uid).get();
-      if (!doc.exists) return null;
+
+      if (kDebugMode) {
+        debugPrint('🔍 FirebaseAuthService.getUserData() - 문서 존재: ${doc.exists}');
+      }
+
+      if (!doc.exists) {
+        if (kDebugMode) {
+          debugPrint('⚠️ FirebaseAuthService.getUserData() - 사용자 문서가 존재하지 않음: $uid');
+        }
+        return null;
+      }
 
       final data = doc.data()!;
-      return _createUserEntityFromData(uid, data);
+      if (kDebugMode) {
+        debugPrint('🔍 FirebaseAuthService.getUserData() - 사용자 데이터: ${data['email']}, ${data['displayName']}, ${data['userType']}');
+      }
+
+      final userEntity = _createUserEntityFromData(uid, data);
+
+      if (kDebugMode) {
+        debugPrint('✅ FirebaseAuthService.getUserData() - UserEntity 생성 완료: ${userEntity.email}');
+      }
+
+      return userEntity;
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ FirebaseAuthService.getUserData() - 오류: $e');
+      }
       AppLogger.error('Error getting user data', 'FirebaseAuthService', e);
       return null;
     }
@@ -76,21 +104,50 @@ class FirebaseAuthService {
     required String password,
   }) async {
     try {
+      if (kDebugMode) {
+        debugPrint('🔵 FirebaseAuthService.signInWithEmailAndPassword() - 시작: $email');
+      }
+
       final credential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
+      if (kDebugMode) {
+        debugPrint('🔵 FirebaseAuthService.signInWithEmailAndPassword() - Firebase 인증 성공: ${credential.user?.uid}');
+      }
+
       // Update last login time
       if (credential.user != null) {
-        await _firestore.collection('users').doc(credential.user!.uid).update({
-          'lastLoginAt': FieldValue.serverTimestamp(),
-        });
+        try {
+          await _firestore.collection('users').doc(credential.user!.uid).update({
+            'lastLoginAt': FieldValue.serverTimestamp(),
+          });
+          if (kDebugMode) {
+            debugPrint('🔵 FirebaseAuthService.signInWithEmailAndPassword() - lastLoginAt 업데이트 완료');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('⚠️ FirebaseAuthService.signInWithEmailAndPassword() - lastLoginAt 업데이트 실패: $e');
+          }
+        }
+      }
+
+      if (kDebugMode) {
+        debugPrint('🔵 FirebaseAuthService.signInWithEmailAndPassword() - 완료');
       }
 
       return credential;
     } on FirebaseAuthException catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ FirebaseAuthService.signInWithEmailAndPassword() - Firebase 인증 오류: ${e.code} - ${e.message}');
+      }
       throw _handleAuthException(e);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ FirebaseAuthService.signInWithEmailAndPassword() - 일반 오류: $e');
+      }
+      rethrow;
     }
   }
 

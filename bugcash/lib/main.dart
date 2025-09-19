@@ -35,9 +35,10 @@ void main() async {
 
 Future<void> _initializeFirebase() async {
   try {
-    // Firebase 초기화 - firebase_options.dart 사용
+    // Firebase 초기화 - 동적 API 키 사용
+    final firebaseOptions = await DefaultFirebaseOptions.currentPlatformWithApiKey;
     await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+      options: firebaseOptions,
     );
 
     if (AppConfig.enableLogging) {

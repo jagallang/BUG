@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'core/services/api_key_service.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -43,8 +44,38 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static Future<FirebaseOptions> get currentPlatformWithApiKey async {
+    final apiKey = await ApiKeyService.getFirebaseApiKey();
+
+    if (kIsWeb) {
+      return webWithApiKey(apiKey);
+    }
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        return androidWithApiKey(apiKey);
+      case TargetPlatform.iOS:
+        return iosWithApiKey(apiKey);
+      case TargetPlatform.macOS:
+        return macosWithApiKey(apiKey);
+      case TargetPlatform.windows:
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for windows - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
+      case TargetPlatform.linux:
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for linux - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
+      default:
+        throw UnsupportedError(
+          'DefaultFirebaseOptions are not supported for this platform.',
+        );
+    }
+  }
+
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'your_firebase_web_api_key_here',
+    apiKey: 'AIzaSyCL7xdDHLHB9CggpjUHQI6mNcKEw_eHGJo',
     appId: '1:335851774651:web:f7efbf71fdfd36690abf9e',
     messagingSenderId: '335851774651',
     projectId: 'bugcash',
@@ -54,7 +85,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'your_firebase_android_api_key_here',
+    apiKey: 'AIzaSyCL7xdDHLHB9CggpjUHQI6mNcKEw_eHGJo',
     appId: '1:335851774651:android:9c485dd2a5f436ef0abf9e',
     messagingSenderId: '335851774651',
     projectId: 'bugcash',
@@ -80,4 +111,50 @@ class DefaultFirebaseOptions {
     iosClientId: 'YOUR_MACOS_CLIENT_ID.apps.googleusercontent.com',
     iosBundleId: 'com.bugcash.app',
   );
+
+  static FirebaseOptions webWithApiKey(String apiKey) {
+    return FirebaseOptions(
+      apiKey: apiKey,
+      appId: '1:335851774651:web:f7efbf71fdfd36690abf9e',
+      messagingSenderId: '335851774651',
+      projectId: 'bugcash',
+      authDomain: 'bugcash.firebaseapp.com',
+      storageBucket: 'bugcash.firebasestorage.app',
+      measurementId: 'G-M1DT15JR9G',
+    );
+  }
+
+  static FirebaseOptions androidWithApiKey(String apiKey) {
+    return FirebaseOptions(
+      apiKey: apiKey,
+      appId: '1:335851774651:android:9c485dd2a5f436ef0abf9e',
+      messagingSenderId: '335851774651',
+      projectId: 'bugcash',
+      storageBucket: 'bugcash.firebasestorage.app',
+    );
+  }
+
+  static FirebaseOptions iosWithApiKey(String apiKey) {
+    return FirebaseOptions(
+      apiKey: apiKey,
+      appId: '1:335851774651:ios:abcdef123456789',
+      messagingSenderId: '335851774651',
+      projectId: 'bugcash',
+      storageBucket: 'bugcash.appspot.com',
+      iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
+      iosBundleId: 'com.bugcash.app',
+    );
+  }
+
+  static FirebaseOptions macosWithApiKey(String apiKey) {
+    return FirebaseOptions(
+      apiKey: apiKey,
+      appId: '1:335851774651:macos:abcdef123456789',
+      messagingSenderId: '335851774651',
+      projectId: 'bugcash',
+      storageBucket: 'bugcash.appspot.com',
+      iosClientId: 'YOUR_MACOS_CLIENT_ID.apps.googleusercontent.com',
+      iosBundleId: 'com.bugcash.app',
+    );
+  }
 }

@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../widgets/earnings_summary_widget.dart';
-import '../widgets/community_board_widget.dart';
-import '../widgets/expandable_mission_card.dart';
-import '../widgets/active_test_session_card.dart';
+// import '../widgets/earnings_summary_widget.dart';
+// import '../widgets/community_board_widget.dart';
+// import '../widgets/expandable_mission_card.dart';
+// import '../widgets/active_test_session_card.dart';
 import '../providers/tester_dashboard_provider.dart';
 import '../../../../models/test_session_model.dart';
 import '../../../../services/test_session_service.dart';
@@ -13,7 +13,8 @@ import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.d
 // 채팅 기능 제거됨
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/auth_wrapper.dart';
-import 'mission_detail_page.dart';
+import '../../../settings/presentation/pages/settings_page.dart';
+// import 'mission_detail_page.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -520,10 +521,32 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                           _buildMissionTab(),
                           
                           // 수익 관리
-                          EarningsSummaryWidget(testerId: widget.testerId),
+                          Card(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.w),
+                              child: Column(
+                                children: [
+                                  Text('수익 요약', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                                  SizedBox(height: 8.h),
+                                  Text('테스터 ID: ${widget.testerId}'),
+                                ],
+                              ),
+                            ),
+                          ),
                           
                           // 게시판 (커뮤니티)
-                          CommunityBoardWidget(testerId: widget.testerId),
+                          Card(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.w),
+                              child: Column(
+                                children: [
+                                  Text('커뮤니티 게시판', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                                  SizedBox(height: 8.h),
+                                  Text('테스터 커뮤니티 준비 중'),
+                                ],
+                              ),
+                            ),
+                          ),
                         ],
                       ),
           ),
@@ -774,11 +797,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   void _navigateToSettings(BuildContext context) {
-    // Settings 페이지로 이동
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('설정 페이지로 이동하는 기능을 구현 예정입니다.'),
-        duration: Duration(seconds: 2),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const SettingsPage(),
       ),
     );
   }
@@ -952,9 +973,12 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         final mission = dashboardState.availableMissions[index];
         return Padding(
           padding: EdgeInsets.only(bottom: 12.h),
-          child: ExpandableMissionCard(
-            mission: mission,
-            testerId: widget.testerId,
+          child: Card(
+            child: ListTile(
+              title: Text('미션: ${mission.id}'),
+              subtitle: Text('테스터 ID: ${widget.testerId}'),
+              trailing: const Icon(Icons.arrow_forward),
+            ),
           ),
         );
       },
@@ -1008,7 +1032,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             final session = activeSessions[index];
             return Padding(
               padding: EdgeInsets.only(bottom: 12.h),
-              child: ActiveTestSessionCard(session: session),
+              child: Card(
+                child: ListTile(
+                  title: Text('활성 세션: ${session.id}'),
+                  subtitle: Text('진행 중'),
+                  trailing: const Icon(Icons.play_arrow),
+                ),
+              ),
             );
           },
         );
@@ -1144,11 +1174,11 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => MissionDetailPage(
-                missionId: 'mission_${title.hashCode}',
-                missionTitle: title,
-                missionDescription: '앱 테스트를 통해 품질을 검증하고 개선점을 찾아주세요.',
-                appName: title.contains('채팅') ? '채팅메신저 앱' : '모바일 게임 앱',
+              builder: (context) => Scaffold(
+                appBar: AppBar(title: Text(title)),
+                body: const Center(
+                  child: Text('미션 상세 페이지 준비 중'),
+                ),
               ),
             ),
           );

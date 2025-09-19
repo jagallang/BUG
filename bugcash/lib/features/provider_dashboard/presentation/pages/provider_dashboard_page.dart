@@ -8,7 +8,7 @@ import '../../../../core/services/auth_service.dart';
 import 'app_management_page.dart' hide ProviderAppModel;
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 // 채팅 기능 제거됨
-import '../widgets/payment_management_tab.dart';
+// import '../widgets/payment_management_tab.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -127,8 +127,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
   Widget _buildDashboardTab() {
     // Provider 정보 대신 간단한 환영 메시지 사용 - Firebase 에러 방지
-    final recentActivitiesAsync = ref.watch(recentActivitiesProvider(widget.providerId));
-
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.w),
       child: Column(
@@ -157,15 +155,14 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             ],
           ),
           SizedBox(height: 24.h),
-          
+
+          // 간단한 통계 카드들
+          _buildSimpleStatsCards(),
+
           SizedBox(height: 24.h),
-          
-          // Recent Activities Section
-          recentActivitiesAsync.when(
-            data: (activities) => _buildRecentActivities(activities),
-            loading: () => _buildRecentActivitiesLoading(),
-            error: (error, stack) => _buildRecentActivitiesError(),
-          ),
+
+          // Recent Activities Section - 에러 방지를 위해 간단한 메시지로 대체
+          _buildSimpleRecentActivities(),
         ],
       ),
     );
@@ -182,7 +179,27 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
 
   Widget _buildPaymentTab() {
-    return PaymentManagementTab(providerId: widget.providerId);
+    return Card(
+      margin: EdgeInsets.all(16.w),
+      child: Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Column(
+          children: [
+            Icon(Icons.payment, size: 48.sp, color: Colors.indigo),
+            SizedBox(height: 16.h),
+            Text(
+              '결제 관리',
+              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '결제 시스템 (개발 중)',
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
 
@@ -452,13 +469,115 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
 
 
+  Widget _buildSimpleStatsCards() {
+    return Row(
+      children: [
+        Expanded(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                children: [
+                  Icon(Icons.apps, size: 32.sp, color: Colors.blue),
+                  SizedBox(height: 8.h),
+                  Text(
+                    '0',
+                    style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '등록된 앱',
+                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        SizedBox(width: 16.w),
+        Expanded(
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(16.w),
+              child: Column(
+                children: [
+                  Icon(Icons.people, size: 32.sp, color: Colors.green),
+                  SizedBox(height: 8.h),
+                  Text(
+                    '0',
+                    style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    '테스터',
+                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSimpleRecentActivities() {
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '최근 활동',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 16.h),
+          Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                children: [
+                  Icon(Icons.inbox_outlined, size: 48.sp, color: Colors.grey),
+                  SizedBox(height: 16.h),
+                  Text(
+                    '아직 활동 내역이 없습니다',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    '앱을 등록하고 테스터를 모집해보세요!',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12.sp),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildChatFAB() {
     // currentUserProvider 대신 직접 Firebase Auth 사용
     final currentUser = FirebaseAuth.instance.currentUser;
     final unreadCount = currentUser != null
         ? 0 // 채팅 기능 제거됨
         : 0;
-        
+
     return Stack(
       children: [
         FloatingActionButton(
