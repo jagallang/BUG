@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.27-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.28-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,25 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.27)
+## ✨ 주요 기능 (v1.4.28)
+
+### 🔧 테스터 신청 컬렉션 연결 오류 수정 & 데이터 로딩 완전 해결 (v1.4.28)
+- **🎯 핵심 문제 해결**: "등록된 테스터 신청이 없습니다" 오류 완전 수정
+  - **📁 컬렉션 연결 수정**: `tester_applications` → `app_testers` 컬렉션으로 변경
+  - **🔄 서버-클라이언트 동기화**: 서버는 `app_testers`에 저장, 클라이언트도 동일 컬렉션 읽기
+  - **🔍 데이터 구조 일치**: Flutter 앱과 Node.js 서버 데이터 소스 완전 통일
+- **📊 데이터 모델 개선**: app_testers 컬렉션 구조에 최적화
+  - **🏗️ fromAppTesters() 팩토리**: 새로운 데이터 구조 전용 파싱 메서드 추가
+  - **📋 필드 매핑 정확성**: testerId, joinedAt, status, deviceInfo 등 정확한 필드 매핑
+  - **🔧 로딩 중 표시**: 앱/테스터 정보 별도 조회 필요 시 "로딩 중..." 상태 표시
+- **🎨 UI/UX 집중화**: 테스터 신청 관리에 특화된 인터페이스
+  - **❌ 미션 생성 기능 제거**: 테스터 관리 페이지에서 불필요한 미션 생성 UI 완전 제거
+  - **📊 신청 현황 대시보드**: 신청/승인/거부 상태별 명확한 구분 및 통계 표시
+  - **🔍 디버그 로깅 강화**: appId, testerId, joinedAt 등 실제 필드에 맞는 로그 출력
+- **⚡ 성능 최적화**: 불필요한 컬렉션 조회 제거 및 정확한 데이터 소스 사용
+  - **🎯 정확한 쿼리**: 존재하는 컬렉션에서만 데이터 조회로 성능 향상
+  - **📡 실시간 동기화**: app_testers 컬렉션 실시간 스트림으로 즉시 업데이트
+  - **🧹 코드 정리**: 사용하지 않는 미션 관련 코드 450+ 줄 제거
 
 ### 🤖 Google Gemini AI 통합 & 미션 데이터 로딩 개선 (v1.4.27)
 - **🧠 Gemini AI 통합**: Google의 최신 AI 모델을 프로젝트에 완벽 통합
