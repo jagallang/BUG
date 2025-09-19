@@ -50,8 +50,10 @@ app.*.map.json
 # android/app/google-services.json
 # ios/Runner/GoogleService-Info.plist
 
-# Environment files (no longer used)
-.env*
+# Environment files - contains sensitive API keys
+.env
+.env.*
+!.env.example
 
 # API Keys and sensitive configuration
 # Uncomment these lines if you have local config files with real API keys

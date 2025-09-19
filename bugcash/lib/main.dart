@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'generated/l10n/app_localizations.dart';
 import 'core/utils/logger.dart';
 import 'core/config/app_config.dart';
+import 'core/services/api_key_service.dart';
 import 'firebase_options.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'shared/theme/app_theme.dart';
@@ -22,6 +23,8 @@ extension ResponsiveText on num {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 환경변수 초기화 (Firebase 초기화 전에 실행)
+  await _initializeEnvironment();
 
   // Firebase 초기화 (Firebase 공식 권장 방식)
   await _initializeFirebase();
@@ -91,5 +94,22 @@ class BugCashWebApp extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+Future<void> _initializeEnvironment() async {
+  try {
+    // 환경변수 로드
+    await ApiKeyService.loadEnv();
+
+    if (AppConfig.enableLogging) {
+      AppLogger.info('Environment variables initialized', 'Main');
+    }
+  } catch (e) {
+    AppLogger.error('Environment initialization failed', 'Main', e);
+
+    if (AppConfig.enableLogging) {
+      AppLogger.info('Continuing with default configuration', 'Main');
+    }
   }
 }

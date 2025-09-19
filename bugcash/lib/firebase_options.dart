@@ -48,11 +48,11 @@ class DefaultFirebaseOptions {
     final apiKey = await ApiKeyService.getFirebaseApiKey();
 
     if (kIsWeb) {
-      return webWithApiKey(apiKey);
+      return await webWithApiKey(apiKey);
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        return androidWithApiKey(apiKey);
+        return await androidWithApiKey(apiKey);
       case TargetPlatform.iOS:
         return iosWithApiKey(apiKey);
       case TargetPlatform.macOS:
@@ -112,25 +112,32 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.bugcash.app',
   );
 
-  static FirebaseOptions webWithApiKey(String apiKey) {
+  static Future<FirebaseOptions> webWithApiKey(String apiKey) async {
+    final measurementId = await ApiKeyService.getMeasurementId();
+    final projectId = await ApiKeyService.getProjectId();
+    final messagingSenderId = await ApiKeyService.getMessagingSenderId();
+
     return FirebaseOptions(
       apiKey: apiKey,
       appId: '1:335851774651:web:f7efbf71fdfd36690abf9e',
-      messagingSenderId: '335851774651',
-      projectId: 'bugcash',
-      authDomain: 'bugcash.firebaseapp.com',
-      storageBucket: 'bugcash.firebasestorage.app',
-      measurementId: 'G-M1DT15JR9G',
+      messagingSenderId: messagingSenderId,
+      projectId: projectId,
+      authDomain: '$projectId.firebaseapp.com',
+      storageBucket: '$projectId.firebasestorage.app',
+      measurementId: measurementId,
     );
   }
 
-  static FirebaseOptions androidWithApiKey(String apiKey) {
+  static Future<FirebaseOptions> androidWithApiKey(String apiKey) async {
+    final projectId = await ApiKeyService.getProjectId();
+    final messagingSenderId = await ApiKeyService.getMessagingSenderId();
+
     return FirebaseOptions(
       apiKey: apiKey,
       appId: '1:335851774651:android:9c485dd2a5f436ef0abf9e',
-      messagingSenderId: '335851774651',
-      projectId: 'bugcash',
-      storageBucket: 'bugcash.firebasestorage.app',
+      messagingSenderId: messagingSenderId,
+      projectId: projectId,
+      storageBucket: '$projectId.firebasestorage.app',
     );
   }
 
