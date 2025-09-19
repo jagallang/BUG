@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.28-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.30-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,22 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.28)
+## ✨ 주요 기능 (v1.4.30)
+
+### 🔑 동적 Firebase API 키 관리 시스템 구현 (v1.4.30)
+- **🎯 사용자 정의 API 키**: 하드코딩된 Firebase API 키를 동적으로 설정 가능
+  - **⚙️ 설정 페이지 추가**: 햄버거 메뉴에서 접근 가능한 Firebase API 키 설정 UI
+  - **💾 SharedPreferences 저장**: 사용자가 입력한 API 키를 로컬에 안전하게 저장
+  - **🔄 런타임 Firebase 초기화**: API 키 변경 시 Firebase 인스턴스 동적 재초기화
+  - **🎨 사용자 친화적 UI**: 기본/사용자 정의 키 구분 표시 및 저장/초기화 버튼 제공
+- **🌐 Google Sign-In 웹 설정**: 웹 환경에서의 Google 로그인 지원 강화
+  - **🔗 Google ClientID 메타 태그**: HTML에 Google Sign-In 설정 추가
+  - **🔍 로그인 디버깅 강화**: 인증 과정의 각 단계별 상세 로그 추가
+  - **✅ 웹 호환성**: FedCM (Federated Credential Management) 지원으로 최신 브라우저 호환성 확보
+- **🏗️ 개선된 테스터 신청 시스템**: tester_applications 컬렉션 구조로 전환
+  - **📊 상호작용 데이터**: daily_interactions 컬렉션으로 테스터-공급자 간 일일 상호작용 관리
+  - **🔒 보안 규칙 강화**: Firestore 보안 규칙에 새로운 컬렉션 구조 반영
+  - **⚡ 성능 최적화**: 통합된 데이터 모델로 쿼리 효율성 향상
 
 ### 🔧 테스터 신청 컬렉션 연결 오류 수정 & 데이터 로딩 완전 해결 (v1.4.28)
 - **🎯 핵심 문제 해결**: "등록된 테스터 신청이 없습니다" 오류 완전 수정

@@ -75,17 +75,17 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCL7xdDHLHB9CggpjUHQI6mNcKEw_eHGJo',
+    apiKey: 'your_web_api_key_here',
     appId: '1:335851774651:web:f7efbf71fdfd36690abf9e',
     messagingSenderId: '335851774651',
     projectId: 'bugcash',
     authDomain: 'bugcash.firebaseapp.com',
     storageBucket: 'bugcash.firebasestorage.app',
-    measurementId: 'G-M1DT15JR9G',
+    measurementId: 'G-XXXXXXXXXX',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCL7xdDHLHB9CggpjUHQI6mNcKEw_eHGJo',
+    apiKey: 'your_android_api_key_here',
     appId: '1:335851774651:android:9c485dd2a5f436ef0abf9e',
     messagingSenderId: '335851774651',
     projectId: 'bugcash',
