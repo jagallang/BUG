@@ -87,6 +87,30 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
         ),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
+        actions: [
+          // 🧹 임시 데이터 정리 버튼
+          IconButton(
+            onPressed: () async {
+              try {
+                final notifier = ref.read(unifiedMissionNotifierProvider.notifier);
+                await notifier.cleanupInvalidMissions();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('잘못된 데이터 정리 완료')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('정리 실패: $e')),
+                  );
+                }
+              }
+            },
+            icon: const Icon(Icons.cleaning_services),
+            tooltip: '잘못된 데이터 정리',
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,

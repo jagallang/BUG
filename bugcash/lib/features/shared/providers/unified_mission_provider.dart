@@ -69,11 +69,42 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
       .snapshots()
       .map((snapshot) {
         debugPrint('📱 UNIFIED_PROVIDER: 앱 $appId - ${snapshot.docs.length}개 테스터 신청');
-        for (var doc in snapshot.docs) {
-          final data = doc.data();
-          debugPrint('📱 문서 ID: ${doc.id}');
-          debugPrint('📱 저장된 appId: ${data['appId']}');
-          debugPrint('📱 테스터: ${data['testerName']}, 상태: ${data['status']}, 신청일: ${data['appliedAt']}');
+
+        if (snapshot.docs.isEmpty) {
+          debugPrint('🔍 NO_RESULTS: appId "$appId"에 대한 결과 없음');
+
+          // 🔧 다양한 변형으로 재검색 시도
+          final searchVariants = [
+            appId,
+            'provider_app_$appId',
+            appId.replaceAll('provider_app_', ''),
+            '앱$appId',
+            appId.replaceAll('앱', ''),
+          ].toSet().toList(); // 중복 제거
+
+          debugPrint('🔍 ALTERNATIVE_SEARCH: 다음 변형들로 검색 시도: $searchVariants');
+
+          // 전체 컬렉션에서 샘플 확인
+          FirebaseFirestore.instance
+              .collection('tester_applications')
+              .limit(10)
+              .get()
+              .then((allDocs) {
+                debugPrint('🔍 COLLECTION_SAMPLE: 전체 컬렉션에 ${allDocs.docs.length}개 문서');
+                for (var doc in allDocs.docs) {
+                  final data = doc.data();
+                  final storedAppId = data['appId']?.toString() ?? '';
+                  final isMatch = searchVariants.any((variant) => storedAppId.contains(variant) || variant.contains(storedAppId));
+                  debugPrint('🔍 SAMPLE_DOC: ID=${doc.id}, appId="${data['appId']}", tester=${data['testerName']}, ${isMatch ? "🎯 POTENTIAL_MATCH" : ""}');
+                }
+              });
+        } else {
+          for (var doc in snapshot.docs) {
+            final data = doc.data();
+            debugPrint('📱 문서 ID: ${doc.id}');
+            debugPrint('📱 저장된 appId: "${data['appId']}"');
+            debugPrint('📱 테스터: ${data['testerName']}, 상태: ${data['status']}, 신청일: ${data['appliedAt']}');
+          }
         }
 
         return snapshot.docs.map((doc) => UnifiedMissionModel.fromFirestore(doc)).toList();
@@ -303,6 +334,40 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
     } catch (e) {
       debugPrint('🚨 UNIFIED_PROVIDER: 미션 삭제 실패 - $e');
       state = state.copyWith(isLoading: false, error: '미션 삭제에 실패했습니다: $e');
+      rethrow;
+    }
+  }
+
+  // 🧹 잘못된 데이터 정리 (빈 appId 데이터 삭제)
+  Future<void> cleanupInvalidMissions() async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      debugPrint('🧹 UNIFIED_PROVIDER: 잘못된 미션 데이터 정리 시작');
+
+      final querySnapshot = await _firestore.collection('tester_applications').get();
+      int deletedCount = 0;
+
+      for (var doc in querySnapshot.docs) {
+        final data = doc.data();
+        final appId = data['appId']?.toString() ?? '';
+        final testerName = data['testerName']?.toString() ?? '';
+        final testerEmail = data['testerEmail']?.toString() ?? '';
+
+        // appId가 빈 문자열이거나 testerName/Email이 없는 경우 삭제
+        if (appId.isEmpty || testerName.isEmpty || testerEmail.isEmpty) {
+          debugPrint('🗑️ CLEANUP: 삭제 대상 - ID=${doc.id}, appId="$appId", tester="$testerName"');
+          await doc.reference.delete();
+          deletedCount++;
+        }
+      }
+
+      debugPrint('✅ UNIFIED_PROVIDER: 정리 완료 - $deletedCount개 문서 삭제됨');
+      state = state.copyWith(isLoading: false);
+
+    } catch (e) {
+      debugPrint('🚨 UNIFIED_PROVIDER: 데이터 정리 실패 - $e');
+      state = state.copyWith(isLoading: false, error: '데이터 정리에 실패했습니다: $e');
       rethrow;
     }
   }

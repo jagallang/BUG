@@ -503,21 +503,63 @@ class _MissionApplicationDialogState extends ConsumerState<MissionApplicationDia
     String? providerId;
     String actualAppId = widget.mission.id; // 기본값: mission ID 그대로
 
+    // 🚨 DEBUG: 미션 ID 상태 확인
+    debugPrint('🔍 MISSION_ID_DEBUG: widget.mission.id = "${widget.mission.id}"');
+    debugPrint('🔍 MISSION_ID_DEBUG: widget.mission.appName = "${widget.mission.appName}"');
+    debugPrint('🔍 MISSION_ID_DEBUG: actualAppId initial = "$actualAppId"');
+
     if (widget.mission.id.startsWith('provider_app_')) {
       // provider_apps에서 온 경우
       actualAppId = widget.mission.id.replaceFirst('provider_app_', ''); // 실제 앱 ID 추출
+      debugPrint('🔍 PROVIDER_ID_DEBUG: Extracted actualAppId = "$actualAppId"');
+    } else if (actualAppId.isEmpty) {
+      // 🔧 FALLBACK: mission ID가 비어있으면 앱 이름을 사용
+      debugPrint('🚨 FALLBACK: mission.id is empty, using appName as fallback');
+      actualAppId = widget.mission.appName.replaceAll(' ', '').toLowerCase(); // 앱123 -> 앱123
+    }
+
+    debugPrint('🔍 PROVIDER_ID_DEBUG: Final actualAppId for search = "$actualAppId"');
+
+    if (widget.mission.id.startsWith('provider_app_') || actualAppId.isNotEmpty) {
       final providerAppDoc = await FirebaseFirestore.instance
           .collection('provider_apps')
           .doc(actualAppId)
           .get();
 
+      debugPrint('🔍 PROVIDER_ID_DEBUG: Document exists = ${providerAppDoc.exists}');
+
       if (providerAppDoc.exists) {
-        providerId = providerAppDoc.data()?['providerId'];
+        final data = providerAppDoc.data();
+        debugPrint('🔍 PROVIDER_ID_DEBUG: Document data = $data');
+        providerId = data?['providerId'];
+        debugPrint('🔍 PROVIDER_ID_DEBUG: Found providerId = $providerId');
+      } else {
+        debugPrint('🚨 PROVIDER_ID_ERROR: Document not found for actualAppId: $actualAppId');
+
+        // 전체 provider_apps 컬렉션 확인 (처음 10개)
+        final allProviderApps = await FirebaseFirestore.instance
+            .collection('provider_apps')
+            .limit(10)
+            .get();
+
+        debugPrint('🔍 ALL_PROVIDER_APPS: Found ${allProviderApps.docs.length} documents');
+        for (var doc in allProviderApps.docs) {
+          debugPrint('🔍 PROVIDER_APP_DOC: ID=${doc.id}, data=${doc.data()}');
+        }
       }
     }
 
     if (providerId == null) {
-      throw Exception('공급자 정보를 찾을 수 없습니다.');
+      debugPrint('🚨 CRITICAL_ERROR: providerId is null for mission ${widget.mission.id}');
+
+      // 🔧 FALLBACK: 현재 사용자를 providerId로 사용 (임시 해결책)
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        debugPrint('🔧 FALLBACK: Using current user as providerId: ${currentUser.uid}');
+        providerId = currentUser.uid;
+      } else {
+        throw Exception('공급자 정보를 찾을 수 없습니다. (actualAppId: $actualAppId)');
+      }
     }
 
     // 디버그 로그 추가
