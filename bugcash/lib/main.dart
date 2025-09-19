@@ -8,7 +8,6 @@ import 'generated/l10n/app_localizations.dart';
 import 'core/utils/logger.dart';
 import 'core/config/app_config.dart';
 import 'firebase_options.dart';
-import 'core/di/injection.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'shared/theme/app_theme.dart';
 
@@ -23,8 +22,6 @@ extension ResponsiveText on num {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Dependency injection 초기화
-  await configureDependencies();
 
   // Firebase 초기화 (Firebase 공식 권장 방식)
   await _initializeFirebase();
