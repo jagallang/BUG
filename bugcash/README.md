@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.26-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.27-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,33 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.26)
+## ✨ 주요 기능 (v1.4.27)
+
+### 🤖 Google Gemini AI 통합 & 미션 데이터 로딩 개선 (v1.4.27)
+- **🧠 Gemini AI 통합**: Google의 최신 AI 모델을 프로젝트에 완벽 통합
+  - **📦 google_generative_ai 패키지**: Flutter 프로젝트에 Gemini AI SDK 추가
+  - **🔑 API 키 관리**: `lib/config/api_keys.dart`로 보안적인 키 관리
+  - **🚀 gemini-1.5-flash 모델**: 빠르고 효율적인 최신 AI 모델 사용
+- **💻 Gemini CLI 도구 구현**: 개발자를 위한 강력한 명령줄 인터페이스
+  - **🔧 일반 CLI**: `dart run lib/scripts/gemini_cli.dart "질문"`으로 즉시 사용
+  - **🎮 대화형 모드**: `dart run lib/scripts/gemini_interactive.dart`로 지속적인 대화
+  - **📋 특별 명령어**: `/bug`, `/test`, `/review`로 전문 분석 기능 제공
+- **🔍 AI 기반 개발 도구**: 버그 분석부터 코드 리뷰까지
+  - **🐛 버그 분석**: AI가 버그 원인, 재현 단계, 해결 방안 자동 생성
+  - **✅ 테스트 케이스 생성**: 기능 설명만으로 포괄적 테스트 케이스 작성
+  - **📝 코드 리뷰**: AI가 코드 품질, 잠재 버그, 성능 개선점 분석
+- **📊 Provider Apps 데이터 로딩 개선**: 더 유연하고 안정적인 데이터 처리
+  - **🔄 필드 매핑 유연화**: appName, name, title, company 등 다양한 필드 자동 인식
+  - **💰 가격 정보 통합**: price, reward, cost 등 다양한 가격 필드 지원
+  - **✨ 필터링 로직 개선**: isActive, active, status 등 다양한 상태 필드 처리
+- **🎯 실제 Firestore 미션 데이터 연동**: 백엔드 데이터 완벽 동기화
+  - **📡 appMissionsProvider 구현**: test_missions 컬렉션 실시간 스트림
+  - **🔄 병렬 데이터 로딩**: 테스터와 미션 데이터 동시 조회로 성능 향상
+  - **📝 디버그 로그 강화**: 미션 로딩 상태 상세 추적 가능
+- **🧹 UI/UX 정리 및 개선**: 불필요한 기능 제거로 핵심 기능 집중
+  - **❌ 미션 생성 버튼 제거**: 테스터 데이터 표시에 집중
+  - **🗑️ CreateMissionDialog 제거**: 불필요한 코드 정리로 유지보수성 향상
+  - **🎨 깔끔한 인터페이스**: 핵심 기능에 집중한 심플한 UI
 
 ### 🚨 테스터 미션 신청 → 공급자 표시 시스템 완전 수정 (v1.4.26)
 - **🔧 핵심 문제 해결**: appId 빈 문자열 저장 문제 발견 및 완전 수정
