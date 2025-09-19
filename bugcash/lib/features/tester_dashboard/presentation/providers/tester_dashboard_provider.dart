@@ -718,8 +718,120 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
   Future<List<MissionCard>> _getActiveMissionsFromFirestore(String testerId) async {
     try {
-      // Return empty list initially - will be populated with real data
-      return <MissionCard>[];
+      final activeMissions = <MissionCard>[];
+
+      // 1. 테스터 신청 정보 가져오기 (pending, approved 상태)
+      final testerApplications = await FirebaseFirestore.instance
+          .collection('tester_applications')
+          .where('testerId', isEqualTo: testerId)
+          .where('status', whereIn: ['pending', 'approved'])
+          .get();
+
+      // 2. 각 신청에 대해 미션 카드 생성
+      for (final applicationDoc in testerApplications.docs) {
+        final applicationData = applicationDoc.data();
+        final appId = applicationData['appId'];
+        final status = applicationData['status'];
+
+        // 앱 정보 가져오기
+        try {
+          final appDoc = await FirebaseFirestore.instance
+              .collection('provider_apps')
+              .doc(appId)
+              .get();
+
+          if (appDoc.exists) {
+            final appData = appDoc.data()!;
+
+            // 미션 카드 생성
+            final missionCard = MissionCard(
+              id: 'tester_app_${applicationDoc.id}', // 고유 ID
+              title: '${appData['appName']} 테스트 미션',
+              description: status == 'pending'
+                  ? '신청 승인 대기 중입니다. 공급자의 승인을 기다려주세요.'
+                  : '테스트를 진행해주세요. 앱을 사용하며 버그나 개선사항을 리포트해주세요.',
+              type: MissionType.featureTesting,
+              rewardPoints: status == 'pending' ? 0 : 5000, // 승인되면 포인트 표시
+              estimatedMinutes: 30,
+              status: status == 'pending' ? MissionStatus.draft : MissionStatus.active,
+              deadline: DateTime.now().add(const Duration(days: 14)), // 기본 14일
+              requiredSkills: ['앱테스트', '버그리포트'],
+              appName: appData['appName'] ?? 'Unknown App',
+              currentParticipants: 1,
+              maxParticipants: 1,
+              difficulty: MissionDifficulty.easy,
+              providerId: appData['providerId'] ?? '',
+              isProviderApp: true,
+              originalAppData: {
+                'applicationId': applicationDoc.id,
+                'applicationStatus': status,
+                'appliedAt': applicationData['appliedAt'],
+                'appId': appId,
+                'isFromTesterApplication': true,
+              },
+            );
+
+            activeMissions.add(missionCard);
+          }
+        } catch (e) {
+          debugPrint('Failed to load app data for appId: $appId, error: $e');
+        }
+      }
+
+      // 3. 정식 할당된 미션들도 가져오기 (mission_assignments에서)
+      try {
+        final assignedMissions = await FirebaseFirestore.instance
+            .collection('mission_assignments')
+            .where('testerId', isEqualTo: testerId)
+            .where('status', whereIn: ['assigned', 'in_progress'])
+            .get();
+
+        for (final assignmentDoc in assignedMissions.docs) {
+          final assignmentData = assignmentDoc.data();
+          final missionId = assignmentData['missionId'];
+
+          // 미션 정보 가져오기
+          final missionDoc = await FirebaseFirestore.instance
+              .collection('test_missions')
+              .doc(missionId)
+              .get();
+
+          if (missionDoc.exists) {
+            final missionData = missionDoc.data()!;
+
+            final missionCard = MissionCard(
+              id: 'formal_mission_${assignmentDoc.id}',
+              title: missionData['title'] ?? 'Test Mission',
+              description: missionData['description'] ?? '',
+              type: MissionType.functional,
+              rewardPoints: 10000, // 정식 미션은 더 높은 보상
+              estimatedMinutes: 60,
+              status: assignmentData['status'] == 'assigned' ? MissionStatus.active : MissionStatus.inProgress,
+              deadline: (missionData['dueDate'] as Timestamp?)?.toDate() ?? DateTime.now().add(const Duration(days: 7)),
+              requiredSkills: ['미션완료', '리포트제출'],
+              appName: 'App Mission', // 앱 이름은 별도로 조회 필요
+              currentParticipants: missionData['assignedCount'] ?? 0,
+              maxParticipants: missionData['assignedCount'] ?? 0,
+              difficulty: MissionDifficulty.medium,
+              providerId: assignmentData['appId'] ?? '',
+              isProviderApp: false,
+              originalAppData: {
+                'assignmentId': assignmentDoc.id,
+                'missionId': missionId,
+                'assignmentStatus': assignmentData['status'],
+                'assignedAt': assignmentData['assignedAt'],
+                'isFromMissionAssignment': true,
+              },
+            );
+
+            activeMissions.add(missionCard);
+          }
+        }
+      } catch (e) {
+        debugPrint('Failed to load assigned missions: $e');
+      }
+
+      return activeMissions;
     } catch (e) {
       debugPrint('Failed to load active missions from Firestore: $e');
       return <MissionCard>[];

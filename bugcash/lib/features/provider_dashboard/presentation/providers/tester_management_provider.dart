@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../shared/providers/unified_mission_provider.dart';
+import '../../../shared/models/unified_mission_model.dart';
 
 // 테스터 신청 모델
 class TesterApplicationModel {
@@ -161,18 +163,37 @@ class AppStatisticsModel {
   }
 }
 
-// 앱별 테스터 목록 Provider
+// 🔥 통합 Provider로 교체 - 앱별 테스터 목록 Provider
 final appTestersProvider = StreamProvider.family<List<TesterApplicationModel>, String>((ref, appId) {
-  AppLogger.info('Loading testers for app: $appId', 'TesterManagement');
+  AppLogger.info('🔄 LEGACY_PROVIDER: Loading testers for app: $appId (통합 Provider 사용)', 'TesterManagement');
 
-  return FirebaseFirestore.instance
-      .collection('tester_applications')
-      .where('appId', isEqualTo: appId)
-      .orderBy('appliedAt', descending: true)
-      .snapshots()
-      .map((snapshot) => snapshot.docs
-          .map((doc) => TesterApplicationModel.fromFirestore(doc))
-          .toList());
+  // 통합 Provider 사용
+  final unifiedMissions = ref.watch(appTestersStreamProvider(appId));
+
+  return unifiedMissions.when(
+    data: (missions) {
+      debugPrint('🔄 LEGACY_PROVIDER: ${missions.length}개 통합 미션을 TesterApplicationModel로 변환');
+
+      return Stream.value(missions.map((mission) {
+        // UnifiedMissionModel을 TesterApplicationModel로 변환 (호환성 유지)
+        return TesterApplicationModel(
+          id: mission.id,
+          appId: mission.appId,
+          testerId: mission.testerId,
+          testerName: mission.testerName,
+          testerEmail: mission.testerEmail,
+          status: mission.status,
+          experience: mission.experience,
+          motivation: mission.motivation,
+          appliedAt: mission.appliedAt,
+          processedAt: mission.processedAt,
+          metadata: mission.metadata,
+        );
+      }).toList());
+    },
+    loading: () => Stream.value([]),
+    error: (error, stack) => Stream.error(error, stack),
+  );
 });
 
 // 앱별 미션 목록 Provider
@@ -234,7 +255,7 @@ final appStatisticsProvider = StreamProvider.family<AppStatisticsModel, String>(
 
 // 테스터 관리 Provider
 final testerManagementProvider = StateNotifierProvider<TesterManagementNotifier, TesterManagementState>((ref) {
-  return TesterManagementNotifier();
+  return TesterManagementNotifier(ref);
 });
 
 class TesterManagementState {
@@ -258,26 +279,26 @@ class TesterManagementState {
 }
 
 class TesterManagementNotifier extends StateNotifier<TesterManagementState> {
-  TesterManagementNotifier() : super(const TesterManagementState());
+  final Ref _ref;
+
+  TesterManagementNotifier(this._ref) : super(const TesterManagementState());
 
   final _firestore = FirebaseFirestore.instance;
 
-  // 테스터 신청 승인/거부 처리
+  // 🔥 통합 Provider로 교체 - 테스터 신청 승인/거부 처리
   Future<void> updateTesterApplication(String applicationId, String newStatus) async {
     try {
       state = state.copyWith(isLoading: true, errorMessage: null);
 
-      await _firestore.collection('tester_applications').doc(applicationId).update({
-        'status': newStatus,
-        'processedAt': FieldValue.serverTimestamp(),
-      });
+      debugPrint('🔄 LEGACY_PROVIDER: 통합 Provider로 상태 업데이트 - $applicationId -> $newStatus');
 
-      // 승인된 경우 앱의 활성 테스터 수 업데이트
-      if (newStatus == 'approved') {
-        await _updateAppTesterCount(applicationId, 1);
-      }
+      // 통합 Provider의 메서드 사용
+      await _ref.read(unifiedMissionNotifierProvider.notifier).updateTesterStatus(
+        missionId: applicationId,
+        newStatus: newStatus,
+      );
 
-      AppLogger.info('Tester application $newStatus: $applicationId', 'TesterManagement');
+      AppLogger.info('🔄 LEGACY_PROVIDER: Tester application $newStatus: $applicationId (통합 Provider 사용)', 'TesterManagement');
       state = state.copyWith(isLoading: false);
     } catch (e) {
       AppLogger.error('Failed to update tester application', e.toString());

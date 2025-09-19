@@ -4,6 +4,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../shared/providers/unified_mission_provider.dart';
+import '../../../shared/models/unified_mission_model.dart';
 import '../providers/tester_management_provider.dart';
 import 'app_management_page.dart';
 
@@ -28,6 +30,36 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     AppLogger.info('Tester Management Page initialized for app: ${widget.app.appName}', 'TesterManagement');
+
+    // 🚀 CRITICAL DEBUG: Page initialization
+    debugPrint('🚀 TESTER_MANAGEMENT_PAGE_DEBUG:');
+    debugPrint('🚀 initState() called for app: ${widget.app.appName}');
+    debugPrint('🚀 App ID: ${widget.app.id}');
+    debugPrint('🚀 Provider ID: ${widget.app.providerId}');
+
+    // Tab controller listener for tracking tab changes
+    _tabController.addListener(() {
+      debugPrint('🚀 TAB_CHANGE_DEBUG:');
+      debugPrint('🚀 Tab changed to index: ${_tabController.index}');
+      if (_tabController.index == 1) {
+        debugPrint('🚀 미션관리 탭이 선택됨 - Providers가 실행되어야 함');
+      }
+    });
+  }
+
+  // appId prefix 정리 헬퍼 함수
+  String _getCleanAppId() {
+    final appId = widget.app.id;
+    final cleanAppId = appId.startsWith('provider_app_')
+        ? appId.replaceFirst('provider_app_', '')
+        : appId;
+
+    // 디버그 로그 추가
+    debugPrint('🟠 PROVIDER_DEBUG:');
+    debugPrint('🟠 Original widget.app.id: $appId');
+    debugPrint('🟠 Clean appId for query: $cleanAppId');
+
+    return cleanAppId;
   }
 
   @override
@@ -38,6 +70,11 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
 
   @override
   Widget build(BuildContext context) {
+    // 🚀 CRITICAL DEBUG: Build method
+    debugPrint('🚀 TESTER_MANAGEMENT_BUILD_DEBUG:');
+    debugPrint('🚀 build() called for app: ${widget.app.appName}');
+    debugPrint('🚀 Current tab index: ${_tabController.index}');
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -75,7 +112,8 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
 
   // 테스터 관리 탭
   Widget _buildTesterManagementTab() {
-    final testersAsync = ref.watch(appTestersProvider(widget.app.id));
+    final cleanAppId = _getCleanAppId();
+    final testersAsync = ref.watch(appTestersStreamProvider(cleanAppId));
 
     return testersAsync.when(
       data: (testers) => _buildTestersList(testers),
@@ -84,7 +122,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     );
   }
 
-  Widget _buildTestersList(List<TesterApplicationModel> testers) {
+  Widget _buildTestersList(List<UnifiedMissionModel> testers) {
     final pendingTesters = testers.where((t) => t.status == 'pending').toList();
     final approvedTesters = testers.where((t) => t.status == 'approved').toList();
     final rejectedTesters = testers.where((t) => t.status == 'rejected').toList();
@@ -166,6 +204,144 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     );
   }
 
+  Widget _buildTesterBasedMissionCard(List<UnifiedMissionModel> pendingTesters, List<UnifiedMissionModel> approvedTesters) {
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.people, color: AppColors.primary, size: 20.sp),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  '${widget.app.appName} 테스터 미션',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4.r),
+                ),
+                child: Text(
+                  '자동 생성',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12.h),
+          Text(
+            '이 앱에 신청한 테스터들의 미션 상태입니다. 테스터를 승인하여 테스트를 시작하세요.',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey[700],
+            ),
+          ),
+          SizedBox(height: 16.h),
+
+          // 미션 상태 통계
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(8.r),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildMissionStatItem('신청 대기', pendingTesters.length, Colors.orange),
+                _buildMissionStatItem('진행 중', approvedTesters.length, Colors.green),
+                _buildMissionStatItem('완료', 0, Colors.blue),
+              ],
+            ),
+          ),
+          SizedBox(height: 16.h),
+
+          // 액션 버튼들
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    // 테스터 관리 탭으로 이동
+                    DefaultTabController.of(context)?.animateTo(0);
+                  },
+                  icon: Icon(Icons.people_outline, size: 16.sp),
+                  label: const Text('테스터 관리'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    side: BorderSide(color: AppColors.primary),
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: approvedTesters.isNotEmpty
+                    ? () => _sendDailyMissionToApprovedTesters(approvedTesters)
+                    : null,
+                  icon: Icon(Icons.send, size: 16.sp),
+                  label: const Text('일일 미션 전송'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMissionStatItem(String label, int count, Color color) {
+    return Column(
+      children: [
+        Text(
+          count.toString(),
+          style: TextStyle(
+            fontSize: 18.sp,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        SizedBox(height: 4.h),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.sp,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildStatCard(String label, int count, Color color) {
     return Column(
       children: [
@@ -189,7 +365,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     );
   }
 
-  Widget _buildTesterCard(TesterApplicationModel tester) {
+  Widget _buildTesterCard(UnifiedMissionModel tester) {
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
@@ -349,16 +525,44 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
 
   // 미션 관리 탭
   Widget _buildMissionManagementTab() {
-    final missionsAsync = ref.watch(appMissionsProvider(widget.app.id));
+    // 🚀 CRITICAL DEBUG: Mission Management Tab
+    debugPrint('🚀 MISSION_MANAGEMENT_TAB_DEBUG:');
+    debugPrint('🚀 _buildMissionManagementTab() called');
 
-    return missionsAsync.when(
-      data: (missions) => _buildMissionsList(missions),
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => _buildErrorWidget('미션 목록을 불러올 수 없습니다'),
+    final cleanAppId = _getCleanAppId();
+    debugPrint('🚀 Clean App ID for queries: $cleanAppId');
+
+    // 🚀 Provider 호출 시작 (통합 Provider 사용 - 단순화)
+    debugPrint('🚀 Calling ref.watch(appTestersStreamProvider($cleanAppId))');
+    final testersAsync = ref.watch(appTestersStreamProvider(cleanAppId));
+
+    return testersAsync.when(
+      data: (testers) {
+        debugPrint('🚀 TESTERS_DATA_DEBUG:');
+        debugPrint('🚀 testersAsync.data received: ${testers.length} testers found');
+        for (var tester in testers) {
+          debugPrint('🚀 Tester: ${tester.testerName}, appId: ${tester.appId}, status: ${tester.status}');
+        }
+
+        debugPrint('🚀 Building missions list with ${testers.length} testers');
+        return _buildMissionsList([], testers);
+      },
+      loading: () {
+        debugPrint('🚀 TESTERS_LOADING_DEBUG: testersAsync is loading');
+        return const Center(child: CircularProgressIndicator());
+      },
+      error: (error, stack) {
+        debugPrint('🚀 TESTERS_ERROR_DEBUG: $error');
+        return _buildErrorWidget('데이터를 불러올 수 없습니다');
+      },
     );
   }
 
-  Widget _buildMissionsList(List<TestMissionModel> missions) {
+  Widget _buildMissionsList(List<TestMissionModel> missions, List<UnifiedMissionModel> testers) {
+    // 승인된 테스터들의 미션 신청을 기반으로 가상 미션 목록 생성
+    final approvedTesters = testers.where((t) => t.status == 'approved').toList();
+    final pendingTesters = testers.where((t) => t.status == 'pending').toList();
+
     return SingleChildScrollView(
       padding: EdgeInsets.all(16.w),
       child: Column(
@@ -380,11 +584,35 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
           ),
           SizedBox(height: 24.h),
 
-          // 미션 목록
-          if (missions.isEmpty)
-            _buildEmptyMissionsState()
-          else
+          // 테스터 신청 기반 미션 상태
+          if (pendingTesters.isNotEmpty || approvedTesters.isNotEmpty) ...[
+            Text(
+              '테스터 신청 기반 미션',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            _buildTesterBasedMissionCard(pendingTesters, approvedTesters),
+            SizedBox(height: 24.h),
+          ],
+
+          // 정식 미션 목록
+          if (missions.isNotEmpty) ...[
+            Text(
+              '생성된 미션',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            SizedBox(height: 12.h),
             ...missions.map((mission) => _buildMissionCard(mission)),
+          ] else if (pendingTesters.isEmpty && approvedTesters.isEmpty)
+            _buildEmptyMissionsState(),
         ],
       ),
     );
@@ -561,7 +789,8 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
 
   // 통계 탭
   Widget _buildStatisticsTab() {
-    final statisticsAsync = ref.watch(appStatisticsProvider(widget.app.id));
+    final cleanAppId = _getCleanAppId();
+    final statisticsAsync = ref.watch(appStatisticsProvider(cleanAppId));
 
     return statisticsAsync.when(
       data: (stats) => _buildStatistics(stats),
@@ -813,6 +1042,68 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
   Future<void> _activateMission(String missionId) async {
     await ref.read(testerManagementProvider.notifier)
         .updateMissionStatus(missionId, 'active');
+  }
+
+  Future<void> _sendDailyMissionToApprovedTesters(List<UnifiedMissionModel> approvedTesters) async {
+    try {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('일일 미션 전송'),
+          content: Text('승인된 테스터 ${approvedTesters.length}명에게 일일 미션을 전송하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+              child: const Text('전송'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed == true) {
+        // 일일 미션 생성 및 전송
+        final dailyMissionTitle = '${widget.app.appName} 일일 테스트 (${DateTime.now().month}/${DateTime.now().day})';
+        const dailyMissionDescription = '''
+앱을 사용하면서 다음 사항들을 확인해주세요:
+• 앱의 주요 기능들이 정상적으로 작동하는지 확인
+• 사용자 인터페이스에 문제가 없는지 확인
+• 앱 사용 중 발생하는 버그나 오류 신고
+• 사용성 개선 사항 제안
+
+테스트 완료 후 리포트를 작성해주세요.
+        ''';
+
+        await ref.read(testerManagementProvider.notifier).createMission(
+          appId: widget.app.id,
+          title: dailyMissionTitle,
+          description: dailyMissionDescription,
+          dueDate: DateTime.now().add(const Duration(days: 1)),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${approvedTesters.length}명의 테스터에게 일일 미션을 전송했습니다'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('미션 전송 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
 

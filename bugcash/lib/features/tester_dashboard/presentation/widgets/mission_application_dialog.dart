@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/tester_dashboard_provider.dart' as provider;
 
-class MissionApplicationDialog extends StatefulWidget {
+class MissionApplicationDialog extends ConsumerStatefulWidget {
   final provider.MissionCard mission;
   final VoidCallback onApplicationSubmitted;
 
@@ -15,10 +16,10 @@ class MissionApplicationDialog extends StatefulWidget {
   });
 
   @override
-  State<MissionApplicationDialog> createState() => _MissionApplicationDialogState();
+  ConsumerState<MissionApplicationDialog> createState() => _MissionApplicationDialogState();
 }
 
-class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
+class _MissionApplicationDialogState extends ConsumerState<MissionApplicationDialog> {
   final _formKey = GlobalKey<FormState>();
   final _messageController = TextEditingController();
   bool _hasReadRequirements = false;
@@ -416,9 +417,15 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
 
       // 성공 처리
       if (mounted) {
+        // 테스터 대시보드 새로고침 (진행중 탭에서 즉시 확인 가능)
+        final currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser != null) {
+          ref.read(provider.testerDashboardProvider.notifier).refreshData(currentUser.uid);
+        }
+
         Navigator.of(context).pop();
         widget.onApplicationSubmitted();
-        
+
         // 성공 스낵바
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -494,12 +501,14 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
 
     // Provider ID 찾기
     String? providerId;
+    String actualAppId = widget.mission.id; // 기본값: mission ID 그대로
+
     if (widget.mission.id.startsWith('provider_app_')) {
       // provider_apps에서 온 경우
-      final providerAppId = widget.mission.id.replaceFirst('provider_app_', '');
+      actualAppId = widget.mission.id.replaceFirst('provider_app_', ''); // 실제 앱 ID 추출
       final providerAppDoc = await FirebaseFirestore.instance
           .collection('provider_apps')
-          .doc(providerAppId)
+          .doc(actualAppId)
           .get();
 
       if (providerAppDoc.exists) {
@@ -511,9 +520,18 @@ class _MissionApplicationDialogState extends State<MissionApplicationDialog> {
       throw Exception('공급자 정보를 찾을 수 없습니다.');
     }
 
+    // 디버그 로그 추가
+    debugPrint('🔵 TESTER_APPLICATION_DEBUG:');
+    debugPrint('🔵 widget.mission.id: ${widget.mission.id}');
+    debugPrint('🔵 actualAppId (저장될 값): $actualAppId');
+    debugPrint('🔵 appName: ${widget.mission.appName}');
+    debugPrint('🔵 providerId: $providerId');
+    debugPrint('🔵 testerId: ${currentUser.uid}');
+
     // Firestore에 신청 정보 저장 (올바른 컬렉션 이름 사용)
     await FirebaseFirestore.instance.collection('tester_applications').add({
-      'appId': widget.mission.id, // appId 필드 추가 (공급자가 필터링할 때 사용)
+      'appId': actualAppId, // 실제 앱 ID 사용 (공급자가 필터링할 때 사용)
+      'appName': widget.mission.appName, // 🔥 앱 이름 추가 - 공급자 화면에서 필수!
       'missionId': widget.mission.id,
       'testerId': currentUser.uid,
       'providerId': providerId,
