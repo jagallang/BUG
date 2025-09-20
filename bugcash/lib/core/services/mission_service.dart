@@ -308,4 +308,116 @@ class MissionService {
 
     return stats;
   }
+
+  // Apply to mission (테스터가 미션에 신청)
+  Future<String> applyToMission(String missionId, Map<String, dynamic> applicationData) async {
+    try {
+      // 미션 신청 정보를 mission_applications 컬렉션에 저장
+      final applicationId = await FirestoreService.create(
+        FirestoreService.missionApplications,
+        applicationData
+      );
+
+      // 미션의 analytics.applications 증가
+      await incrementApplications(missionId);
+
+      // 공급자에게 알림 전송 (추후 구현)
+      // await _sendApplicationNotification(applicationData);
+
+      return applicationId;
+    } catch (e) {
+      print('Error applying to mission: $e');
+      rethrow;
+    }
+  }
+
+  // Get applications for a mission (공급자가 미션 신청자들 조회)
+  static Future<List<MissionApplication>> getMissionApplications(String missionId) async {
+    try {
+      final query = FirestoreService.missionApplications
+          .where('missionId', isEqualTo: missionId)
+          .orderBy('appliedAt', descending: true);
+
+      final snapshot = await query.get();
+
+      return snapshot.docs.map((doc) {
+        final data = {'id': doc.id, ...doc.data()};
+        return MissionApplication.fromFirestore(data);
+      }).toList();
+    } catch (e) {
+      print('Error getting mission applications: $e');
+      return [];
+    }
+  }
+
+  // Get applications by tester (테스터가 자신의 신청 내역 조회)
+  static Future<List<MissionApplication>> getTesterApplications(String testerId) async {
+    try {
+      final query = FirestoreService.missionApplications
+          .where('testerId', isEqualTo: testerId)
+          .orderBy('appliedAt', descending: true);
+
+      final snapshot = await query.get();
+
+      return snapshot.docs.map((doc) {
+        final data = {'id': doc.id, ...doc.data()};
+        return MissionApplication.fromFirestore(data);
+      }).toList();
+    } catch (e) {
+      print('Error getting tester applications: $e');
+      return [];
+    }
+  }
+
+  // Update application status (공급자가 신청 승인/거부)
+  static Future<void> updateApplicationStatus(
+    String applicationId,
+    MissionApplicationStatus status, {
+    String? responseMessage,
+  }) async {
+    try {
+      final updateData = <String, dynamic>{
+        'status': status.name,
+        'reviewedAt': FieldValue.serverTimestamp(),
+      };
+
+      if (responseMessage != null) {
+        updateData['responseMessage'] = responseMessage;
+      }
+
+      if (status == MissionApplicationStatus.accepted) {
+        updateData['acceptedAt'] = FieldValue.serverTimestamp();
+      } else if (status == MissionApplicationStatus.rejected) {
+        updateData['rejectedAt'] = FieldValue.serverTimestamp();
+      }
+
+      await FirestoreService.update(
+        FirestoreService.missionApplications,
+        applicationId,
+        updateData,
+      );
+
+      // 테스터에게 알림 전송 (추후 구현)
+      // await _sendStatusUpdateNotification(applicationId, status);
+    } catch (e) {
+      print('Error updating application status: $e');
+      rethrow;
+    }
+  }
+
+  // Check if user already applied to mission
+  static Future<bool> hasUserApplied(String missionId, String testerId) async {
+    try {
+      final query = FirestoreService.missionApplications
+          .where('missionId', isEqualTo: missionId)
+          .where('testerId', isEqualTo: testerId)
+          .limit(1);
+
+      final snapshot = await query.get();
+      return snapshot.docs.isNotEmpty;
+    } catch (e) {
+      print('Error checking if user applied: $e');
+      return false;
+    }
+  }
 }

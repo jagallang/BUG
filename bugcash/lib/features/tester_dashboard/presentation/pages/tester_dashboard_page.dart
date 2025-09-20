@@ -14,7 +14,7 @@ import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.d
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/auth_wrapper.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
-// import 'mission_detail_page.dart';
+import 'mission_detail_page.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -37,7 +37,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _scrollController = ScrollController();
     
     // TabController 초기화 완료
@@ -497,7 +497,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 controller: _tabController,
                 tabs: const [
                   Tab(text: '미션', icon: Icon(Icons.assignment)),
-                  Tab(text: '수익', icon: Icon(Icons.account_balance_wallet)),
                   Tab(text: '게시판', icon: Icon(Icons.forum)),
                 ],
                 labelColor: Theme.of(context).colorScheme.primary,
@@ -519,21 +518,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                         children: [
                           // 미션 (미션 찾기 + 진행 중인 미션 통합)
                           _buildMissionTab(),
-                          
-                          // 수익 관리
-                          Card(
-                            child: Padding(
-                              padding: EdgeInsets.all(16.w),
-                              child: Column(
-                                children: [
-                                  Text('수익 요약', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-                                  SizedBox(height: 8.h),
-                                  Text('테스터 ID: ${widget.testerId}'),
-                                ],
-                              ),
-                            ),
-                          ),
-                          
+
                           // 게시판 (커뮤니티)
                           Card(
                             child: Padding(
@@ -973,12 +958,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         final mission = dashboardState.availableMissions[index];
         return Padding(
           padding: EdgeInsets.only(bottom: 12.h),
-          child: Card(
-            child: ListTile(
-              title: Text('미션: ${mission.id}'),
-              subtitle: Text('테스터 ID: ${widget.testerId}'),
-              trailing: const Icon(Icons.arrow_forward),
-            ),
+          child: _buildMissionCard(
+            mission: mission,
+            title: mission.title.isNotEmpty ? mission.title : '미션 ${mission.id}',
+            description: mission.description.isNotEmpty ? mission.description : '새로운 테스트 미션에 참여해보세요!',
+            reward: '${mission.rewardPoints}P',
+            deadline: '바로 진행',
+            participants: '대기 중',
           ),
         );
       },
@@ -1032,12 +1018,11 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             final session = activeSessions[index];
             return Padding(
               padding: EdgeInsets.only(bottom: 12.h),
-              child: Card(
-                child: ListTile(
-                  title: Text('활성 세션: ${session.id}'),
-                  subtitle: Text('진행 중'),
-                  trailing: const Icon(Icons.play_arrow),
-                ),
+              child: _buildActiveMissionCard(
+                title: '미션 ID: ${session.missionId}',
+                progress: 0.6, // 예시 진행률
+                status: '진행 중',
+                deadline: '3일 남음',
               ),
             );
           },
@@ -1067,6 +1052,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   Widget _buildMissionCard({
+    required dynamic mission,
     required String title,
     required String description,
     required String reward,
@@ -1079,10 +1065,18 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: InkWell(
-        onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$title 미션 상세보기')),
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MissionDetailPage(mission: mission),
+            ),
           );
+
+          if (result == true) {
+            // 미션 신청 후 대시보드 새로고침
+            ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+          }
         },
         borderRadius: BorderRadius.circular(12.r),
         child: Padding(
