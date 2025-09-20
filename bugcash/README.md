@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.34-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.35-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,22 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.34)
+## ✨ 주요 기능 (v1.4.35)
+
+### 🧹 더미 데이터 정리 기능 추가 (v1.4.35)
+- **🛠️ 통합 정리 도구**: 공급자 대시보드에서 더미 데이터 원클릭 정리 기능
+  - **⚡ 즉시 정리**: 앱바 액션 버튼을 통한 즉시 더미 데이터 삭제
+  - **📋 체계적 관리**: DummyDataCleanup 클래스로 구조화된 정리 로직
+  - **🎯 타겟 정리**: 특정 더미 tester ID 기반 정확한 데이터 삭제
+  - **✅ 사용자 피드백**: SnackBar를 통한 정리 완료/실패 상태 알림
+- **🗂️ 다중 정리 방법**: 문서 ID와 testerId 기반 이중 정리 시스템
+  - **📄 직접 문서 삭제**: 하드코딩된 더미 문서 ID로 즉시 삭제
+  - **🔍 쿼리 기반 삭제**: testerId 필드 검색으로 관련 문서 일괄 삭제
+  - **🛡️ 안전 처리**: 존재하지 않는 문서 처리 및 오류 예외 처리
+- **🔧 개발자 도구**: 독립 실행형 정리 스크립트 제공
+  - **📱 Flutter 스크립트**: cleanup_dummy_testers.dart로 Firebase 연동 정리
+  - **🌐 Node.js 스크립트**: cleanup_dummy_data.js로 Admin SDK 기반 정리
+  - **⚙️ 유연한 실행**: 앱 내부 또는 외부에서 독립적 실행 가능
 
 ### 🔗 테스터 미션 상세보기 백엔드 데이터 연동 완성 (v1.4.34)
 - **🗄️ 완전한 백엔드 연동**: 공급자가 등록한 실제 앱 상세정보를 Firestore에서 실시간 로딩
