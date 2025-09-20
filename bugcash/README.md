@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.31-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.33-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,28 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.30)
+## ✨ 주요 기능 (v1.4.33)
+
+### 🎯 미션 상세보기 & 신청 시스템 완전 구현 (v1.4.33)
+- **📱 완전한 미션 상세 페이지**: 테스터 대시보드에서 미션 카드 클릭 시 상세정보 페이지로 자동 이동
+  - **🎨 Material Design 3**: 현대적이고 일관성 있는 UI/UX 디자인 적용
+  - **📊 완전한 정보 표시**: 미션 헤더, 설명, 참여 조건, 테스트 가이드라인, 리워드 정보 완전 구현
+  - **🔄 유연한 데이터 지원**: MissionCard와 MissionModel 타입 모두 지원하는 범용 상세 페이지
+  - **⚡ 반응형 디자인**: 다양한 화면 크기에 최적화된 flutter_screenutil 적용
+- **🚀 미션 신청 시스템**: 원클릭 신청부터 실시간 피드백까지 완전 자동화
+  - **✅ 로그인 상태 확인**: 미로그인 사용자에게 자동 안내 메시지 표시
+  - **👥 모집 정원 실시간 확인**: 정원 초과 시 "모집 완료" 상태로 자동 전환
+  - **⏳ 신청 진행 상태**: 로딩 애니메이션과 함께 사용자 경험 최적화
+  - **💬 성공/실패 피드백**: SnackBar를 통한 즉시 결과 알림
+- **🔧 백엔드 신청 처리 시스템**: Firestore 기반 완전 자동화된 신청 관리
+  - **📋 MissionService 확장**: applyToMission, getMissionApplications 등 완전한 신청 관리 API
+  - **🗄️ mission_applications 컬렉션**: 구조화된 신청 데이터 저장 및 관리
+  - **📈 Analytics 자동 업데이트**: 신청 시 미션 통계 자동 증가
+  - **🛡️ 중복 신청 방지**: hasUserApplied 메서드로 중복 신청 자동 차단
+- **🤝 공급자-테스터 연결**: 실시간 신청 상태 전달 시스템
+  - **📨 자동 알림 준비**: 공급자에게 신청 알림 전송 시스템 기반 구축
+  - **🔄 양방향 상태 관리**: 승인/거부 처리 및 상태 업데이트 시스템 준비
+  - **📊 신청 현황 대시보드**: 공급자용 신청자 관리 시스템 연동 준비
 
 ### 🔑 동적 Firebase API 키 관리 시스템 구현 (v1.4.30)
 - **🎯 사용자 정의 API 키**: 하드코딩된 Firebase API 키를 동적으로 설정 가능
