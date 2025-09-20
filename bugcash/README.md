@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.33-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-1.4.34-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,17 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.33)
+## ✨ 주요 기능 (v1.4.34)
+
+### 🔗 테스터 미션 상세보기 백엔드 데이터 연동 완성 (v1.4.34)
+- **🗄️ 완전한 백엔드 연동**: 공급자가 등록한 실제 앱 상세정보를 Firestore에서 실시간 로딩
+  - **📄 앱 기본정보**: 앱 이름, 카테고리, URL, 등록일 표시
+  - **📢 공지사항**: 공급자 공지사항 동적 표시 시스템
+  - **💰 단가정보**: 테스트 단가 시각적 표시
+  - **⚙️ 테스트 설정**: 참여 인원, 기간, 소요시간, 기타 요구사항 완전 표시
+- **🔍 스마트 검색 로직**: appId 우선 검색 후 앱 이름 기반 대체 검색 구현
+- **🛡️ 강화된 오류 처리**: 데이터 로딩 실패 시 적절한 사용자 피드백 제공
+- **⚡ 유연한 호환성**: MissionCard와 MissionModel 객체 모두 지원
 
 ### 🎯 미션 상세보기 & 신청 시스템 완전 구현 (v1.4.33)
 - **📱 완전한 미션 상세 페이지**: 테스터 대시보드에서 미션 카드 클릭 시 상세정보 페이지로 자동 이동
