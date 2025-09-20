@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 // 통합 미션 모델 - 모든 미션 관련 데이터를 단일 모델로 통합
 class UnifiedMissionModel {
@@ -85,36 +86,87 @@ class UnifiedMissionModel {
     );
   }
 
-  // tester_applications 컬렉션에서 데이터 읽기 (새로운 구조)
+  // tester_applications 컬렉션에서 데이터 읽기 (실제 MissionService 구조에 맞춤)
   factory UnifiedMissionModel.fromTesterApplications(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    final testerInfo = data['testerInfo'] as Map<String, dynamic>? ?? {};
     final missionInfo = data['missionInfo'] as Map<String, dynamic>? ?? {};
     final progress = data['progress'] as Map<String, dynamic>? ?? {};
+
+    // 🚀 DEBUG: 실제 데이터 구조 확인
+    debugPrint('🚀 RAW_DATA_DEBUG for doc ${doc.id}:');
+    debugPrint('🚀 All available keys: ${data.keys.toList()}');
+    debugPrint('🚀 testerName: ${data['testerName']}');
+    debugPrint('🚀 name: ${data['name']}');
+    debugPrint('🚀 userName: ${data['userName']}');
+    debugPrint('🚀 displayName: ${data['displayName']}');
+    debugPrint('🚀 userDisplayName: ${data['userDisplayName']}');
+    if (missionInfo.isNotEmpty) {
+      debugPrint('🚀 missionInfo keys: ${missionInfo.keys.toList()}');
+    }
+
+    // 다양한 필드명 시도하여 테스터 이름 찾기
+    String testerName = '테스터 정보 로딩 중...';
+    final possibleNameFields = [
+      data['testerName'],
+      data['name'],
+      data['userName'],
+      data['displayName'],
+      data['userDisplayName'],
+      data['userInfo']?['name'],
+      data['userInfo']?['displayName'],
+      missionInfo['testerName'],
+      missionInfo['name'],
+    ];
+
+    for (final field in possibleNameFields) {
+      if (field != null && field.toString().isNotEmpty && field.toString() != 'null') {
+        testerName = field.toString();
+        debugPrint('🚀 Found tester name: $testerName');
+        break;
+      }
+    }
+
+    // 테스터 이메일도 다양한 필드 시도
+    String testerEmail = '';
+    final possibleEmailFields = [
+      data['testerEmail'],
+      data['email'],
+      data['userEmail'],
+      data['userInfo']?['email'],
+      missionInfo['testerEmail'],
+      missionInfo['email'],
+    ];
+
+    for (final field in possibleEmailFields) {
+      if (field != null && field.toString().isNotEmpty && field.toString() != 'null') {
+        testerEmail = field.toString();
+        break;
+      }
+    }
 
     return UnifiedMissionModel(
       id: doc.id,
       appId: data['appId'] ?? '',
-      appName: missionInfo['appName'] ?? testerInfo['appName'] ?? '앱 정보 로딩 중...',
+      appName: data['appName'] ?? missionInfo['appName'] ?? data['missionName'] ?? '앱 정보 로딩 중...',
       testerId: data['testerId'] ?? '',
-      testerName: testerInfo['name'] ?? '테스터 정보 로딩 중...',
-      testerEmail: testerInfo['email'] ?? '',
+      testerName: testerName,
+      testerEmail: testerEmail,
       providerId: data['providerId'] ?? '',
       status: data['status'] ?? 'pending',
-      experience: testerInfo['experience'] ?? '',
-      motivation: testerInfo['motivation'] ?? '',
+      experience: data['experience'] ?? '',
+      motivation: data['motivation'] ?? '',
       appliedAt: (data['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       processedAt: (data['statusUpdatedAt'] as Timestamp?)?.toDate(),
       startedAt: (data['startedAt'] as Timestamp?)?.toDate(),
       completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
-      dailyPoints: (missionInfo['dailyReward'] as int?) ?? 5000,
+      dailyPoints: (data['dailyReward'] ?? missionInfo['dailyReward']) ?? 5000,
       totalPoints: (progress['totalPoints'] as int?) ?? 0,
       currentDay: (progress['currentDay'] as int?) ?? 0,
-      totalDays: (missionInfo['totalDays'] as int?) ?? 14,
+      totalDays: (data['totalDays'] ?? missionInfo['totalDays']) ?? 14,
       progressPercentage: (progress['progressPercentage'] as num?)?.toDouble() ?? 0.0,
       todayCompleted: (progress['todayCompleted'] as bool?) ?? false,
-      metadata: Map<String, dynamic>.from(testerInfo),
-      requirements: List<String>.from(missionInfo['requirements'] ?? []),
+      metadata: Map<String, dynamic>.from(data),
+      requirements: List<String>.from((data['requirements'] ?? missionInfo['requirements']) ?? []),
       feedback: progress['latestFeedback'] as String?,
       rating: (progress['averageRating'] as num?)?.toInt(),
     );

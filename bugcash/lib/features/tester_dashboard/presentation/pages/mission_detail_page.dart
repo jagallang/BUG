@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../../models/mission_model.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/mission_service.dart';
 import '../../../../core/utils/logger.dart';
@@ -34,7 +33,18 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   int get maxParticipants => widget.mission.maxParticipants ?? widget.mission.maxTesters ?? 10;
   int get estimatedMinutes => widget.mission.estimatedMinutes ?? widget.mission.duration ?? 30;
   List<String> get requiredSkills => widget.mission.requiredSkills ?? <String>[];
-  String get providerId => widget.mission.providerId ?? widget.mission.createdBy ?? '';
+  String get providerId {
+    try {
+      return widget.mission.providerId ?? '';
+    } catch (e) {
+      try {
+        // createdBy 필드가 있는 경우에만 접근
+        return (widget.mission as dynamic).createdBy ?? '';
+      } catch (e2) {
+        return '';
+      }
+    }
+  }
   String? get appId {
     try {
       // MissionModel인 경우 appId가 있음
@@ -948,14 +958,21 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         'missionId': missionId,
         'testerId': authState.user!.uid,
         'providerId': providerId,
-        'testerName': authState.user!.displayName,
-        'testerEmail': authState.user!.email,
+        'testerName': authState.user!.displayName ?? 'Unknown User',
+        'testerEmail': authState.user!.email ?? '',
+        'missionName': missionAppName,
         'status': 'pending',
         'message': '미션에 참여하고 싶습니다.',
         'appliedAt': DateTime.now(),
+        'dailyReward': missionReward,
+        'totalDays': estimatedMinutes > 0 ? (estimatedMinutes / 30).ceil() : 14,
+        'requirements': requiredSkills,
         'testerInfo': {
           'userType': authState.user!.userType.toString(),
           'experience': 'beginner',
+          'name': authState.user!.displayName ?? 'Unknown User',
+          'email': authState.user!.email ?? '',
+          'motivation': '새로운 앱을 테스트하며 버그를 찾는 것에 관심이 있습니다.',
         },
       };
 

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../providers/provider_dashboard_provider.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/auth_service.dart';
 import 'app_management_page.dart' hide ProviderAppModel;

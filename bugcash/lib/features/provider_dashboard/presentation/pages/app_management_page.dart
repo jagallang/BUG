@@ -459,7 +459,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
                       // Refresh the list if changes were made
                       if (result == true && mounted) {
-                        ref.refresh(providerAppsProvider(widget.providerId));
+                        ref.invalidate(providerAppsProvider(widget.providerId));
                       }
                     },
                     style: OutlinedButton.styleFrom(
@@ -880,7 +880,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           SizedBox(height: 24.h),
           ElevatedButton.icon(
             onPressed: () {
-              ref.refresh(providerAppsProvider(widget.providerId));
+              ref.invalidate(providerAppsProvider(widget.providerId));
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('새로고침 중...')),
               );

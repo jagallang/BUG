@@ -57,64 +57,28 @@ final providerMissionsProvider = StreamProvider.family<List<UnifiedMissionModel>
       });
 });
 
-// 3. 앱별 테스터 신청 Provider
+// 3. 앱별 테스터 신청 Provider (최적화된 검색)
 final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>, String>((ref, appId) {
-  debugPrint('📱 UNIFIED_PROVIDER: 앱($appId) 테스터 신청 조회');
-  debugPrint('🔍 QUERY_DEBUG: appId로 검색 = $appId');
-  debugPrint('🔍 현재 시간: ${DateTime.now()}');
+  if (kDebugMode) {
+    debugPrint('📱 UNIFIED_PROVIDER: 앱($appId) 테스터 신청 조회');
+  }
+
+  // 정규화된 appId로 직접 검색 (가장 효율적)
+  final normalizedAppId = appId.replaceAll('provider_app_', '');
 
   return FirebaseFirestore.instance
       .collection('tester_applications')
-      .where('appId', isEqualTo: appId)
+      .where('appId', isEqualTo: normalizedAppId)
+      .orderBy('appliedAt', descending: true)
       .snapshots()
       .map((snapshot) {
-        debugPrint('📱 UNIFIED_PROVIDER: 앱 $appId - ${snapshot.docs.length}개 테스터 신청');
-
-        if (snapshot.docs.isEmpty) {
-          debugPrint('🔍 NO_RESULTS: appId "$appId"에 대한 결과 없음');
-
-          // 🔧 다양한 변형으로 재검색 시도
-          final searchVariants = [
-            appId,
-            'provider_app_$appId',
-            appId.replaceAll('provider_app_', ''),
-            '앱$appId',
-            appId.replaceAll('앱', ''),
-          ].toSet().toList(); // 중복 제거
-
-          debugPrint('🔍 ALTERNATIVE_SEARCH: 다음 변형들로 검색 시도: $searchVariants');
-
-          // 전체 컬렉션에서 샘플 확인
-          FirebaseFirestore.instance
-              .collection('tester_applications')
-              .limit(10)
-              .get()
-              .then((allDocs) {
-                debugPrint('🔍 COLLECTION_SAMPLE: 전체 컬렉션에 ${allDocs.docs.length}개 문서');
-                for (var doc in allDocs.docs) {
-                  final data = doc.data();
-                  final storedAppId = data['appId']?.toString() ?? '';
-                  final isMatch = searchVariants.any((variant) => storedAppId.contains(variant) || variant.contains(storedAppId));
-                  debugPrint('🔍 SAMPLE_DOC: ID=${doc.id}');
-                  debugPrint('🔍   - appId="${data['appId']}"');
-                  debugPrint('🔍   - testerId="${data['testerId']}"');
-                  debugPrint('🔍   - status="${data['status']}"');
-                  debugPrint('🔍   - joinedAt="${data['joinedAt']}"');
-                  debugPrint('🔍   - deviceInfo="${data['deviceInfo']}"');
-                  debugPrint('🔍   - ${isMatch ? "🎯 POTENTIAL_MATCH" : "❌ NO_MATCH"}');
-                  debugPrint('🔍   ---');
-                }
-              });
-        } else {
-          for (var doc in snapshot.docs) {
-            final data = doc.data();
-            debugPrint('📱 문서 ID: ${doc.id}');
-            debugPrint('📱 저장된 appId: "${data['appId']}"');
-            debugPrint('📱 테스터ID: ${data['testerId']}, 상태: ${data['status']}, 가입일: ${data['joinedAt']}');
-          }
+        if (kDebugMode) {
+          debugPrint('📱 앱 $normalizedAppId - ${snapshot.docs.length}개 테스터 신청 발견');
         }
 
-        return snapshot.docs.map((doc) => UnifiedMissionModel.fromTesterApplications(doc)).toList();
+        return snapshot.docs
+            .map((doc) => UnifiedMissionModel.fromTesterApplications(doc))
+            .toList();
       });
 });
 

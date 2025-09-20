@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firestore_service.dart';
 import '../../models/mission_model.dart';
+import '../utils/logger.dart';
+import '../constants/firestore_constants.dart';
 
 class MissionService {
   // Create a new mission
@@ -40,14 +42,14 @@ class MissionService {
       'priority': priority.name,
       'complexity': complexity.name,
       'difficulty': difficulty.name,
-      'status': MissionStatus.draft.name,
+      'status': FirestoreConstants.statusDraft,
       'requirements': {
         'platforms': platforms,
         'devices': devices,
         'osVersions': osVersions,
         'languages': languages,
         'experience': experience,
-        'minRating': minRating ?? 0.0,
+        'minRating': minRating ?? FirestoreConstants.defaultMinRating,
         'specialSkills': specialSkills ?? <String>[],
       },
       'participation': {
@@ -65,8 +67,8 @@ class MissionService {
       'rewards': {
         'baseReward': baseReward,
         'bonusReward': bonusReward ?? 0.0,
-        'currency': 'USD',
-        'paymentMethod': 'cash',
+        'currency': FirestoreConstants.defaultCurrency,
+        'paymentMethod': FirestoreConstants.defaultPaymentMethod,
         'bonusConditions': <String>[],
       },
       'attachments': <Map<String, dynamic>>[],
@@ -121,7 +123,7 @@ class MissionService {
     int? limit,
   }) {
     return FirestoreService.streamMissions(
-      status: MissionStatus.active.name,
+      status: FirestoreConstants.statusActive,
       types: types,
       difficulty: difficulty,
       limit: limit,
@@ -133,7 +135,7 @@ class MissionService {
   // Publish mission (change status from draft to active)
   static Future<void> publishMission(String missionId) async {
     await updateMission(missionId, {
-      'status': MissionStatus.active.name,
+      'status': FirestoreConstants.statusActive,
       'publishedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -141,7 +143,7 @@ class MissionService {
   // Complete mission
   static Future<void> completeMission(String missionId) async {
     await updateMission(missionId, {
-      'status': MissionStatus.completed.name,
+      'status': FirestoreConstants.statusCompleted,
       'completedAt': FieldValue.serverTimestamp(),
     });
   }
@@ -149,20 +151,20 @@ class MissionService {
   // Pause/Resume mission
   static Future<void> pauseMission(String missionId) async {
     await updateMission(missionId, {
-      'status': MissionStatus.paused.name,
+      'status': FirestoreConstants.statusPaused,
     });
   }
 
   static Future<void> resumeMission(String missionId) async {
     await updateMission(missionId, {
-      'status': MissionStatus.active.name,
+      'status': FirestoreConstants.statusActive,
     });
   }
 
   // Cancel mission
   static Future<void> cancelMission(String missionId) async {
     await updateMission(missionId, {
-      'status': MissionStatus.cancelled.name,
+      'status': FirestoreConstants.statusCancelled,
     });
   }
 
@@ -244,7 +246,7 @@ class MissionService {
     }
 
     // Only active missions
-    firestoreQuery = firestoreQuery.where('status', isEqualTo: MissionStatus.active.name);
+    firestoreQuery = firestoreQuery.where('status', isEqualTo: FirestoreConstants.statusActive);
 
     // Order by creation date
     firestoreQuery = firestoreQuery.orderBy('createdAt', descending: true);
@@ -312,22 +314,90 @@ class MissionService {
   // Apply to mission (테스터가 미션에 신청)
   Future<String> applyToMission(String missionId, Map<String, dynamic> applicationData) async {
     try {
-      // 미션 신청 정보를 mission_applications 컬렉션에 저장
+      // 1. 중복 신청 체크
+      final testerId = applicationData['testerId'];
+      final hasApplied = await hasUserApplied(missionId, testerId);
+      if (hasApplied) {
+        throw Exception('이미 신청한 미션입니다.');
+      }
+
+      // 2. 미션 신청 정보를 mission_applications 컬렉션에 저장
       final applicationId = await FirestoreService.create(
         FirestoreService.missionApplications,
         applicationData
       );
 
-      // 미션의 analytics.applications 증가
+      // 3. 새로운 tester_applications 컬렉션에도 저장 (확장 구조)
+      final unifiedApplicationData = {
+        ...applicationData,
+        'id': applicationId,
+        'appId': missionId, // appId로 missionId 사용
+        'appName': applicationData['missionName'] ?? FirestoreConstants.unknownApp,
+        'missionInfo': {
+          'missionId': missionId,
+          'appName': applicationData['missionName'] ?? FirestoreConstants.unknownApp,
+          'dailyReward': applicationData['dailyReward'] ?? FirestoreConstants.defaultDailyReward,
+          'totalDays': applicationData['totalDays'] ?? FirestoreConstants.defaultTotalDays,
+          'requirements': applicationData['requirements'] ?? [],
+        },
+        'progress': {
+          'currentDay': 0,
+          'totalPoints': 0,
+          'progressPercentage': 0.0,
+          'todayCompleted': false,
+          'latestFeedback': null,
+          'averageRating': null,
+        },
+        'statusUpdatedAt': applicationData['appliedAt'],
+      };
+
+      await FirestoreService.create(
+        FirestoreService.testerApplications,
+        unifiedApplicationData
+      );
+
+      // 4. 미션의 analytics.applications 증가
       await incrementApplications(missionId);
 
-      // 공급자에게 알림 전송 (추후 구현)
-      // await _sendApplicationNotification(applicationData);
+      // 5. 공급자에게 실시간 알림 전송
+      await _sendApplicationNotification(applicationData);
 
       return applicationId;
     } catch (e) {
-      print('Error applying to mission: $e');
+      AppLogger.error('Error applying to mission', e.toString());
       rethrow;
+    }
+  }
+
+  // 공급자에게 신청 알림 전송
+  Future<void> _sendApplicationNotification(Map<String, dynamic> applicationData) async {
+    try {
+      final notificationData = {
+        'recipientId': applicationData['providerId'],
+        'senderId': applicationData['testerId'],
+        'type': FirestoreConstants.notificationTypeMissionApplication,
+        'title': '새 미션 신청',
+        'message': '${applicationData['testerName']}님이 미션에 신청했습니다.',
+        'missionId': applicationData['missionId'],
+        'applicationId': applicationData['id'],
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+        'data': {
+          'testerName': applicationData['testerName'],
+          'testerEmail': applicationData['testerEmail'],
+          'appName': applicationData['missionName'] ?? FirestoreConstants.unknownApp,
+        },
+      };
+
+      await FirestoreService.create(
+        FirestoreService.notifications,
+        notificationData
+      );
+
+      AppLogger.info('Application notification sent to provider: ${applicationData['providerId']}', 'MissionService');
+    } catch (e) {
+      AppLogger.warning('Failed to send application notification: $e', 'MissionService');
+      // 알림 전송 실패는 전체 프로세스를 중단시키지 않음
     }
   }
 
@@ -345,7 +415,7 @@ class MissionService {
         return MissionApplication.fromFirestore(data);
       }).toList();
     } catch (e) {
-      print('Error getting mission applications: $e');
+      AppLogger.error('Error getting mission applications', e.toString());
       return [];
     }
   }
@@ -364,7 +434,7 @@ class MissionService {
         return MissionApplication.fromFirestore(data);
       }).toList();
     } catch (e) {
-      print('Error getting tester applications: $e');
+      AppLogger.error('Error getting tester applications', e.toString());
       return [];
     }
   }
@@ -400,7 +470,7 @@ class MissionService {
       // 테스터에게 알림 전송 (추후 구현)
       // await _sendStatusUpdateNotification(applicationId, status);
     } catch (e) {
-      print('Error updating application status: $e');
+      AppLogger.error('Error updating application status', e.toString());
       rethrow;
     }
   }
@@ -416,8 +486,251 @@ class MissionService {
       final snapshot = await query.get();
       return snapshot.docs.isNotEmpty;
     } catch (e) {
-      print('Error checking if user applied: $e');
+      AppLogger.error('Error checking if user applied', e.toString());
       return false;
+    }
+  }
+
+  // 상태 관리 시스템: 신청중 → 승인됨 → 일일미션중 → 미션완료 → 미션승인됨 → 프로젝트종료
+
+  // 공급자가 테스터 신청을 승인
+  static Future<void> approveApplication(String applicationId, {String? responseMessage}) async {
+    try {
+      // 1. mission_applications 업데이트
+      await updateApplicationStatus(
+        applicationId,
+        MissionApplicationStatus.accepted,
+        responseMessage: responseMessage ?? '신청이 승인되었습니다.',
+      );
+
+      // 2. tester_applications에서 해당 신청 찾아서 상태 업데이트
+      final query = FirestoreService.testerApplications
+          .where('id', isEqualTo: applicationId)
+          .limit(1);
+
+      final snapshot = await query.get();
+      if (snapshot.docs.isNotEmpty) {
+        final docId = snapshot.docs.first.id;
+        await FirestoreService.update(
+          FirestoreService.testerApplications,
+          docId,
+          {
+            'status': FirestoreConstants.statusApproved,
+            'statusUpdatedAt': FieldValue.serverTimestamp(),
+            'startedAt': FieldValue.serverTimestamp(),
+          },
+        );
+      }
+
+      AppLogger.info('Application approved: $applicationId', 'MissionService');
+    } catch (e) {
+      AppLogger.error('Error approving application', e.toString());
+      rethrow;
+    }
+  }
+
+  // 공급자가 테스터 신청을 거부
+  static Future<void> rejectApplication(String applicationId, {String? responseMessage}) async {
+    try {
+      // 1. mission_applications 업데이트
+      await updateApplicationStatus(
+        applicationId,
+        MissionApplicationStatus.rejected,
+        responseMessage: responseMessage ?? '신청이 거부되었습니다.',
+      );
+
+      // 2. tester_applications에서 해당 신청 찾아서 상태 업데이트
+      final query = FirestoreService.testerApplications
+          .where('id', isEqualTo: applicationId)
+          .limit(1);
+
+      final snapshot = await query.get();
+      if (snapshot.docs.isNotEmpty) {
+        final docId = snapshot.docs.first.id;
+        await FirestoreService.update(
+          FirestoreService.testerApplications,
+          docId,
+          {
+            'status': FirestoreConstants.statusRejected,
+            'statusUpdatedAt': FieldValue.serverTimestamp(),
+          },
+        );
+      }
+
+      AppLogger.info('Application rejected: $applicationId', 'MissionService');
+    } catch (e) {
+      AppLogger.error('Error rejecting application', e.toString());
+      rethrow;
+    }
+  }
+
+  // 테스터가 일일 미션 시작
+  static Future<void> startDailyMission(String applicationId) async {
+    try {
+      final query = FirestoreService.testerApplications
+          .where('id', isEqualTo: applicationId)
+          .limit(1);
+
+      final snapshot = await query.get();
+      if (snapshot.docs.isNotEmpty) {
+        final docId = snapshot.docs.first.id;
+        final data = snapshot.docs.first.data();
+        final progress = data['progress'] as Map<String, dynamic>? ?? {};
+
+        await FirestoreService.update(
+          FirestoreService.testerApplications,
+          docId,
+          {
+            'status': FirestoreConstants.statusInProgress,
+            'statusUpdatedAt': FieldValue.serverTimestamp(),
+            'progress.currentDay': (progress['currentDay'] ?? 0) + 1,
+            'progress.todayCompleted': false,
+          },
+        );
+      }
+
+      AppLogger.info('Daily mission started: $applicationId', 'MissionService');
+    } catch (e) {
+      AppLogger.error('Error starting daily mission', e.toString());
+      rethrow;
+    }
+  }
+
+  // 테스터가 일일 미션 완료
+  static Future<void> completeDailyMission(String applicationId, {
+    String? feedback,
+    int? rating,
+    Map<String, dynamic>? additionalData,
+  }) async {
+    try {
+      final query = FirestoreService.testerApplications
+          .where('id', isEqualTo: applicationId)
+          .limit(1);
+
+      final snapshot = await query.get();
+      if (snapshot.docs.isNotEmpty) {
+        final docId = snapshot.docs.first.id;
+        final data = snapshot.docs.first.data();
+        final progress = data['progress'] as Map<String, dynamic>? ?? {};
+        final missionInfo = data['missionInfo'] as Map<String, dynamic>? ?? {};
+
+        final currentDay = progress['currentDay'] ?? 1;
+        final totalDays = missionInfo['totalDays'] ?? 14;
+        final dailyReward = missionInfo['dailyReward'] ?? 5000;
+        final totalPoints = (progress['totalPoints'] ?? 0) + dailyReward;
+        final progressPercentage = (currentDay / totalDays * 100).clamp(0.0, 100.0);
+
+        final updateData = {
+          'progress.todayCompleted': true,
+          'progress.totalPoints': totalPoints,
+          'progress.progressPercentage': progressPercentage,
+          'progress.latestFeedback': feedback,
+          'statusUpdatedAt': FieldValue.serverTimestamp(),
+        };
+
+        if (rating != null) {
+          updateData['progress.averageRating'] = rating;
+        }
+
+        // 모든 일일 미션 완료 체크
+        if (currentDay >= totalDays) {
+          updateData['status'] = FirestoreConstants.statusCompleted;
+          updateData['completedAt'] = FieldValue.serverTimestamp();
+        }
+
+        await FirestoreService.update(
+          FirestoreService.testerApplications,
+          docId,
+          updateData,
+        );
+      }
+
+      AppLogger.info('Daily mission completed: $applicationId', 'MissionService');
+    } catch (e) {
+      AppLogger.error('Error completing daily mission', e.toString());
+      rethrow;
+    }
+  }
+
+  // 공급자가 미션 완료를 승인
+  static Future<void> approveMissionCompletion(String applicationId, {String? responseMessage}) async {
+    try {
+      final query = FirestoreService.testerApplications
+          .where('id', isEqualTo: applicationId)
+          .limit(1);
+
+      final snapshot = await query.get();
+      if (snapshot.docs.isNotEmpty) {
+        final docId = snapshot.docs.first.id;
+
+        await FirestoreService.update(
+          FirestoreService.testerApplications,
+          docId,
+          {
+            'status': FirestoreConstants.statusMissionApproved,
+            'statusUpdatedAt': FieldValue.serverTimestamp(),
+            'approvedAt': FieldValue.serverTimestamp(),
+          },
+        );
+      }
+
+      AppLogger.info('Mission completion approved: $applicationId', 'MissionService');
+    } catch (e) {
+      AppLogger.error('Error approving mission completion', e.toString());
+      rethrow;
+    }
+  }
+
+  // 프로젝트 종료
+  static Future<void> finalizeProject(String applicationId) async {
+    try {
+      final query = FirestoreService.testerApplications
+          .where('id', isEqualTo: applicationId)
+          .limit(1);
+
+      final snapshot = await query.get();
+      if (snapshot.docs.isNotEmpty) {
+        final docId = snapshot.docs.first.id;
+
+        await FirestoreService.update(
+          FirestoreService.testerApplications,
+          docId,
+          {
+            'status': FirestoreConstants.statusProjectEnded,
+            'statusUpdatedAt': FieldValue.serverTimestamp(),
+            'finalizedAt': FieldValue.serverTimestamp(),
+          },
+        );
+      }
+
+      AppLogger.info('Project finalized: $applicationId', 'MissionService');
+    } catch (e) {
+      AppLogger.error('Error finalizing project', e.toString());
+      rethrow;
+    }
+  }
+
+  // 공급자가 미션의 모든 신청자들을 조회 (확장된 정보 포함)
+  static Future<List<Map<String, dynamic>>> getEnhancedMissionApplications(String missionId) async {
+    try {
+      // tester_applications에서 해당 미션의 신청자들 조회
+      final query = FirestoreService.testerApplications
+          .where('missionId', isEqualTo: missionId)
+          .orderBy('appliedAt', descending: true);
+
+      final snapshot = await query.get();
+
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'documentId': doc.id,
+          ...data,
+        };
+      }).toList();
+    } catch (e) {
+      AppLogger.error('Error getting enhanced mission applications', e.toString());
+      return [];
     }
   }
 }

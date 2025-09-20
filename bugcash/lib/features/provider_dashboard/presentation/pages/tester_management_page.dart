@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../tools/cleanup_dummy_data.dart';
 import '../../../shared/providers/unified_mission_provider.dart';
 import '../../../shared/models/unified_mission_model.dart';
 import '../providers/tester_management_provider.dart';
@@ -73,27 +74,28 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         actions: [
-          // 🧹 임시 데이터 정리 버튼
+          // 🧹 더미 데이터 정리 버튼
           IconButton(
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
+
               try {
-                final notifier = ref.read(unifiedMissionNotifierProvider.notifier);
-                await notifier.cleanupInvalidMissions();
+                await DummyDataCleanup.cleanupDummyTesterApplications();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('잘못된 데이터 정리 완료')),
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('더미 데이터 정리 완료')),
                   );
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(content: Text('정리 실패: $e')),
                   );
                 }
               }
             },
             icon: const Icon(Icons.cleaning_services),
-            tooltip: '잘못된 데이터 정리',
+            tooltip: '더미 데이터 정리',
           ),
         ],
       ),

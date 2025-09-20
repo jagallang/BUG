@@ -2,8 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/services/mission_service.dart';
 import '../../../shared/providers/unified_mission_provider.dart';
-import '../../../shared/models/unified_mission_model.dart';
 
 // 테스터 신청 모델
 class TesterApplicationModel {
@@ -298,13 +298,22 @@ class TesterManagementNotifier extends StateNotifier<TesterManagementState> {
 
       debugPrint('🔄 LEGACY_PROVIDER: 통합 Provider로 상태 업데이트 - $applicationId -> $newStatus');
 
-      // 통합 Provider의 메서드 사용
-      await _ref.read(unifiedMissionNotifierProvider.notifier).updateTesterStatus(
-        missionId: applicationId,
-        newStatus: newStatus,
-      );
+      // 새로운 MissionService 메서드 사용 - 상태에 따라 분기
+      if (newStatus == 'approved') {
+        await MissionService.approveApplication(applicationId);
+        AppLogger.info('🔄 LEGACY_PROVIDER: Tester application approved: $applicationId (MissionService 사용)', 'TesterManagement');
+      } else if (newStatus == 'rejected') {
+        await MissionService.rejectApplication(applicationId);
+        AppLogger.info('🔄 LEGACY_PROVIDER: Tester application rejected: $applicationId (MissionService 사용)', 'TesterManagement');
+      } else {
+        // 기존 로직 유지 (기타 상태 변경)
+        await _ref.read(unifiedMissionNotifierProvider.notifier).updateTesterStatus(
+          missionId: applicationId,
+          newStatus: newStatus,
+        );
+        AppLogger.info('🔄 LEGACY_PROVIDER: Tester application status updated: $applicationId -> $newStatus (통합 Provider 사용)', 'TesterManagement');
+      }
 
-      AppLogger.info('🔄 LEGACY_PROVIDER: Tester application $newStatus: $applicationId (통합 Provider 사용)', 'TesterManagement');
       state = state.copyWith(isLoading: false);
     } catch (e) {
       AppLogger.error('Failed to update tester application', e.toString());

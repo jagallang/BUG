@@ -23,6 +23,9 @@ abstract class FirestoreService {
   static CollectionReference<Map<String, dynamic>> get missionApplications =>
       _firestore.collection('mission_applications');
 
+  static CollectionReference<Map<String, dynamic>> get testerApplications =>
+      _firestore.collection('tester_applications');
+
   static CollectionReference<Map<String, dynamic>> get bugReports =>
       _firestore.collection('bug_reports');
 
