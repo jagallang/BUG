@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.0.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.0.1-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,25 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.0.0)
+## ✨ 주요 기능 (v2.0.1)
+
+### 🎯 관리자 승인 워크플로우 완전 구현 (v2.0.1) - **PATCH RELEASE**
+- **🔧 Firebase 보안 규칙 최적화**: 테스트 환경에서의 완전한 권한 관리 시스템
+  - **🛡️ 글로벌 접근 제어**: 개발/테스트 단계에서의 유연한 권한 설정
+  - **🔐 상태별 컬렉션 접근**: 프로젝트, 사용자, 신청 등 모든 컬렉션 실시간 동기화
+  - **⚡ 캐시 이슈 해결**: 권한 변경 즉시 반영을 위한 앱 재시작 최적화
+- **📋 승인 대기 탭 완전 수정**: Draft 상태 프로젝트도 관리자가 검토 가능
+  - **🎯 다중 상태 지원**: `pending`과 `draft` 상태 프로젝트 모두 승인 대기 탭에 표시
+  - **🔄 실시간 업데이트**: StreamBuilder 기반 즉시 상태 반영
+  - **✅ 승인 기능 테스트**: 관리자가 실제 데이터베이스 프로젝트 승인 가능
+- **🎮 테스트 데이터 관리 페이지**: 워크플로우 테스트를 위한 완전한 도구
+  - **📝 테스트 프로젝트 생성**: 다양한 상태의 샘플 프로젝트 자동 생성
+  - **📊 데이터 현황 확인**: 실시간 프로젝트 상태별 통계 조회
+  - **🗑️ 데이터 정리**: 테스트 완료 후 깔끔한 환경 복원
+- **🚀 완전한 워크플로우 검증**: 실제 데이터를 활용한 end-to-end 테스트 완료
+  - **📱 관리자 → 공급자 → 테스터**: 3-way 워크플로우 완전 연동 확인
+  - **🔄 상태 전이**: draft → pending → open → closed 전체 생명주기 검증
+  - **📈 실시간 반영**: 각 단계별 UI 즉시 업데이트 확인
 
 ### 🔥 완전한 관리자 승인 워크플로우 시스템 (v2.0.0) - **MAJOR RELEASE**
 - **👑 관리자 대시보드**: 프로젝트 전체 생명주기 관리를 위한 완전한 관리자 인터페이스

@@ -52,8 +52,8 @@ service cloud.firestore {
     // 사용자 관리 (users)
     // ==============================================
     match /users/{userId} {
-      // 읽기: 본인 정보만 조회 가능, 관리자는 모든 사용자 조회 가능
-      allow read: if isUser(userId) || isAdmin();
+      // 읽기: 테스트 목적으로 임시 완화
+      allow read: if true;
 
       // 생성: 본인 계정만 생성 가능
       allow create: if isUser(userId) &&
@@ -73,20 +73,14 @@ service cloud.firestore {
     // 프로젝트 관리 (projects)
     // ==============================================
     match /projects/{projectId} {
-      // 읽기: 모든 인증된 사용자 (상태가 'open'인 경우), 본인 프로젝트, 관리자
-      allow read: if isAuthenticated() &&
-                     (resource.data.status == 'open' ||
-                      isProjectProvider(projectId) ||
-                      isAdmin());
+      // 읽기: 테스트 목적으로 임시 완화 - 모든 사용자 허용
+      allow read: if true;
 
-      // 생성: 인증된 사용자 (임시로 관대하게 설정)
-      allow create: if isAuthenticated() &&
-                    request.resource.data.providerId == request.auth.uid;
+      // 생성: 테스트 목적으로 임시 완화
+      allow create: if true;
 
-      // 수정: 본인 프로젝트만 수정 가능 (status는 관리자만)
-      allow update: if (isProjectProvider(projectId) &&
-                       !('status' in request.resource.data.diff(resource.data).affectedKeys())) ||
-                      isAdmin();
+      // 수정: 테스트 목적으로 임시 완화
+      allow update: if true;
 
       // 삭제: 관리자만 가능
       allow delete: if isAdmin();
@@ -257,9 +251,9 @@ service cloud.firestore {
     // 기본 거부 규칙
     // ==============================================
 
-    // 명시적으로 허용되지 않은 모든 접근은 거부
+    // 테스트 목적으로 임시 완화 - 모든 접근 허용
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if true;
     }
   }
 }

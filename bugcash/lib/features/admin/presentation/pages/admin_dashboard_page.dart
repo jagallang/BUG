@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'test_data_page.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -30,6 +31,14 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         foregroundColor: Colors.white,
         elevation: 2,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.data_usage),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const TestDataPage()),
+            ),
+            tooltip: '테스트 데이터 관리',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => setState(() {}),
@@ -131,18 +140,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           ),
           SizedBox(height: 24.h),
 
-          // 요약 카드들
-          Row(
-            children: [
-              Expanded(child: _buildSummaryCard('총 충전액', '₩5,000,000', Colors.blue, Icons.credit_card)),
-              SizedBox(width: 16.w),
-              Expanded(child: _buildSummaryCard('총 지급액', '₩3,800,000', Colors.green, Icons.payments)),
-              SizedBox(width: 16.w),
-              Expanded(child: _buildSummaryCard('플랫폼 수익', '₩1,200,000', Colors.purple, Icons.trending_up)),
-              SizedBox(width: 16.w),
-              Expanded(child: _buildSummaryCard('신규 사용자', '54명', Colors.orange, Icons.person_add)),
-            ],
-          ),
+          // 실시간 요약 카드들
+          _buildRealTimeSummaryCards(),
 
           SizedBox(height: 24.h),
 
@@ -246,16 +245,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           ),
           SizedBox(height: 24.h),
 
-          // 사용자 통계
-          Row(
-            children: [
-              Expanded(child: _buildUserStatsCard('전체 사용자', '1,234명', Colors.blue)),
-              SizedBox(width: 16.w),
-              Expanded(child: _buildUserStatsCard('테스터', '980명', Colors.green)),
-              SizedBox(width: 16.w),
-              Expanded(child: _buildUserStatsCard('공급자', '254명', Colors.orange)),
-            ],
-          ),
+          // 실시간 사용자 통계
+          _buildRealTimeUserStats(),
 
           SizedBox(height: 24.h),
 
@@ -429,10 +420,15 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     return StreamBuilder<QuerySnapshot>(
       stream: status == 'all'
           ? FirebaseFirestore.instance.collection('projects').snapshots()
-          : FirebaseFirestore.instance
-              .collection('projects')
-              .where('status', isEqualTo: status)
-              .snapshots(),
+          : status == 'pending'
+              ? FirebaseFirestore.instance
+                  .collection('projects')
+                  .where('status', whereIn: ['pending', 'draft'])
+                  .snapshots()
+              : FirebaseFirestore.instance
+                  .collection('projects')
+                  .where('status', isEqualTo: status)
+                  .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -653,7 +649,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     );
   }
 
-  // 더미 위젯들 (구현 예정)
+  // 실제 데이터와 연동된 최근 활동 패널
   Widget _buildRecentActivityPanel() {
     return Container(
       padding: EdgeInsets.all(20.w),
@@ -677,10 +673,130 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16.h),
-          Text('최근 활동 내역이 여기에 표시됩니다.'),
+          SizedBox(
+            height: 300.h,
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('projects')
+                  .orderBy('createdAt', descending: true)
+                  .limit(5)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text('최근 활동이 없습니다.'),
+                  );
+                }
+
+                return ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: snapshot.data!.docs.length,
+                  separatorBuilder: (context, index) => Divider(height: 16.h),
+                  itemBuilder: (context, index) {
+                    final doc = snapshot.data!.docs[index];
+                    final data = doc.data() as Map<String, dynamic>;
+                    final createdAt = data['createdAt'] as Timestamp?;
+                    final timeAgo = createdAt != null
+                        ? _getTimeAgo(createdAt.toDate())
+                        : '방금';
+
+                    return Row(
+                      children: [
+                        Icon(
+                          _getStatusIcon(data['status'] ?? 'pending'),
+                          size: 16.sp,
+                          color: _getStatusColor(data['status'] ?? 'pending'),
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                data['appName'] ?? '프로젝트',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                _getStatusText(data['status'] ?? 'pending'),
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          timeAgo,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  String _getTimeAgo(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}일 전';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}시간 전';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}분 전';
+    } else {
+      return '방금';
+    }
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'pending':
+        return Icons.schedule;
+      case 'open':
+        return Icons.check_circle;
+      case 'rejected':
+        return Icons.cancel;
+      case 'closed':
+        return Icons.archive;
+      default:
+        return Icons.help;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return Colors.orange[600]!;
+      case 'open':
+        return Colors.green[600]!;
+      case 'rejected':
+        return Colors.red[600]!;
+      case 'closed':
+        return Colors.grey[600]!;
+      default:
+        return Colors.grey[600]!;
+    }
   }
 
   Widget _buildQuickActions() {
@@ -768,16 +884,123 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '사용자 목록',
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '사용자 목록',
+                  style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => setState(() {}),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('새로고침'),
+                ),
+              ],
             ),
             SizedBox(height: 16.h),
-            Text('사용자 테이블이 여기에 표시됩니다.'),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('users')
+                  .orderBy('createdAt', descending: true)
+                  .limit(10)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return const Center(
+                    child: Text('등록된 사용자가 없습니다.'),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: const [
+                      DataColumn(label: Text('이름')),
+                      DataColumn(label: Text('이메일')),
+                      DataColumn(label: Text('역할')),
+                      DataColumn(label: Text('가입일')),
+                      DataColumn(label: Text('상태')),
+                    ],
+                    rows: snapshot.data!.docs.map((doc) {
+                      final data = doc.data() as Map<String, dynamic>;
+                      final createdAt = data['createdAt'] as Timestamp?;
+                      final dateString = createdAt != null
+                          ? DateFormat('yyyy-MM-dd').format(createdAt.toDate())
+                          : '미상';
+
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(data['name'] ?? 'N/A')),
+                          DataCell(Text(data['email'] ?? 'N/A')),
+                          DataCell(
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 4.h,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getRoleColor(data['role'] ?? 'tester'),
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              child: Text(
+                                _getRoleText(data['role'] ?? 'tester'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                          DataCell(Text(dateString)),
+                          DataCell(
+                            Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 16.sp,
+                            ),
+                          ),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Color _getRoleColor(String role) {
+    switch (role) {
+      case 'admin':
+        return Colors.red[600]!;
+      case 'provider':
+        return Colors.orange[600]!;
+      case 'tester':
+        return Colors.blue[600]!;
+      default:
+        return Colors.grey[600]!;
+    }
+  }
+
+  String _getRoleText(String role) {
+    switch (role) {
+      case 'admin':
+        return '관리자';
+      case 'provider':
+        return '공급자';
+      case 'tester':
+        return '테스터';
+      default:
+        return '알 수 없음';
+    }
   }
 
   Widget _buildFinanceCard(String title, String value, Color color, IconData icon) {
@@ -1141,6 +1364,178 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   void _showNotImplemented(String feature) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('$feature 기능 (개발 중)')),
+    );
+  }
+
+  // 실시간 Firebase 데이터와 연동된 요약 카드들
+  Widget _buildRealTimeSummaryCards() {
+    return FutureBuilder<List<QuerySnapshot>>(
+      future: Future.wait([
+        FirebaseFirestore.instance.collection('payments').get(),
+        FirebaseFirestore.instance.collection('projects').get(),
+        FirebaseFirestore.instance.collection('users').get(),
+        FirebaseFirestore.instance.collection('applications').get(),
+      ]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData) {
+          return _buildDefaultSummaryCards();
+        }
+
+        final payments = snapshot.data![0];
+        final projects = snapshot.data![1];
+        final users = snapshot.data![2];
+        final applications = snapshot.data![3];
+
+        // 실제 데이터 계산
+        int totalCharged = 0;
+        int totalPaid = 0;
+        int platformRevenue = 0;
+        int newUsersThisMonth = 0;
+
+        // 결제 데이터 계산
+        for (var doc in payments.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final amount = data['amount'] ?? 0;
+          final type = data['type'] ?? '';
+
+          if (type == 'charge') {
+            totalCharged += (amount as num).toInt();
+          } else if (type == 'payout') {
+            totalPaid += (amount as num).toInt();
+          }
+        }
+
+        platformRevenue = (totalCharged * 0.1).toInt(); // 10% 수수료
+
+        // 이번 달 신규 사용자 계산
+        final thisMonth = DateTime.now();
+        final startOfMonth = DateTime(thisMonth.year, thisMonth.month, 1);
+
+        for (var doc in users.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final createdAt = data['createdAt'];
+          if (createdAt != null) {
+            DateTime userCreatedAt;
+            if (createdAt is Timestamp) {
+              userCreatedAt = createdAt.toDate();
+            } else {
+              continue;
+            }
+
+            if (userCreatedAt.isAfter(startOfMonth)) {
+              newUsersThisMonth++;
+            }
+          }
+        }
+
+        return Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
+                '총 프로젝트',
+                '${projects.docs.length}개',
+                Colors.blue,
+                Icons.folder_open,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: _buildSummaryCard(
+                '총 신청',
+                '${applications.docs.length}건',
+                Colors.green,
+                Icons.assignment,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: _buildSummaryCard(
+                '활성 사용자',
+                '${users.docs.length}명',
+                Colors.purple,
+                Icons.people,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: _buildSummaryCard(
+                '이번 달 신규',
+                '${newUsersThisMonth}명',
+                Colors.orange,
+                Icons.person_add,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDefaultSummaryCards() {
+    return Row(
+      children: [
+        Expanded(child: _buildSummaryCard('총 프로젝트', '로딩...', Colors.blue, Icons.folder_open)),
+        SizedBox(width: 16.w),
+        Expanded(child: _buildSummaryCard('총 신청', '로딩...', Colors.green, Icons.assignment)),
+        SizedBox(width: 16.w),
+        Expanded(child: _buildSummaryCard('활성 사용자', '로딩...', Colors.purple, Icons.people)),
+        SizedBox(width: 16.w),
+        Expanded(child: _buildSummaryCard('이번 달 신규', '로딩...', Colors.orange, Icons.person_add)),
+      ],
+    );
+  }
+
+  // 실시간 사용자 통계
+  Widget _buildRealTimeUserStats() {
+    return FutureBuilder<List<QuerySnapshot>>(
+      future: Future.wait([
+        FirebaseFirestore.instance.collection('users').get(),
+        FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'tester').get(),
+        FirebaseFirestore.instance.collection('users').where('role', isEqualTo: 'provider').get(),
+      ]),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Row(
+            children: [
+              Expanded(child: _buildUserStatsCard('전체 사용자', '로딩...', Colors.blue)),
+              SizedBox(width: 16.w),
+              Expanded(child: _buildUserStatsCard('테스터', '로딩...', Colors.green)),
+              SizedBox(width: 16.w),
+              Expanded(child: _buildUserStatsCard('공급자', '로딩...', Colors.orange)),
+            ],
+          );
+        }
+
+        if (!snapshot.hasData) {
+          return Row(
+            children: [
+              Expanded(child: _buildUserStatsCard('전체 사용자', '0명', Colors.blue)),
+              SizedBox(width: 16.w),
+              Expanded(child: _buildUserStatsCard('테스터', '0명', Colors.green)),
+              SizedBox(width: 16.w),
+              Expanded(child: _buildUserStatsCard('공급자', '0명', Colors.orange)),
+            ],
+          );
+        }
+
+        final allUsers = snapshot.data![0];
+        final testers = snapshot.data![1];
+        final providers = snapshot.data![2];
+
+        return Row(
+          children: [
+            Expanded(child: _buildUserStatsCard('전체 사용자', '${allUsers.docs.length}명', Colors.blue)),
+            SizedBox(width: 16.w),
+            Expanded(child: _buildUserStatsCard('테스터', '${testers.docs.length}명', Colors.green)),
+            SizedBox(width: 16.w),
+            Expanded(child: _buildUserStatsCard('공급자', '${providers.docs.length}명', Colors.orange)),
+          ],
+        );
+      },
     );
   }
 }
