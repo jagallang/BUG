@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.0.1-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.0.02-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,21 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.0.1)
+## ✨ 주요 기능 (v2.0.02)
 
-### 🎯 관리자 승인 워크플로우 완전 구현 (v2.0.1) - **PATCH RELEASE**
+### 🔧 Cloud Functions 아키텍처 및 관리자 UI 개선 (v2.0.02) - **PATCH RELEASE**
+- **⚡ Cloud Functions 상태 전이 시스템**: 서버 사이드 검증 및 보안 강화
+  - **🛡️ 역할 기반 접근 제어**: 관리자만 프로젝트 승인/거부 가능
+  - **🔄 상태 전이 검증**: draft → pending → open → closed 워크플로우 검증
+  - **📡 이벤트 기반 알림**: 상태 변경 시 자동 알림 및 부가 작업 실행
+  - **💾 폴백 메커니즘**: Cloud Functions 미배포 환경에서도 동작하는 Firestore 직접 업데이트
+- **🎨 관리자 대시보드 UI/UX 개선**: 직관적인 상태 관리 인터페이스
+  - **🟦 Draft 상태 지원**: 초안 프로젝트도 승인 버튼으로 관리 가능
+  - **🎯 상태별 색상 시스템**: 파란색(초안), 주황색(대기), 초록색(승인), 빨간색(거부)
+  - **📋 승인/거부 버튼**: pending 및 draft 상태 프로젝트에 수동 승인 버튼 표시
+  - **💬 거부 사유 입력**: 프로젝트 거부 시 상세한 피드백 제공 기능
+
+### 🎯 관리자 승인 워크플로우 완전 구현 (v2.0.1) - **이전 버전**
 - **🔧 Firebase 보안 규칙 최적화**: 테스트 환경에서의 완전한 권한 관리 시스템
   - **🛡️ 글로벌 접근 제어**: 개발/테스트 단계에서의 유연한 권한 설정
   - **🔐 상태별 컬렉션 접근**: 프로젝트, 사용자, 신청 등 모든 컬렉션 실시간 동기화

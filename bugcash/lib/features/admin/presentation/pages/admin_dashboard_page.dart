@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import 'test_data_page.dart';
 
@@ -478,6 +479,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     Color statusColor;
     IconData statusIcon;
     switch (status) {
+      case 'draft':
+        statusColor = Colors.blue;
+        statusIcon = Icons.edit;
+        break;
       case 'pending':
         statusColor = Colors.orange;
         statusIcon = Icons.pending;
@@ -489,6 +494,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       case 'rejected':
         statusColor = Colors.red;
         statusIcon = Icons.cancel;
+        break;
+      case 'closed':
+        statusColor = Colors.grey;
+        statusIcon = Icons.archive;
         break;
       default:
         statusColor = Colors.grey;
@@ -590,7 +599,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 Icon(Icons.people, size: 16.sp, color: Colors.grey[600]),
                 SizedBox(width: 4.w),
                 Text(
-                  '최대 테스터: ${maxTesters}명',
+                  '최대 테스터: $maxTesters명',
                   style: TextStyle(
                     fontSize: 12.sp,
                     color: Colors.grey[600],
@@ -600,7 +609,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 Wrap(
                   spacing: 8.w,
                   children: [
-                    if (status == 'pending') ...[
+                    if (status == 'pending' || status == 'draft') ...[
                       SizedBox(
                         width: 80.w,
                         height: 32.h,
@@ -771,6 +780,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   IconData _getStatusIcon(String status) {
     switch (status) {
+      case 'draft':
+        return Icons.edit;
       case 'pending':
         return Icons.schedule;
       case 'open':
@@ -786,6 +797,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   Color _getStatusColor(String status) {
     switch (status) {
+      case 'draft':
+        return Colors.blue[600]!;
       case 'pending':
         return Colors.orange[600]!;
       case 'open':
@@ -1195,6 +1208,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 액션 메서드들
   String _getStatusText(String status) {
     switch (status) {
+      case 'draft': return '초안';
       case 'pending': return '승인 대기';
       case 'open': return '승인됨';
       case 'rejected': return '거부됨';
@@ -1205,14 +1219,28 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   void _approveProject(String projectId) async {
     try {
-      await FirebaseFirestore.instance
-          .collection('projects')
-          .doc(projectId)
-          .update({
-        'status': 'open',
-        'approvedAt': FieldValue.serverTimestamp(),
-        'approvedBy': 'admin', // 실제로는 현재 관리자 ID
-      });
+      // Try Cloud Functions first, fallback to direct Firestore update if needed
+      try {
+        final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+        final callable = functions.httpsCallable('reviewProject');
+
+        await callable.call({
+          'projectId': projectId,
+          'approve': true,
+        });
+      } catch (cloudError) {
+        print('Cloud Functions not available, using direct Firestore update: $cloudError');
+        // Fallback to direct Firestore update
+        await FirebaseFirestore.instance
+            .collection('projects')
+            .doc(projectId)
+            .update({
+          'status': 'open',
+          'approvedAt': FieldValue.serverTimestamp(),
+          'approvedBy': 'admin',
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1240,15 +1268,30 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     if (reason == null) return;
 
     try {
-      await FirebaseFirestore.instance
-          .collection('projects')
-          .doc(projectId)
-          .update({
-        'status': 'rejected',
-        'rejectedAt': FieldValue.serverTimestamp(),
-        'rejectedBy': 'admin',
-        'rejectionReason': reason,
-      });
+      // Try Cloud Functions first, fallback to direct Firestore update if needed
+      try {
+        final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+        final callable = functions.httpsCallable('reviewProject');
+
+        await callable.call({
+          'projectId': projectId,
+          'approve': false,
+          'rejectionReason': reason,
+        });
+      } catch (cloudError) {
+        print('Cloud Functions not available, using direct Firestore update: $cloudError');
+        // Fallback to direct Firestore update
+        await FirebaseFirestore.instance
+            .collection('projects')
+            .doc(projectId)
+            .update({
+          'status': 'rejected',
+          'rejectedAt': FieldValue.serverTimestamp(),
+          'rejectedBy': 'admin',
+          'rejectionReason': reason,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1391,25 +1434,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         final applications = snapshot.data![3];
 
         // 실제 데이터 계산
-        int totalCharged = 0;
-        int totalPaid = 0;
-        int platformRevenue = 0;
         int newUsersThisMonth = 0;
-
-        // 결제 데이터 계산
-        for (var doc in payments.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          final amount = data['amount'] ?? 0;
-          final type = data['type'] ?? '';
-
-          if (type == 'charge') {
-            totalCharged += (amount as num).toInt();
-          } else if (type == 'payout') {
-            totalPaid += (amount as num).toInt();
-          }
-        }
-
-        platformRevenue = (totalCharged * 0.1).toInt(); // 10% 수수료
 
         // 이번 달 신규 사용자 계산
         final thisMonth = DateTime.now();
@@ -1464,7 +1489,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             Expanded(
               child: _buildSummaryCard(
                 '이번 달 신규',
-                '${newUsersThisMonth}명',
+                '$newUsersThisMonth명',
                 Colors.orange,
                 Icons.person_add,
               ),
