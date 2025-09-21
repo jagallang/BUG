@@ -21,7 +21,9 @@ class FirebaseAuthService {
       photoUrl: data['photoUrl'] as String?,
       userType: data['userType'] == 'provider'
           ? UserType.provider
-          : UserType.tester,
+          : data['userType'] == 'admin'
+              ? UserType.admin
+              : UserType.tester,
       country: data['country'] ?? '',
       timezone: data['timezone'] ?? 'UTC',
       phoneNumber: TypeConverter.safeStringConversion(data['phoneNumber']),
@@ -171,36 +173,56 @@ class FirebaseAuthService {
 
       // Create user document in Firestore
       if (credential.user != null) {
-        await _firestore.collection('users').doc(credential.user!.uid).set({
-          'email': email,
-          'displayName': displayName,
-          'userType': userType == UserType.provider ? 'provider' : 'tester',
-          'country': country,
-          'timezone': 'UTC',
-          'phoneNumber': phoneNumber,
-          'createdAt': FieldValue.serverTimestamp(),
-          'updatedAt': FieldValue.serverTimestamp(),
-          'lastLoginAt': FieldValue.serverTimestamp(),
-        });
+        try {
+          if (kDebugMode) {
+            debugPrint('🔵 회원가입 - Firestore 문서 생성 시작: ${credential.user!.uid}');
+          }
 
-        // Create additional collection for provider
-        if (userType == UserType.provider) {
-          await _firestore.collection('providers').doc(credential.user!.uid).set({
-            'companyName': displayName,
-            'contactEmail': email,
-            'status': 'pending',
-            'createdAt': FieldValue.serverTimestamp(),
-          });
-        } else {
-          // Create additional collection for tester
-          await _firestore.collection('testers').doc(credential.user!.uid).set({
-            'name': displayName,
+          await _firestore.collection('users').doc(credential.user!.uid).set({
+            'uid': credential.user!.uid,
             'email': email,
-            'level': 'beginner',
-            'totalPoints': 0,
-            'completedMissions': 0,
+            'displayName': displayName,
+            'role': userType == UserType.provider ? 'provider' : 'tester',
+            'userType': userType == UserType.provider ? 'provider' : 'tester',
+            'country': country,
+            'timezone': 'UTC',
+            'phoneNumber': phoneNumber,
+            'photoURL': null,
             'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+            'lastLoginAt': FieldValue.serverTimestamp(),
           });
+
+          // Create additional collection for provider
+          if (userType == UserType.provider) {
+            await _firestore.collection('providers').doc(credential.user!.uid).set({
+              'companyName': displayName,
+              'contactEmail': email,
+              'status': 'pending',
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+          } else {
+            // Create additional collection for tester
+            await _firestore.collection('testers').doc(credential.user!.uid).set({
+              'name': displayName,
+              'email': email,
+              'level': 'beginner',
+              'totalPoints': 0,
+              'completedMissions': 0,
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+          }
+
+          if (kDebugMode) {
+            debugPrint('✅ 회원가입 - Firestore 문서 생성 성공');
+          }
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('❌ 회원가입 - Firestore 문서 생성 실패: $e');
+          }
+          // 계정은 생성되었지만 문서 생성 실패 - 계정 삭제
+          await credential.user?.delete();
+          throw Exception('Failed to create user profile: $e');
         }
       }
 

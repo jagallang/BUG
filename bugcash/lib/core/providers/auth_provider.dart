@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// 현재 사용자 Provider - 자동 로그인 비활성화
+// 현재 사용자 Provider - 인증 상태 추적 활성화
 final currentUserProvider = StreamProvider<User?>((ref) {
-  // return FirebaseAuth.instance.authStateChanges();
-  return const Stream<User?>.empty(); // 빈 스트림 반환으로 자동 로그인 방지
+  return FirebaseAuth.instance.authStateChanges();
 });
 
 // 현재 사용자 ID Provider

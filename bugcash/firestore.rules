@@ -52,13 +52,14 @@ service cloud.firestore {
     // 사용자 관리 (users)
     // ==============================================
     match /users/{userId} {
-      // 읽기: 테스트 목적으로 임시 완화
+      // 읽기: 모든 사용자 허용 (인증 상태 확인용)
       allow read: if true;
 
-      // 생성: 본인 계정만 생성 가능
-      allow create: if isUser(userId) &&
+      // 생성: 인증된 사용자가 본인 계정만 생성 가능
+      allow create: if isAuthenticated() &&
+                    request.auth.uid == userId &&
                     validateRequiredFields(['uid', 'email', 'displayName', 'role']) &&
-                    request.resource.data.role in ['tester', 'provider'];
+                    request.resource.data.role in ['tester', 'provider', 'admin'];
 
       // 수정: 본인 정보만 수정 가능, 관리자는 role 변경 가능
       allow update: if (isUser(userId) &&
@@ -73,14 +74,19 @@ service cloud.firestore {
     // 프로젝트 관리 (projects)
     // ==============================================
     match /projects/{projectId} {
-      // 읽기: 테스트 목적으로 임시 완화 - 모든 사용자 허용
+      // 읽기: 임시로 모든 사용자 허용 (테스트용)
       allow read: if true;
 
-      // 생성: 테스트 목적으로 임시 완화
-      allow create: if true;
+      // 생성: 공급자만 가능
+      allow create: if isProvider() &&
+                    validateRequiredFields(['title', 'description', 'providerId', 'status']) &&
+                    request.resource.data.providerId == request.auth.uid &&
+                    request.resource.data.status == 'draft';
 
-      // 수정: 테스트 목적으로 임시 완화
-      allow update: if true;
+      // 수정: 상태 변경은 Cloud Functions만, 일반 필드는 공급자가 수정 가능
+      allow update: if isProjectProvider(projectId) &&
+                    // 상태 변경 차단 (Cloud Functions에서만 가능)
+                    !('status' in request.resource.data.diff(resource.data).affectedKeys());
 
       // 삭제: 관리자만 가능
       allow delete: if isAdmin();
@@ -251,9 +257,9 @@ service cloud.firestore {
     // 기본 거부 규칙
     // ==============================================
 
-    // 테스트 목적으로 임시 완화 - 모든 접근 허용
+    // 명시적으로 허용되지 않은 모든 요청 거부
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
     }
   }
 }

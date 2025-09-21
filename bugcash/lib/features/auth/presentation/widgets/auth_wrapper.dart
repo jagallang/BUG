@@ -6,6 +6,7 @@ import '../../domain/entities/user_entity.dart';
 import '../pages/login_page.dart';
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
+import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 
 class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
@@ -47,49 +48,7 @@ class AuthWrapper extends ConsumerWidget {
       case UserType.provider:
         return ProviderDashboardPage(providerId: userData.uid);
       case UserType.admin:
-        // Admin Dashboard 구현 예정
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Provider Dashboard'),
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-          ),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.construction, size: 64, color: Colors.orange),
-                const SizedBox(height: 16),
-                Text(
-                  'Provider Dashboard',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '현재 수정 중입니다.\n테스터 계정으로 로그인하여 테스트해주세요.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () async {
-                    await ref.read(authProvider.notifier).signOut();
-                  },
-                  icon: const Icon(Icons.logout),
-                  label: const Text('로그아웃'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
+        return const AdminDashboardPage();
     }
   }
 }
