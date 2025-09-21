@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.0.02-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.0.03-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,21 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.0.02)
+## ✨ 주요 기능 (v2.0.03)
 
-### 🔧 Cloud Functions 아키텍처 및 관리자 UI 개선 (v2.0.02) - **PATCH RELEASE**
+### 🔐 관리자 계정 로그인 및 인증 시스템 수정 (v2.0.03) - **PATCH RELEASE**
+- **🔑 관리자 인증 시스템 완전 수정**: 관리자 계정 로그인 문제 완전 해결
+  - **🔄 인증 상태 추적 활성화**: AuthProvider에서 Firebase 인증 상태 실시간 추적 재활성화
+  - **👑 관리자 타입 인식**: FirebaseAuthService에서 admin 사용자 타입 정확한 파싱 구현
+  - **🚪 정확한 라우팅**: AuthWrapper에서 관리자 로그인 시 AdminDashboardPage로 올바른 이동
+  - **🛡️ 보안 규칙 최적화**: Firestore Security Rules에서 관리자 계정 생성 및 접근 권한 개선
+- **✅ 관리자 워크플로우 검증 완료**: admin@bugcash.com 계정으로 완전한 승인 기능 테스트 완료
+  - **📋 프로젝트 승인 기능**: pending/draft 상태 프로젝트에 대한 실시간 승인/거부 기능
+  - **🎯 상태별 탭 필터링**: 승인대기, 승인됨, 거부됨 탭별 정확한 프로젝트 분류
+  - **📊 실시간 동기화**: 관리자 승인 즉시 공급자 및 테스터 화면에 반영 확인
+  - **🔔 완전한 워크플로우**: 관리자 → 공급자 → 테스터 3단계 승인 프로세스 정상 동작
+
+### 🔧 Cloud Functions 아키텍처 및 관리자 UI 개선 (v2.0.02) - **이전 버전**
 - **⚡ Cloud Functions 상태 전이 시스템**: 서버 사이드 검증 및 보안 강화
   - **🛡️ 역할 기반 접근 제어**: 관리자만 프로젝트 승인/거부 가능
   - **🔄 상태 전이 검증**: draft → pending → open → closed 워크플로우 검증
