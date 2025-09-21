@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-1.4.37-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.0.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,31 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v1.4.37)
+## ✨ 주요 기능 (v2.0.0)
+
+### 🔥 완전한 관리자 승인 워크플로우 시스템 (v2.0.0) - **MAJOR RELEASE**
+- **👑 관리자 대시보드**: 프로젝트 전체 생명주기 관리를 위한 완전한 관리자 인터페이스
+  - **📋 6개 완전 구현 메뉴**: Dashboard/Projects/Users/Finance/Reports/Settings
+  - **✅ 실시간 프로젝트 승인/거부**: Firebase StreamBuilder 기반 실시간 상태 업데이트
+  - **🏷️ 상태별 탭 필터링**: 승인대기/승인됨/거부됨/전체 프로젝트 관리
+  - **⚡ 즉시 반영**: 승인 즉시 테스터 미션 탭에 자동 표시
+- **🎯 새로운 프로젝트 워크플로우**: 완전한 PRD 기반 상태 관리 시스템
+  - **📝 등록**: 공급자가 프로젝트 등록 (status: 'pending')
+  - **👑 승인**: 관리자가 대시보드에서 승인 (status: 'open')
+  - **🚀 참여**: 승인된 프로젝트만 테스터 미션 탭에 표시
+  - **📊 모니터링**: 공급자가 앱 관리 탭에서 실시간 상태 확인
+- **🏗️ 새로운 데이터베이스 아키텍처**: 확장성과 성능을 위한 완전한 재설계
+  - **📦 projects 컬렉션**: 프로젝트 정보와 상태 관리 (새로운 최적화된 구조)
+  - **📋 applications 컬렉션**: 테스터 신청 정보 관리
+  - **🎮 enrollments 컬렉션**: 활성 미션 등록 정보
+  - **📈 missions 컬렉션**: 일일 미션 데이터 및 진행 상황
+- **🔐 Firebase 백엔드 완전 연동**: 보안과 성능을 위한 최적화
+  - **🔍 복합 인덱스**: 상태별 정렬을 위한 Firebase 인덱스 최적화
+  - **🛡️ 보안 규칙**: 역할 기반 접근 제어 (RBAC) 완전 구현
+  - **⚡ 실시간 동기화**: 모든 사용자 인터페이스의 즉시 상태 반영
+  - **🎨 PRD 기반 UI**: 상태별 색상 코딩과 아이콘으로 직관적 사용자 경험
+
+## ✨ 이전 버전 주요 기능
 
 ### 🎯 완전한 미션 워크플로우 시스템 구현 (v1.4.37)
 - **🔄 실시간 워크플로우 관리**: 테스터-공급자 간 완전한 미션 생명주기 관리
