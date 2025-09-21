@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../../core/services/mission_service.dart';
+import '../../../../core/services/mission_workflow_service.dart';
+import '../../../shared/models/mission_workflow_model.dart';
 import '../../../shared/providers/unified_mission_provider.dart';
 
 // 테스터 신청 모델
@@ -163,38 +165,56 @@ class AppStatisticsModel {
   }
 }
 
-// 🔥 통합 Provider로 교체 - 앱별 테스터 목록 Provider
+// 🔥 새로운 워크플로우 기반 Provider - 앱별 테스터 목록 Provider
 final appTestersProvider = StreamProvider.family<List<TesterApplicationModel>, String>((ref, appId) {
-  AppLogger.info('🔄 LEGACY_PROVIDER: Loading testers for app: $appId (통합 Provider 사용)', 'TesterManagement');
+  AppLogger.info('🔄 WORKFLOW_PROVIDER: Loading testers for app: $appId (새 워크플로우 시스템 사용)', 'TesterManagement');
 
-  // 통합 Provider 사용
-  final unifiedMissions = ref.watch(appTestersStreamProvider(appId));
+  final workflowService = MissionWorkflowService();
 
-  return unifiedMissions.when(
-    data: (missions) {
-      debugPrint('🔄 LEGACY_PROVIDER: ${missions.length}개 통합 미션을 TesterApplicationModel로 변환');
+  return workflowService.getAppWorkflows(appId).map((workflows) {
+    debugPrint('🔄 WORKFLOW_PROVIDER: ${workflows.length}개 워크플로우를 TesterApplicationModel로 변환');
 
-      return Stream.value(missions.map((mission) {
-        // UnifiedMissionModel을 TesterApplicationModel로 변환 (호환성 유지)
-        return TesterApplicationModel(
-          id: mission.id,
-          appId: mission.appId,
-          testerId: mission.testerId,
-          testerName: mission.testerName,
-          testerEmail: mission.testerEmail,
-          status: mission.status,
-          experience: mission.experience,
-          motivation: mission.motivation,
-          appliedAt: mission.appliedAt,
-          processedAt: mission.processedAt,
-          metadata: mission.metadata,
-        );
-      }).toList());
-    },
-    loading: () => Stream.value([]),
-    error: (error, stack) => Stream.error(error, stack),
-  );
+    return workflows.map((workflow) {
+      // MissionWorkflowModel을 TesterApplicationModel로 변환 (호환성 유지)
+      return TesterApplicationModel(
+        id: workflow.id,
+        appId: workflow.appId,
+        testerId: workflow.testerId,
+        testerName: workflow.testerName,
+        testerEmail: workflow.testerEmail,
+        status: _mapWorkflowStateToStatus(workflow.currentState),
+        experience: workflow.experience,
+        motivation: workflow.motivation,
+        appliedAt: workflow.appliedAt,
+        processedAt: workflow.approvedAt,
+        metadata: workflow.metadata,
+      );
+    }).toList();
+  });
 });
+
+// 워크플로우 상태를 기존 상태로 매핑하는 헬퍼 함수
+String _mapWorkflowStateToStatus(MissionWorkflowState state) {
+  switch (state) {
+    case MissionWorkflowState.applicationSubmitted:
+      return 'pending';
+    case MissionWorkflowState.applicationApproved:
+    case MissionWorkflowState.missionInProgress:
+    case MissionWorkflowState.dailyMissionStarted:
+    case MissionWorkflowState.dailyMissionCompleted:
+    case MissionWorkflowState.dailyMissionApproved:
+    case MissionWorkflowState.projectCompleted:
+    case MissionWorkflowState.projectApproved:
+    case MissionWorkflowState.projectFinalized:
+      return 'approved';
+    case MissionWorkflowState.applicationRejected:
+      return 'rejected';
+    case MissionWorkflowState.paused:
+      return 'paused';
+    case MissionWorkflowState.cancelled:
+      return 'cancelled';
+  }
+}
 
 // 앱별 미션 목록 Provider
 final appMissionsProvider = StreamProvider.family<List<TestMissionModel>, String>((ref, appId) {
@@ -291,27 +311,43 @@ class TesterManagementNotifier extends StateNotifier<TesterManagementState> {
 
   final _firestore = FirebaseFirestore.instance;
 
-  // 🔥 통합 Provider로 교체 - 테스터 신청 승인/거부 처리
+  // 🔥 새로운 워크플로우 기반 - 테스터 신청 승인/거부 처리
   Future<void> updateTesterApplication(String applicationId, String newStatus) async {
     try {
       state = state.copyWith(isLoading: true, errorMessage: null);
 
-      debugPrint('🔄 LEGACY_PROVIDER: 통합 Provider로 상태 업데이트 - $applicationId -> $newStatus');
+      debugPrint('🔄 WORKFLOW_PROVIDER: 새 워크플로우로 상태 업데이트 - $applicationId -> $newStatus');
 
-      // 새로운 MissionService 메서드 사용 - 상태에 따라 분기
+      final workflowService = MissionWorkflowService();
+
+      // 현재 로그인한 공급자 ID 가져오기
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final providerId = currentUser?.uid ?? 'unknown_provider';
+
+      // 새로운 워크플로우 시스템 사용 - 상태에 따라 분기
       if (newStatus == 'approved') {
-        await MissionService.approveApplication(applicationId);
-        AppLogger.info('🔄 LEGACY_PROVIDER: Tester application approved: $applicationId (MissionService 사용)', 'TesterManagement');
+        await workflowService.processMissionApplication(
+          workflowId: applicationId,
+          approved: true,
+          processedBy: providerId,
+          feedback: '신청이 승인되었습니다.',
+        );
+        AppLogger.info('🔄 WORKFLOW_PROVIDER: Tester application approved: $applicationId by $providerId (워크플로우 서비스 사용)', 'TesterManagement');
       } else if (newStatus == 'rejected') {
-        await MissionService.rejectApplication(applicationId);
-        AppLogger.info('🔄 LEGACY_PROVIDER: Tester application rejected: $applicationId (MissionService 사용)', 'TesterManagement');
+        await workflowService.processMissionApplication(
+          workflowId: applicationId,
+          approved: false,
+          processedBy: providerId,
+          feedback: '신청이 거부되었습니다.',
+        );
+        AppLogger.info('🔄 WORKFLOW_PROVIDER: Tester application rejected: $applicationId by $providerId (워크플로우 서비스 사용)', 'TesterManagement');
       } else {
-        // 기존 로직 유지 (기타 상태 변경)
+        // 기존 로직 유지 (기타 상태 변경은 레거시 시스템 사용)
         await _ref.read(unifiedMissionNotifierProvider.notifier).updateTesterStatus(
           missionId: applicationId,
           newStatus: newStatus,
         );
-        AppLogger.info('🔄 LEGACY_PROVIDER: Tester application status updated: $applicationId -> $newStatus (통합 Provider 사용)', 'TesterManagement');
+        AppLogger.info('🔄 WORKFLOW_PROVIDER: Tester application status updated: $applicationId -> $newStatus (레거시 시스템 사용)', 'TesterManagement');
       }
 
       state = state.copyWith(isLoading: false);

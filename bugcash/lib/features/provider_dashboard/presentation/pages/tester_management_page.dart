@@ -40,6 +40,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
 
   String _getCleanAppId() {
     final appId = widget.app.id;
+    // Remove provider_app_ prefix if present to match workflow system
     return appId.startsWith('provider_app_')
         ? appId.replaceFirst('provider_app_', '')
         : appId;
@@ -110,8 +111,13 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
 
   // 탭 1: 신청 관리
   Widget _buildApplicationsTab() {
+    final cleanAppId = _getCleanAppId();
+    print('🔍 Provider TesterManagement - Original appId: ${widget.app.id}');
+    print('🔍 Provider TesterManagement - Clean appId: $cleanAppId');
+    print('🔍 Provider TesterManagement - Querying workflows for appId: $cleanAppId');
+
     return StreamBuilder<List<MissionWorkflowModel>>(
-      stream: _workflowService.getAppWorkflows(_getCleanAppId()),
+      stream: _workflowService.getAppWorkflows(cleanAppId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -122,8 +128,15 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
         }
 
         final workflows = snapshot.data ?? [];
+        print('🔍 Provider TesterManagement - Total workflows found: ${workflows.length}');
+        for (int i = 0; i < workflows.length; i++) {
+          final w = workflows[i];
+          print('🔍 Provider TesterManagement - Workflow $i: appId=${w.appId}, testerId=${w.testerId}, state=${w.currentState.name}');
+        }
+
         final pendingApplications = workflows.where((w) =>
           w.currentState == MissionWorkflowState.applicationSubmitted).toList();
+        print('🔍 Provider TesterManagement - Pending applications: ${pendingApplications.length}');
 
         if (pendingApplications.isEmpty) {
           return _buildEmptyState(

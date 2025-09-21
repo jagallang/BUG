@@ -22,6 +22,14 @@ class MissionWorkflowService {
     int dailyReward = 5000,
   }) async {
     try {
+      // Input validation
+      if (appId.isEmpty) throw ArgumentError('appId cannot be empty');
+      if (appName.isEmpty) throw ArgumentError('appName cannot be empty');
+      if (testerId.isEmpty) throw ArgumentError('testerId cannot be empty');
+      if (testerName.isEmpty) throw ArgumentError('testerName cannot be empty');
+      if (providerId.isEmpty) throw ArgumentError('providerId cannot be empty');
+      if (providerName.isEmpty) throw ArgumentError('providerName cannot be empty');
+
       AppLogger.info('Creating mission application for $appName by $testerName', 'MissionWorkflow');
 
       final workflow = MissionWorkflowModel(

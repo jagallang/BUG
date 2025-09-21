@@ -7,10 +7,10 @@ import '../../../../core/utils/logger.dart';
 import 'app_detail_page.dart';
 import 'tester_management_page.dart';
 
-// Provider for managing apps
+// Provider for managing apps (using optimized projects collection)
 final providerAppsProvider = StreamProvider.family<List<ProviderAppModel>, String>((ref, providerId) {
   return FirebaseFirestore.instance
-      .collection('provider_apps')
+      .collection('projects')
       .where('providerId', isEqualTo: providerId)
       .orderBy('createdAt', descending: true)
       .snapshots()
@@ -61,11 +61,11 @@ class ProviderAppModel {
       id: doc.id,
       providerId: data['providerId'] ?? '',
       appName: data['appName'] ?? '',
-      appUrl: data['appUrl'] ?? '',
+      appUrl: data['appUrl'] ?? data['appStoreUrl'] ?? '',
       description: data['description'] ?? '',
       category: data['category'] ?? '',
-      status: data['status'] ?? 'active',
-      totalTesters: data['totalTesters'] ?? 0,
+      status: data['status'] ?? 'draft',
+      totalTesters: data['totalTesters'] ?? data['maxTesters'] ?? 0,
       activeTesters: data['activeTesters'] ?? 0,
       totalBugs: data['totalBugs'] ?? 0,
       resolvedBugs: data['resolvedBugs'] ?? 0,
@@ -110,11 +110,29 @@ class AppManagementPage extends ConsumerStatefulWidget {
 
 class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   bool _showUploadDialog = false;
+  // Basic info controllers
   final _appNameController = TextEditingController();
   final _appUrlController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _testingGuidelinesController = TextEditingController();
+  final _minOSVersionController = TextEditingController();
+  final _appStoreUrlController = TextEditingController();
+
+  // Advanced options
   String _selectedCategory = 'Productivity';
-  String _selectedInstallType = 'play_store'; // play_store, apk_upload, testflight, enterprise
+  String _selectedInstallType = 'play_store';
+  String _selectedDifficulty = 'easy';
+  String _selectedType = 'functional';
+  List<String> _selectedPlatforms = ['android'];
+  int _maxTesters = 10;
+  int _testPeriodDays = 14;
+  int _baseReward = 5000;
+  int _bonusReward = 2000;
+
+  // Requirements
+  final _minExperienceController = TextEditingController();
+  final _specialRequirementsController = TextEditingController();
+  List<String> _requiredSpecializations = [];
 
   final List<String> _categories = [
     'Productivity',
@@ -127,7 +145,59 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     'Travel',
     'Food & Drink',
     'Games',
+    'News',
+    'Photo & Video',
+    'Music',
+    'Lifestyle',
+    'Business',
+    'Medical',
+    'Weather',
+    'Sports',
+    'Navigation',
+    'Utilities',
     'Other',
+  ];
+
+  final List<String> _difficulties = [
+    'easy',
+    'medium',
+    'hard',
+    'expert',
+  ];
+
+  final List<String> _types = [
+    'functional',
+    'usability',
+    'performance',
+    'security',
+    'compatibility',
+    'regression',
+    'exploratory',
+    'automated',
+  ];
+
+  final List<String> _platforms = [
+    'android',
+    'ios',
+    'web',
+    'windows',
+    'mac',
+    'linux',
+  ];
+
+  final List<String> _specializations = [
+    'UI/UX Testing',
+    'Performance Testing',
+    'Security Testing',
+    'API Testing',
+    'Mobile Testing',
+    'Web Testing',
+    'Game Testing',
+    'E-commerce Testing',
+    'Payment Testing',
+    'Accessibility Testing',
+    'Localization Testing',
+    'Device Testing',
   ];
 
   @override
@@ -140,6 +210,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     _appNameController.dispose();
     _appUrlController.dispose();
     _descriptionController.dispose();
+    _testingGuidelinesController.dispose();
+    _minOSVersionController.dispose();
+    _appStoreUrlController.dispose();
+    _minExperienceController.dispose();
+    _specialRequirementsController.dispose();
     super.dispose();
   }
 
@@ -154,27 +229,73 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     }
 
     try {
-      final newApp = {
-        'providerId': widget.providerId,
+      final newProject = {
+        'type': _selectedType,
+        'appId': '', // Will be set to document ID after creation
         'appName': _appNameController.text,
         'appUrl': _appUrlController.text,
         'description': _descriptionController.text,
         'category': _selectedCategory,
         'installType': _selectedInstallType,
-        'status': 'active',
+        'platform': _selectedPlatforms.first, // Primary platform
+        'providerId': widget.providerId,
+        'status': 'draft', // New projects start as draft
+        'difficulty': _selectedDifficulty,
+
+        // Extended fields matching database indexes
+        'maxTesters': _maxTesters,
+        'testPeriodDays': _testPeriodDays,
+        'rewardPoints': _baseReward, // For backward compatibility
         'totalTesters': 0,
         'activeTesters': 0,
         'totalBugs': 0,
         'resolvedBugs': 0,
         'progressPercentage': 0.0,
+
+        // Testing guidelines and requirements
+        'testingGuidelines': _testingGuidelinesController.text,
+        'minOSVersion': _minOSVersionController.text,
+        'appStoreUrl': _appStoreUrlController.text,
+
+        // Advanced reward system
+        'rewards': {
+          'baseReward': _baseReward,
+          'bonusReward': _bonusReward,
+          'currency': 'KRW',
+        },
+
+        // Requirements matching indexed fields
+        'requirements': {
+          'platforms': _selectedPlatforms,
+          'minExperience': _minExperienceController.text.isEmpty ? 'beginner' : _minExperienceController.text,
+          'specializations': _requiredSpecializations,
+          'specialRequirements': _specialRequirementsController.text,
+          'maxParticipants': _maxTesters,
+          'testDuration': _testPeriodDays,
+        },
+
+        // Timestamps
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
-        'metadata': {},
+
+        // Metadata with all config
+        'metadata': {
+          'installType': _selectedInstallType,
+          'difficulty': _selectedDifficulty,
+          'type': _selectedType,
+          'platforms': _selectedPlatforms,
+          'version': '1.0',
+          'configVersion': '2.0', // Indicate this is the new enhanced format
+        },
       };
 
-      await FirebaseFirestore.instance
-          .collection('provider_apps')
-          .add(newApp);
+      // Create project in the new optimized structure
+      final docRef = await FirebaseFirestore.instance
+          .collection('projects')
+          .add(newProject);
+
+      // Update the document with its ID as appId
+      await docRef.update({'appId': docRef.id});
 
       if (mounted) {
         setState(() {
@@ -182,7 +303,21 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           _appNameController.clear();
           _appUrlController.clear();
           _descriptionController.clear();
+          _testingGuidelinesController.clear();
+          _minOSVersionController.clear();
+          _appStoreUrlController.clear();
+          _minExperienceController.clear();
+          _specialRequirementsController.clear();
           _selectedCategory = 'Productivity';
+          _selectedInstallType = 'play_store';
+          _selectedDifficulty = 'easy';
+          _selectedType = 'functional';
+          _selectedPlatforms = ['android'];
+          _maxTesters = 10;
+          _testPeriodDays = 14;
+          _baseReward = 5000;
+          _bonusReward = 2000;
+          _requiredSpecializations = [];
         });
 
         if (mounted) {
@@ -515,37 +650,65 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   Widget _buildStatusBadge(String status) {
     Color color;
     String text;
+    IconData icon;
+
+    // PRD 기준 프로젝트 상태: pending → open → closed
     switch (status) {
-      case 'active':
-        color = Colors.indigo[600]!;
-        text = '활성';
+      case 'pending':
+        color = Colors.orange[600]!;
+        text = '승인 대기';
+        icon = Icons.schedule;
         break;
-      case 'paused':
-        color = Colors.indigo[400]!;
-        text = '일시정지';
+      case 'open':
+        color = Colors.green[600]!;
+        text = '승인됨';
+        icon = Icons.check_circle;
         break;
-      case 'completed':
-        color = Colors.indigo[300]!;
-        text = '완료';
+      case 'closed':
+        color = Colors.blue[600]!;
+        text = '종료됨';
+        icon = Icons.archive;
+        break;
+      case 'rejected':
+        color = Colors.red[600]!;
+        text = '거부됨';
+        icon = Icons.cancel;
+        break;
+      case 'draft':
+        color = Colors.grey[600]!;
+        text = '임시저장';
+        icon = Icons.edit;
         break;
       default:
         color = Colors.grey;
-        text = '대기';
+        text = '알 수 없음';
+        icon = Icons.help;
     }
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(4.r),
+        borderRadius: BorderRadius.circular(12.r),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 12.sp,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 14.sp,
+            color: color,
+          ),
+          SizedBox(width: 4.w),
+          Text(
+            text,
+            style: TextStyle(
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -576,7 +739,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   Widget _buildUploadDialog() {
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,  // 화면 높이의 85%로 제한
+        maxHeight: MediaQuery.of(context).size.height * 0.9,
       ),
       padding: EdgeInsets.all(20.w),
       decoration: BoxDecoration(
@@ -590,158 +753,394 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
         ],
       ),
-      child: SingleChildScrollView(  // ScrollView 추가
+      child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '새 앱 등록',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.bold,
+            // Header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '새 앱/미션 등록',
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _showUploadDialog = false;
+                    });
+                  },
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+
+            // Basic Information Section
+            _buildSectionHeader('기본 정보'),
+            SizedBox(height: 12.h),
+            // App Name
+            TextField(
+              controller: _appNameController,
+              decoration: InputDecoration(
+                labelText: '앱/프로젝트 이름 *',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-              IconButton(
-                onPressed: () {
-                  setState(() {
-                    _showUploadDialog = false;
-                  });
-                },
-                icon: const Icon(Icons.close),
-              ),
-            ],
-          ),
-          SizedBox(height: 20.h),
-          TextField(
-            controller: _appNameController,
-            decoration: InputDecoration(
-              labelText: '앱 이름',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
             ),
-          ),
-          SizedBox(height: 12.h),
-          DropdownButtonFormField<String>(
-            value: _selectedInstallType,
-            items: const [
-              DropdownMenuItem(
-                value: 'play_store',
-                child: Text('구글 플레이 스토어'),
-              ),
-              DropdownMenuItem(
-                value: 'apk_upload',
-                child: Text('APK 파일 업로드'),
-              ),
-              DropdownMenuItem(
-                value: 'testflight',
-                child: Text('TestFlight (iOS)'),
-              ),
-              DropdownMenuItem(
-                value: 'enterprise',
-                child: Text('기업용 배포'),
-              ),
-            ],
-            onChanged: (value) {
-              setState(() {
-                _selectedInstallType = value!;
-                // 힌트 텍스트를 타입에 따라 변경
-                _appUrlController.clear();
-              });
-            },
-            decoration: InputDecoration(
-              labelText: '설치 방식',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-            ),
-          ),
-          SizedBox(height: 12.h),
-          TextField(
-            controller: _appUrlController,
-            decoration: InputDecoration(
-              labelText: _getUrlLabel(),
-              hintText: _getUrlHint(),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-            ),
-          ),
-          SizedBox(height: 12.h),
-          DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            items: _categories.map((category) {
-              return DropdownMenuItem(
-                value: category,
-                child: Text(category),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedCategory = value!;
-              });
-            },
-            decoration: InputDecoration(
-              labelText: '카테고리',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-            ),
-          ),
-          SizedBox(height: 12.h),
-          TextField(
-            controller: _descriptionController,
-            maxLines: 3,
-            decoration: InputDecoration(
-              labelText: '설명',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-            ),
-          ),
-          SizedBox(height: 20.h),
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 48.h,
-                  child: OutlinedButton(
-                    onPressed: () {
+            SizedBox(height: 12.h),
+
+            // Type and Difficulty Row
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedType,
+                    items: _types.map((type) {
+                      return DropdownMenuItem(
+                        value: type,
+                        child: Text(_getTypeDisplayName(type)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
                       setState(() {
-                        _showUploadDialog = false;
+                        _selectedType = value!;
                       });
                     },
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
+                    decoration: InputDecoration(
+                      labelText: '테스트 유형',
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                     ),
-                    child: const Text('취소'),
                   ),
                 ),
-              ),
-              SizedBox(width: 12.w),
-              Expanded(
-                child: SizedBox(
-                  height: 48.h,
-                  child: ElevatedButton(
-                    onPressed: _uploadApp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedDifficulty,
+                    items: _difficulties.map((difficulty) {
+                      return DropdownMenuItem(
+                        value: difficulty,
+                        child: Text(_getDifficultyDisplayName(difficulty)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedDifficulty = value!;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: '난이도',
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                     ),
-                    child: const Text('등록'),
                   ),
                 ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+
+            // Install Type and Category Row
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedInstallType,
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'play_store',
+                        child: Text('구글 플레이 스토어'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'apk_upload',
+                        child: Text('APK 파일 업로드'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'testflight',
+                        child: Text('TestFlight (iOS)'),
+                      ),
+                      DropdownMenuItem(
+                        value: 'enterprise',
+                        child: Text('기업용 배포'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedInstallType = value!;
+                        _appUrlController.clear();
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: '설치 방식',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    items: _categories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedCategory = value!;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: '카테고리',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+
+            // App URL
+            TextField(
+              controller: _appUrlController,
+              decoration: InputDecoration(
+                labelText: _getUrlLabel(),
+                hintText: _getUrlHint(),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
               ),
-            ],
-          ),
+            ),
+            SizedBox(height: 12.h),
+
+            // Description
+            TextField(
+              controller: _descriptionController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: '설명 *',
+                hintText: '앱/프로젝트에 대한 상세 설명을 입력하세요',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+
+            // Platform Selection Section
+            _buildSectionHeader('플랫폼 선택'),
+            SizedBox(height: 12.h),
+            _buildPlatformSelector(),
+            SizedBox(height: 20.h),
+
+            // Testing Configuration Section
+            _buildSectionHeader('테스트 설정'),
+            SizedBox(height: 12.h),
+            // Max Testers and Test Period Row
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    initialValue: _maxTesters.toString(),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _maxTesters = int.tryParse(value) ?? 10;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '최대 테스터 수',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: TextFormField(
+                    initialValue: _testPeriodDays.toString(),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _testPeriodDays = int.tryParse(value) ?? 14;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '테스트 기간 (일)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+
+            // Rewards Section
+            _buildSectionHeader('보상 설정'),
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    initialValue: _baseReward.toString(),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _baseReward = int.tryParse(value) ?? 5000;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '기본 보상 (원)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: TextFormField(
+                    initialValue: _bonusReward.toString(),
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _bonusReward = int.tryParse(value) ?? 2000;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '보너스 보상 (원)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+
+            // Requirements Section
+            _buildSectionHeader('테스터 요구사항'),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: _minExperienceController,
+              decoration: InputDecoration(
+                labelText: '최소 경험 레벨',
+                hintText: 'beginner, intermediate, advanced, expert',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            _buildSpecializationSelector(),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: _specialRequirementsController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: '특별 요구사항',
+                hintText: '추가적인 요구사항이나 주의사항을 입력하세요',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+            ),
+            SizedBox(height: 20.h),
+
+            // Additional Info Section
+            _buildSectionHeader('추가 정보'),
+            SizedBox(height: 12.h),
+            TextField(
+              controller: _testingGuidelinesController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: '테스팅 가이드라인',
+                hintText: '테스터가 따라야 할 구체적인 테스팅 지침을 작성하세요',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _minOSVersionController,
+                    decoration: InputDecoration(
+                      labelText: '최소 OS 버전',
+                      hintText: 'Android 8.0+, iOS 13.0+',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: TextField(
+                    controller: _appStoreUrlController,
+                    decoration: InputDecoration(
+                      labelText: '앱스토어 URL (선택)',
+                      hintText: '이미 출시된 앱의 스토어 링크',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 30.h),
+
+            // Action Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: 48.h,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        setState(() {
+                          _showUploadDialog = false;
+                        });
+                      },
+                      style: OutlinedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                      child: const Text('취소'),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: SizedBox(
+                    height: 48.h,
+                    child: ElevatedButton(
+                      onPressed: _uploadApp,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                      ),
+                      child: const Text('등록'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
         ],
         ),
@@ -895,5 +1294,167 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         ],
       ),
     );
+  }
+
+  // Helper methods for enhanced UI
+
+  Widget _buildSectionHeader(String title) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8.h),
+      child: Row(
+        children: [
+          Container(
+            width: 4.w,
+            height: 20.h,
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(2.r),
+            ),
+          ),
+          SizedBox(width: 8.w),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.black87,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPlatformSelector() {
+    return Wrap(
+      spacing: 8.w,
+      runSpacing: 8.h,
+      children: _platforms.map((platform) {
+        final isSelected = _selectedPlatforms.contains(platform);
+        return FilterChip(
+          label: Text(_getPlatformDisplayName(platform)),
+          selected: isSelected,
+          onSelected: (selected) {
+            setState(() {
+              if (selected) {
+                if (!_selectedPlatforms.contains(platform)) {
+                  _selectedPlatforms.add(platform);
+                }
+              } else {
+                _selectedPlatforms.remove(platform);
+              }
+              // Ensure at least one platform is selected
+              if (_selectedPlatforms.isEmpty) {
+                _selectedPlatforms.add('android');
+              }
+            });
+          },
+          backgroundColor: Colors.grey[200],
+          selectedColor: AppColors.primary.withValues(alpha: 0.2),
+          checkmarkColor: AppColors.primary,
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildSpecializationSelector() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '필요한 전문 분야 (선택)',
+          style: TextStyle(
+            fontSize: 14.sp,
+            color: Colors.grey[700],
+          ),
+        ),
+        SizedBox(height: 8.h),
+        Wrap(
+          spacing: 8.w,
+          runSpacing: 8.h,
+          children: _specializations.map((spec) {
+            final isSelected = _requiredSpecializations.contains(spec);
+            return FilterChip(
+              label: Text(
+                spec,
+                style: TextStyle(fontSize: 12.sp),
+              ),
+              selected: isSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    if (!_requiredSpecializations.contains(spec)) {
+                      _requiredSpecializations.add(spec);
+                    }
+                  } else {
+                    _requiredSpecializations.remove(spec);
+                  }
+                });
+              },
+              backgroundColor: Colors.grey[200],
+              selectedColor: AppColors.primary.withValues(alpha: 0.2),
+              checkmarkColor: AppColors.primary,
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  String _getTypeDisplayName(String type) {
+    switch (type) {
+      case 'functional':
+        return '기능 테스트';
+      case 'usability':
+        return '사용성 테스트';
+      case 'performance':
+        return '성능 테스트';
+      case 'security':
+        return '보안 테스트';
+      case 'compatibility':
+        return '호환성 테스트';
+      case 'regression':
+        return '회귀 테스트';
+      case 'exploratory':
+        return '탐색적 테스트';
+      case 'automated':
+        return '자동화 테스트';
+      default:
+        return type;
+    }
+  }
+
+  String _getDifficultyDisplayName(String difficulty) {
+    switch (difficulty) {
+      case 'easy':
+        return '쉬움';
+      case 'medium':
+        return '보통';
+      case 'hard':
+        return '어려움';
+      case 'expert':
+        return '전문가';
+      default:
+        return difficulty;
+    }
+  }
+
+  String _getPlatformDisplayName(String platform) {
+    switch (platform) {
+      case 'android':
+        return 'Android';
+      case 'ios':
+        return 'iOS';
+      case 'web':
+        return 'Web';
+      case 'windows':
+        return 'Windows';
+      case 'mac':
+        return 'macOS';
+      case 'linux':
+        return 'Linux';
+      default:
+        return platform;
+    }
   }
 }

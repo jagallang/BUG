@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/unified_mission_model.dart';
+import '../../../core/services/mission_workflow_service.dart';
 
 // 🎯 중앙 집중식 통합 미션 관리 Provider
 // 모든 미션 관련 상태를 단일 Provider에서 관리하여 실시간 동기화 보장
@@ -69,7 +70,6 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
   return FirebaseFirestore.instance
       .collection('tester_applications')
       .where('appId', isEqualTo: normalizedAppId)
-      .orderBy('appliedAt', descending: true)
       .snapshots()
       .map((snapshot) {
         if (kDebugMode) {
@@ -174,10 +174,11 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
   // ignore: unused_field
   final Ref _ref;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final MissionWorkflowService _workflowService = MissionWorkflowService();
 
   UnifiedMissionNotifier(this._ref) : super(const UnifiedMissionState());
 
-  // 🔄 테스터 미션 신청
+  // 🔄 테스터 미션 신청 (새로운 워크플로우 시스템 사용)
   Future<void> applyForMission({
     required String appId,
     required String appName,
@@ -185,16 +186,35 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
     required String testerName,
     required String testerEmail,
     required String providerId,
+    required String providerName,
     required String experience,
     required String motivation,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      debugPrint('📝 UNIFIED_PROVIDER: 미션 신청 시작 - $appName by $testerName');
+      debugPrint('📝 UNIFIED_PROVIDER: 새로운 워크플로우로 미션 신청 시작 - $appName by $testerName');
 
+      // 새로운 MissionWorkflowService를 사용하여 워크플로우 생성
+      final workflowId = await _workflowService.createMissionApplication(
+        appId: appId,
+        appName: appName,
+        testerId: testerId,
+        testerName: testerName,
+        testerEmail: testerEmail,
+        providerId: providerId,
+        providerName: providerName,
+        experience: experience,
+        motivation: motivation,
+        totalDays: 14, // 기본 14일
+        dailyReward: 5000, // 기본 일일 리워드
+      );
+
+      debugPrint('✅ UNIFIED_PROVIDER: 워크플로우 생성 성공 - ID: $workflowId');
+
+      // 기존 시스템과의 호환성을 위해 tester_applications에도 저장
       final mission = UnifiedMissionModel(
-        id: '', // Firestore가 자동 생성
+        id: workflowId, // 워크플로우 ID 사용
         appId: appId,
         appName: appName,
         testerId: testerId,
@@ -207,9 +227,9 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         appliedAt: DateTime.now(),
       );
 
-      await _firestore.collection('tester_applications').add(mission.toFirestore());
+      await _firestore.collection('tester_applications').doc(workflowId).set(mission.toFirestore());
 
-      debugPrint('✅ UNIFIED_PROVIDER: 미션 신청 성공 - $appName');
+      debugPrint('✅ UNIFIED_PROVIDER: 미션 신청 완료 - $appName (워크플로우: $workflowId)');
       state = state.copyWith(isLoading: false);
 
     } catch (e) {

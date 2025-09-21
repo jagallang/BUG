@@ -3,6 +3,7 @@ import 'firestore_service.dart';
 import '../../models/mission_model.dart';
 import '../utils/logger.dart';
 import '../constants/firestore_constants.dart';
+import 'mission_workflow_service.dart';
 
 class MissionService {
   // Create a new mission
@@ -314,10 +315,17 @@ class MissionService {
   // Apply to mission (테스터가 미션에 신청)
   Future<String> applyToMission(String missionId, Map<String, dynamic> applicationData) async {
     try {
+      AppLogger.info('🔄 미션 신청 시작 - missionId: $missionId', 'MissionService');
+
       // 1. 중복 신청 체크
       final testerId = applicationData['testerId'];
+      AppLogger.info('🔄 중복 신청 체크 - testerId: $testerId', 'MissionService');
+
       final hasApplied = await hasUserApplied(missionId, testerId);
+      AppLogger.info('🔄 중복 신청 체크 결과: $hasApplied', 'MissionService');
+
       if (hasApplied) {
+        AppLogger.warning('❌ 중복 신청 감지 - 신청 중단', 'MissionService');
         throw Exception('이미 신청한 미션입니다.');
       }
 
@@ -359,7 +367,32 @@ class MissionService {
       // 4. 미션의 analytics.applications 증가
       await incrementApplications(missionId);
 
-      // 5. 공급자에게 실시간 알림 전송
+      // 5. 새로운 워크플로우 시스템에 등록
+      final workflowService = MissionWorkflowService();
+
+      // 미션 정보에서 실제 appId를 가져오기
+      final mission = await getMission(missionId);
+      final realAppId = mission?.appId ?? missionId; // 백업으로 missionId 사용
+
+      AppLogger.info('🔄 워크플로우 생성 - missionId: $missionId, realAppId: $realAppId', 'MissionService');
+
+      final workflowId = await workflowService.createMissionApplication(
+        appId: realAppId, // 실제 appId 사용
+        appName: applicationData['missionName'] ?? FirestoreConstants.unknownApp,
+        testerId: applicationData['testerId'],
+        testerName: applicationData['testerName'],
+        testerEmail: applicationData['testerEmail'],
+        providerId: applicationData['providerId'],
+        providerName: applicationData['providerName'] ?? 'Unknown Provider',
+        experience: applicationData['testerInfo']?['experience'] ?? 'beginner',
+        motivation: applicationData['testerInfo']?['motivation'] ?? applicationData['message'] ?? '미션에 참여하고 싶습니다.',
+        totalDays: applicationData['totalDays'] ?? FirestoreConstants.defaultTotalDays,
+        dailyReward: applicationData['dailyReward'] ?? FirestoreConstants.defaultDailyReward,
+      );
+
+      AppLogger.info('워크플로우 생성 완료', 'WorkflowID: $workflowId');
+
+      // 6. 공급자에게 실시간 알림 전송
       await _sendApplicationNotification(applicationData);
 
       return applicationId;
@@ -478,13 +511,43 @@ class MissionService {
   // Check if user already applied to mission
   static Future<bool> hasUserApplied(String missionId, String testerId) async {
     try {
-      final query = FirestoreService.missionApplications
+      AppLogger.info('🔄 중복 신청 체크 상세 - missionId: $missionId, testerId: $testerId', 'MissionService');
+
+      // 1. 기존 mission_applications 컬렉션 확인
+      final legacyQuery = FirestoreService.missionApplications
           .where('missionId', isEqualTo: missionId)
           .where('testerId', isEqualTo: testerId)
           .limit(1);
 
-      final snapshot = await query.get();
-      return snapshot.docs.isNotEmpty;
+      final legacySnapshot = await legacyQuery.get();
+      AppLogger.info('🔄 mission_applications 확인 결과: ${legacySnapshot.docs.length}개', 'MissionService');
+
+      if (legacySnapshot.docs.isNotEmpty) {
+        AppLogger.info('❌ mission_applications에서 중복 발견', 'MissionService');
+        return true;
+      }
+
+      // 2. 미션 정보에서 실제 appId를 가져와서 확인
+      final mission = await getMission(missionId);
+      final realAppId = mission?.appId ?? missionId; // 백업으로 missionId 사용
+
+      // 3. 새로운 mission_workflows 컬렉션 확인
+      final workflowQuery = FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .where('appId', isEqualTo: realAppId)
+          .where('testerId', isEqualTo: testerId)
+          .limit(1);
+
+      final workflowSnapshot = await workflowQuery.get();
+      AppLogger.info('🔄 mission_workflows 확인 결과: ${workflowSnapshot.docs.length}개', 'MissionService');
+
+      if (workflowSnapshot.docs.isNotEmpty) {
+        AppLogger.info('❌ mission_workflows에서 중복 발견', 'MissionService');
+        return true;
+      }
+
+      AppLogger.info('✅ 중복 신청 없음 - 신청 가능', 'MissionService');
+      return false;
     } catch (e) {
       AppLogger.error('Error checking if user applied', e.toString());
       return false;

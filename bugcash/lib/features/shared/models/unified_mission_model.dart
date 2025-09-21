@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
 
 // 통합 미션 모델 - 모든 미션 관련 데이터를 단일 모델로 통합
 class UnifiedMissionModel {
@@ -92,17 +91,7 @@ class UnifiedMissionModel {
     final missionInfo = data['missionInfo'] as Map<String, dynamic>? ?? {};
     final progress = data['progress'] as Map<String, dynamic>? ?? {};
 
-    // 🚀 DEBUG: 실제 데이터 구조 확인
-    debugPrint('🚀 RAW_DATA_DEBUG for doc ${doc.id}:');
-    debugPrint('🚀 All available keys: ${data.keys.toList()}');
-    debugPrint('🚀 testerName: ${data['testerName']}');
-    debugPrint('🚀 name: ${data['name']}');
-    debugPrint('🚀 userName: ${data['userName']}');
-    debugPrint('🚀 displayName: ${data['displayName']}');
-    debugPrint('🚀 userDisplayName: ${data['userDisplayName']}');
-    if (missionInfo.isNotEmpty) {
-      debugPrint('🚀 missionInfo keys: ${missionInfo.keys.toList()}');
-    }
+    // Field resolution for tester name - trying multiple field names for compatibility
 
     // 다양한 필드명 시도하여 테스터 이름 찾기
     String testerName = '테스터 정보 로딩 중...';
@@ -121,7 +110,6 @@ class UnifiedMissionModel {
     for (final field in possibleNameFields) {
       if (field != null && field.toString().isNotEmpty && field.toString() != 'null') {
         testerName = field.toString();
-        debugPrint('🚀 Found tester name: $testerName');
         break;
       }
     }

@@ -4,36 +4,65 @@ import '../../features/auth/domain/entities/user_entity.dart';
 abstract class FirestoreService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Users Collection
+  // ===== 새로운 최적화된 컬렉션 구조 =====
+
+  /// 통합 사용자 관리 (tester + provider + admin)
   static CollectionReference<Map<String, dynamic>> get users =>
       _firestore.collection('users');
 
-  static CollectionReference<Map<String, dynamic>> get providers =>
-      _firestore.collection('providers');
+  /// 통합 프로젝트 관리 (apps + missions 통합)
+  static CollectionReference<Map<String, dynamic>> get projects =>
+      _firestore.collection('projects');
 
-  static CollectionReference<Map<String, dynamic>> get testers =>
-      _firestore.collection('testers');
+  /// 통합 신청 관리 (mission_applications + tester_applications + mission_workflows 통합)
+  static CollectionReference<Map<String, dynamic>> get applications =>
+      _firestore.collection('applications');
 
+  /// 활성 미션 관리 (승인된 신청의 진행 상황)
+  static CollectionReference<Map<String, dynamic>> get enrollments =>
+      _firestore.collection('enrollments');
+
+  /// 일일 미션 관리
   static CollectionReference<Map<String, dynamic>> get missions =>
       _firestore.collection('missions');
 
-  static CollectionReference<Map<String, dynamic>> get apps =>
-      _firestore.collection('apps');
+  /// 포인트 거래 내역
+  static CollectionReference<Map<String, dynamic>> get pointsTransactions =>
+      _firestore.collection('points_transactions');
 
+  /// 신고 관리
+  static CollectionReference<Map<String, dynamic>> get reports =>
+      _firestore.collection('reports');
+
+  /// 알림 관리
+  static CollectionReference<Map<String, dynamic>> get notifications =>
+      _firestore.collection('notifications');
+
+  /// 관리자 대시보드 통계
+  static CollectionReference<Map<String, dynamic>> get adminDashboard =>
+      _firestore.collection('admin_dashboard');
+
+  // ===== 레거시 컬렉션 지원 (마이그레이션 기간 동안) =====
+
+  @Deprecated('Use applications instead')
   static CollectionReference<Map<String, dynamic>> get missionApplications =>
       _firestore.collection('mission_applications');
 
+  @Deprecated('Use applications instead')
   static CollectionReference<Map<String, dynamic>> get testerApplications =>
       _firestore.collection('tester_applications');
 
+  @Deprecated('Use projects instead')
+  static CollectionReference<Map<String, dynamic>> get apps =>
+      _firestore.collection('apps');
+
+  @Deprecated('Use reports instead')
   static CollectionReference<Map<String, dynamic>> get bugReports =>
       _firestore.collection('bug_reports');
 
+  @Deprecated('Use pointsTransactions instead')
   static CollectionReference<Map<String, dynamic>> get payments =>
       _firestore.collection('payments');
-
-  static CollectionReference<Map<String, dynamic>> get notifications =>
-      _firestore.collection('notifications');
 
   // Generic CRUD Operations
   static Future<String> create(

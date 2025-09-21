@@ -954,10 +954,26 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     try {
       final missionService = MissionService();
 
+      // 공급자 이름 가져오기
+      String providerName = 'Unknown Provider';
+      try {
+        final providerDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(providerId)
+            .get();
+        if (providerDoc.exists) {
+          final data = providerDoc.data() as Map<String, dynamic>;
+          providerName = data['displayName'] ?? data['name'] ?? 'Unknown Provider';
+        }
+      } catch (e) {
+        print('Provider name lookup failed: $e');
+      }
+
       final applicationData = {
         'missionId': missionId,
         'testerId': authState.user!.uid,
         'providerId': providerId,
+        'providerName': providerName,
         'testerName': authState.user!.displayName ?? 'Unknown User',
         'testerEmail': authState.user!.email ?? '',
         'missionName': missionAppName,
@@ -976,7 +992,13 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         },
       };
 
+      print('🎯 UI - 미션 신청 버튼 클릭됨! missionId: $missionId');
+      print('🎯 UI - testerId: ${authState.user!.uid}');
+      print('🎯 UI - providerId: $providerId');
+
       await missionService.applyToMission(missionId, applicationData);
+
+      print('🎯 UI - 미션 신청 호출 완료!');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

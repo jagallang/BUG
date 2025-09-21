@@ -6,6 +6,7 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/services/auth_service.dart';
 import 'app_management_page.dart' hide ProviderAppModel;
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
+import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 // 채팅 기능 제거됨
 // import '../widgets/payment_management_tab.dart';
 
@@ -41,6 +42,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         return _buildAppsTab();
       case 2:
         return _buildPaymentTab();
+      case 3:
+        return _buildAdminTab();
       default:
         return _buildDashboardTab();
     }
@@ -118,6 +121,10 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.payment),
             label: '결제',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.admin_panel_settings),
+            label: '관리자',
           ),
         ],
       ),
@@ -622,6 +629,17 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             ),
           ),
       ],
+    );
+  }
+
+  // 관리자 탭 - 프로젝트 검수 기능
+  Widget _buildAdminTab() {
+    return Navigator(
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (context) => const AdminDashboardPage(),
+        );
+      },
     );
   }
 }

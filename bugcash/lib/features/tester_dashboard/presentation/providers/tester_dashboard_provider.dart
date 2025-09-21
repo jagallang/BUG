@@ -249,7 +249,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       // Load pending applications
       final pendingApplications = await _getPendingApplications(testerId);
 
-      // Start real-time subscriptions
+      // Start real-time subscriptions for PRD collections
       _startRealTimeUpdates(testerId);
 
       state = state.copyWith(
@@ -467,33 +467,41 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
 
   void _startRealTimeUpdates(String testerId) {
-    // Firebase 실시간 업데이트 구독
+    // PRD 기준 Firebase 실시간 업데이트 구독
     _refreshTimer?.cancel();
-    
-    // 사용자별 미션 업데이트 구독
+
     final userId = CurrentUserService.getCurrentUserIdOrDefault();
-    
-    // Available missions stream
+
+    // Projects stream (status='open')
     FirebaseFirestore.instance
-        .collection('missions')
-        .where('status', isEqualTo: 'active')
+        .collection('projects')
+        .where('status', isEqualTo: 'open')
         .snapshots()
         .listen((snapshot) {
       _loadMissions(testerId);
     });
-    
-    // User's active missions stream
+
+    // User's applications stream
     FirebaseFirestore.instance
-        .collection('mission_participants')
+        .collection('applications')
         .where('testerId', isEqualTo: userId)
         .snapshots()
         .listen((snapshot) {
       _loadMissions(testerId);
     });
-    
-    // Earnings updates
+
+    // User's enrollments stream
     FirebaseFirestore.instance
-        .collection('earnings')
+        .collection('enrollments')
+        .where('testerId', isEqualTo: userId)
+        .snapshots()
+        .listen((snapshot) {
+      _loadMissions(testerId);
+    });
+
+    // Points transactions updates (PRD 기준)
+    FirebaseFirestore.instance
+        .collection('points_transactions')
         .where('userId', isEqualTo: userId)
         .snapshots()
         .listen((snapshot) {
@@ -574,126 +582,82 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     await loadTesterData(testerId);
   }
 
-  // Real Firestore query methods (replacing mock data generation)
+  // PRD에 따른 새로운 projects 컬렉션 사용
   Future<List<MissionCard>> _getAvailableMissionsFromFirestore() async {
     try {
-      AppLogger.debug('🔍 Loading available missions from Firestore...', 'TesterDashboard');
+      AppLogger.debug('🔍 Loading available projects from Firestore...', 'TesterDashboard');
       final missionCards = <MissionCard>[];
-      
-      // 1. 일반 미션들 가져오기
-      final missionsSnapshot = await FirebaseFirestore.instance
-          .collection('missions')
-          .where('status', isEqualTo: 'active')
-          .limit(10)
-          .get();
-      
-      AppLogger.info('📊 Found ${missionsSnapshot.docs.length} regular missions', 'TesterDashboard');
-      
-      for (final doc in missionsSnapshot.docs) {
-        try {
-          final data = doc.data();
-          final missionCard = MissionCard(
-            id: doc.id,
-            title: data['title'] ?? '미션 제목',
-            description: data['description'] ?? '미션 설명',
-            appName: data['company'] ?? '회사명',
-            type: _parseMissionType(data['type']),
-            rewardPoints: _getIntValue(data['reward']) ?? 0,
-            estimatedMinutes: _getIntValue(data['estimatedMinutes']) ?? 60,
-            status: MissionStatus.active,
-            deadline: (data['endDate'] as Timestamp?)?.toDate() ?? DateTime.now().add(const Duration(days: 7)),
-            requiredSkills: (data['requirements'] as List<dynamic>?)?.cast<String>() ?? ['테스팅'],
-            currentParticipants: _getIntValue(data['currentParticipants']) ?? 0,
-            maxParticipants: _getIntValue(data['maxParticipants']) ?? 10,
-            progress: 0,
-            difficulty: MissionDifficulty.medium,
-            isProviderApp: false,
-            originalAppData: null,
-          );
-          missionCards.add(missionCard);
-        } catch (e) {
-          AppLogger.error('❌ Error parsing mission ${doc.id}', 'TesterDashboard', e);
-        }
-      }
-      
-      // 2. Provider Apps를 미션으로 변환해서 추가
-      final providerAppsSnapshot = await FirebaseFirestore.instance
-          .collection('provider_apps')
+
+      // PRD 기준: projects 컬렉션에서 status='open'인 프로젝트들 가져오기
+      final projectsSnapshot = await FirebaseFirestore.instance
+          .collection('projects')
+          .where('status', isEqualTo: 'open')
+          .orderBy('createdAt', descending: true)
           .limit(20)
           .get();
 
-      AppLogger.info('📱 Found ${providerAppsSnapshot.docs.length} provider apps', 'TesterDashboard');
-      AppLogger.info('📱 Document IDs: ${providerAppsSnapshot.docs.map((doc) => doc.id).toList()}', 'TesterDashboard');
+      AppLogger.info('📊 Found ${projectsSnapshot.docs.length} open projects', 'TesterDashboard');
 
-      for (final doc in providerAppsSnapshot.docs) {
+      for (final doc in projectsSnapshot.docs) {
         try {
           final data = doc.data();
 
-          // 다양한 필드에서 앱 이름 찾기
-          final appName = data['appName'] ??
-                         data['name'] ??
-                         data['title'] ??
-                         data['company'] ??
-                         'Unknown App';
+          // PRD 기반 프로젝트 데이터 파싱
+          final appName = data['appName'] ?? '알 수 없는 앱';
+          final type = data['type'] ?? 'app'; // app 또는 mission
+          final difficulty = data['difficulty'] ?? 'medium';
+          final platform = data['platform'] ?? 'android';
+          final category = data['category'] ?? 'general';
 
-          AppLogger.info('🔍 Processing app: ${doc.id}, name: $appName', 'TesterDashboard');
-          AppLogger.info('📱 Full data for $appName: ${data.toString()}', 'TesterDashboard');
+          // 리워드 계산 (PRD 기준)
+          final baseReward = _getIntValue(data['rewards']?['baseReward']) ?? 5000;
+          final bonusReward = _getIntValue(data['rewards']?['bonusReward']) ?? 0;
+          final totalReward = baseReward + bonusReward;
 
-          // 메타데이터 확인 (선택적)
-          final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
-          AppLogger.info('📊 Metadata for $appName: ${metadata.toString()}', 'TesterDashboard');
-
-          // 활성화 상태 확인 (더 관대하게)
-          final isActive = data['isActive'] ??
-                          data['active'] ??
-                          metadata['isActive'] ??
-                          (data['status'] == 'active') ??
-                          true; // 기본값 true
-
-          AppLogger.info('✅ App $appName (${doc.id}) - isActive: $isActive', 'TesterDashboard');
-
-          // 메타데이터에서 단가 정보 가져오기 (여러 필드 확인)
-          final price = metadata['price'] ??
-                       data['price'] ??
-                       data['reward'] ??
-                       data['cost'] ??
-                       5000; // 기본값
+          // 테스터 제한 (PRD 기준)
+          final maxTesters = _getIntValue(data['maxTesters']) ?? 10;
+          final currentTesters = _getIntValue(data['currentTesters']) ?? 0;
 
           final missionCard = MissionCard(
-            id: 'provider_app_${doc.id}',
-            title: '$appName 테스팅',
-            description: data['description'] ??
-                        data['summary'] ??
-                        '$appName 앱 테스팅 및 피드백 제공',
+            id: doc.id,
+            title: '$appName 테스팅 프로젝트',
+            description: data['description'] ?? '$appName을 테스트하고 피드백을 제공해주세요.',
             appName: appName,
-            type: MissionType.functional,
-            rewardPoints: _getIntValue(price) ?? 5000,
-            estimatedMinutes: _getIntValue(metadata['testTime']) ??
-                             _getIntValue(data['testTime']) ?? 30,
+            type: type == 'mission' ? MissionType.featureTesting : MissionType.functional,
+            rewardPoints: totalReward,
+            estimatedMinutes: (_getIntValue(data['testPeriodDays']) ?? 14) * 20, // 14일 * 20분
             status: MissionStatus.active,
-            deadline: DateTime.now().add(const Duration(days: 30)),
-            requiredSkills: ['앱 테스팅', '피드백 작성'],
-            currentParticipants: _getIntValue(data['activeTesters']) ??
-                               _getIntValue(data['currentTesters']) ?? 0,
-            maxParticipants: _getIntValue(metadata['participantCount']) ??
-                            _getIntValue(data['maxTesters']) ??
-                            _getIntValue(data['participantCount']) ?? 50,
+            deadline: DateTime.now().add(Duration(days: _getIntValue(data['testPeriodDays']) ?? 14)),
+            requiredSkills: _getRequiredSkills(data),
+            currentParticipants: currentTesters,
+            maxParticipants: maxTesters,
             progress: 0,
-            difficulty: MissionDifficulty.medium,
+            difficulty: _parseDifficulty(difficulty),
             isProviderApp: true,
-            originalAppData: data,
+            originalAppData: {
+              'projectId': doc.id,
+              'providerId': data['providerId'],
+              'type': type,
+              'platform': platform,
+              'category': category,
+              'appStoreUrl': data['appStoreUrl'],
+              'testingGuidelines': data['testingGuidelines'],
+              'requirements': data['requirements'],
+              'specializations': data['requirements']?['specializations'],
+            },
           );
+
           missionCards.add(missionCard);
-          AppLogger.info('✅ Successfully added mission for app $appName (${doc.id})', 'TesterDashboard');
+          AppLogger.info('✅ Added project: $appName (${doc.id})', 'TesterDashboard');
         } catch (e) {
-          AppLogger.error('❌ Error parsing provider app ${doc.id}', 'TesterDashboard', e);
+          AppLogger.error('❌ Error parsing project ${doc.id}', 'TesterDashboard', e);
         }
       }
-      
-      AppLogger.info('✅ Total missions loaded: ${missionCards.length}', 'TesterDashboard');
+
+      AppLogger.info('✅ Total projects loaded: ${missionCards.length}', 'TesterDashboard');
       return missionCards;
     } catch (e) {
-      debugPrint('Failed to load available missions from Firestore: $e');
+      debugPrint('Failed to load available projects from Firestore: $e');
       return <MissionCard>[];
     }
   }
@@ -950,6 +914,33 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     if (value is DateTime) return value;
     if (value is String) return DateTime.tryParse(value);
     return null;
+  }
+
+  // PRD 기준 헬퍼 함수들
+  List<String> _getRequiredSkills(Map<String, dynamic> data) {
+    final requirements = data['requirements'] as Map<String, dynamic>? ?? {};
+    final specializations = requirements['specializations'] as List<dynamic>? ?? [];
+    final platforms = requirements['platforms'] as List<dynamic>? ?? [];
+
+    final skills = <String>['앱 테스팅'];
+    skills.addAll(specializations.map((s) => s.toString()));
+    skills.addAll(platforms.map((p) => p.toString()));
+
+    return skills.take(3).toList(); // 최대 3개로 제한
+  }
+
+  MissionDifficulty _parseDifficulty(String? difficulty) {
+    switch (difficulty?.toLowerCase()) {
+      case 'easy':
+        return MissionDifficulty.easy;
+      case 'hard':
+        return MissionDifficulty.hard;
+      case 'expert':
+        return MissionDifficulty.expert;
+      case 'medium':
+      default:
+        return MissionDifficulty.medium;
+    }
   }
 }
 
