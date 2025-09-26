@@ -19,22 +19,22 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // 관리자인지 확인 (users 컬렉션에서 role 확인)
+    // 관리자인지 확인 (users 컬렉션에서 userType 확인)
     function isAdmin() {
       return isAuthenticated() &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin';
     }
 
     // 공급자인지 확인
     function isProvider() {
       return isAuthenticated() &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'provider';
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'provider';
     }
 
     // 테스터인지 확인
     function isTester() {
       return isAuthenticated() &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tester';
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'tester';
     }
 
     // 특정 프로젝트의 공급자인지 확인
@@ -58,12 +58,12 @@ service cloud.firestore {
       // 생성: 인증된 사용자가 본인 계정만 생성 가능
       allow create: if isAuthenticated() &&
                     request.auth.uid == userId &&
-                    validateRequiredFields(['uid', 'email', 'displayName', 'role']) &&
-                    request.resource.data.role in ['tester', 'provider', 'admin'];
+                    validateRequiredFields(['uid', 'email', 'displayName', 'userType']) &&
+                    request.resource.data.userType in ['tester', 'provider', 'admin'];
 
-      // 수정: 본인 정보만 수정 가능, 관리자는 role 변경 가능
+      // 수정: 본인 정보만 수정 가능, 관리자는 userType 변경 가능
       allow update: if (isUser(userId) &&
-                       !('role' in request.resource.data.diff(resource.data).affectedKeys())) ||
+                       !('userType' in request.resource.data.diff(resource.data).affectedKeys())) ||
                       isAdmin();
 
       // 삭제: 관리자만 가능
@@ -74,8 +74,8 @@ service cloud.firestore {
     // 프로젝트 관리 (projects)
     // ==============================================
     match /projects/{projectId} {
-      // 읽기: 임시로 모든 사용자 허용 (테스트용)
-      allow read: if true;
+      // 읽기: 임시로 모든 인증된 사용자 허용 (테스트용)
+      allow read: if isAuthenticated();
 
       // 생성: 공급자만 가능
       allow create: if isProvider() &&
@@ -251,6 +251,30 @@ service cloud.firestore {
                     request.resource.data.testerId == request.auth.uid;
       allow update: if isProjectProvider(projectId);
       allow delete: if isAdmin();
+    }
+
+    // ==============================================
+    // 임시 미션 및 신청 관련 컬렉션 (테스트용)
+    // ==============================================
+
+    // missions 컬렉션 임시 허용
+    match /missions/{missionId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // missionApplications 컬렉션 임시 허용
+    match /missionApplications/{applicationId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // earnings 컬렉션 임시 허용
+    match /earnings/{earningId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // activities 컬렉션 임시 허용
+    match /activities/{activityId} {
+      allow read, write: if isAuthenticated();
     }
 
     // ==============================================
