@@ -141,7 +141,34 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v1.4.12 (Latest) - Bidirectional Application Status Display System
+### v2.0.05 (Latest) - 코드 품질 및 개발환경 최적화
+*Released: 2025-09-27*
+
+**🔧 코드 품질 대폭 개선:**
+- **80% 이슈 해결**: Flutter analyze 결과 431개 → 84개 이슈로 극적 개선
+- **Scripts 정리**: 개발 도구 및 스크립트 파일들을 tools/ 디렉토리로 체계적 정리
+- **구조 최적화**: 미사용 main_*.dart 파일 제거 및 주석 코드 정리
+- **분석 최적화**: analysis_options.yaml 설정으로 개발 도구 분석 범위 최적화
+
+**🛠️ 개발 환경 개선:**
+- **개발 가이드**: CLAUDE.md 추가로 안전한 코드 수정 가이드라인 제공
+- **위험성 체크**: 코드 수정 시 의존성 분석 및 영향도 평가 시스템
+- **단계별 검증**: Phase별 코드 정리로 안전성과 효율성 확보
+- **도구 분리**: 프로덕션 코드와 개발 도구의 명확한 분리
+
+**⚡ 성능 및 유지보수성:**
+- **빌드 최적화**: 불필요한 파일 제거로 빌드 시간 개선
+- **코드 정리**: print() 사용 정리 및 deprecated API 경고 최소화
+- **구조 개선**: Clean Architecture 원칙에 따른 프로젝트 구조 최적화
+- **개발 생산성**: 체계적 파일 구조로 개발 효율성 향상
+
+**📊 정량적 개선 결과:**
+- **코드 이슈**: 431개 → 84개 (80.5% 개선)
+- **Scripts 정리**: 8개 파일 적절한 위치로 이동
+- **파일 정리**: 중복 및 미사용 파일 15개 제거
+- **구조 개선**: tools/, admin/ 디렉토리 체계화
+
+### v1.4.12 - Bidirectional Application Status Display System
 *Released: 2025-01-16*
 
 **🔄 Bidirectional Application Status Display:**
