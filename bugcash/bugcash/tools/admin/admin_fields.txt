@@ -1,0 +1,62 @@
+Firebase Console에서 admin 사용자 문서 생성시 필요한 필드:
+
+필수 필드:
+---------
+필드명: uid
+타입: string
+값: pmkoZCAE7LOfIIdQ0v6A6WPKzif2
+
+필드명: email
+타입: string
+값: admin@bugcash.com
+
+필드명: displayName
+타입: string
+값: 관리자
+
+필드명: role
+타입: string
+값: admin
+
+필드명: userType
+타입: string
+값: admin
+
+필드명: country
+타입: string
+값: KR
+
+필드명: timezone
+타입: string
+값: Asia/Seoul
+
+선택 필드:
+---------
+필드명: phoneNumber
+타입: string (또는 null)
+값: (빈칸 가능)
+
+필드명: photoUrl
+타입: string (또는 null)
+값: (빈칸 가능)
+
+타임스탬프 필드 (자동 생성 권장):
+--------------------------------
+필드명: createdAt
+타입: timestamp
+값: (현재 시간 선택)
+
+필드명: updatedAt
+타입: timestamp
+값: (현재 시간 선택)
+
+필드명: lastLoginAt
+타입: timestamp
+값: (현재 시간 선택)
+
+====================================
+admin2 계정용:
+uid: 3Ud1QbdDuwbfKZqa0QlcSioMYN72
+email: admin2@bugcash.com
+displayName: 관리자2
+나머지 필드는 동일
