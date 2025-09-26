@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../../tools/cleanup_dummy_data.dart';
 import '../../../shared/models/mission_workflow_model.dart';
 import '../../../../core/services/mission_workflow_service.dart';
 import 'app_management_page.dart';
@@ -73,29 +72,6 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
             Tab(text: '분석', icon: Icon(Icons.analytics, size: 18)),
           ],
         ),
-        actions: [
-          IconButton(
-            onPressed: () async {
-              final messenger = ScaffoldMessenger.of(context);
-              try {
-                await DummyDataCleanup.cleanupDummyTesterApplications();
-                if (mounted) {
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('더미 데이터 정리 완료')),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  messenger.showSnackBar(
-                    SnackBar(content: Text('정리 실패: $e')),
-                  );
-                }
-              }
-            },
-            icon: const Icon(Icons.cleaning_services),
-            tooltip: '더미 데이터 정리',
-          ),
-        ],
       ),
       body: TabBarView(
         controller: _tabController,
