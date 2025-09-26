@@ -52,7 +52,7 @@ void main() async {
     request1.headers.set('Content-Type', 'application/json');
     request1.write(jsonEncode(project1Data));
     final response1 = await request1.close();
-    debugPrint('Project 1 created: ${response1.statusCode}');
+    print('Project 1 created: ${response1.statusCode}');
 
     // 테스트 프로젝트 2 - pending 상태
     final project2Data = {
@@ -97,11 +97,11 @@ void main() async {
     request2.headers.set('Content-Type', 'application/json');
     request2.write(jsonEncode(project2Data));
     final response2 = await request2.close();
-    debugPrint('Project 2 created: ${response2.statusCode}');
+    print('Project 2 created: ${response2.statusCode}');
 
-    debugPrint('테스트 프로젝트 데이터 생성이 완료되었습니다!');
+    print('테스트 프로젝트 데이터 생성이 완료되었습니다!');
   } catch (e) {
-    debugPrint('오류 발생: $e');
+    print('오류 발생: $e');
   } finally {
     client.close();
   }

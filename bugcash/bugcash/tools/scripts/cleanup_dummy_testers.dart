@@ -14,7 +14,7 @@ void main() async {
     ),
   );
 
-  debugPrint('🧹 더미 테스터 데이터 정리 시작...');
+  print('🧹 더미 테스터 데이터 정리 시작...');
 
   final firestore = FirebaseFirestore.instance;
 
@@ -33,18 +33,18 @@ void main() async {
 
         if (doc.exists) {
           await docRef.delete();
-          debugPrint('✅ 더미 테스터 삭제 완료: $docId');
+          print('✅ 더미 테스터 삭제 완료: $docId');
         } else {
-          debugPrint('ℹ️  문서가 이미 존재하지 않음: $docId');
+          print('ℹ️  문서가 이미 존재하지 않음: $docId');
         }
       } catch (e) {
-        debugPrint('❌ 문서 삭제 실패 $docId: $e');
+        print('❌ 문서 삭제 실패 $docId: $e');
       }
     }
 
-    debugPrint('🎉 더미 테스터 데이터 정리 완료!');
+    print('🎉 더미 테스터 데이터 정리 완료!');
 
   } catch (e) {
-    debugPrint('❌ 오류 발생: $e');
+    print('❌ 오류 발생: $e');
   }
 }

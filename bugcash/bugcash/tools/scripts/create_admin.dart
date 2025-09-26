@@ -30,14 +30,14 @@ Future<void> createAdminAccount() async {
         email: adminEmail,
         password: adminPassword,
       );
-      debugPrint('기존 관리자 계정으로 로그인: ${userCredential.user?.uid}');
+      print('기존 관리자 계정으로 로그인: ${userCredential.user?.uid}');
     } catch (e) {
       // 계정이 없으면 새로 생성
       userCredential = await auth.createUserWithEmailAndPassword(
         email: adminEmail,
         password: adminPassword,
       );
-      debugPrint('새 관리자 계정 생성: ${userCredential.user?.uid}');
+      print('새 관리자 계정 생성: ${userCredential.user?.uid}');
 
       // 사용자 프로필 업데이트
       await userCredential.user?.updateDisplayName(adminName);
@@ -62,20 +62,20 @@ Future<void> createAdminAccount() async {
         },
       }, SetOptions(merge: true));
 
-      debugPrint('✅ 관리자 계정 설정 완료!');
-      debugPrint('=====================================');
-      debugPrint('📧 이메일: $adminEmail');
-      debugPrint('🔑 비밀번호: $adminPassword');
-      debugPrint('👤 이름: $adminName');
-      debugPrint('🛡️ 역할: 관리자 (admin)');
-      debugPrint('=====================================');
-      debugPrint('위 정보로 로그인하실 수 있습니다.');
+      print('✅ 관리자 계정 설정 완료!');
+      print('=====================================');
+      print('📧 이메일: $adminEmail');
+      print('🔑 비밀번호: $adminPassword');
+      print('👤 이름: $adminName');
+      print('🛡️ 역할: 관리자 (admin)');
+      print('=====================================');
+      print('위 정보로 로그인하실 수 있습니다.');
 
       // 로그아웃
       await auth.signOut();
-      debugPrint('로그아웃 완료. 로그인 페이지에서 위 정보로 로그인하세요.');
+      print('로그아웃 완료. 로그인 페이지에서 위 정보로 로그인하세요.');
     }
   } catch (e) {
-    debugPrint('❌ 오류 발생: $e');
+    print('❌ 오류 발생: $e');
   }
 }

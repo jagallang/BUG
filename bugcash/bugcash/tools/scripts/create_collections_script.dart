@@ -5,7 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 /// 독립적인 Firebase 컬렉션 생성 스크립트
 /// dart run create_collections_script.dart 로 실행
 void main() async {
-  debugPrint('🔥 Firebase 컬렉션 생성 스크립트 시작');
+  print('🔥 Firebase 컬렉션 생성 스크립트 시작');
 
   try {
     // Firebase 초기화
@@ -21,27 +21,27 @@ void main() async {
       ),
     );
 
-    debugPrint('✅ Firebase 초기화 완료');
+    print('✅ Firebase 초기화 완료');
 
     final firestore = FirebaseFirestore.instance;
 
     // 1. tester_applications 컬렉션 생성
-    debugPrint('\n📋 tester_applications 컬렉션 생성 중...');
+    print('\n📋 tester_applications 컬렉션 생성 중...');
     await createTesterApplicationsCollection(firestore);
 
     // 2. daily_interactions 컬렉션 생성
-    debugPrint('\n📅 daily_interactions 컬렉션 생성 중...');
+    print('\n📅 daily_interactions 컬렉션 생성 중...');
     await createDailyInteractionsCollection(firestore);
 
     // 3. apps 컬렉션 생성
-    debugPrint('\n📱 apps 컬렉션 생성 중...');
+    print('\n📱 apps 컬렉션 생성 중...');
     await createAppsCollection(firestore);
 
-    debugPrint('\n🎉 모든 컬렉션 생성 완료!');
-    debugPrint('Firebase Console에서 확인: https://console.firebase.google.com/u/0/project/bugcash/firestore');
+    print('\n🎉 모든 컬렉션 생성 완료!');
+    print('Firebase Console에서 확인: https://console.firebase.google.com/u/0/project/bugcash/firestore');
 
   } catch (e) {
-    debugPrint('❌ 오류 발생: $e');
+    print('❌ 오류 발생: $e');
     exit(1);
   }
 
@@ -180,16 +180,16 @@ Future<void> createTesterApplicationsCollection(FirebaseFirestore firestore) asy
   };
 
   // 문서들 추가
-  debugPrint('📄 Document 1 (pending) 추가...');
+  print('📄 Document 1 (pending) 추가...');
   await collection.add(pendingDoc);
 
-  debugPrint('📄 Document 2 (approved) 추가...');
+  print('📄 Document 2 (approved) 추가...');
   await collection.add(approvedDoc);
 
-  debugPrint('📄 Document 3 (completed) 추가...');
+  print('📄 Document 3 (completed) 추가...');
   await collection.add(completedDoc);
 
-  debugPrint('✅ tester_applications 컬렉션 생성 완료');
+  print('✅ tester_applications 컬렉션 생성 완료');
 }
 
 Future<void> createDailyInteractionsCollection(FirebaseFirestore firestore) async {
@@ -251,13 +251,13 @@ Future<void> createDailyInteractionsCollection(FirebaseFirestore firestore) asyn
     'updatedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 22))),
   };
 
-  debugPrint('📄 오늘 상호작용 추가...');
+  print('📄 오늘 상호작용 추가...');
   await collection.doc('app_001_$today').set(todayDoc);
 
-  debugPrint('📄 어제 상호작용 추가...');
+  print('📄 어제 상호작용 추가...');
   await collection.doc('app_001_$yesterday').set(yesterdayDoc);
 
-  debugPrint('✅ daily_interactions 컬렉션 생성 완료');
+  print('✅ daily_interactions 컬렉션 생성 완료');
 }
 
 Future<void> createAppsCollection(FirebaseFirestore firestore) async {
@@ -291,8 +291,8 @@ Future<void> createAppsCollection(FirebaseFirestore firestore) async {
     'updatedAt': FieldValue.serverTimestamp(),
   };
 
-  debugPrint('📄 앱 정보 추가...');
+  print('📄 앱 정보 추가...');
   await collection.doc('eUOdv8wASX7RfSGMin7c').set(appDoc);
 
-  debugPrint('✅ apps 컬렉션 생성 완료');
+  print('✅ apps 컬렉션 생성 완료');
 }
