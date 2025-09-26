@@ -141,7 +141,40 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.0.05 (Latest) - 코드 품질 및 개발환경 최적화
+### v2.0.06 (Latest) - Firebase 백엔드 완전 연동 및 로그인 시스템 수정
+*Released: 2025-09-27*
+
+**🔥 Firebase 백엔드 완전 연동:**
+- **실제 프로젝트 연결**: Firebase CLI로 정확한 웹 앱 설정 정보 획득
+- **API 키 적용**: 실제 프로젝트 API 키로 교체 (AIzaSyAeMQcgKwJR5smPY6t6tnDtNdqaPoCamk0)
+- **측정 ID 설정**: Google Analytics 연동을 위한 측정 ID 실제 값 적용 (G-M1DT15JR9G)
+- **환경변수 동기화**: .env 파일과 firebase_options.dart 설정 일치화
+
+**🛡️ Firestore 보안 규칙 개선:**
+- **필드명 통일**: role → userType 필드 기반 권한 체크로 변경
+- **컬렉션 접근 권한**: missions, missionApplications, earnings 임시 허용 설정
+- **인증 기반 보안**: 인증된 사용자만 데이터 접근 가능하도록 설정
+- **규칙 배포 완료**: Firebase Firestore 보안 규칙 프로덕션 반영
+
+**🌐 웹 배포 시스템 완성:**
+- **호스팅 설정 추가**: firebase.json에 웹 호스팅 구성 완료
+- **도메인 연결**: bugcash.web.app 도메인으로 접근 가능
+- **CORS 및 라우팅**: SPA 라우팅 및 크로스 오리진 설정 완료
+- **프로덕션 빌드**: 최적화된 웹 앱 빌드 및 배포
+
+**✅ 로그인 시스템 검증:**
+- **로컬 테스트 성공**: Chrome 환경에서 로그인 정상 작동 확인
+- **Firebase Auth 연동**: 이메일/패스워드 로그인 시스템 완전 작동
+- **사용자 데이터 로드**: Firestore에서 사용자 정보 정상 조회
+- **역할별 라우팅**: tester, provider, admin 역할별 대시보드 이동
+
+**📊 기술적 개선사항:**
+- **백엔드 연동률**: Mock 시스템 → 100% Firebase 백엔드 연동
+- **설정 정확도**: Placeholder 값 → 실제 프로덕션 설정값
+- **보안 강화**: 임시 허용 → 인증 기반 접근 제어
+- **배포 안정성**: 로컬 전용 → 프로덕션 웹 서비스 가능
+
+### v2.0.05 - 코드 품질 및 개발환경 최적화
 *Released: 2025-09-27*
 
 **🔧 코드 품질 대폭 개선:**
