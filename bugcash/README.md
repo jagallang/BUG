@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.0.03-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.0.09-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,29 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.0.03)
+## ✨ 주요 기능 (v2.0.09)
 
-### 🔐 관리자 계정 로그인 및 인증 시스템 수정 (v2.0.03) - **PATCH RELEASE**
+### 🔒 관리자 대시보드 접근 권한 및 앱공급자 UX 개선 (v2.0.09) - **SECURITY & UX RELEASE**
+- **🛡️ 관리자 대시보드 보안 강화**: 관리자만 관리자 대시보드에 접근할 수 있도록 권한 시스템 완전 수정
+  - **🚫 비관리자 접근 차단**: 앱공급자나 테스터가 관리자 대시보드에 접근할 경우 접근 거부 화면 표시
+  - **🔐 역할 기반 인증**: `user.roles.contains(UserType.admin)` 및 `user.primaryRole == UserType.admin` 이중 검증
+  - **🎯 AuthWrapper 연동**: admin_dashboard_page.dart에서 실시간 사용자 역할 검증
+  - **🔒 라우팅 보안**: 관리자가 아닌 경우 대시보드 내용 접근 불가 및 안전한 메시지 표시
+- **👀 조건부 UI 표시**: 하단 네비게이션에서 관리자 UI 아이콘 역할 기반 표시
+  - **🔘 관리자 탭 숨김**: 비관리자에게는 관리자 탭 아이콘 완전 숨김 처리
+  - **⚠️ 접근 차단 알림**: 직접 탭 접근 시도 시 권한 부족 스낵바 메시지 표시
+  - **🎛️ 동적 네비게이션**: provider_dashboard_page.dart에서 사용자 역할에 따른 탭 개수 조정
+- **🔐 로그인 보안 강화**: 개발용 테스트 버튼 제거로 보안 취약점 완전 차단
+  - **🚫 테스트 버튼 제거**: login_page.dart에서 관리자 직접 접근 버튼 완전 제거
+  - **✅ 정상 인증 플로우**: 오직 이메일/비밀번호 또는 Google 로그인을 통한 정상 인증만 허용
+  - **🔄 AuthWrapper 연동**: 로그인 후 사용자 역할에 따른 자동 라우팅만 사용
+- **🎨 앱 등록 UX 대폭 개선**: 앱 등록 후 "사라지는" 문제 해결 및 명확한 상태 안내
+  - **📝 상세 상태 설명**: 각 앱 진행 상태별로 다음 단계 및 예상 시간 상세 안내
+  - **⏰ 성공 메시지 강화**: 앱 등록 성공 시 4초간 체크 아이콘과 함께 상세 안내 메시지 표시
+  - **🔄 실시간 상태 표시**: 등록 → 검토중 → 승인됨 → 테스팅중 → 완료 각 단계별 설명
+  - **💡 다음 단계 안내**: "관리자 승인 후 테스팅이 시작됩니다" 등 명확한 가이드 제공
+
+### 🔐 관리자 계정 로그인 및 인증 시스템 수정 (v2.0.03) - **이전 버전**
 - **🔑 관리자 인증 시스템 완전 수정**: 관리자 계정 로그인 문제 완전 해결
   - **🔄 인증 상태 추적 활성화**: AuthProvider에서 Firebase 인증 상태 실시간 추적 재활성화
   - **👑 관리자 타입 인식**: FirebaseAuthService에서 admin 사용자 타입 정확한 파싱 구현
