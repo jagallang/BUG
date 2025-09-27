@@ -436,3 +436,10 @@ async function processFinalPayouts(projectId) {
   // - Update point balances
   // - Create transaction records
 }
+
+// Import migration functions
+const migration = require('./migration.js');
+exports.migrateUserOnWrite = migration.migrateUserOnWrite;
+exports.bulkMigrateUsers = migration.bulkMigrateUsers;
+exports.checkMigrationStatus = migration.checkMigrationStatus;
+exports.validateMigratedUsers = migration.validateMigratedUsers;

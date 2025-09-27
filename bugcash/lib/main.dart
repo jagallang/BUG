@@ -38,10 +38,9 @@ void main() async {
 
 Future<void> _initializeFirebase() async {
   try {
-    // Firebase 초기화 - 동적 API 키 사용
-    final firebaseOptions = await DefaultFirebaseOptions.currentPlatformWithApiKey;
+    // Firebase 초기화 - 플랫폼별 설정 사용
     await Firebase.initializeApp(
-      options: firebaseOptions,
+      options: DefaultFirebaseOptions.currentPlatform,
     );
 
     if (AppConfig.enableLogging) {

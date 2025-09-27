@@ -431,6 +431,70 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "roles",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "isActive",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "primaryRole",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "testerProfile.rating",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "primaryRole",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "testerProfile.verificationStatus",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "testerProfile.completedTests",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "roles",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "providerProfile.rating",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [

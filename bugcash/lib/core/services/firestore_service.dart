@@ -226,7 +226,7 @@ abstract class FirestoreService {
     int? limit,
   }) {
     return streamCollection(
-      bugReports,
+      reports,
       queryBuilder: (query) {
         Query<Map<String, dynamic>> filteredQuery = query;
         
@@ -270,7 +270,7 @@ abstract class FirestoreService {
     int? limit,
   }) {
     return streamCollection(
-      missionApplications,
+      applications,
       queryBuilder: (query) {
         Query<Map<String, dynamic>> filteredQuery = query;
         
@@ -317,7 +317,7 @@ abstract class FirestoreService {
         .length;
 
     // Get bug reports count
-    final bugReportsQuery = await bugReports
+    final bugReportsQuery = await reports
         .where('providerId', isEqualTo: providerId)
         .get();
 
@@ -337,7 +337,7 @@ abstract class FirestoreService {
 
   static Future<Map<String, dynamic>> getTesterStats(String testerId) async {
     // Get tester applications count
-    final applicationsQuery = await missionApplications
+    final applicationsQuery = await applications
         .where('testerId', isEqualTo: testerId)
         .get();
 
@@ -350,7 +350,7 @@ abstract class FirestoreService {
         .length;
 
     // Get submitted bug reports count
-    final bugReportsQuery = await bugReports
+    final bugReportsQuery = await reports
         .where('testerId', isEqualTo: testerId)
         .get();
 

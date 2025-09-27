@@ -19,22 +19,31 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // 관리자인지 확인 (users 컬렉션에서 userType 확인)
+    // 관리자인지 확인 (새 형식: isAdmin 필드 또는 기존 형식: userType)
     function isAdmin() {
       return isAuthenticated() &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin';
+             (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'admin');
     }
 
-    // 공급자인지 확인
+    // 공급자인지 확인 (새 형식: roles 배열 또는 기존 형식: userType)
     function isProvider() {
       return isAuthenticated() &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'provider';
+             (hasRole('provider') ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'provider');
     }
 
-    // 테스터인지 확인
+    // 테스터인지 확인 (새 형식: roles 배열 또는 기존 형식: userType)
     function isTester() {
       return isAuthenticated() &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'tester';
+             (hasRole('tester') ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'tester');
+    }
+
+    // 특정 역할을 가지고 있는지 확인 (다중 역할 지원)
+    function hasRole(role) {
+      return isAuthenticated() &&
+             role in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.roles;
     }
 
     // 특정 프로젝트의 공급자인지 확인
@@ -48,6 +57,31 @@ service cloud.firestore {
       return requiredFields.hasAll(request.resource.data.keys());
     }
 
+    // 새 형식 사용자 데이터 검증 (다중 역할 지원)
+    function validateNewUserFormat() {
+      return request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'roles', 'primaryRole']) &&
+             request.resource.data.roles is list &&
+             request.resource.data.roles.size() > 0 &&
+             request.resource.data.primaryRole in request.resource.data.roles &&
+             request.resource.data.primaryRole in ['tester', 'provider', 'admin'] &&
+             request.resource.data.roles.hasOnly(['tester', 'provider', 'admin']);
+    }
+
+    // 기존 형식 사용자 데이터 검증 (하위 호환성)
+    function validateLegacyUserFormat() {
+      return request.resource.data.keys().hasAll(['uid', 'email', 'displayName', 'userType']) &&
+             request.resource.data.userType in ['tester', 'provider', 'admin'];
+    }
+
+    // 역할 관련 필드 수정 여부 확인
+    function canModifyRoles() {
+      let affectedKeys = request.resource.data.diff(resource.data).affectedKeys();
+      return 'userType' in affectedKeys ||
+             'roles' in affectedKeys ||
+             'primaryRole' in affectedKeys ||
+             'isAdmin' in affectedKeys;
+    }
+
     // ==============================================
     // 사용자 관리 (users)
     // ==============================================
@@ -55,16 +89,13 @@ service cloud.firestore {
       // 읽기: 모든 사용자 허용 (인증 상태 확인용)
       allow read: if true;
 
-      // 생성: 인증된 사용자가 본인 계정만 생성 가능
+      // 생성: 인증된 사용자가 본인 계정만 생성 가능 (새 형식 또는 기존 형식)
       allow create: if isAuthenticated() &&
                     request.auth.uid == userId &&
-                    validateRequiredFields(['uid', 'email', 'displayName', 'userType']) &&
-                    request.resource.data.userType in ['tester', 'provider', 'admin'];
+                    (validateNewUserFormat() || validateLegacyUserFormat());
 
-      // 수정: 본인 정보만 수정 가능, 관리자는 userType 변경 가능
-      allow update: if (isUser(userId) &&
-                       !('userType' in request.resource.data.diff(resource.data).affectedKeys())) ||
-                      isAdmin();
+      // 수정: 본인 정보만 수정 가능, 관리자는 역할 변경 가능
+      allow update: if (isUser(userId) && !canModifyRoles()) || isAdmin();
 
       // 삭제: 관리자만 가능
       allow delete: if isAdmin();
@@ -269,13 +300,38 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    // tester_applications 컬렉션 (테스터 신청)
+    match /tester_applications/{applicationId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // mission_participants 컬렉션 (미션 참여자)
+    match /mission_participants/{participantId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // points_transactions 컬렉션 (포인트 거래)
+    match /points_transactions/{transactionId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // mission_assignments 컬렉션 (미션 할당)
+    match /mission_assignments/{assignmentId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // test_missions 컬렉션 (테스트 미션)
+    match /test_missions/{missionId} {
+      allow read, write: if isAuthenticated();
+    }
+
     // ==============================================
-    // 기본 거부 규칙
+    // 임시 전체 허용 규칙 (테스트용)
     // ==============================================
 
-    // 명시적으로 허용되지 않은 모든 요청 거부
+    // 인증된 사용자는 모든 컬렉션 접근 가능 (임시)
     match /{document=**} {
-      allow read, write: if false;
+      allow read, write: if isAuthenticated();
     }
   }
 }

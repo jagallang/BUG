@@ -7,7 +7,9 @@ class UserModel extends UserEntity {
     required super.email,
     required super.displayName,
     super.photoUrl,
-    required super.userType,
+    required super.roles,
+    required super.primaryRole,
+    super.isAdmin = false,
     super.phoneNumber,
     required super.country,
     required super.timezone,
@@ -16,58 +18,27 @@ class UserModel extends UserEntity {
     super.isActive = true,
     super.lastLoginAt,
     super.profile,
+    super.testerProfile,
+    super.providerProfile,
+    super.level = 1,
+    super.completedMissions = 0,
+    super.points = 0,
   });
-  
+
   factory UserModel.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    return UserModel(
-      uid: doc.id,
-      email: data['email'] ?? '',
-      displayName: data['displayName'] ?? '',
-      photoUrl: data['photoURL'],
-      userType: UserType.values.byName(data['userType'] ?? 'tester'),
-      phoneNumber: data['phoneNumber'],
-      country: data['country'] ?? '',
-      timezone: data['timezone'] ?? '',
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
-      isActive: data['isActive'] ?? true,
-      lastLoginAt: data['lastLoginAt'] != null 
-          ? (data['lastLoginAt'] as Timestamp).toDate() 
-          : null,
-      profile: data['profile'] != null
-          ? UserProfile.fromMap(data['profile'])
-          : null,
-    );
+    return UserModel.fromUserEntity(UserEntity.fromFirestore(doc.id, doc.data() as Map<String, dynamic>));
   }
-  
-  @override
-  Map<String, dynamic> toFirestore() {
-    return {
-      'email': email,
-      'displayName': displayName,
-      'photoURL': photoUrl,
-      'userType': userType.name,
-      'phoneNumber': phoneNumber,
-      'country': country,
-      'timezone': timezone,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'updatedAt': Timestamp.fromDate(updatedAt),
-      'isActive': isActive,
-      'lastLoginAt': lastLoginAt != null 
-          ? Timestamp.fromDate(lastLoginAt!) 
-          : null,
-      'profile': profile?.toMap(),
-    };
-  }
-  
-  factory UserModel.fromEntity(UserEntity entity) {
+
+  // UserEntity에서 UserModel로 변환
+  factory UserModel.fromUserEntity(UserEntity entity) {
     return UserModel(
       uid: entity.uid,
       email: entity.email,
       displayName: entity.displayName,
       photoUrl: entity.photoUrl,
-      userType: entity.userType,
+      roles: entity.roles,
+      primaryRole: entity.primaryRole,
+      isAdmin: entity.isAdmin,
       phoneNumber: entity.phoneNumber,
       country: entity.country,
       timezone: entity.timezone,
@@ -76,6 +47,16 @@ class UserModel extends UserEntity {
       isActive: entity.isActive,
       lastLoginAt: entity.lastLoginAt,
       profile: entity.profile,
+      testerProfile: entity.testerProfile,
+      providerProfile: entity.providerProfile,
+      level: entity.level,
+      completedMissions: entity.completedMissions,
+      points: entity.points,
     );
+  }
+
+  @override
+  Map<String, dynamic> toFirestore() {
+    return super.toFirestore(); // UserEntity의 toFirestore 사용
   }
 }

@@ -331,7 +331,7 @@ class MissionService {
 
       // 2. 미션 신청 정보를 mission_applications 컬렉션에 저장
       final applicationId = await FirestoreService.create(
-        FirestoreService.missionApplications,
+        FirestoreService.applications,
         applicationData
       );
 
@@ -360,7 +360,7 @@ class MissionService {
       };
 
       await FirestoreService.create(
-        FirestoreService.testerApplications,
+        FirestoreService.applications,
         unifiedApplicationData
       );
 
@@ -437,7 +437,7 @@ class MissionService {
   // Get applications for a mission (공급자가 미션 신청자들 조회)
   static Future<List<MissionApplication>> getMissionApplications(String missionId) async {
     try {
-      final query = FirestoreService.missionApplications
+      final query = FirestoreService.applications
           .where('missionId', isEqualTo: missionId)
           .orderBy('appliedAt', descending: true);
 
@@ -456,7 +456,7 @@ class MissionService {
   // Get applications by tester (테스터가 자신의 신청 내역 조회)
   static Future<List<MissionApplication>> getTesterApplications(String testerId) async {
     try {
-      final query = FirestoreService.missionApplications
+      final query = FirestoreService.applications
           .where('testerId', isEqualTo: testerId)
           .orderBy('appliedAt', descending: true);
 
@@ -495,7 +495,7 @@ class MissionService {
       }
 
       await FirestoreService.update(
-        FirestoreService.missionApplications,
+        FirestoreService.applications,
         applicationId,
         updateData,
       );
@@ -514,7 +514,7 @@ class MissionService {
       AppLogger.info('🔄 중복 신청 체크 상세 - missionId: $missionId, testerId: $testerId', 'MissionService');
 
       // 1. 기존 mission_applications 컬렉션 확인
-      final legacyQuery = FirestoreService.missionApplications
+      final legacyQuery = FirestoreService.applications
           .where('missionId', isEqualTo: missionId)
           .where('testerId', isEqualTo: testerId)
           .limit(1);
@@ -567,7 +567,7 @@ class MissionService {
       );
 
       // 2. tester_applications에서 해당 신청 찾아서 상태 업데이트
-      final query = FirestoreService.testerApplications
+      final query = FirestoreService.applications
           .where('id', isEqualTo: applicationId)
           .limit(1);
 
@@ -575,7 +575,7 @@ class MissionService {
       if (snapshot.docs.isNotEmpty) {
         final docId = snapshot.docs.first.id;
         await FirestoreService.update(
-          FirestoreService.testerApplications,
+          FirestoreService.applications,
           docId,
           {
             'status': FirestoreConstants.statusApproved,
@@ -603,7 +603,7 @@ class MissionService {
       );
 
       // 2. tester_applications에서 해당 신청 찾아서 상태 업데이트
-      final query = FirestoreService.testerApplications
+      final query = FirestoreService.applications
           .where('id', isEqualTo: applicationId)
           .limit(1);
 
@@ -611,7 +611,7 @@ class MissionService {
       if (snapshot.docs.isNotEmpty) {
         final docId = snapshot.docs.first.id;
         await FirestoreService.update(
-          FirestoreService.testerApplications,
+          FirestoreService.applications,
           docId,
           {
             'status': FirestoreConstants.statusRejected,
@@ -630,7 +630,7 @@ class MissionService {
   // 테스터가 일일 미션 시작
   static Future<void> startDailyMission(String applicationId) async {
     try {
-      final query = FirestoreService.testerApplications
+      final query = FirestoreService.applications
           .where('id', isEqualTo: applicationId)
           .limit(1);
 
@@ -641,7 +641,7 @@ class MissionService {
         final progress = data['progress'] as Map<String, dynamic>? ?? {};
 
         await FirestoreService.update(
-          FirestoreService.testerApplications,
+          FirestoreService.applications,
           docId,
           {
             'status': FirestoreConstants.statusInProgress,
@@ -666,7 +666,7 @@ class MissionService {
     Map<String, dynamic>? additionalData,
   }) async {
     try {
-      final query = FirestoreService.testerApplications
+      final query = FirestoreService.applications
           .where('id', isEqualTo: applicationId)
           .limit(1);
 
@@ -702,7 +702,7 @@ class MissionService {
         }
 
         await FirestoreService.update(
-          FirestoreService.testerApplications,
+          FirestoreService.applications,
           docId,
           updateData,
         );
@@ -718,7 +718,7 @@ class MissionService {
   // 공급자가 미션 완료를 승인
   static Future<void> approveMissionCompletion(String applicationId, {String? responseMessage}) async {
     try {
-      final query = FirestoreService.testerApplications
+      final query = FirestoreService.applications
           .where('id', isEqualTo: applicationId)
           .limit(1);
 
@@ -727,7 +727,7 @@ class MissionService {
         final docId = snapshot.docs.first.id;
 
         await FirestoreService.update(
-          FirestoreService.testerApplications,
+          FirestoreService.applications,
           docId,
           {
             'status': FirestoreConstants.statusMissionApproved,
@@ -747,7 +747,7 @@ class MissionService {
   // 프로젝트 종료
   static Future<void> finalizeProject(String applicationId) async {
     try {
-      final query = FirestoreService.testerApplications
+      final query = FirestoreService.applications
           .where('id', isEqualTo: applicationId)
           .limit(1);
 
@@ -756,7 +756,7 @@ class MissionService {
         final docId = snapshot.docs.first.id;
 
         await FirestoreService.update(
-          FirestoreService.testerApplications,
+          FirestoreService.applications,
           docId,
           {
             'status': FirestoreConstants.statusProjectEnded,
@@ -777,7 +777,7 @@ class MissionService {
   static Future<List<Map<String, dynamic>>> getEnhancedMissionApplications(String missionId) async {
     try {
       // tester_applications에서 해당 미션의 신청자들 조회
-      final query = FirestoreService.testerApplications
+      final query = FirestoreService.applications
           .where('missionId', isEqualTo: missionId)
           .orderBy('appliedAt', descending: true);
 

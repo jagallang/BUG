@@ -118,10 +118,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               
               const SizedBox(height: 8),
               
-              Text(
-                '버그를 찾고, 캐시를 받자!',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Colors.grey[600],
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  '버그를 찾고, 캐시를 받자!',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.normal,
+                    height: 1.2,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
               

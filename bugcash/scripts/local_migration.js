@@ -1,33 +1,23 @@
-// 간단한 로컬 마이그레이션 스크립트 (Firebase CLI 인증 사용)
-const { initializeApp, applicationDefault } = require('firebase-admin/app');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+// 로컬에서 실행할 Firebase Admin 마이그레이션
+const admin = require('firebase-admin');
 
-// Firebase Admin 초기화
+// Service Account 키 없이 실행 (Application Default Credentials)
 try {
-  // 환경변수로 서비스 계정 키 경로가 설정되어 있으면 사용, 없으면 기본 경로 사용
-  const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS ||
-    '/Users/isan/Desktop/coding/BUG/bugcash/bugcash-firebase-adminsdk.json';
-
-  const app = initializeApp({
-    credential: applicationDefault(),
+  admin.initializeApp({
     projectId: 'bugcash'
   });
   console.log('✅ Firebase Admin 초기화 성공');
-  console.log(`📁 서비스 계정 키: ${serviceAccountPath}`);
 } catch (error) {
   console.log('⚠️ 초기화 오류:', error.message);
-  console.log('💡 서비스 계정 키 파일 경로를 확인해주세요');
-  process.exit(1);
 }
-
-const db = getFirestore();
 
 async function migrateAllUsers() {
   try {
-    console.log('🔄 마이그레이션 시작...');
+    console.log('🔄 자동 마이그레이션 시작...');
 
-    // 모든 사용자 조회
+    const db = admin.firestore();
     const usersSnapshot = await db.collection('users').get();
+
     console.log(`📊 총 ${usersSnapshot.size}명의 사용자 발견`);
 
     let migratedCount = 0;
@@ -54,32 +44,30 @@ async function migrateAllUsers() {
           roles: [oldUserType],
           primaryRole: oldUserType,
           isAdmin: oldUserType === 'admin',
-          migratedAt: FieldValue.serverTimestamp(),
-          migratedBy: 'local-script'
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
         };
 
         // 역할별 프로필 추가
         if (oldUserType === 'tester') {
           updateData.testerProfile = {
-            preferredCategories: data.preferredCategories || [],
-            devices: data.devices || [],
-            experience: data.experience || null,
-            rating: data.rating || 0.0,
+            preferredCategories: [],
+            devices: [],
+            rating: 0.0,
             completedTests: data.completedMissions || 0,
-            testingPreferences: data.testingPreferences || {},
-            verificationStatus: data.verificationStatus || 'pending'
+            testingPreferences: {},
+            verificationStatus: 'pending'
           };
         } else if (oldUserType === 'provider') {
           updateData.providerProfile = {
-            companyName: data.companyName || null,
-            website: data.website || null,
-            businessType: data.businessType || null,
-            appCategories: data.appCategories || [],
-            contactInfo: data.contactInfo || null,
-            rating: data.rating || 0.0,
-            publishedApps: data.publishedApps || 0,
-            businessInfo: data.businessInfo || {},
-            verificationStatus: data.verificationStatus || 'pending'
+            companyName: null,
+            website: null,
+            businessType: null,
+            appCategories: [],
+            contactInfo: null,
+            rating: 0.0,
+            publishedApps: 0,
+            businessInfo: {},
+            verificationStatus: 'pending'
           };
         }
 
@@ -113,14 +101,14 @@ async function migrateAllUsers() {
 
     // 검증
     console.log('\n🔍 마이그레이션 결과 검증...');
-    await verifyMigration();
+    await verifyMigration(db);
 
   } catch (error) {
     console.error('❌ 마이그레이션 중 전체 오류:', error);
   }
 }
 
-async function verifyMigration() {
+async function verifyMigration(db) {
   try {
     const usersSnapshot = await db.collection('users').get();
 
@@ -163,11 +151,55 @@ async function verifyMigration() {
   }
 }
 
+// 특정 사용자 확인 함수
+async function checkSpecificUser(userId) {
+  try {
+    const db = admin.firestore();
+    const userDoc = await db.collection('users').doc(userId).get();
+
+    if (userDoc.exists) {
+      const data = userDoc.data();
+      console.log(`\n👤 사용자 ${userId} 상세 정보:`);
+      console.log(`  이메일: ${data.email}`);
+      console.log(`  이름: ${data.displayName}`);
+
+      if (data.roles && data.primaryRole) {
+        console.log(`  ✅ 새 형식: roles=${JSON.stringify(data.roles)}, primaryRole=${data.primaryRole}`);
+        console.log(`  관리자: ${data.isAdmin ? '✅' : '❌'}`);
+
+        if (data.testerProfile) {
+          console.log(`  테스터 프로필: ✅`);
+        }
+        if (data.providerProfile) {
+          console.log(`  공급자 프로필: ✅`);
+        }
+      } else {
+        console.log(`  ❌ 기존 형식: userType=${data.userType}`);
+      }
+
+      console.log(`  마지막 업데이트: ${data.updatedAt?.toDate?.() || data.updatedAt}`);
+    } else {
+      console.log(`❌ 사용자 ${userId}를 찾을 수 없습니다`);
+    }
+
+  } catch (error) {
+    console.error(`❌ 사용자 ${userId} 확인 중 오류:`, error);
+  }
+}
+
 // 메인 실행
 if (require.main === module) {
   console.log('🚀 BugCash 사용자 마이그레이션 도구 시작');
 
   migrateAllUsers()
+    .then(() => {
+      // 특정 사용자들 확인
+      console.log('\n🔍 특정 사용자들 확인...');
+      return Promise.all([
+        checkSpecificUser('hthxwtMDTCapAsvGF17bn8kb3mf2'),
+        checkSpecificUser('CazdCJYsxGMxEOzXGTen3AY5Kom2')
+      ]);
+    })
     .then(() => {
       console.log('\n✅ 마이그레이션 프로세스 완료');
       process.exit(0);
@@ -178,4 +210,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { migrateAllUsers, verifyMigration };
+module.exports = { migrateAllUsers, checkSpecificUser };

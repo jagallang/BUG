@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import 'test_data_page.dart';
+import '../../../../utils/migration_helper.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -25,6 +26,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 마이그레이션 실행 완료됨
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('BUGS 관리자 대시보드'),
@@ -39,6 +42,17 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               MaterialPageRoute(builder: (context) => const TestDataPage()),
             ),
             tooltip: '테스트 데이터 관리',
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.orange,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.account_tree, color: Colors.white),
+              onPressed: () => _showMigrationDialog(),
+              tooltip: '🔄 사용자 데이터 마이그레이션 (필요함)',
+            ),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -1561,6 +1575,219 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           ],
         );
       },
+    );
+  }
+
+  // 마이그레이션 다이얼로그 표시
+  void _showMigrationDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('사용자 데이터 마이그레이션'),
+        content: const Text(
+          '기존 사용자 데이터를 새로운 다중 역할 시스템으로 마이그레이션합니다.\n\n'
+          '이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?'
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _analyzeUserData();
+            },
+            child: const Text('분석'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _performMigration();
+            },
+            child: const Text('마이그레이션 실행'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 사용자 데이터 구조 분석
+  void _analyzeUserData() async {
+    _showLoadingDialog('사용자 데이터 분석 중...');
+
+    try {
+      final analysis = await MigrationHelper.analyzeCurrentUsers();
+
+      if (mounted) {
+        Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+        _showAnalysisResult(analysis);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        _showErrorDialog('분석 실패: $e');
+      }
+    }
+  }
+
+  // 실제 마이그레이션 실행
+  void _performMigration() async {
+    _showLoadingDialog('마이그레이션 실행 중...');
+
+    try {
+      // 1. 시뮬레이션 실행
+      final simulation = await MigrationHelper.migrateUsers(dryRun: true);
+
+      if (simulation.containsKey('error')) {
+        throw Exception(simulation['error']);
+      }
+
+      // 2. 실제 마이그레이션 실행
+      final result = await MigrationHelper.migrateUsers(dryRun: false);
+
+      if (result.containsKey('error')) {
+        throw Exception(result['error']);
+      }
+
+      // 3. 검증
+      final isValid = await MigrationHelper.verifyMigration();
+
+      if (mounted) {
+        Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+        _showMigrationResult(result, isValid);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        _showErrorDialog('마이그레이션 실패: $e');
+      }
+    }
+  }
+
+  // 분석 결과 표시
+  void _showAnalysisResult(Map<String, dynamic> analysis) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('데이터 분석 결과'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('총 사용자: ${analysis['totalUsers']}명'),
+              Text('새 형식: ${analysis['newFormat']}명'),
+              Text('기존 형식: ${analysis['oldFormat']}명'),
+              const SizedBox(height: 16),
+              const Text('역할별 통계:', style: TextStyle(fontWeight: FontWeight.bold)),
+              ...((analysis['userTypes'] as Map<String, int>).entries.map(
+                (entry) => Text('${entry.key}: ${entry.value}명'),
+              )),
+              if (analysis['samples'] != null) ...[
+                const SizedBox(height: 16),
+                const Text('샘플 데이터:', style: TextStyle(fontWeight: FontWeight.bold)),
+                ...((analysis['samples'] as List).take(3).map(
+                  (sample) => Text('${sample['email']}: ${sample['userType'] ?? sample['roles']}'),
+                )),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 마이그레이션 결과 표시
+  void _showMigrationResult(Map<String, dynamic> result, bool isValid) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          isValid ? '✅ 마이그레이션 완료' : '⚠️ 마이그레이션 주의',
+          style: TextStyle(
+            color: isValid ? Colors.green : Colors.orange,
+          ),
+        ),
+        content: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('총 사용자: ${result['totalUsers']}명'),
+            Text('마이그레이션: ${result['migrated']}명'),
+            Text('건너뛴 사용자: ${result['skipped']}명'),
+            if (result['errors'] != null && (result['errors'] as List).isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text('오류: ${(result['errors'] as List).length}건',
+                   style: const TextStyle(color: Colors.red)),
+            ],
+            const SizedBox(height: 16),
+            Text(
+              isValid
+                ? '모든 사용자 데이터가 성공적으로 마이그레이션되었습니다.'
+                : '일부 사용자 데이터에 문제가 있을 수 있습니다. 확인이 필요합니다.',
+              style: TextStyle(
+                color: isValid ? Colors.green : Colors.orange,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('확인'),
+          ),
+          if (!isValid)
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                setState(() {}); // 페이지 새로고침
+              },
+              child: const Text('새로고침'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 로딩 다이얼로그 표시
+  void _showLoadingDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Row(
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(width: 16),
+            Expanded(child: Text(message)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // 오류 다이얼로그 표시
+  void _showErrorDialog(String error) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('오류'),
+        content: Text(error),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
     );
   }
 }

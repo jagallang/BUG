@@ -984,7 +984,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         'totalDays': estimatedMinutes > 0 ? (estimatedMinutes / 30).ceil() : 14,
         'requirements': requiredSkills,
         'testerInfo': {
-          'userType': authState.user!.userType.toString(),
+          'userType': authState.user!.primaryRole.toString(),
           'experience': 'beginner',
           'name': authState.user!.displayName ?? 'Unknown User',
           'email': authState.user!.email ?? '',

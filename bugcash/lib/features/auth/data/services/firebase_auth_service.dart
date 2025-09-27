@@ -12,18 +12,45 @@ class FirebaseAuthService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  /// UserEntity 생성을 위한 팩토리 메소드
+  /// UserEntity 생성을 위한 팩토리 메소드 (다중 역할 지원)
   UserEntity _createUserEntityFromData(String uid, Map<String, dynamic> data) {
+    // 새 형식 또는 기존 형식 지원
+    List<UserType> roles = [];
+    UserType primaryRole = UserType.tester;
+    bool isAdmin = false;
+
+    if (data.containsKey('roles') && data['roles'] != null) {
+      // 새 형식: 다중 역할
+      roles = (data['roles'] as List)
+          .map((role) => UserType.values.byName(role))
+          .toList();
+      primaryRole = UserType.values.byName(data['primaryRole'] ?? 'tester');
+      isAdmin = data['isAdmin'] ?? false;
+    } else if (data.containsKey('userType')) {
+      // 기존 형식: 단일 역할
+      final userType = data['userType'] == 'provider'
+          ? UserType.provider
+          : data['userType'] == 'admin'
+              ? UserType.admin
+              : UserType.tester;
+      roles = [userType];
+      primaryRole = userType;
+      isAdmin = userType == UserType.admin;
+    } else {
+      // 기본값: 테스터
+      roles = [UserType.tester];
+      primaryRole = UserType.tester;
+      isAdmin = false;
+    }
+
     return UserEntity(
       uid: uid,
       email: data['email'] ?? '',
       displayName: data['displayName'] ?? '',
       photoUrl: data['photoUrl'] as String?,
-      userType: data['userType'] == 'provider'
-          ? UserType.provider
-          : data['userType'] == 'admin'
-              ? UserType.admin
-              : UserType.tester,
+      roles: roles,
+      primaryRole: primaryRole,
+      isAdmin: isAdmin,
       country: data['country'] ?? '',
       timezone: data['timezone'] ?? 'UTC',
       phoneNumber: TypeConverter.safeStringConversion(data['phoneNumber']),

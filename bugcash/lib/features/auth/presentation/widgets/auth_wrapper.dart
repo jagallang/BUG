@@ -7,6 +7,7 @@ import '../pages/login_page.dart';
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
+import '../pages/role_selection_page.dart';
 
 class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
@@ -39,10 +40,25 @@ class AuthWrapper extends ConsumerWidget {
 
     final userData = authState.user!;
     if (kDebugMode) {
-      debugPrint('AuthWrapper - Navigating to dashboard for ${userData.userType}');
+      debugPrint('AuthWrapper - User roles: ${userData.roles}');
+      debugPrint('AuthWrapper - Primary role: ${userData.primaryRole}');
+      debugPrint('AuthWrapper - Can switch roles: ${userData.canSwitchRoles}');
     }
 
-    switch (userData.userType) {
+    // 다중 역할 사용자는 역할 선택 화면으로 이동
+    if (userData.canSwitchRoles) {
+      if (kDebugMode) {
+        debugPrint('AuthWrapper - Showing role selection for multi-role user');
+      }
+      return RoleSelectionPage(userData: userData);
+    }
+
+    // 단일 역할 사용자는 기본 역할로 대시보드 이동
+    return _navigateToDashboard(userData, userData.primaryRole);
+  }
+
+  Widget _navigateToDashboard(UserEntity userData, UserType role) {
+    switch (role) {
       case UserType.tester:
         return TesterDashboardPage(testerId: userData.uid);
       case UserType.provider:

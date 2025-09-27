@@ -72,3 +72,9 @@ firebase-debug.*.log
 **/*_secrets.*
 **/*.key
 **/*.pem
+
+# Firebase Service Account Keys - NEVER COMMIT
+*firebase-adminsdk*.json
+bugcash-firebase-adminsdk.json
+credentials/
+service-account*.json

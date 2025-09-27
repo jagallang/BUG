@@ -39,7 +39,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
   <!-- Google Sign-In Configuration -->
-  <meta name="google-signin-client_id" content="335851774651-your_client_id_here.apps.googleusercontent.com">
+  <meta name="google-signin-client_id" content="335851774651-8m5b8a9k7d2f1e3g4h5i6j7k8l9m0n1o.apps.googleusercontent.com">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -58,40 +58,7 @@
   <title>BugCash - 앱 테스트 플랫폼</title>
   <link rel="manifest" href="manifest.json">
   
-  <!-- Firebase Configuration -->
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
-    import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
-    import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js';
-    import { getStorage } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js';
-    import { getMessaging } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging.js';
-
-    // Firebase configuration
-    // WARNING: Replace with your actual Firebase config
-    const firebaseConfig = {
-      apiKey: "your_firebase_api_key_here",
-      authDomain: "bugcash.firebaseapp.com",
-      projectId: "bugcash",
-      storageBucket: "bugcash.firebasestorage.app",
-      messagingSenderId: "335851774651",
-      appId: "1:335851774651:android:9c485dd2a5f436ef0abf9e",
-      measurementId: "G-XXXXXXXXXX"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const firestore = getFirestore(app);
-    const storage = getStorage(app);
-    
-    // Make Firebase available globally
-    window.firebaseApp = app;
-    window.firebaseAuth = auth;
-    window.firebaseFirestore = firestore;
-    window.firebaseStorage = storage;
-    
-    console.log('Firebase initialized successfully');
-  </script>
+  <!-- Firebase는 Flutter 플러그인에서 초기화됩니다 -->
   
   <!-- Preconnect to Firebase -->
   <link rel="preconnect" href="https://bugcash.firebaseapp.com">
