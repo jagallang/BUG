@@ -53,6 +53,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Provider/Service 레이어 변경
 - 데이터 모델 구조 수정
 - 핵심 비즈니스 로직 변경
+- 관리자 권한 검증 로직 수정
+- 프로젝트 상태 전환 규칙 변경
+- Cloud Functions 연동 수정
 ```
 
 ### 수정 내역 기록 의무
@@ -402,6 +405,90 @@ Widget build(BuildContext context) {
 }
 ```
 
+## 🔧 BugCash 관리자 워크플로 룰스
+
+### 프로젝트 상태 전환 체계
+```
+draft → pending → open/rejected → closed
+
+상태별 권한:
+- draft: 공급자 수정 가능
+- pending: 관리자 검수 대기 (읽기 전용)
+- open: 테스터 모집 활성화
+- rejected: 재신청 가능 (사유 필수)
+- closed: 테스트 종료 (결과 집계만)
+```
+
+### 관리자 액션 패턴
+```dart
+// 프로젝트 승인 표준 패턴 - Cloud Functions 우선, Firestore Fallback
+void _approveProject(String projectId) async {
+  try {
+    // 1. Cloud Functions 우선 시도 (asia-northeast1 리전)
+    final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+    final callable = functions.httpsCallable('reviewProject');
+    await callable.call({
+      'projectId': projectId,
+      'approve': true,
+    });
+  } catch (e) {
+    // 2. Fallback: Firestore 직접 업데이트
+    await FirebaseFirestore.instance
+        .collection('projects')
+        .doc(projectId)
+        .update({
+      'status': 'open',
+      'approvedAt': FieldValue.serverTimestamp(),
+      'approvedBy': 'admin', // 실제 관리자 ID로 교체 필요
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  // 3. UI 안전성 체크 (mounted 확인 필수)
+  if (mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('✅ 프로젝트가 승인되었습니다'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+}
+```
+
+### 관리자 대시보드 상태관리
+```dart
+// 실시간 프로젝트 모니터링 - StreamBuilder 패턴
+StreamBuilder<QuerySnapshot>(
+  stream: FirebaseFirestore.instance
+      .collection('projects')
+      .where('status', whereIn: ['pending', 'draft'])
+      .orderBy('createdAt', descending: true)
+      .snapshots(),
+  builder: (context, snapshot) {
+    if (snapshot.connectionState == ConnectionState.waiting) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    // 상태별 자동 필터링 및 렌더링
+    return _buildProjectsList(snapshot.data!);
+  }
+)
+
+// 관리자 권한 체크 필수 (모든 관리자 액션 전)
+if (userData.userType != UserType.admin) {
+  throw UnauthorizedException('관리자 권한이 필요합니다');
+}
+```
+
+### 관리자 기능 개발 체크리스트
+- [ ] `userType == 'admin'` 권한 확인 (auth_wrapper.dart 패턴 준수)
+- [ ] Cloud Functions 연동 및 Firestore Fallback 구현
+- [ ] 모든 액션에 타임스탬프 및 관리자 ID 기록
+- [ ] 거부 시 사유 필수 입력 다이얼로그 (TextEditingController 사용)
+- [ ] mounted 체크로 비동기 작업 후 UI 안전성 확보
+- [ ] 실시간 데이터는 StreamBuilder 사용 (FutureBuilder 지양)
+- [ ] ConsumerStatefulWidget 사용 시 Riverpod Provider 활용 필수
+
 ## 🧪 테스트 및 검증 체크리스트
 
 ### 역할별 기능 테스트
@@ -424,6 +511,11 @@ Widget build(BuildContext context) {
 - [ ] 사용자 관리 (테스터/프로바이더 승인)
 - [ ] 시스템 모니터링
 - [ ] 데이터 분석 및 리포트
+- [ ] 프로젝트 상태별 필터링 (pending, open, rejected)
+- [ ] 프로젝트 승인/거부 워크플로
+- [ ] 거부 사유 기록 및 조회
+- [ ] Cloud Functions Fallback 동작 확인
+- [ ] 실시간 통계 업데이트
 ```
 
 ### Firebase 연결 테스트

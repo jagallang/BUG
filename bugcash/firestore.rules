@@ -137,32 +137,24 @@ service cloud.firestore {
     }
 
     // ==============================================
-    // 일일 미션 관리 (missions)
+    // 미션 관리 (missions) - 통합 규칙
     // ==============================================
     match /missions/{missionId} {
-      // 읽기: 참여 테스터, 해당 프로젝트 공급자, 관리자
-      allow read: if isAuthenticated() &&
-                     (request.auth.uid == resource.data.testerId ||
-                      isProjectProvider(resource.data.projectId) ||
-                      isAdmin());
+      // 읽기: 인증된 사용자 (단순화)
+      allow read: if isAuthenticated();
 
-      // 생성: Cloud Functions만
-      allow create: if false;
+      // 생성: 인증된 사용자 (테스터가 미션 신청 시)
+      allow create: if isAuthenticated();
 
-      // 수정: 테스터는 제출 데이터만, 공급자는 피드백만
-      allow update: if (request.auth.uid == resource.data.testerId &&
-                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['submissionData', 'submittedAt', 'status'])) ||
-                      (isProjectProvider(resource.data.projectId) &&
-                       request.resource.data.diff(resource.data).affectedKeys().hasOnly(['providerFeedback', 'approvedAt', 'status']));
+      // 수정: 인증된 사용자 (상태 업데이트)
+      allow update: if isAuthenticated();
 
       // 삭제: 관리자만 가능
       allow delete: if isAdmin();
 
       // 일일 상호작용 서브컬렉션
       match /daily_interactions/{interactionId} {
-        allow read, write: if request.auth.uid == get(/databases/$(database)/documents/missions/$(missionId)).data.testerId ||
-                              isProjectProvider(get(/databases/$(database)/documents/missions/$(missionId)).data.projectId) ||
-                              isAdmin();
+        allow read, write: if isAuthenticated();
       }
     }
 
@@ -254,26 +246,26 @@ service cloud.firestore {
     }
 
     // ==============================================
-    // 임시 미션 및 신청 관련 컬렉션 (테스트용)
+    // 추가 컬렉션 규칙
     // ==============================================
 
-    // missions 컬렉션 임시 허용
-    match /missions/{missionId} {
-      allow read, write: if isAuthenticated();
-    }
-
-    // missionApplications 컬렉션 임시 허용
+    // missionApplications 컬렉션
     match /missionApplications/{applicationId} {
       allow read, write: if isAuthenticated();
     }
 
-    // earnings 컬렉션 임시 허용
+    // earnings 컬렉션
     match /earnings/{earningId} {
       allow read, write: if isAuthenticated();
     }
 
-    // activities 컬렉션 임시 허용
+    // activities 컬렉션
     match /activities/{activityId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // apps 컬렉션 (공급자 앱 등록)
+    match /apps/{appId} {
       allow read, write: if isAuthenticated();
     }
 
