@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/auth_service.dart';
-import 'app_management_page.dart' hide ProviderAppModel;
+import 'app_management_page.dart';
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';

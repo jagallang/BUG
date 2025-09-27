@@ -24,8 +24,8 @@ final providerInfoStateProvider = FutureProvider.family.autoDispose<ProviderMode
   return await repository.getProviderInfo(providerId);
 });
 
-// Apps Providers  
-final providerAppsProvider = FutureProvider.family.autoDispose<List<AppModel>, String>((ref, providerId) async {
+// Apps Providers
+final dashboardAppsProvider = FutureProvider.family.autoDispose<List<AppModel>, String>((ref, providerId) async {
   final repository = ref.watch(providerDashboardRepositoryProvider);
   return await repository.getProviderApps(providerId);
 });
@@ -266,7 +266,7 @@ final selectedMissionProvider = StateProvider<String?>((ref) => null);
 
 // Filtered Apps Provider
 final filteredAppsProvider = Provider.family<AsyncValue<List<AppModel>>, String>((ref, providerId) {
-  final appsAsync = ref.watch(providerAppsProvider(providerId));
+  final appsAsync = ref.watch(dashboardAppsProvider(providerId));
   final filter = ref.watch(appFilterProvider);
 
   return appsAsync.when(

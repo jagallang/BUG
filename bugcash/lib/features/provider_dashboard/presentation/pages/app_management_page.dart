@@ -14,9 +14,31 @@ final providerAppsProvider = StreamProvider.family<List<ProviderAppModel>, Strin
       .where('providerId', isEqualTo: providerId)
       .orderBy('createdAt', descending: true)
       .snapshots()
-      .map((snapshot) => snapshot.docs
-          .map((doc) => ProviderAppModel.fromFirestore(doc))
-          .toList());
+      .map((snapshot) {
+        final docs = snapshot.docs
+            .map((doc) => ProviderAppModel.fromFirestore(doc))
+            .toList();
+        // 클라이언트 측에서 정렬 (인덱스 생성 전까지 임시 방안)
+        // 인덱스 생성 후에는 이 정렬이 불필요하지만 안전성을 위해 유지
+        docs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return docs;
+      })
+      .handleError((error) {
+        // 인덱스 오류 발생 시 orderBy 없이 재시도
+        AppLogger.error('Firestore index error, retrying without orderBy', error.toString());
+        return FirebaseFirestore.instance
+            .collection('projects')
+            .where('providerId', isEqualTo: providerId)
+            .snapshots()
+            .map((snapshot) {
+              final docs = snapshot.docs
+                  .map((doc) => ProviderAppModel.fromFirestore(doc))
+                  .toList();
+              // 클라이언트 측에서 정렬
+              docs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              return docs;
+            });
+      });
 });
 
 // App Model
