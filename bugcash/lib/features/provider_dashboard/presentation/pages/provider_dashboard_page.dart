@@ -7,6 +7,8 @@ import '../../../../core/services/auth_service.dart';
 import 'app_management_page.dart' hide ProviderAppModel;
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 // 채팅 기능 제거됨
 // import '../widgets/payment_management_tab.dart';
 
@@ -35,6 +37,12 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   Widget _buildCurrentTab() {
+    // 현재 사용자의 권한 확인
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final hasAdminRole = user?.roles.contains(UserType.admin) == true ||
+                        user?.primaryRole == UserType.admin;
+
     switch (_selectedIndex) {
       case 0:
         return _buildDashboardTab();
@@ -43,7 +51,16 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       case 2:
         return _buildPaymentTab();
       case 3:
-        return _buildAdminTab();
+        // 관리자 권한이 있는 경우에만 관리자 탭 표시
+        if (hasAdminRole) {
+          return _buildAdminTab();
+        } else {
+          // 권한이 없는 경우 대시보드로 리디렉션
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            setState(() => _selectedIndex = 0);
+          });
+          return _buildDashboardTab();
+        }
       default:
         return _buildDashboardTab();
     }
@@ -51,6 +68,39 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 현재 사용자의 권한 확인
+    final authState = ref.watch(authProvider);
+    final user = authState.user;
+    final hasAdminRole = user?.roles.contains(UserType.admin) == true ||
+                        user?.primaryRole == UserType.admin;
+
+    // 디버그 로그
+    debugPrint('ProviderDashboard - User roles: ${user?.roles}');
+    debugPrint('ProviderDashboard - Primary role: ${user?.primaryRole}');
+    debugPrint('ProviderDashboard - Has admin role: $hasAdminRole');
+
+    // 관리자 권한에 따라 네비게이션 아이템 구성
+    final List<BottomNavigationBarItem> navigationItems = [
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.dashboard),
+        label: '대시보드',
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.apps),
+        label: '앱 관리',
+      ),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.payment),
+        label: '결제',
+      ),
+      // 관리자 권한이 있을 때만 관리자 탭 표시
+      if (hasAdminRole)
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.admin_panel_settings),
+          label: '관리자',
+        ),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.indigo[900],
@@ -107,26 +157,21 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         currentIndex: _selectedIndex,
         onTap: (index) {
           debugPrint('BottomNavigationBar tapped: $index');
+
+          // 관리자 권한이 없는데 관리자 탭(3번)을 클릭한 경우 방지
+          if (!hasAdminRole && index >= 3) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('⚠️ 관리자 권한이 필요합니다'),
+                backgroundColor: Colors.red,
+              ),
+            );
+            return;
+          }
+
           setState(() => _selectedIndex = index);
         },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: '대시보드',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.apps),
-            label: '앱 관리',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.payment),
-            label: '결제',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.admin_panel_settings),
-            label: '관리자',
-          ),
-        ],
+        items: navigationItems,
       ),
     );
   }

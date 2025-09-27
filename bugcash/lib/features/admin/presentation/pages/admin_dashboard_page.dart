@@ -6,6 +6,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import 'test_data_page.dart';
 import '../../../../utils/migration_helper.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/domain/entities/user_entity.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -26,6 +28,69 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    // 관리자 권한 확인
+    final authState = ref.watch(authProvider);
+
+    // 로그인되지 않은 경우 로그인 페이지로 리디렉션
+    if (authState.user == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushReplacementNamed('/login');
+      });
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // 관리자 권한이 없는 경우 접근 거부
+    final user = authState.user!;
+    final hasAdminRole = user.roles.contains('admin') || user.primaryRole == UserType.admin;
+
+    if (!hasAdminRole) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('접근 거부'),
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.block,
+                size: 64,
+                color: Colors.red[400],
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '⚠️ 관리자 권한이 필요합니다',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '현재 역할: ${user.primaryRole.toString().split('.').last}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pushReplacementNamed('/');
+                },
+                child: const Text('홈으로 돌아가기'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     // 마이그레이션 실행 완료됨
 
     return Scaffold(

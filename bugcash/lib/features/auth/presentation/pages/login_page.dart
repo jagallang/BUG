@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import 'signup_page.dart';
-import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
-import '../../../../services/firestore_service.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -339,87 +337,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               ),
               
               const SizedBox(height: 20),
-              
-              // Admin Function Button (for testing)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  TextButton.icon(
-                    onPressed: () {
-                      // 관리자 기능 - Provider Dashboard로 바로 이동
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (_) => const ProviderDashboardPage(
-                            providerId: 'test_provider_001',
-                          ),
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.admin_panel_settings, size: 20),
-                    label: const Text('관리자 대시보드'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.red,
-                    ),
-                  ),
-                  TextButton.icon(
-                    onPressed: () async {
-                      // 더미 데이터 삭제 확인 다이얼로그
-                      final confirmed = await showDialog<bool>(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('⚠️ 경고'),
-                          content: const Text(
-                            'Firestore의 모든 더미 데이터(미션, 버그리포트, 제출물)를 삭제합니다.\n\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?'
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('취소'),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.red,
-                              ),
-                              child: const Text('삭제'),
-                            ),
-                          ],
-                        ),
-                      );
 
-                      if (confirmed == true) {
-                        try {
-                          final firestoreService = FirestoreService();
-                          await firestoreService.clearAllData();
-
-                          if (mounted && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('✅ 모든 더미 데이터가 삭제되었습니다.'),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          }
-                        } catch (e) {
-                          if (mounted && context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('❌ 삭제 실패: ${e.toString()}'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        }
-                      }
-                    },
-                    icon: const Icon(Icons.delete_forever, size: 20),
-                    label: const Text('더미 데이터 삭제'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.orange,
-                    ),
-                  ),
-                ],
-              ),
+              // Note: Admin test functions removed for security -
+              // Only accessible through proper authentication flow
             ],
           ),
         ),

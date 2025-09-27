@@ -298,33 +298,50 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       await docRef.update({'appId': docRef.id});
 
       if (mounted) {
-        setState(() {
-          _showUploadDialog = false;
-          _appNameController.clear();
-          _appUrlController.clear();
-          _descriptionController.clear();
-          _testingGuidelinesController.clear();
-          _minOSVersionController.clear();
-          _appStoreUrlController.clear();
-          _minExperienceController.clear();
-          _specialRequirementsController.clear();
-          _selectedCategory = 'Productivity';
-          _selectedInstallType = 'play_store';
-          _selectedDifficulty = 'easy';
-          _selectedType = 'functional';
-          _selectedPlatforms = ['android'];
-          _maxTesters = 10;
-          _testPeriodDays = 14;
-          _baseReward = 5000;
-          _bonusReward = 2000;
-          _requiredSpecializations = [];
-        });
+        // 성공 메시지를 더 명확하게 표시
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('✅ 앱이 성공적으로 등록되었습니다.\n관리자 승인 후 테스팅이 시작됩니다.'),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
 
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('앱이 성공적으로 등록되었습니다')),
-          );
-        }
+        // 다이얼로그 닫기 및 필드 초기화를 약간 지연
+        Future.delayed(const Duration(milliseconds: 1500), () {
+          if (mounted) {
+            setState(() {
+              _showUploadDialog = false;
+              _appNameController.clear();
+              _appUrlController.clear();
+              _descriptionController.clear();
+              _testingGuidelinesController.clear();
+              _minOSVersionController.clear();
+              _appStoreUrlController.clear();
+              _minExperienceController.clear();
+              _specialRequirementsController.clear();
+              _selectedCategory = 'Productivity';
+              _selectedInstallType = 'play_store';
+              _selectedDifficulty = 'easy';
+              _selectedType = 'functional';
+              _selectedPlatforms = ['android'];
+              _maxTesters = 10;
+              _testPeriodDays = 14;
+              _baseReward = 5000;
+              _bonusReward = 2000;
+              _requiredSpecializations = [];
+            });
+          }
+        });
       }
     } catch (e) {
       AppLogger.error('Failed to upload app', e.toString());
@@ -577,6 +594,10 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
           SizedBox(height: 16.h),
 
+          // Status Description and Next Steps
+          _buildStatusDescription(app.status),
+          SizedBox(height: 16.h),
+
           // Action Buttons
           Row(
             children: [
@@ -652,32 +673,32 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     String text;
     IconData icon;
 
-    // PRD 기준 프로젝트 상태: pending → open → closed
+    // PRD 기준 프로젝트 상태: draft → pending → open → closed
     switch (status) {
+      case 'draft':
+        color = Colors.blue[600]!;
+        text = '검수 대기';
+        icon = Icons.hourglass_empty;
+        break;
       case 'pending':
         color = Colors.orange[600]!;
-        text = '승인 대기';
+        text = '승인 검토 중';
         icon = Icons.schedule;
         break;
       case 'open':
         color = Colors.green[600]!;
-        text = '승인됨';
+        text = '모집 중';
         icon = Icons.check_circle;
         break;
       case 'closed':
-        color = Colors.blue[600]!;
-        text = '종료됨';
+        color = Colors.grey[600]!;
+        text = '테스트 완료';
         icon = Icons.archive;
         break;
       case 'rejected':
         color = Colors.red[600]!;
-        text = '거부됨';
+        text = '승인 거부';
         icon = Icons.cancel;
-        break;
-      case 'draft':
-        color = Colors.grey[600]!;
-        text = '임시저장';
-        icon = Icons.edit;
         break;
       default:
         color = Colors.grey;
@@ -1456,5 +1477,108 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       default:
         return platform;
     }
+  }
+
+  // Status description widget for better user experience
+  Widget _buildStatusDescription(String status) {
+    String description;
+    String nextStep;
+    Color backgroundColor;
+    IconData icon;
+
+    switch (status) {
+      case 'draft':
+        description = '앱이 성공적으로 등록되었습니다';
+        nextStep = '관리자 검수를 기다리고 있습니다 (보통 1-2일 소요)';
+        backgroundColor = Colors.blue[50]!;
+        icon = Icons.hourglass_empty;
+        break;
+      case 'pending':
+        description = '관리자가 검수 중입니다';
+        nextStep = '승인되면 테스터 모집이 시작됩니다';
+        backgroundColor = Colors.orange[50]!;
+        icon = Icons.schedule;
+        break;
+      case 'open':
+        description = '테스터 모집이 진행 중입니다';
+        nextStep = '신청자를 검토하고 승인해주세요';
+        backgroundColor = Colors.green[50]!;
+        icon = Icons.check_circle;
+        break;
+      case 'closed':
+        description = '테스트가 완료되었습니다';
+        nextStep = '결과를 확인하고 피드백을 검토하세요';
+        backgroundColor = Colors.grey[50]!;
+        icon = Icons.archive;
+        break;
+      case 'rejected':
+        description = '승인이 거부되었습니다';
+        nextStep = '거부 사유를 확인하고 수정 후 재신청하세요';
+        backgroundColor = Colors.red[50]!;
+        icon = Icons.cancel;
+        break;
+      default:
+        description = '상태를 확인하고 있습니다';
+        nextStep = '잠시 후 다시 확인해주세요';
+        backgroundColor = Colors.grey[50]!;
+        icon = Icons.help;
+    }
+
+    return Container(
+      padding: EdgeInsets.all(12.w),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(8.r),
+        border: Border.all(
+          color: backgroundColor == Colors.blue[50] ? Colors.blue[200]! :
+                 backgroundColor == Colors.orange[50] ? Colors.orange[200]! :
+                 backgroundColor == Colors.green[50] ? Colors.green[200]! :
+                 backgroundColor == Colors.red[50] ? Colors.red[200]! : Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 16.sp,
+                color: backgroundColor == Colors.blue[50] ? Colors.blue[600] :
+                       backgroundColor == Colors.orange[50] ? Colors.orange[600] :
+                       backgroundColor == Colors.green[50] ? Colors.green[600] :
+                       backgroundColor == Colors.red[50] ? Colors.red[600] : Colors.grey[600],
+              ),
+              SizedBox(width: 8.w),
+              Expanded(
+                child: Text(
+                  description,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w500,
+                    color: backgroundColor == Colors.blue[50] ? Colors.blue[700] :
+                           backgroundColor == Colors.orange[50] ? Colors.orange[700] :
+                           backgroundColor == Colors.green[50] ? Colors.green[700] :
+                           backgroundColor == Colors.red[50] ? Colors.red[700] : Colors.grey[700],
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 4.h),
+          Text(
+            nextStep,
+            style: TextStyle(
+              fontSize: 12.sp,
+              color: backgroundColor == Colors.blue[50] ? Colors.blue[600] :
+                     backgroundColor == Colors.orange[50] ? Colors.orange[600] :
+                     backgroundColor == Colors.green[50] ? Colors.green[600] :
+                     backgroundColor == Colors.red[50] ? Colors.red[600] : Colors.grey[600],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
