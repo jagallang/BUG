@@ -5,6 +5,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../shared/models/mission_workflow_model.dart';
 import '../../../../core/services/mission_workflow_service.dart';
+import '../../../../core/services/mission_management_service.dart';
+import '../../../shared/models/mission_management_model.dart';
 import 'app_management_page.dart';
 
 class TesterManagementPage extends ConsumerStatefulWidget {
@@ -23,6 +25,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final MissionWorkflowService _workflowService = MissionWorkflowService();
+  final MissionManagementService _missionManagementService = MissionManagementService();
 
   @override
   void initState() {
@@ -1056,6 +1059,14 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
               child: const Text('취소'),
             ),
             ElevatedButton(
+              onPressed: () => _showRejectionDialog(workflow, interaction),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('거절'),
+            ),
+            ElevatedButton(
               onPressed: () async {
                 Navigator.pop(context);
                 await _workflowService.approveDailyMission(
@@ -1193,6 +1204,95 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
               setState(() {});
             },
             child: const Text('다시 시도'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRejectionDialog(MissionWorkflowModel workflow, DailyMissionInteraction interaction) {
+    final rejectionReasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${interaction.dayNumber}일차 미션 거절'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('테스터: ${workflow.testerName}'),
+            SizedBox(height: 16.h),
+            const Text(
+              '거절 사유를 입력해주세요:',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 8.h),
+            TextField(
+              controller: rejectionReasonController,
+              decoration: const InputDecoration(
+                hintText: '스크린샷이 부족합니다, 테스트 시간이 부족합니다 등',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (rejectionReasonController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('거절 사유를 입력해주세요'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              Navigator.pop(context); // 거절 다이얼로그 닫기
+              Navigator.pop(context); // 승인 다이얼로그 닫기
+
+              try {
+                // 일일 미션 ID 찾기 (interaction에서 생성)
+                final missionId = '${workflow.id}_day_${interaction.dayNumber}';
+
+                await _missionManagementService.updateMissionStatus(
+                  missionId: missionId,
+                  status: DailyMissionStatus.rejected,
+                  note: rejectionReasonController.text.trim(),
+                );
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('일일 미션을 거절했습니다'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('거절 처리 중 오류가 발생했습니다: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('거절'),
           ),
         ],
       ),

@@ -21,6 +21,9 @@ class MissionDetailPage extends ConsumerStatefulWidget {
 class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   bool _isApplying = false;
   bool _isLoadingAppDetails = false;
+  bool _isLoadingApplicationStatus = false;
+  bool _hasAlreadyApplied = false;
+  String? _applicationStatus;
   Map<String, dynamic>? _appDetails;
 
   String get missionId => widget.mission.id ?? '';
@@ -64,6 +67,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   void initState() {
     super.initState();
     _loadAppDetails();
+    _checkApplicationStatus();
   }
 
   // 공급자가 등록한 앱 상세정보를 Firestore에서 가져오기
@@ -143,6 +147,76 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         _isLoadingAppDetails = false;
       });
       AppLogger.error('Failed to load app details', 'MissionDetailPage', e);
+    }
+  }
+
+  // 미션 신청 상태 확인
+  Future<void> _checkApplicationStatus() async {
+    final authState = ref.read(authProvider);
+    if (authState.user == null) return;
+
+    setState(() {
+      _isLoadingApplicationStatus = true;
+    });
+
+    try {
+      // 중복 신청 체크
+      final hasApplied = await MissionService.hasUserApplied(missionId, authState.user!.uid);
+
+      if (hasApplied) {
+        // 신청 상태 조회
+        String applicationStatus = await _getApplicationStatus(authState.user!.uid);
+
+        setState(() {
+          _hasAlreadyApplied = true;
+          _applicationStatus = applicationStatus;
+        });
+
+        AppLogger.info('신청 상태 확인: $_applicationStatus', 'MissionDetailPage');
+      }
+    } catch (e) {
+      AppLogger.error('신청 상태 확인 실패', 'MissionDetailPage', e);
+    } finally {
+      setState(() {
+        _isLoadingApplicationStatus = false;
+      });
+    }
+  }
+
+  // 신청 상태 조회
+  Future<String> _getApplicationStatus(String testerId) async {
+    try {
+      // mission_applications 컬렉션에서 상태 확인
+      final query = await FirebaseFirestore.instance
+          .collection('mission_applications')
+          .where('missionId', isEqualTo: missionId)
+          .where('testerId', isEqualTo: testerId)
+          .limit(1)
+          .get();
+
+      if (query.docs.isNotEmpty) {
+        return query.docs.first.data()['status'] ?? 'pending';
+      }
+
+      // mission_workflows 컬렉션에서도 확인
+      final mission = await MissionService.getMission(missionId);
+      final realAppId = mission?.appId ?? missionId;
+
+      final workflowQuery = await FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .where('appId', isEqualTo: realAppId)
+          .where('testerId', isEqualTo: testerId)
+          .limit(1)
+          .get();
+
+      if (workflowQuery.docs.isNotEmpty) {
+        return workflowQuery.docs.first.data()['status'] ?? 'pending';
+      }
+
+      return 'unknown';
+    } catch (e) {
+      AppLogger.error('신청 상태 조회 실패', 'MissionDetailPage', e);
+      return 'unknown';
     }
   }
 
@@ -905,16 +979,16 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           width: double.infinity,
           height: 48.h,
           child: ElevatedButton(
-            onPressed: _isApplying || isFull ? null : () => _applyToMission(authState),
+            onPressed: _getButtonAction(authState, isFull),
             style: ElevatedButton.styleFrom(
-              backgroundColor: isFull ? Colors.grey[400] : Colors.blue[600],
+              backgroundColor: _getButtonColor(isFull),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.r),
               ),
             ),
-            child: _isApplying
+            child: _isApplying || _isLoadingApplicationStatus
                 ? SizedBox(
                     width: 20.w,
                     height: 20.w,
@@ -924,7 +998,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                     ),
                   )
                 : Text(
-                    isFull ? '모집 완료' : '미션 신청하기',
+                    _getButtonText(isFull),
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
@@ -934,6 +1008,80 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         ),
       ),
     );
+  }
+
+  // 버튼 액션 결정
+  VoidCallback? _getButtonAction(AuthState authState, bool isFull) {
+    if (_isApplying || _isLoadingApplicationStatus || isFull) {
+      return null;
+    }
+
+    if (_hasAlreadyApplied) {
+      // 이미 신청한 경우 신청 현황 페이지로 이동
+      return () => _navigateToApplicationStatus();
+    }
+
+    // 신청 가능한 경우
+    return () => _applyToMission(authState);
+  }
+
+  // 버튼 색상 결정
+  Color _getButtonColor(bool isFull) {
+    if (isFull) {
+      return Colors.grey[400]!;
+    }
+
+    if (_hasAlreadyApplied) {
+      switch (_applicationStatus) {
+        case 'pending':
+          return Colors.orange[600]!;
+        case 'approved':
+        case 'active':
+          return Colors.green[600]!;
+        case 'rejected':
+          return Colors.red[600]!;
+        default:
+          return Colors.blue[600]!;
+      }
+    }
+
+    return Colors.blue[600]!;
+  }
+
+  // 버튼 텍스트 결정
+  String _getButtonText(bool isFull) {
+    if (isFull) {
+      return '모집 완료';
+    }
+
+    if (_hasAlreadyApplied) {
+      switch (_applicationStatus) {
+        case 'pending':
+          return '신청 검토중';
+        case 'approved':
+        case 'active':
+          return '신청 현황 보기';
+        case 'rejected':
+          return '신청 거부됨';
+        default:
+          return '신청 현황 보기';
+      }
+    }
+
+    return '미션 신청하기';
+  }
+
+  // 신청 현황 페이지로 이동
+  void _navigateToApplicationStatus() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('신청 상태: $_applicationStatus'),
+        backgroundColor: _getButtonColor(false),
+      ),
+    );
+
+    // TODO: 신청 현황 페이지 구현 후 Navigation 추가
+    // Navigator.pushNamed(context, '/application-status', arguments: missionId);
   }
 
   Future<void> _applyToMission(AuthState authState) async {
@@ -998,25 +1146,45 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
       await missionService.applyToMission(missionId, applicationData);
 
-      print('🎯 UI - 미션 신청 호출 완료!');
+      AppLogger.info('미션 신청 호출 완료', 'MissionDetailPage');
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('미션 신청이 완료되었습니다!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context, true);
+        // 신청 성공 후 상태 새로고침
+        await _checkApplicationStatus();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('미션 신청이 완료되었습니다!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context, true);
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('미션 신청에 실패했습니다: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        String errorMessage = e.toString();
+        Color backgroundColor = Colors.red;
+
+        // 중복 신청 에러인 경우 특별 처리
+        if (errorMessage.contains('이미 신청한 미션입니다')) {
+          errorMessage = '이미 신청하신 미션입니다. 신청 현황을 확인해보세요.';
+          backgroundColor = Colors.orange;
+
+          // 신청 상태 새로고침
+          await _checkApplicationStatus();
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: backgroundColor,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
       }
     } finally {
       if (mounted) {

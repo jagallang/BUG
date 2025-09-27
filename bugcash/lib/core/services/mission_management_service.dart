@@ -181,7 +181,7 @@ class MissionManagementService {
     }
   }
 
-  /// 오늘 미션 조회
+  /// 오늘 미션 조회 (앱 기반)
   Stream<List<DailyMissionModel>> watchTodayMissions(String appId) {
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
@@ -190,6 +190,24 @@ class MissionManagementService {
     return _firestore
         .collection(_dailyMissionsCollection)
         .where('appId', isEqualTo: appId)
+        .where('missionDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .where('missionDate', isLessThan: Timestamp.fromDate(endOfDay))
+        .orderBy('missionDate')
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => DailyMissionModel.fromFirestore(doc))
+            .toList());
+  }
+
+  /// 테스터 오늘 미션 조회 (테스터 기반)
+  Stream<List<DailyMissionModel>> watchTesterTodayMissions(String testerId) {
+    final today = DateTime.now();
+    final startOfDay = DateTime(today.year, today.month, today.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    return _firestore
+        .collection(_dailyMissionsCollection)
+        .where('testerId', isEqualTo: testerId)
         .where('missionDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
         .where('missionDate', isLessThan: Timestamp.fromDate(endOfDay))
         .orderBy('missionDate')
@@ -311,11 +329,23 @@ class MissionManagementService {
     }
   }
 
-  /// 정산 목록 조회
+  /// 정산 목록 조회 (앱 기반)
   Stream<List<MissionSettlementModel>> watchSettlements(String appId) {
     return _firestore
         .collection(_settlementsCollection)
         .where('appId', isEqualTo: appId)
+        .orderBy('calculatedAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => MissionSettlementModel.fromFirestore(doc))
+            .toList());
+  }
+
+  /// 테스터 정산 목록 조회 (테스터 기반)
+  Stream<List<MissionSettlementModel>> watchTesterSettlements(String testerId) {
+    return _firestore
+        .collection(_settlementsCollection)
+        .where('testerId', isEqualTo: testerId)
         .orderBy('calculatedAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs

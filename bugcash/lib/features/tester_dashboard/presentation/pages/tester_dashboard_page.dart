@@ -7,7 +7,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 // import '../widgets/expandable_mission_card.dart';
 // import '../widgets/active_test_session_card.dart';
 import '../providers/tester_dashboard_provider.dart';
-import '../../../../models/test_session_model.dart';
 import '../../../../services/test_session_service.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 // 채팅 기능 제거됨
@@ -15,6 +14,9 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/auth_wrapper.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import 'mission_detail_page.dart';
+import '../../../../core/services/mission_management_service.dart';
+import '../../../shared/widgets/daily_mission_card.dart';
+import '../../../shared/models/mission_management_model.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -874,8 +876,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   _buildActiveMissionsTab(),
                   // 완료된 미션 탭
                   _buildCompletedMissionsTab(),
-                  // 신청 현황 탭
-                  _buildApplicationStatusTab(),
+                  // 정산 탭
+                  _buildSettlementTab(),
                 ],
               ),
             ),
@@ -910,7 +912,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 16.w)),
                   Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 16.w)),
                   Tab(text: '완료', icon: Icon(Icons.check_circle, size: 16.w)),
-                  Tab(text: '신청 현황', icon: Icon(Icons.pending_actions, size: 16.w)),
+                  Tab(text: '정산', icon: Icon(Icons.monetization_on, size: 16.w)),
                 ],
               ),
             ),
@@ -972,18 +974,49 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   Widget _buildActiveMissionsTab() {
-    // 실제 테스트 세션 데이터를 사용
-    final testSessionsAsync = ref.watch(testerTestSessionsProvider(widget.testerId));
+    // 기존 MissionManagementService를 사용해서 실제 데이터 로드
+    final missionService = MissionManagementService();
 
-    return testSessionsAsync.when(
-      data: (testSessions) {
-        // 활성 상태(승인됨, 진행중)인 세션만 필터링
-        final activeSessions = testSessions.where((session) =>
-          session.status == TestSessionStatus.approved ||
-          session.status == TestSessionStatus.active
-        ).toList();
+    return StreamBuilder<List<DailyMissionModel>>(
+      stream: missionService.watchTesterTodayMissions(widget.testerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-        if (activeSessions.isEmpty) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48.w, color: Colors.red[300]),
+                SizedBox(height: 16.h),
+                Text(
+                  '데이터를 불러올 수 없습니다',
+                  style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  snapshot.error.toString(),
+                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16.h),
+                ElevatedButton(
+                  onPressed: () {
+                    // 새로고침을 위해 setState 호출
+                    setState(() {});
+                  },
+                  child: const Text('다시 시도'),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final dailyMissions = snapshot.data ?? [];
+
+        if (dailyMissions.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -991,7 +1024,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 Icon(Icons.play_circle_outline, size: 64.w, color: Colors.grey[400]),
                 SizedBox(height: 16.h),
                 Text(
-                  '진행 중인 미션이 없습니다',
+                  '진행 중인 일일 미션이 없습니다',
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
@@ -1000,7 +1033,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  '미션을 신청하고 승인을 기다리세요!',
+                  '미션을 신청하고 일일 미션을 시작하세요!',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: Colors.grey[500],
@@ -1013,40 +1046,275 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
         return ListView.builder(
           padding: EdgeInsets.all(16.w),
-          itemCount: activeSessions.length,
+          itemCount: dailyMissions.length,
           itemBuilder: (context, index) {
-            final session = activeSessions[index];
+            final mission = dailyMissions[index];
             return Padding(
               padding: EdgeInsets.only(bottom: 12.h),
-              child: _buildActiveMissionCard(
-                title: '미션 ID: ${session.missionId}',
-                progress: 0.6, // 예시 진행률
-                status: '진행 중',
-                deadline: '3일 남음',
+              child: DailyMissionCard(
+                mission: mission,
+                onTap: () {
+                  // 미션 상세 보기
+                  _showMissionDetail(mission);
+                },
+                onStart: mission.status == DailyMissionStatus.pending
+                    ? () => _startMission(mission)
+                    : null,
+                onSubmit: mission.status == DailyMissionStatus.inProgress
+                    ? () => _submitMission(mission)
+                    : null,
+                onResubmit: mission.status == DailyMissionStatus.rejected
+                    ? () => _resubmitMission(mission)
+                    : null,
               ),
             );
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    );
+  }
+
+  // 일일 미션 상호작용 함수들
+  void _showMissionDetail(DailyMissionModel mission) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(mission.missionTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.error_outline, size: 48.w, color: Colors.red[300]),
-            SizedBox(height: 16.h),
             Text(
-              '데이터를 불러올 수 없습니다',
-              style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+              '미션 설명:',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14.sp,
+              ),
             ),
             SizedBox(height: 8.h),
-            Text(
-              error.toString(),
-              style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
+            Text(mission.missionDescription),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Icon(Icons.monetization_on, color: Colors.amber, size: 20.w),
+                SizedBox(width: 8.w),
+                Text(
+                  '보상: ${mission.baseReward}원',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber[700],
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Row(
+              children: [
+                Icon(Icons.date_range, color: Colors.grey, size: 20.w),
+                SizedBox(width: 8.w),
+                Text('미션 날짜: ${_formatDate(mission.missionDate)}'),
+              ],
             ),
           ],
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startMission(DailyMissionModel mission) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('미션 시작'),
+        content: Text('${mission.missionTitle} 미션을 시작하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                // MissionManagementService를 사용해서 미션 상태를 inProgress로 변경
+                await MissionManagementService().updateMissionStatus(
+                  missionId: mission.id,
+                  status: DailyMissionStatus.inProgress,
+                );
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ 미션이 시작되었습니다!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('❌ 미션 시작 실패: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('시작'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _submitMission(DailyMissionModel mission) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('미션 제출'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${mission.missionTitle} 미션을 제출하시겠습니까?'),
+            SizedBox(height: 16.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.blue.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: const Text(
+                '📸 스크린샷과 테스트 결과를 첨부해주세요.',
+                style: TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                // MissionManagementService를 사용해서 미션 상태를 completed로 변경
+                await MissionManagementService().updateMissionStatus(
+                  missionId: mission.id,
+                  status: DailyMissionStatus.completed,
+                  note: '미션 완료 제출',
+                );
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ 미션이 제출되었습니다! 검토 대기 중입니다.'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('❌ 미션 제출 실패: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('제출'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _resubmitMission(DailyMissionModel mission) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('미션 재제출'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${mission.missionTitle} 미션을 재제출하시겠습니까?'),
+            if (mission.reviewNote != null) ...[
+              SizedBox(height: 16.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '이전 거절 사유:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red[700],
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      mission.reviewNote!,
+                      style: TextStyle(color: Colors.red[600]),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                // MissionManagementService를 사용해서 미션을 다시 completed 상태로 변경 (재제출)
+                await MissionManagementService().updateMissionStatus(
+                  missionId: mission.id,
+                  status: DailyMissionStatus.completed,
+                  note: '미션 재제출 - 수정사항 반영',
+                );
+
+                if (mounted && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ 미션이 재제출되었습니다!'),
+                      backgroundColor: Colors.blue,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('❌ 미션 재제출 실패: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('재제출'),
+          ),
+        ],
       ),
     );
   }
@@ -1152,105 +1420,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  Widget _buildActiveMissionCard({
-    required String title,
-    required double progress,
-    required String status,
-    required String deadline,
-  }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => Scaffold(
-                appBar: AppBar(title: Text(title)),
-                body: const Center(
-                  child: Text('미션 상세 페이지 준비 중'),
-                ),
-              ),
-            ),
-          );
-        },
-        borderRadius: BorderRadius.circular(12.r),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.shade100,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Text(
-                      status,
-                      style: TextStyle(
-                        color: Colors.orange.shade700,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 12.h),
-              Row(
-                children: [
-                  Expanded(
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      backgroundColor: Colors.grey[300],
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Text(
-                    '${(progress * 100).toInt()}%',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8.h),
-              Row(
-                children: [
-                  Icon(Icons.access_time, size: 16.w, color: Colors.grey[600]),
-                  SizedBox(width: 4.w),
-                  Text(
-                    deadline,
-                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildCompletedMissionsTab() {
     final dashboardState = ref.watch(testerDashboardProvider);
@@ -1514,20 +1683,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  String _formatTimeAgo(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays}일 전';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}시간 전';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}분 전';
-    } else {
-      return '방금 전';
-    }
-  }
 
   String _formatDate(DateTime date) {
     final now = DateTime.now();
@@ -1544,30 +1699,63 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
   }
 
-  Widget _buildApplicationStatusTab() {
-    // 실제 테스트 세션 데이터에서 pending, rejected 상태만 필터링
-    final testSessionsAsync = ref.watch(testerTestSessionsProvider(widget.testerId));
+  Widget _buildSettlementTab() {
+    final missionService = MissionManagementService();
 
-    return testSessionsAsync.when(
-      data: (testSessions) {
-        final pendingSessions = testSessions.where((session) =>
-          session.status == TestSessionStatus.pending ||
-          session.status == TestSessionStatus.rejected
-        ).toList();
+    return StreamBuilder<List<MissionSettlementModel>>(
+      stream: missionService.watchTesterSettlements(widget.testerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-        if (pendingSessions.isEmpty) {
+        if (snapshot.hasError) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.pending_actions_outlined,
+                  Icons.error_outline,
+                  size: 64.w,
+                  color: Colors.red[400],
+                ),
+                SizedBox(height: 16.h),
+                Text(
+                  '정산 정보를 불러올 수 없습니다',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red[600],
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  '오류: ${snapshot.error}',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.red[500],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final settlements = snapshot.data ?? [];
+
+        if (settlements.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.monetization_on,
                   size: 64.w,
                   color: Colors.grey[400],
                 ),
                 SizedBox(height: 16.h),
                 Text(
-                  '신청한 미션이 없습니다',
+                  '정산 가능한 미션이 없습니다',
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
@@ -1576,7 +1764,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  '관심있는 미션에 신청해보세요!',
+                  '14일 미션을 완료하면 정산이 가능합니다!',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: Colors.grey[500],
@@ -1589,320 +1777,115 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
         return ListView.builder(
           padding: EdgeInsets.all(16.w),
-          itemCount: pendingSessions.length,
+          itemCount: settlements.length,
           itemBuilder: (context, index) {
-            final session = pendingSessions[index];
-            return Padding(
-              padding: EdgeInsets.only(bottom: 12.h),
-              child: _buildTestSessionStatusCard(session),
+            final settlement = settlements[index];
+            return Card(
+              margin: EdgeInsets.only(bottom: 12.h),
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '정산 #${settlement.id.substring(0, 8)}',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: settlement.isPaid ? Colors.green : Colors.orange,
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Text(
+                            settlement.isPaid ? '지급완료' : '지급대기',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+                    Text(
+                      '완료 미션: ${settlement.completedMissions}/${settlement.totalDays}일',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '기본 보상: ${settlement.totalBaseReward.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        if (settlement.bonusReward > 0)
+                          Text(
+                            '보너스: ${settlement.bonusReward.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.blue[600],
+                            ),
+                          ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+                    const Divider(),
+                    SizedBox(height: 8.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '총 지급액',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '${settlement.finalAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (settlement.paidAt != null) ...[
+                      SizedBox(height: 8.h),
+                      Text(
+                        '지급일: ${settlement.paidAt!.year}.${settlement.paidAt!.month.toString().padLeft(2, '0')}.${settlement.paidAt!.day.toString().padLeft(2, '0')}',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             );
           },
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 48.w, color: Colors.red[300]),
-            SizedBox(height: 16.h),
-            Text(
-              '데이터를 불러올 수 없습니다',
-              style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildTestSessionStatusCard(TestSession session) {
-    Color statusColor = Colors.orange;
-    IconData statusIcon = Icons.schedule;
-    String statusText = '대기 중';
-
-    switch (session.status) {
-      case TestSessionStatus.pending:
-        statusColor = Colors.orange;
-        statusIcon = Icons.schedule;
-        statusText = '승인 대기';
-        break;
-      case TestSessionStatus.approved:
-        statusColor = Colors.green;
-        statusIcon = Icons.check_circle;
-        statusText = '승인됨';
-        break;
-      case TestSessionStatus.rejected:
-        statusColor = Colors.red;
-        statusIcon = Icons.cancel;
-        statusText = '거부됨';
-        break;
-      case TestSessionStatus.active:
-        statusColor = Colors.blue;
-        statusIcon = Icons.play_circle;
-        statusText = '진행 중';
-        break;
-      default:
-        break;
-    }
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(statusIcon, size: 14.w, color: statusColor),
-                      SizedBox(width: 4.w),
-                      Text(
-                        statusText,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: statusColor,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  _formatDate(session.createdAt),
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              '미션: ${session.appId}',
-              style: TextStyle(
-                fontSize: 14.sp,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: 4.h),
-            Text(
-              '미션 ID: ${session.missionId}',
-              style: TextStyle(
-                fontSize: 12.sp,
-                color: Colors.grey[600],
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Row(
-              children: [
-                Icon(Icons.star, size: 16.w, color: Colors.orange),
-                SizedBox(width: 4.w),
-                Text(
-                  '${session.totalRewardPoints} 포인트',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.orange,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-            if (session.status == TestSessionStatus.rejected) ...[
-              SizedBox(height: 12.h),
-              Container(
-                padding: EdgeInsets.all(8.w),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade50,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, size: 16.w, color: Colors.red),
-                    SizedBox(width: 8.w),
-                    Expanded(
-                      child: Text(
-                        '거부 사유를 확인하고 다시 신청해보세요.',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.red.shade700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildApplicationStatusCard(MissionApplicationStatus application) {
-    Color statusColor = Colors.orange;
-    IconData statusIcon = Icons.schedule;
-    String statusText = '대기 중';
-
-    switch (application.status) {
-      case ApplicationStatus.pending:
-        statusColor = Colors.orange;
-        statusIcon = Icons.schedule;
-        statusText = '검토 대기';
-        break;
-      case ApplicationStatus.reviewing:
-        statusColor = Colors.blue;
-        statusIcon = Icons.visibility;
-        statusText = '검토 중';
-        break;
-      case ApplicationStatus.accepted:
-        statusColor = Colors.green;
-        statusIcon = Icons.check_circle;
-        statusText = '승인됨';
-        break;
-      case ApplicationStatus.rejected:
-        statusColor = Colors.red;
-        statusIcon = Icons.cancel;
-        statusText = '거절됨';
-        break;
-      case ApplicationStatus.cancelled:
-        statusColor = Colors.grey;
-        statusIcon = Icons.block;
-        statusText = '취소됨';
-        break;
-    }
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(statusIcon, color: statusColor, size: 16.w),
-                      SizedBox(width: 4.w),
-                      Text(
-                        statusText,
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12.sp,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  _formatTimeAgo(application.appliedAt),
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12.sp,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              'Mission ID: ${application.missionId}',
-              style: TextStyle(
-                fontSize: 16.sp,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            SizedBox(height: 8.h),
-            if (application.message.isNotEmpty)
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: Colors.grey[50],
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.grey[200]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '신청 메시지:',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      application.message,
-                      style: TextStyle(fontSize: 14.sp),
-                    ),
-                  ],
-                ),
-              ),
-            if (application.responseMessage != null && application.responseMessage!.isNotEmpty) ...[
-              SizedBox(height: 8.h),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.2)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '공급자 응답:',
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: statusColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      application.responseMessage!,
-                      style: TextStyle(fontSize: 14.sp),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 enum SettlementStatus {
