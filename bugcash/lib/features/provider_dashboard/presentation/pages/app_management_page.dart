@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/config/feature_flags.dart';
 import 'app_detail_page.dart';
 import 'tester_management_page.dart';
+import 'mission_management_page.dart';
 
 // Provider for managing apps (using optimized projects collection)
 final providerAppsProvider = StreamProvider.family<List<ProviderAppModel>, String>((ref, providerId) {
@@ -647,7 +649,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                       ),
                     ),
                     child: Text(
-                      '상세보기',
+                      '게시정보',
                       style: TextStyle(
                         color: AppColors.primary,
                         fontSize: 14.sp,
@@ -661,24 +663,45 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                 child: SizedBox(
                   height: 36.h,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Navigate to tester management page
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => TesterManagementPage(app: app),
-                        ),
-                      );
-                    },
+                    onPressed: _canUseMissionManagement(app) ? () {
+                      if (FeatureFlagUtils.shouldUseNewMissionManagement(
+                        userId: app.providerId,
+                        isAdmin: false,
+                      )) {
+                        // 새로운 미션관리 페이지로 이동
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MissionManagementPage(app: app),
+                          ),
+                        );
+                        FeatureFlagUtils.logFeatureUsage('new_mission_management', app.providerId);
+                      } else {
+                        // 기존 시스템 사용
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TesterManagementPage(app: app),
+                          ),
+                        );
+                      }
+                    } : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
+                      backgroundColor: _canUseMissionManagement(app)
+                        ? AppColors.primary
+                        : Colors.grey[400],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                     ),
                     child: Text(
-                      '관리',
-                      style: TextStyle(fontSize: 14.sp),
+                      '미션관리',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: _canUseMissionManagement(app)
+                          ? Colors.white
+                          : Colors.grey[600],
+                      ),
                     ),
                   ),
                 ),
@@ -699,12 +722,12 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     switch (status) {
       case 'draft':
         color = Colors.blue[600]!;
-        text = '검수 대기';
+        text = '접수 대기';
         icon = Icons.hourglass_empty;
         break;
       case 'pending':
         color = Colors.orange[600]!;
-        text = '승인 검토 중';
+        text = '검수 중';
         icon = Icons.schedule;
         break;
       case 'open':
@@ -714,41 +737,46 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         break;
       case 'closed':
         color = Colors.grey[600]!;
-        text = '테스트 완료';
+        text = '완료';
         icon = Icons.archive;
         break;
       case 'rejected':
         color = Colors.red[600]!;
-        text = '승인 거부';
+        text = '거부';
         icon = Icons.cancel;
         break;
       default:
         color = Colors.grey;
-        text = '알 수 없음';
+        text = '확인중';
         icon = Icons.help;
     }
 
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12.r),
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+          width: 1.5,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            size: 14.sp,
+            size: 18.sp,
             color: color,
           ),
-          SizedBox(width: 4.w),
+          SizedBox(width: 6.w),
           Text(
             text,
             style: TextStyle(
-              fontSize: 12.sp,
-              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w700,
               color: color,
+              letterSpacing: 0.5,
             ),
           ),
         ],
@@ -1602,5 +1630,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         ],
       ),
     );
+  }
+
+  /// 미션관리 기능 사용 가능 여부 확인
+  /// 앱 상태가 'open'(모집중)일 때만 활성화
+  bool _canUseMissionManagement(ProviderAppModel app) {
+    return app.status == 'open';
   }
 }
