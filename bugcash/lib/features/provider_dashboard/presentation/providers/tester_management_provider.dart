@@ -533,23 +533,26 @@ Future<List<Map<String, dynamic>>> _getRecentActivities(String appId) async {
       FirebaseFirestore.instance
           .collection('tester_applications')
           .where('appId', isEqualTo: appId)
-          .orderBy('appliedAt', descending: true)
-          .limit(3)
           .get(),
       // 최근 미션 완료
       FirebaseFirestore.instance
           .collection('mission_assignments')
           .where('appId', isEqualTo: appId)
           .where('status', isEqualTo: 'completed')
-          .orderBy('completedAt', descending: true)
-          .limit(3)
           .get(),
     ]);
 
     final activities = <Map<String, dynamic>>[];
 
-    // 테스터 신청 활동
-    for (final doc in futures[0].docs) {
+    // 테스터 신청 활동 (클라이언트 사이드 정렬 후 최대 3개)
+    final testerApplications = futures[0].docs.toList();
+    testerApplications.sort((a, b) {
+      final aTime = (a.data()['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+      final bTime = (b.data()['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+      return bTime.compareTo(aTime);
+    });
+
+    for (final doc in testerApplications.take(3)) {
       final data = doc.data();
       activities.add({
         'type': 'tester_application',
@@ -558,8 +561,15 @@ Future<List<Map<String, dynamic>>> _getRecentActivities(String appId) async {
       });
     }
 
-    // 미션 완료 활동
-    for (final doc in futures[1].docs) {
+    // 미션 완료 활동 (클라이언트 사이드 정렬 후 최대 3개)
+    final missionCompletions = futures[1].docs.toList();
+    missionCompletions.sort((a, b) {
+      final aTime = (a.data()['completedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+      final bTime = (b.data()['completedAt'] as Timestamp?)?.toDate() ?? DateTime.now();
+      return bTime.compareTo(aTime);
+    });
+
+    for (final doc in missionCompletions.take(3)) {
       final data = doc.data();
       activities.add({
         'type': 'mission_completed',

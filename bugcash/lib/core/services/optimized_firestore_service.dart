@@ -195,16 +195,26 @@ class OptimizedFirestoreService {
       query = query.where('status', isEqualTo: status);
     }
 
-    query = query.orderBy('appliedAt', descending: true);
-
     if (limit != null) {
       query = query.limit(limit);
     }
 
     return query.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) {
+      final results = snapshot.docs.map((doc) {
         return {'id': doc.id, ...doc.data()};
       }).toList();
+
+      // 클라이언트 사이드 정렬 (appliedAt 기준 내림차순)
+      results.sort((a, b) {
+        final aTime = a['appliedAt'] as Timestamp?;
+        final bTime = b['appliedAt'] as Timestamp?;
+        if (aTime == null && bTime == null) return 0;
+        if (aTime == null) return 1;
+        if (bTime == null) return -1;
+        return bTime.compareTo(aTime);
+      });
+
+      return results;
     });
   }
 

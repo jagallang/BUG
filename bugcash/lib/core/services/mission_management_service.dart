@@ -122,11 +122,17 @@ class MissionManagementService {
     return _firestore
         .collection(_testerApplicationsCollection)
         .where('appId', isEqualTo: appId)
-        .orderBy('appliedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => TesterApplicationModel.fromFirestore(doc))
-            .toList());
+        .map((snapshot) {
+          final results = snapshot.docs
+              .map((doc) => TesterApplicationModel.fromFirestore(doc))
+              .toList();
+
+          // 클라이언트 사이드 정렬 (appliedAt 기준 내림차순)
+          results.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
+
+          return results;
+        });
   }
 
   /// 테스터 신청 승인/거부

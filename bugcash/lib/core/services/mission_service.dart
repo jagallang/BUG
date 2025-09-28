@@ -438,15 +438,19 @@ class MissionService {
   static Future<List<MissionApplication>> getMissionApplications(String missionId) async {
     try {
       final query = FirestoreService.applications
-          .where('missionId', isEqualTo: missionId)
-          .orderBy('appliedAt', descending: true);
+          .where('missionId', isEqualTo: missionId);
 
       final snapshot = await query.get();
 
-      return snapshot.docs.map((doc) {
+      final results = snapshot.docs.map((doc) {
         final data = {'id': doc.id, ...doc.data()};
         return MissionApplication.fromFirestore(data);
       }).toList();
+
+      // 클라이언트 사이드 정렬 (appliedAt 기준 내림차순)
+      results.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
+
+      return results;
     } catch (e) {
       AppLogger.error('Error getting mission applications', e.toString());
       return [];
@@ -457,15 +461,19 @@ class MissionService {
   static Future<List<MissionApplication>> getTesterApplications(String testerId) async {
     try {
       final query = FirestoreService.applications
-          .where('testerId', isEqualTo: testerId)
-          .orderBy('appliedAt', descending: true);
+          .where('testerId', isEqualTo: testerId);
 
       final snapshot = await query.get();
 
-      return snapshot.docs.map((doc) {
+      final results = snapshot.docs.map((doc) {
         final data = {'id': doc.id, ...doc.data()};
         return MissionApplication.fromFirestore(data);
       }).toList();
+
+      // 클라이언트 사이드 정렬 (appliedAt 기준 내림차순)
+      results.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
+
+      return results;
     } catch (e) {
       AppLogger.error('Error getting tester applications', e.toString());
       return [];
@@ -778,12 +786,11 @@ class MissionService {
     try {
       // tester_applications에서 해당 미션의 신청자들 조회
       final query = FirestoreService.applications
-          .where('missionId', isEqualTo: missionId)
-          .orderBy('appliedAt', descending: true);
+          .where('missionId', isEqualTo: missionId);
 
       final snapshot = await query.get();
 
-      return snapshot.docs.map((doc) {
+      final results = snapshot.docs.map((doc) {
         final data = doc.data();
         return {
           'id': doc.id,
@@ -791,6 +798,18 @@ class MissionService {
           ...data,
         };
       }).toList();
+
+      // 클라이언트 사이드 정렬 (appliedAt 기준 내림차순)
+      results.sort((a, b) {
+        final aTime = a['appliedAt'] as DateTime?;
+        final bTime = b['appliedAt'] as DateTime?;
+        if (aTime == null && bTime == null) return 0;
+        if (aTime == null) return 1;
+        if (bTime == null) return -1;
+        return bTime.compareTo(aTime);
+      });
+
+      return results;
     } catch (e) {
       AppLogger.error('Error getting enhanced mission applications', e.toString());
       return [];

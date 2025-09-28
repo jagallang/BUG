@@ -9,92 +9,107 @@ import '../../../core/services/mission_workflow_service.dart';
 
 // 1. 전체 미션 StreamProvider (실시간 감시)
 final unifiedMissionsStreamProvider = StreamProvider<List<UnifiedMissionModel>>((ref) {
-  debugPrint('🌟 UNIFIED_PROVIDER: 전체 미션 스트림 시작');
+  debugPrint('🌟 UNIFIED_PROVIDER: 전체 미션 스트림 시작 - mission_workflows 컬렉션 사용');
 
   return FirebaseFirestore.instance
-      .collection('test_sessions')
-      .orderBy('appliedAt', descending: true)
+      .collection('mission_workflows')
       .snapshots()
       .map((snapshot) {
-        debugPrint('🌟 UNIFIED_PROVIDER: ${snapshot.docs.length}개 미션 데이터 수신');
+        debugPrint('🌟 UNIFIED_PROVIDER: ${snapshot.docs.length}개 미션 워크플로우 데이터 수신');
 
-        return snapshot.docs.map((doc) {
+        final results = snapshot.docs.map((doc) {
           try {
             return UnifiedMissionModel.fromFirestore(doc);
           } catch (e) {
             debugPrint('🚨 UNIFIED_PROVIDER: 데이터 파싱 오류 - ${doc.id}: $e');
-            // 기본값으로 fallback
+            // 기본값으로 fallback (mission_workflows 필드명에 맞게 수정)
+            final data = doc.data();
             return UnifiedMissionModel(
               id: doc.id,
-              appId: doc.data()['appId'] ?? '',
-              appName: doc.data()['appName'] ?? '알 수 없는 앱',
-              testerId: doc.data()['testerId'] ?? '',
-              testerName: doc.data()['testerName'] ?? '',
-              testerEmail: doc.data()['testerEmail'] ?? '',
-              providerId: doc.data()['providerId'] ?? '',
-              status: doc.data()['status'] ?? 'pending',
-              experience: doc.data()['experience'] ?? '',
-              motivation: doc.data()['motivation'] ?? '',
-              appliedAt: DateTime.now(),
+              appId: data['appId'] ?? '',
+              appName: data['appName'] ?? '알 수 없는 앱',
+              testerId: data['testerId'] ?? '',
+              testerName: data['testerName'] ?? '',
+              testerEmail: data['testerEmail'] ?? '',
+              providerId: data['providerId'] ?? '',
+              status: data['currentState'] ?? data['status'] ?? 'pending', // mission_workflows는 currentState 사용
+              experience: data['experience'] ?? '',
+              motivation: data['motivation'] ?? '',
+              appliedAt: data['appliedAt']?.toDate() ?? DateTime.now(),
             );
           }
         }).toList();
+
+        // 클라이언트 사이드 정렬 (appliedAt 기준 내림차순)
+        results.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
+
+        return results;
       });
 });
 
 // 2. 공급자별 미션 필터링 Provider
 final providerMissionsProvider = StreamProvider.family<List<UnifiedMissionModel>, String>((ref, providerId) {
-  debugPrint('🏢 UNIFIED_PROVIDER: 공급자($providerId) 미션 필터링');
+  debugPrint('🏢 UNIFIED_PROVIDER: 공급자($providerId) 미션 필터링 - mission_workflows 컬렉션 사용');
 
   return FirebaseFirestore.instance
-      .collection('test_sessions')
+      .collection('mission_workflows')
       .where('providerId', isEqualTo: providerId)
-      .orderBy('appliedAt', descending: true)
       .snapshots()
       .map((snapshot) {
-        debugPrint('🏢 UNIFIED_PROVIDER: 공급자 $providerId - ${snapshot.docs.length}개 미션 발견');
+        debugPrint('🏢 UNIFIED_PROVIDER: 공급자 $providerId - ${snapshot.docs.length}개 미션 워크플로우 발견');
 
-        return snapshot.docs.map((doc) => UnifiedMissionModel.fromFirestore(doc)).toList();
+        final results = snapshot.docs.map((doc) => UnifiedMissionModel.fromFirestore(doc)).toList();
+
+        // 클라이언트 사이드 정렬 (appliedAt 기준 내림차순)
+        results.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
+
+        return results;
       });
 });
 
 // 3. 앱별 테스터 신청 Provider (최적화된 검색)
 final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>, String>((ref, appId) {
   if (kDebugMode) {
-    debugPrint('📱 UNIFIED_PROVIDER: 앱($appId) 테스터 신청 조회');
+    debugPrint('📱 UNIFIED_PROVIDER: 앱($appId) 테스터 신청 조회 - mission_workflows 컬렉션 사용');
   }
 
   // 정규화된 appId로 직접 검색 (가장 효율적)
   final normalizedAppId = appId.replaceAll('provider_app_', '');
 
   return FirebaseFirestore.instance
-      .collection('tester_applications')
+      .collection('mission_workflows')
       .where('appId', isEqualTo: normalizedAppId)
       .snapshots()
       .map((snapshot) {
         if (kDebugMode) {
-          debugPrint('📱 앱 $normalizedAppId - ${snapshot.docs.length}개 테스터 신청 발견');
+          debugPrint('📱 앱 $normalizedAppId - ${snapshot.docs.length}개 미션 워크플로우 발견');
         }
 
         return snapshot.docs
-            .map((doc) => UnifiedMissionModel.fromTesterApplications(doc))
+            .map((doc) => UnifiedMissionModel.fromFirestore(doc))
             .toList();
       });
 });
 
 // 4. 테스터별 미션 Provider
 final testerMissionsProvider = StreamProvider.family<List<UnifiedMissionModel>, String>((ref, testerId) {
-  debugPrint('👤 UNIFIED_PROVIDER: 테스터($testerId) 미션 조회');
+  debugPrint('👤 UNIFIED_PROVIDER: 테스터($testerId) 미션 조회 - mission_workflows 컬렉션 사용');
 
   return FirebaseFirestore.instance
-      .collection('test_sessions')
+      .collection('mission_workflows')
       .where('testerId', isEqualTo: testerId)
-      .orderBy('appliedAt', descending: true)
+      .limit(50)
       .snapshots()
       .map((snapshot) {
-        debugPrint('👤 UNIFIED_PROVIDER: 테스터 $testerId - ${snapshot.docs.length}개 미션');
+        debugPrint('👤 UNIFIED_PROVIDER: 테스터 $testerId - ${snapshot.docs.length}개 미션 워크플로우');
 
-        return snapshot.docs.map((doc) => UnifiedMissionModel.fromFirestore(doc)).toList();
+        // 클라이언트에서 appliedAt 기준으로 정렬 (최신순)
+        final missions = snapshot.docs
+            .map((doc) => UnifiedMissionModel.fromFirestore(doc))
+            .toList()
+          ..sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
+
+        return missions;
       });
 });
 
@@ -212,22 +227,8 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
 
       debugPrint('✅ UNIFIED_PROVIDER: 워크플로우 생성 성공 - ID: $workflowId');
 
-      // 기존 시스템과의 호환성을 위해 tester_applications에도 저장
-      final mission = UnifiedMissionModel(
-        id: workflowId, // 워크플로우 ID 사용
-        appId: appId,
-        appName: appName,
-        testerId: testerId,
-        testerName: testerName,
-        testerEmail: testerEmail,
-        providerId: providerId,
-        status: 'pending',
-        experience: experience,
-        motivation: motivation,
-        appliedAt: DateTime.now(),
-      );
-
-      await _firestore.collection('tester_applications').doc(workflowId).set(mission.toFirestore());
+      // 이미 MissionWorkflowService에서 mission_workflows에 저장했으므로 추가 저장 불필요
+      debugPrint('✅ UNIFIED_PROVIDER: 워크플로우 ID $workflowId로 mission_workflows에 저장 완료');
 
       debugPrint('✅ UNIFIED_PROVIDER: 미션 신청 완료 - $appName (워크플로우: $workflowId)');
       state = state.copyWith(isLoading: false);
@@ -250,8 +251,9 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
       debugPrint('🔄 UNIFIED_PROVIDER: 테스터 상태 업데이트 - $missionId -> $newStatus');
 
       final updateData = {
-        'status': newStatus,
-        'processedAt': FieldValue.serverTimestamp(),
+        'currentState': newStatus, // mission_workflows는 currentState 필드 사용
+        'stateUpdatedAt': FieldValue.serverTimestamp(),
+        'stateUpdatedBy': 'provider', // 누가 업데이트했는지 기록
       };
 
       // 승인시 시작 시간 기록
@@ -259,7 +261,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         updateData['startedAt'] = FieldValue.serverTimestamp();
       }
 
-      await _firestore.collection('tester_applications').doc(missionId).update(updateData);
+      await _firestore.collection('mission_workflows').doc(missionId).update(updateData);
 
       debugPrint('✅ UNIFIED_PROVIDER: 상태 업데이트 성공 - $missionId');
       state = state.copyWith(isLoading: false);
@@ -290,15 +292,15 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      // 완료 체크
+      // 완료 체크 (mission_workflows는 currentState 필드 사용)
       if (progressPercentage >= 100.0) {
-        updateData['status'] = 'completed';
+        updateData['currentState'] = 'completed';
         updateData['completedAt'] = FieldValue.serverTimestamp();
       } else if (currentDay > 0) {
-        updateData['status'] = 'in_progress';
+        updateData['currentState'] = 'in_progress';
       }
 
-      await _firestore.collection('tester_applications').doc(missionId).update(updateData);
+      await _firestore.collection('mission_workflows').doc(missionId).update(updateData);
 
       debugPrint('✅ UNIFIED_PROVIDER: 진행률 업데이트 성공');
       state = state.copyWith(isLoading: false);
@@ -317,7 +319,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
     try {
       debugPrint('🗑️ UNIFIED_PROVIDER: 미션 삭제 - $missionId');
 
-      await _firestore.collection('tester_applications').doc(missionId).delete();
+      await _firestore.collection('mission_workflows').doc(missionId).delete();
 
       debugPrint('✅ UNIFIED_PROVIDER: 미션 삭제 성공');
       state = state.copyWith(isLoading: false);
@@ -336,7 +338,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
     try {
       debugPrint('🧹 UNIFIED_PROVIDER: 잘못된 미션 데이터 정리 시작');
 
-      final querySnapshot = await _firestore.collection('tester_applications').get();
+      final querySnapshot = await _firestore.collection('mission_workflows').get();
       int deletedCount = 0;
 
       for (var doc in querySnapshot.docs) {
