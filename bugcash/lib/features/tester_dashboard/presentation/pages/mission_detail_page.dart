@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/mission_service.dart';
 import '../../../../core/utils/logger.dart';
@@ -882,7 +883,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               Icon(Icons.attach_money, color: Colors.green[600], size: 20.w),
               SizedBox(width: 8.w),
               Text(
-                '💰 단가정보',
+                '💰 보상정보',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
@@ -902,14 +903,14 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '테스트 단가: ',
+                  '총 보상: ',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: Colors.grey[700],
                   ),
                 ),
                 Text(
-                  '${metadata['price'] ?? 0}원',
+                  '${NumberFormat('#,###').format(missionReward)}원',
                   style: TextStyle(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
