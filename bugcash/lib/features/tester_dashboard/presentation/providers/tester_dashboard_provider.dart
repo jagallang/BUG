@@ -609,9 +609,15 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           final platform = data['platform'] ?? 'android';
           final category = data['category'] ?? 'general';
 
-          // 리워드 계산 (PRD 기준)
-          final baseReward = _getIntValue(data['rewards']?['baseReward']) ?? 5000;
-          final bonusReward = _getIntValue(data['rewards']?['bonusReward']) ?? 0;
+          // 리워드 계산 (PRD 기준) - metadata 우선, rewards 폴백
+          final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
+          final rewards = data['rewards'] as Map<String, dynamic>? ?? {};
+
+          final baseReward = _getIntValue(metadata['baseReward']) ??
+                           _getIntValue(rewards['baseReward']) ??
+                           _getIntValue(metadata['price']) ?? 5000;
+          final bonusReward = _getIntValue(metadata['bonusReward']) ??
+                            _getIntValue(rewards['bonusReward']) ?? 0;
           final totalReward = baseReward + bonusReward;
 
           // 테스터 제한 (PRD 기준)

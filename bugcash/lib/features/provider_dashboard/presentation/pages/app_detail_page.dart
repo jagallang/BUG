@@ -279,6 +279,15 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           // 최대 테스터 수 (totalTesters와 동기화)
           'maxTesters': participantCount,
         },
+
+        // 테스터/관리자 모드와의 호환성을 위한 rewards 객체 (앱 공급자 입력이 소스)
+        'rewards': {
+          'baseReward': baseReward,
+          'bonusReward': bonusReward,
+          'dailyMissionPoints': dailyMissionPoints,
+          'finalCompletionPoints': finalCompletionPoints,
+          'bonusPoints': bonusPoints,
+        },
       };
 
       // 문서 존재 여부 확인 후 업데이트

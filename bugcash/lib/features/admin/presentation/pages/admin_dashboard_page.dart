@@ -557,8 +557,14 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     final createdAt = (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
     final description = data['description'] ?? '';
     final maxTesters = data['maxTesters'] ?? 0;
+    // 보상 정보 읽기 - metadata 우선, rewards 폴백
+    final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
     final rewards = data['rewards'] as Map<String, dynamic>? ?? {};
-    final baseReward = rewards['baseReward'] ?? 0;
+    final baseReward = metadata['baseReward'] ??
+                      rewards['baseReward'] ??
+                      metadata['price'] ?? 0;
+    final bonusReward = metadata['bonusReward'] ??
+                       rewards['bonusReward'] ?? 0;
 
     Color statusColor;
     IconData statusIcon;
@@ -1301,6 +1307,16 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     }
   }
 
+  // 통합된 보상 정보 추출 헬퍼 (metadata 우선, rewards 폴백)
+  int _getBaseReward(Map<String, dynamic> data) {
+    final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
+    final rewards = data['rewards'] as Map<String, dynamic>? ?? {};
+
+    return metadata['baseReward'] ??
+           rewards['baseReward'] ??
+           metadata['price'] ?? 0;
+  }
+
   void _approveProject(String projectId) async {
     try {
       // Try Cloud Functions first, fallback to direct Firestore update if needed
@@ -1452,7 +1468,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               SizedBox(height: 8.h),
               Text('최대 테스터: ${data['maxTesters'] ?? 0}명'),
               SizedBox(height: 8.h),
-              Text('기본 리워드: ₩${NumberFormat('#,###').format(data['rewards']?['baseReward'] ?? 0)}'),
+              Text('기본 리워드: ₩${NumberFormat('#,###').format(_getBaseReward(data))}'),
             ],
           ),
         ),
