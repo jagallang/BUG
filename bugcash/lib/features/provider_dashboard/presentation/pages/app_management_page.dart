@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/config/feature_flags.dart';
@@ -1855,7 +1856,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     return SizedBox(
       height: 36.h,
       child: OutlinedButton(
-        onPressed: () => _deleteApp(app),
+        onPressed: () => _showPasswordConfirmationDialog(app),
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: Colors.red),
           shape: RoundedRectangleBorder(
@@ -1967,5 +1968,217 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         ),
       ),
     );
+  }
+
+  // === Password Re-authentication Methods ===
+
+  /// 비밀번호 재인증 다이얼로그 표시
+  Future<void> _showPasswordConfirmationDialog(ProviderAppModel app) async {
+    final passwordController = TextEditingController();
+    bool isLoading = false;
+    bool showPassword = false;
+
+    await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.security, color: Colors.red, size: 24.sp),
+                  SizedBox(width: 8.w),
+                  Text(
+                    '보안 인증',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 400.w,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '앱을 삭제하려면 현재 계정의 비밀번호를 입력하세요.',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    Container(
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(color: Colors.red[200]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning, color: Colors.red, size: 20.sp),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: Text(
+                              '앱 "${app.appName}"이(가) 영구적으로 삭제됩니다.',
+                              style: TextStyle(
+                                fontSize: 13.sp,
+                                color: Colors.red[800],
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                    Text(
+                      '비밀번호',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    TextFormField(
+                      controller: passwordController,
+                      obscureText: !showPassword,
+                      autofocus: true,
+                      decoration: InputDecoration(
+                        hintText: '현재 계정 비밀번호를 입력하세요',
+                        hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: BorderSide(color: Colors.grey[300]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r),
+                          borderSide: const BorderSide(color: AppColors.primary),
+                        ),
+                        prefixIcon: Icon(Icons.lock, color: Colors.grey[600], size: 20.sp),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            showPassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.grey[600],
+                            size: 20.sp,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              showPassword = !showPassword;
+                            });
+                          },
+                        ),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
+                      ),
+                      onFieldSubmitted: (_) {
+                        if (passwordController.text.isNotEmpty && !isLoading) {
+                          _verifyPasswordAndDelete(dialogContext, app, passwordController.text, setState);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () {
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: Text(
+                    '취소',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading || passwordController.text.isEmpty ? null : () {
+                    _verifyPasswordAndDelete(dialogContext, app, passwordController.text, setState);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                  child: isLoading
+                      ? SizedBox(
+                          width: 16.w,
+                          height: 16.h,
+                          child: const CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : Text(
+                          '삭제',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// 비밀번호 검증 및 앱 삭제 실행
+  Future<void> _verifyPasswordAndDelete(
+    BuildContext dialogContext,
+    ProviderAppModel app,
+    String password,
+    StateSetter setState,
+  ) async {
+    try {
+      // 현재 로그인된 사용자 정보 가져오기
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null || currentUser.email == null) {
+        throw Exception('로그인된 사용자를 찾을 수 없습니다');
+      }
+
+      // Firebase 재인증 수행
+      final credential = EmailAuthProvider.credential(
+        email: currentUser.email!,
+        password: password,
+      );
+
+      await currentUser.reauthenticateWithCredential(credential);
+
+      // 재인증 성공시 다이얼로그 닫기
+      if (Navigator.of(dialogContext).canPop()) {
+        Navigator.of(dialogContext).pop();
+      }
+
+      // 앱 삭제 실행
+      await _deleteApp(app);
+
+    } catch (e) {
+      // 재인증 실패시 에러 메시지 표시
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '비밀번호가 올바르지 않습니다. 다시 확인해주세요.',
+              style: TextStyle(fontSize: 14.sp),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 }
