@@ -117,15 +117,16 @@ class MissionManagementService {
     }
   }
 
-  /// 테스터 신청 목록 조회
+  /// 테스터 신청 목록 조회 (mission_workflows 컬렉션에서 application_submitted 상태 조회)
   Stream<List<TesterApplicationModel>> watchTesterApplications(String appId) {
     return _firestore
-        .collection(_testerApplicationsCollection)
+        .collection(_dailyMissionsCollection) // mission_workflows 컬렉션 사용
         .where('appId', isEqualTo: appId)
+        .where('currentState', isEqualTo: 'application_submitted') // 신청 상태만 조회
         .snapshots()
         .map((snapshot) {
           final results = snapshot.docs
-              .map((doc) => TesterApplicationModel.fromFirestore(doc))
+              .map((doc) => _convertMissionWorkflowToTesterApplication(doc.data(), doc.id))
               .toList();
 
           // 클라이언트 사이드 정렬 (appliedAt 기준 내림차순)
@@ -135,20 +136,52 @@ class MissionManagementService {
         });
   }
 
-  /// 테스터 신청 승인/거부
+  /// MissionWorkflow 데이터를 TesterApplicationModel로 변환
+  TesterApplicationModel _convertMissionWorkflowToTesterApplication(Map<String, dynamic> data, String docId) {
+    return TesterApplicationModel(
+      id: docId,
+      appId: data['appId'] ?? '',
+      testerId: data['testerId'] ?? '',
+      testerName: data['testerName'] ?? data['testerDisplayName'] ?? 'Unknown Tester',
+      testerEmail: data['testerEmail'] ?? '',
+      status: TesterApplicationStatus.pending, // application_submitted → pending 매핑
+      appliedAt: (data['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      testerProfile: {
+        'photoURL': data['testerPhotoURL'],
+        'experience': data['testerExperience'] ?? 'Unknown',
+      },
+    );
+  }
+
+  /// 테스터 신청 승인/거부 (mission_workflows 컬렉션의 currentState 업데이트)
   Future<void> reviewTesterApplication({
     required String applicationId,
     required TesterApplicationStatus status,
     String? reviewNote,
   }) async {
     try {
-      await _firestore.collection(_testerApplicationsCollection).doc(applicationId).update({
-        'status': status.name,
-        'reviewedAt': FieldValue.serverTimestamp(),
+      // TesterApplicationStatus를 MissionWorkflow state로 변환
+      String newState;
+      switch (status) {
+        case TesterApplicationStatus.approved:
+          newState = 'approved';
+          break;
+        case TesterApplicationStatus.rejected:
+          newState = 'rejected';
+          break;
+        default:
+          newState = 'application_submitted';
+          break;
+      }
+
+      await _firestore.collection(_dailyMissionsCollection).doc(applicationId).update({
+        'currentState': newState,
+        'stateUpdatedAt': FieldValue.serverTimestamp(),
+        'stateUpdatedBy': 'provider', // 실제 providerId로 교체 가능
         'reviewNote': reviewNote,
       });
 
-      AppLogger.info('Tester application reviewed: $applicationId -> $status', 'MissionManagementService');
+      AppLogger.info('Tester application reviewed: $applicationId -> $newState', 'MissionManagementService');
     } catch (e) {
       AppLogger.error('Failed to review tester application', 'MissionManagementService', e);
       rethrow;
