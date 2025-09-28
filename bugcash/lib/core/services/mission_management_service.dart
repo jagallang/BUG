@@ -117,12 +117,12 @@ class MissionManagementService {
     }
   }
 
-  /// 테스터 신청 목록 조회 (mission_workflows 컬렉션에서 application_submitted 상태 조회)
+  /// 테스터 신청 목록 조회 (mission_workflows 컬렉션에서 application_submitted, approved 상태 조회)
   Stream<List<TesterApplicationModel>> watchTesterApplications(String appId) {
     return _firestore
         .collection(_dailyMissionsCollection) // mission_workflows 컬렉션 사용
         .where('appId', isEqualTo: appId)
-        .where('currentState', isEqualTo: 'application_submitted') // 신청 상태만 조회
+        .where('currentState', whereIn: ['application_submitted', 'approved']) // 신청 및 승인 상태 모두 조회
         .snapshots()
         .map((snapshot) {
           final results = snapshot.docs
