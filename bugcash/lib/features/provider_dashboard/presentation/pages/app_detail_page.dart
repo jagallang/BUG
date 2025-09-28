@@ -282,7 +282,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       };
 
       await FirebaseFirestore.instance
-          .collection('provider_apps')
+          .collection('apps')
           .doc(widget.app.id)
           .update(updatedData);
 
