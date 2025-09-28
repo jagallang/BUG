@@ -324,8 +324,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       if (mounted) {
         // 성공 메시지를 더 명확하게 표시
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Row(
+          const SnackBar(
+            content: Row(
               children: [
                 Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 8),
@@ -335,7 +335,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               ],
             ),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 4),
+            duration: Duration(seconds: 4),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -527,6 +527,10 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Status Description (moved to top for better visibility)
+          _buildStatusDescription(app.status),
+          SizedBox(height: 16.h),
+
           // App Header
           Row(
             children: [
@@ -618,8 +622,22 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
           SizedBox(height: 16.h),
 
-          // Status Description and Next Steps
-          _buildStatusDescription(app.status),
+          // Visibility Control and Delete Button
+          Row(
+            children: [
+              // Visibility Dropdown
+              Expanded(
+                flex: 2,
+                child: _buildVisibilityDropdown(app),
+              ),
+              SizedBox(width: 8.w),
+              // Delete Button
+              Expanded(
+                flex: 1,
+                child: _buildDeleteButton(app),
+              ),
+            ],
+          ),
           SizedBox(height: 16.h),
 
           // Action Buttons
@@ -1630,6 +1648,221 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         ],
       ),
     );
+  }
+
+  /// 앱 공개/비공개 설정 드롭다운
+  Widget _buildVisibilityDropdown(ProviderAppModel app) {
+    // 오직 'open'(게시)과 'draft'(숨김) 상태만 전환 가능
+    final String currentVisibility = app.status == 'open' ? 'published' : 'hidden';
+
+    return Container(
+      height: 36.h,
+      padding: EdgeInsets.symmetric(horizontal: 12.w),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppColors.primary),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: currentVisibility,
+          icon: Icon(Icons.keyboard_arrow_down, color: AppColors.primary, size: 20.sp),
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+          ),
+          onChanged: app.status == 'pending' || app.status == 'rejected' ? null : (String? newValue) {
+            if (newValue != null && newValue != currentVisibility) {
+              _updateAppVisibility(app, newValue);
+            }
+          },
+          items: [
+            DropdownMenuItem<String>(
+              value: 'published',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.visibility, color: Colors.green, size: 16.sp),
+                  SizedBox(width: 4.w),
+                  const Text('게시'),
+                ],
+              ),
+            ),
+            DropdownMenuItem<String>(
+              value: 'hidden',
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.visibility_off, color: Colors.grey, size: 16.sp),
+                  SizedBox(width: 4.w),
+                  const Text('숨김'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 앱 삭제 버튼
+  Widget _buildDeleteButton(ProviderAppModel app) {
+    return SizedBox(
+      height: 36.h,
+      child: ElevatedButton(
+        onPressed: () => _showDeleteConfirmation(app),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red[600],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+        ),
+        child: Icon(
+          Icons.delete_outline,
+          color: Colors.white,
+          size: 16.sp,
+        ),
+      ),
+    );
+  }
+
+  /// 앱 공개 상태 업데이트
+  Future<void> _updateAppVisibility(ProviderAppModel app, String visibility) async {
+    try {
+      final newStatus = visibility == 'published' ? 'open' : 'draft';
+
+      await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(app.id)
+          .update({
+        'status': newStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              visibility == 'published' ? '앱이 게시되었습니다' : '앱이 숨김 처리되었습니다',
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      AppLogger.error('Failed to update app visibility', e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('상태 변경에 실패했습니다'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// 앱 삭제 확인 다이얼로그
+  Future<void> _showDeleteConfirmation(ProviderAppModel app) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            '앱 삭제 확인',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('정말로 이 앱을 삭제하시겠습니까?'),
+              SizedBox(height: 8.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '앱 이름: ${app.appName}',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Text('카테고리: ${app.category}'),
+                    SizedBox(height: 8.h),
+                    Text(
+                      '⚠️ 이 작업은 되돌릴 수 없습니다.',
+                      style: TextStyle(
+                        color: Colors.red[700],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red[600],
+              ),
+              child: const Text(
+                '삭제',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      await _deleteApp(app);
+    }
+  }
+
+  /// 앱 삭제 실행
+  Future<void> _deleteApp(ProviderAppModel app) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(app.id)
+          .delete();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('앱이 성공적으로 삭제되었습니다'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // 리스트 새로고침
+        ref.invalidate(providerAppsProvider(widget.providerId));
+      }
+    } catch (e) {
+      AppLogger.error('Failed to delete app', e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('앱 삭제에 실패했습니다'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   /// 미션관리 기능 사용 가능 여부 확인
