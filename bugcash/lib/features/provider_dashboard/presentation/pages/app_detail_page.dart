@@ -281,10 +281,17 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         },
       };
 
-      await FirebaseFirestore.instance
-          .collection('apps')
-          .doc(widget.app.id)
-          .update(updatedData);
+      // 문서 존재 여부 확인 후 업데이트
+      final docRef = FirebaseFirestore.instance
+          .collection('projects')
+          .doc(widget.app.id);
+
+      final docSnapshot = await docRef.get();
+      if (!docSnapshot.exists) {
+        throw Exception('문서를 찾을 수 없습니다. ID: ${widget.app.id}');
+      }
+
+      await docRef.update(updatedData);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

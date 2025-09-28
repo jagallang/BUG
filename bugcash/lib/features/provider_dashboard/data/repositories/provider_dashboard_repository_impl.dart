@@ -52,7 +52,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   Future<List<AppModel>> getProviderApps(String providerId) async {
     try {
       final query = await _firestore
-          .collection('apps')
+          .collection('projects')
           .where('providerId', isEqualTo: providerId)
           .orderBy('createdAt', descending: true)
           .get();
@@ -67,7 +67,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<AppModel?> getApp(String appId) async {
     try {
-      final doc = await _firestore.collection('apps').doc(appId).get();
+      final doc = await _firestore.collection('projects').doc(appId).get();
       
       if (!doc.exists) return null;
       
@@ -81,7 +81,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<String> createApp(AppModel app) async {
     try {
-      final docRef = _firestore.collection('apps').doc();
+      final docRef = _firestore.collection('projects').doc();
       
       await docRef.set({
         ...app.toMap(),
@@ -102,7 +102,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   Future<void> updateApp(String appId, Map<String, dynamic> data) async {
     try {
       data['updatedAt'] = FieldValue.serverTimestamp();
-      await _firestore.collection('apps').doc(appId).update(data);
+      await _firestore.collection('projects').doc(appId).update(data);
       AppLogger.info('App updated: $appId', 'ProviderDashboardRepository');
     } catch (e) {
       AppLogger.error('Failed to update app', 'ProviderDashboardRepository', e);
@@ -113,7 +113,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> updateAppStatus(String appId, AppStatus status) async {
     try {
-      await _firestore.collection('apps').doc(appId).update({
+      await _firestore.collection('projects').doc(appId).update({
         'status': status.name,
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -127,7 +127,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Future<void> deleteApp(String appId) async {
     try {
-      await _firestore.collection('apps').doc(appId).delete();
+      await _firestore.collection('projects').doc(appId).delete();
       AppLogger.info('App deleted: $appId', 'ProviderDashboardRepository');
     } catch (e) {
       AppLogger.error('Failed to delete app', 'ProviderDashboardRepository', e);
@@ -449,7 +449,7 @@ class ProviderDashboardRepositoryImpl implements ProviderDashboardRepository {
   @override
   Stream<List<AppModel>> watchProviderApps(String providerId) {
     return _firestore
-        .collection('apps')
+        .collection('projects')
         .where('providerId', isEqualTo: providerId)
         .orderBy('createdAt', descending: true)
         .snapshots()
