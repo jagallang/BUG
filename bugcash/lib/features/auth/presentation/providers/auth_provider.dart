@@ -53,13 +53,26 @@ class AuthState {
     UserEntity? user,
     bool? isLoading,
     String? errorMessage,
+    bool clearUser = false,
   }) {
     return AuthState(
-      user: user ?? this.user,
+      user: clearUser ? null : (user ?? this.user),
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
     );
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AuthState &&
+          runtimeType == other.runtimeType &&
+          user == other.user &&
+          isLoading == other.isLoading &&
+          errorMessage == other.errorMessage;
+
+  @override
+  int get hashCode => user.hashCode ^ isLoading.hashCode ^ errorMessage.hashCode;
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -243,17 +256,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
 
     try {
-      // 즉시 상태를 null로 설정
-      state = state.copyWith(user: null, isLoading: false, errorMessage: null);
+      // Auth subscription 취소 (새로운 상태 변화 차단)
+      _authSubscription?.cancel();
+      _authSubscription = null;
 
-      // Firebase 로그아웃
-      await _authService.signOut();
+      // 즉시 로그아웃 상태로 설정 (clearUser 플래그 사용)
+      state = state.copyWith(clearUser: true, isLoading: false, errorMessage: null);
 
       if (kDebugMode) {
-        debugPrint('✅ AuthProvider.signOut() - 완료');
+        debugPrint('🔄 AuthProvider.signOut() - 상태 즉시 초기화됨 (user: ${state.user})');
       }
 
-      // Auth stream listener가 자동으로 상태를 업데이트할 것임
+      // Firebase 로그아웃 실행
+      await _authService.signOut();
+
+      // 다시 한번 확실히 상태 초기화
+      state = state.copyWith(clearUser: true, isLoading: false, errorMessage: null);
+
+      if (kDebugMode) {
+        debugPrint('✅ AuthProvider.signOut() - 완료, Firebase 로그아웃 및 상태 초기화됨');
+      }
+
+      // Auth state 모니터링 재시작 (새 사용자 로그인을 위해)
+      _initializeAuthState();
+
     } catch (e) {
       if (kDebugMode) {
         debugPrint('❌ AuthProvider.signOut() - 실패: $e');
@@ -262,6 +288,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
         isLoading: false,
         errorMessage: e.toString(),
       );
+      // Auth state 모니터링 재시작 (에러 상황에서도)
+      _initializeAuthState();
       rethrow;
     }
   }

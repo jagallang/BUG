@@ -9,11 +9,30 @@ import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.d
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 import '../pages/role_selection_page.dart';
 
-class AuthWrapper extends ConsumerWidget {
+class AuthWrapper extends ConsumerStatefulWidget {
   const AuthWrapper({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends ConsumerState<AuthWrapper> {
+  @override
+  void initState() {
+    super.initState();
+
+    // 상태 변화 리스너 추가
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.listen<AuthState>(authProvider, (previous, next) {
+        if (kDebugMode) {
+          debugPrint('🔔 AuthWrapper - State changed: ${previous?.user?.email} → ${next.user?.email}');
+        }
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
     // 디버깅을 위한 로그 (프로덕션에서는 제거)

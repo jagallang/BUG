@@ -129,6 +129,11 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             onPressed: () => _showNotifications(),
             tooltip: '알림',
           ),
+          IconButton(
+            icon: const Icon(Icons.logout, color: Colors.red),
+            onPressed: _logout,
+            tooltip: '로그아웃',
+          ),
         ],
       ),
       body: Row(
@@ -1465,6 +1470,30 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('알림 기능 (개발 중)')),
     );
+  }
+
+  void _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('로그아웃'),
+        content: const Text('정말 로그아웃하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('로그아웃'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await ref.read(authProvider.notifier).signOut();
+    }
   }
 
   void _showProjectFilters() {
