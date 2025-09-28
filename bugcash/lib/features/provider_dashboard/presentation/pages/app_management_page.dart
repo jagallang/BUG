@@ -622,107 +622,27 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
           SizedBox(height: 16.h),
 
-          // Visibility Control and Delete Button
+          // All Action Buttons in Single Row
           Row(
             children: [
               // Visibility Dropdown
               Expanded(
-                flex: 2,
-                child: _buildVisibilityDropdown(app),
+                child: _buildUnifiedVisibilityDropdown(app),
               ),
               SizedBox(width: 8.w),
-              // Delete Button
+              // App Detail Input Button
               Expanded(
-                flex: 1,
-                child: _buildDeleteButton(app),
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-
-          // Action Buttons
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 36.h,
-                  child: OutlinedButton(
-                    onPressed: () async {
-                      // Navigate to app detail page
-                      final result = await Navigator.of(context).push<bool>(
-                        MaterialPageRoute(
-                          builder: (context) => AppDetailPage(app: app),
-                        ),
-                      );
-
-                      // Refresh the list if changes were made
-                      if (result == true && mounted) {
-                        ref.invalidate(providerAppsProvider(widget.providerId));
-                      }
-                    },
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: AppColors.primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                    child: Text(
-                      '게시정보',
-                      style: TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 14.sp,
-                      ),
-                    ),
-                  ),
-                ),
+                child: _buildUnifiedInputButton(app),
               ),
               SizedBox(width: 8.w),
+              // Mission Management Button
               Expanded(
-                child: SizedBox(
-                  height: 36.h,
-                  child: ElevatedButton(
-                    onPressed: _canUseMissionManagement(app) ? () {
-                      if (FeatureFlagUtils.shouldUseNewMissionManagement(
-                        userId: app.providerId,
-                        isAdmin: false,
-                      )) {
-                        // 새로운 미션관리 페이지로 이동
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => MissionManagementPage(app: app),
-                          ),
-                        );
-                        FeatureFlagUtils.logFeatureUsage('new_mission_management', app.providerId);
-                      } else {
-                        // 기존 시스템 사용
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TesterManagementPage(app: app),
-                          ),
-                        );
-                      }
-                    } : null,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _canUseMissionManagement(app)
-                        ? AppColors.primary
-                        : Colors.grey[400],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                    child: Text(
-                      '미션관리',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        color: _canUseMissionManagement(app)
-                          ? Colors.white
-                          : Colors.grey[600],
-                      ),
-                    ),
-                  ),
-                ),
+                child: _buildUnifiedMissionButton(app),
+              ),
+              SizedBox(width: 8.w),
+              // Delete Button (moved to rightmost position)
+              Expanded(
+                child: _buildUnifiedDeleteButton(app),
               ),
             ],
           ),
@@ -1869,5 +1789,183 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   /// 앱 상태가 'open'(모집중)일 때만 활성화
   bool _canUseMissionManagement(ProviderAppModel app) {
     return app.status == 'open';
+  }
+
+  // === Unified Button Methods ===
+
+  /// 통일된 디자인의 공개/비공개 드롭다운 버튼
+  Widget _buildUnifiedVisibilityDropdown(ProviderAppModel app) {
+    final String currentVisibility = app.status == 'open' ? 'published' : 'hidden';
+
+    return SizedBox(
+      height: 36.h,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 8.w),
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.primary),
+          borderRadius: BorderRadius.circular(8.r),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: currentVisibility,
+            isExpanded: true,
+            icon: Icon(Icons.keyboard_arrow_down, color: AppColors.primary, size: 16.sp),
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 12.sp,
+              fontWeight: FontWeight.w500,
+            ),
+            onChanged: app.status == 'pending' || app.status == 'rejected' ? null : (String? newValue) {
+              if (newValue != null && newValue != currentVisibility) {
+                _updateAppVisibility(app, newValue);
+              }
+            },
+            items: [
+              DropdownMenuItem<String>(
+                value: 'published',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.visibility, color: Colors.green, size: 14.sp),
+                    SizedBox(width: 4.w),
+                    Text('게시', style: TextStyle(fontSize: 12.sp)),
+                  ],
+                ),
+              ),
+              DropdownMenuItem<String>(
+                value: 'hidden',
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.visibility_off, color: Colors.grey, size: 14.sp),
+                    SizedBox(width: 4.w),
+                    Text('숨김', style: TextStyle(fontSize: 12.sp)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 통일된 디자인의 삭제 버튼
+  Widget _buildUnifiedDeleteButton(ProviderAppModel app) {
+    return SizedBox(
+      height: 36.h,
+      child: OutlinedButton(
+        onPressed: () => _deleteApp(app),
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: Colors.red),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 8.w),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.delete, color: Colors.red, size: 14.sp),
+            SizedBox(width: 4.w),
+            Text(
+              '삭제',
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 통일된 디자인의 정보 입력 버튼
+  Widget _buildUnifiedInputButton(ProviderAppModel app) {
+    return SizedBox(
+      height: 36.h,
+      child: OutlinedButton(
+        onPressed: () async {
+          // Navigate to app detail page
+          final result = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(
+              builder: (context) => AppDetailPage(app: app),
+            ),
+          );
+
+          // Refresh the list if changes were made
+          if (result == true && mounted) {
+            ref.invalidate(providerAppsProvider(widget.providerId));
+          }
+        },
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: AppColors.primary),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 8.w),
+        ),
+        child: Text(
+          '입력',
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 통일된 디자인의 미션관리 버튼
+  Widget _buildUnifiedMissionButton(ProviderAppModel app) {
+    final bool canUse = _canUseMissionManagement(app);
+
+    return SizedBox(
+      height: 36.h,
+      child: ElevatedButton(
+        onPressed: canUse ? () {
+          if (FeatureFlagUtils.shouldUseNewMissionManagement(
+            userId: app.providerId,
+            isAdmin: false,
+          )) {
+            // 새로운 미션관리 페이지로 이동
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MissionManagementPage(app: app),
+              ),
+            );
+            FeatureFlagUtils.logFeatureUsage('new_mission_management', app.providerId);
+          } else {
+            // 기존 시스템 사용
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => TesterManagementPage(app: app),
+              ),
+            );
+          }
+        } : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: canUse ? AppColors.primary : Colors.grey[400],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+          padding: EdgeInsets.symmetric(horizontal: 8.w),
+        ),
+        child: Text(
+          '미션',
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: FontWeight.w500,
+            color: canUse ? Colors.white : Colors.grey[600],
+          ),
+        ),
+      ),
+    );
   }
 }
