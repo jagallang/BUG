@@ -96,10 +96,11 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
       Map<String, dynamic>? appData;
       String? detectedProviderId;
 
-      // 1. appId가 있으면 직접 조회
+      // 1. appId가 있으면 직접 조회 (확장된 컬렉션 검색)
       if (appId != null && appId!.isNotEmpty) {
-        AppLogger.info('Loading app details with appId: $appId', 'MissionDetailPage');
+        AppLogger.info('🔍 앱 조회 시작 - appId: $appId, appName: $missionAppName', 'MissionDetailPage');
 
+        // 1-1. provider_apps 컬렉션에서 조회
         final appDoc = await FirebaseFirestore.instance
             .collection('provider_apps')
             .doc(appId)
@@ -108,9 +109,11 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         if (appDoc.exists) {
           appData = appDoc.data();
           detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
-          AppLogger.info('App details loaded from provider_apps by ID', 'MissionDetailPage');
+          AppLogger.info('✅ App details loaded from provider_apps by ID', 'MissionDetailPage');
         } else {
-          // provider_apps에 없으면 apps 컬렉션에서도 시도
+          AppLogger.info('❌ provider_apps에서 미발견, apps 컬렉션 시도', 'MissionDetailPage');
+
+          // 1-2. apps 컬렉션에서 조회
           final fallbackDoc = await FirebaseFirestore.instance
               .collection('apps')
               .doc(appId)
@@ -119,16 +122,32 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           if (fallbackDoc.exists) {
             appData = fallbackDoc.data();
             detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
-            AppLogger.info('App details loaded from apps collection by ID', 'MissionDetailPage');
+            AppLogger.info('✅ App details loaded from apps collection by ID', 'MissionDetailPage');
+          } else {
+            AppLogger.info('❌ apps에서 미발견, projects 컬렉션 시도', 'MissionDetailPage');
+
+            // 1-3. projects 컬렉션에서 조회 (새로 추가)
+            final projectDoc = await FirebaseFirestore.instance
+                .collection('projects')
+                .doc(appId)
+                .get();
+
+            if (projectDoc.exists) {
+              appData = projectDoc.data();
+              detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
+              AppLogger.info('✅ App details loaded from projects collection by ID', 'MissionDetailPage');
+            } else {
+              AppLogger.warning('❌ 모든 컬렉션에서 appId로 미발견: $appId', 'MissionDetailPage');
+            }
           }
         }
       }
 
-      // 2. appId가 없거나 찾지 못했으면 앱 이름으로 검색
+      // 2. appId가 없거나 찾지 못했으면 앱 이름으로 검색 (확장된 컬렉션 검색)
       if (appData == null && missionAppName.isNotEmpty) {
-        AppLogger.info('Loading app details with appName: $missionAppName', 'MissionDetailPage');
+        AppLogger.info('🔍 앱 이름으로 조회 시작 - appName: $missionAppName', 'MissionDetailPage');
 
-        // provider_apps 컬렉션에서 앱 이름으로 검색
+        // 2-1. provider_apps 컬렉션에서 앱 이름으로 검색
         final querySnapshot = await FirebaseFirestore.instance
             .collection('provider_apps')
             .where('appName', isEqualTo: missionAppName)
@@ -138,9 +157,11 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         if (querySnapshot.docs.isNotEmpty) {
           appData = querySnapshot.docs.first.data();
           detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
-          AppLogger.info('App details loaded from provider_apps by name', 'MissionDetailPage');
+          AppLogger.info('✅ App details loaded from provider_apps by name', 'MissionDetailPage');
         } else {
-          // provider_apps에 없으면 apps 컬렉션에서도 검색
+          AppLogger.info('❌ provider_apps에서 미발견, apps 컬렉션 시도', 'MissionDetailPage');
+
+          // 2-2. apps 컬렉션에서 검색
           final fallbackQuery = await FirebaseFirestore.instance
               .collection('apps')
               .where('name', isEqualTo: missionAppName)
@@ -150,7 +171,24 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           if (fallbackQuery.docs.isNotEmpty) {
             appData = fallbackQuery.docs.first.data();
             detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
-            AppLogger.info('App details loaded from apps collection by name', 'MissionDetailPage');
+            AppLogger.info('✅ App details loaded from apps collection by name', 'MissionDetailPage');
+          } else {
+            AppLogger.info('❌ apps에서 미발견, projects 컬렉션 시도', 'MissionDetailPage');
+
+            // 2-3. projects 컬렉션에서 검색 (새로 추가)
+            final projectQuery = await FirebaseFirestore.instance
+                .collection('projects')
+                .where('appName', isEqualTo: missionAppName)
+                .limit(1)
+                .get();
+
+            if (projectQuery.docs.isNotEmpty) {
+              appData = projectQuery.docs.first.data();
+              detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
+              AppLogger.info('✅ App details loaded from projects collection by name', 'MissionDetailPage');
+            } else {
+              AppLogger.warning('❌ 모든 컬렉션에서 appName으로 미발견: $missionAppName', 'MissionDetailPage');
+            }
           }
         }
       }
@@ -164,8 +202,14 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         _isLoadingAppDetails = false;
       });
 
-      if (appData == null) {
-        AppLogger.warning('App not found in database. AppId: $appId, AppName: $missionAppName', 'MissionDetailPage');
+      // 결과 로깅 강화
+      if (appData != null && detectedProviderId != null) {
+        AppLogger.info('🎉 providerId 조회 성공: $detectedProviderId', 'MissionDetailPage');
+        AppLogger.info('📊 앱 데이터 필드: ${appData.keys.toList()}', 'MissionDetailPage');
+      } else if (appData == null) {
+        AppLogger.warning('❌ 앱 데이터 미발견 - AppId: $appId, AppName: $missionAppName', 'MissionDetailPage');
+      } else {
+        AppLogger.warning('⚠️ 앱 데이터는 있지만 providerId 누락 - AppId: $appId', 'MissionDetailPage');
       }
     } catch (e) {
       setState(() {

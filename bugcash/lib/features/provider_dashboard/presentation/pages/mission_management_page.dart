@@ -8,7 +8,7 @@ import '../../../../features/shared/models/mission_management_model.dart';
 import '../../../provider_dashboard/presentation/pages/app_management_page.dart';
 
 /// 새로운 미션관리 페이지
-/// 4개 탭: 앱테스터 → 오늘미션 → 완료미션 → 정산
+/// 4개 탭: 대기 → 오늘 → 완료 → 종료
 class MissionManagementPage extends ConsumerStatefulWidget {
   final ProviderAppModel app;
 
@@ -83,10 +83,10 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
             fontWeight: FontWeight.normal,
           ),
           tabs: const [
-            Tab(text: '앱테스터'),
-            Tab(text: '오늘미션'),
-            Tab(text: '완료미션'),
-            Tab(text: '정산'),
+            Tab(text: '대기'),
+            Tab(text: '오늘'),
+            Tab(text: '완료'),
+            Tab(text: '종료'),
           ],
         ),
       ),
@@ -102,7 +102,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
     );
   }
 
-  /// 앱테스터 탭 - 테스터 모집 및 관리
+  /// 대기 탭 - 테스터 신청 대기 및 관리
   Widget _buildTesterRecruitmentTab() {
     return StreamBuilder<List<TesterApplicationModel>>(
       stream: _missionService.watchTesterApplications(widget.app.id),
@@ -255,7 +255,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
     );
   }
 
-  /// 정산 탭 - 14일 완료 후 정산
+  /// 종료 탭 - 프로젝트 완료 후 정산
   Widget _buildSettlementTab() {
     return StreamBuilder<List<MissionSettlementModel>>(
       stream: _missionService.watchSettlements(widget.app.id),
