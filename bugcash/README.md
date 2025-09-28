@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.0.09-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.0.11-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,26 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.0.09)
+## ✨ 주요 기능 (v2.0.11)
 
-### 🔒 관리자 대시보드 접근 권한 및 앱공급자 UX 개선 (v2.0.09) - **SECURITY & UX RELEASE**
+### 🔄 테스터 대시보드 실시간 데이터 연동 (v2.0.11) - **DATA SYNC RELEASE**
+- **🗂️ 더미 데이터 완전 제거**: 테스터 대시보드 "진행 중" 미션 탭에서 하드코딩된 샘플 데이터 제거
+  - **🔥 `sampleDailyMissions` 배열 삭제**: 더이상 테스트용 더미 데이터에 의존하지 않음
+  - **📡 실시간 Firebase 연결**: `MissionManagementService.watchTesterTodayMissions()` 활용한 실시간 스트림
+  - **⚡ StreamBuilder 구현**: 서버 데이터 변경 시 즉시 UI 반영되는 반응형 시스템
+  - **🛡️ 안전한 빈 상태 처리**: 데이터가 없을 경우 "아직 배정된 미션이 없습니다" 명확한 안내
+- **🔧 MissionManagementService 확장**: 테스터 전용 메서드 신규 추가로 기능 분리
+  - **👤 `watchTesterTodayMissions(String testerId)`**: 테스터별 오늘 미션 실시간 조회
+  - **💰 `watchTesterSettlements(String testerId)`**: 테스터별 정산 내역 실시간 조회
+  - **🎯 파라미터 타입 분리**: 기존 `appId` 기반에서 `testerId` 기반 쿼리로 확장
+  - **🔄 기존 시스템 호환성**: 기존 앱공급자 기능에 영향 없이 안전한 확장
+- **🎨 새로운 UI 컴포넌트 추가**: 재사용 가능한 미션 관련 위젯 구현
+  - **📄 `DailyMissionCard`**: 미션 정보 표시를 위한 통일된 카드 컴포넌트
+  - **🏷️ `MissionStatusBadge`**: 미션 상태별 시각적 구분을 위한 배지 시스템
+  - **⚙️ 미션 액션 버튼**: 시작/제출/재제출 버튼과 실제 서비스 메서드 연결
+  - **🔒 BuildContext 안전성**: 비동기 작업 후 `mounted && context.mounted` 이중 체크
+
+### 🔒 관리자 대시보드 접근 권한 및 앱공급자 UX 개선 (v2.0.09) - **이전 버전**
 - **🛡️ 관리자 대시보드 보안 강화**: 관리자만 관리자 대시보드에 접근할 수 있도록 권한 시스템 완전 수정
   - **🚫 비관리자 접근 차단**: 앱공급자나 테스터가 관리자 대시보드에 접근할 경우 접근 거부 화면 표시
   - **🔐 역할 기반 인증**: `user.roles.contains(UserType.admin)` 및 `user.primaryRole == UserType.admin` 이중 검증

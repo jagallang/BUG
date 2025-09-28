@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../features/shared/models/mission_management_model.dart';
+import '../../features/shared/models/mission_workflow_model.dart';
 import '../utils/logger.dart';
 
 /// 미션 관리 서비스 (기존 시스템과 완전 분리)
@@ -13,7 +14,7 @@ class MissionManagementService {
   // 컬렉션 이름들 (기존 시스템과 분리)
   static const String _missionManagementCollection = 'missionManagement';
   static const String _testerApplicationsCollection = 'testerApplications';
-  static const String _dailyMissionsCollection = 'dailyMissions';
+  static const String _dailyMissionsCollection = 'mission_workflows';
   static const String _settlementsCollection = 'settlements';
 
   /// 미션 관리 시스템 초기화
@@ -199,22 +200,42 @@ class MissionManagementService {
             .toList());
   }
 
-  /// 테스터 오늘 미션 조회 (테스터 기반)
+  /// 테스터 오늘 미션 조회 (테스터 기반) - mission_workflows 컬렉션 사용
   Stream<List<DailyMissionModel>> watchTesterTodayMissions(String testerId) {
-    final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
-
     return _firestore
         .collection(_dailyMissionsCollection)
         .where('testerId', isEqualTo: testerId)
-        .where('missionDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('missionDate', isLessThan: Timestamp.fromDate(endOfDay))
-        .orderBy('missionDate')
+        .where('currentState', whereIn: ['mission_in_progress', 'daily_mission_started', 'daily_mission_completed'])
         .snapshots()
         .map((snapshot) => snapshot.docs
-            .map((doc) => DailyMissionModel.fromFirestore(doc))
+            .map((doc) {
+              // MissionWorkflowModel을 DailyMissionModel로 변환
+              final workflowData = MissionWorkflowModel.fromFirestore(doc);
+              return DailyMissionModel(
+                id: workflowData.id,
+                appId: workflowData.appId,
+                testerId: workflowData.testerId,
+                missionDate: workflowData.appliedAt, // appliedAt을 missionDate로 사용
+                status: _convertWorkflowStateToDailyMissionStatus(workflowData.currentState),
+                missionTitle: '일일 테스트 미션',
+                missionDescription: '앱의 주요 기능들을 테스트하고 발견된 이슈를 리포트해주세요.',
+                baseReward: 5000,
+              );
+            })
             .toList());
+  }
+
+  /// MissionWorkflowState를 DailyMissionStatus로 변환하는 헬퍼 메서드
+  DailyMissionStatus _convertWorkflowStateToDailyMissionStatus(MissionWorkflowState state) {
+    switch (state) {
+      case MissionWorkflowState.missionInProgress:
+      case MissionWorkflowState.dailyMissionStarted:
+        return DailyMissionStatus.inProgress;
+      case MissionWorkflowState.dailyMissionCompleted:
+        return DailyMissionStatus.completed;
+      default:
+        return DailyMissionStatus.pending;
+    }
   }
 
   /// 완료된 미션 조회
