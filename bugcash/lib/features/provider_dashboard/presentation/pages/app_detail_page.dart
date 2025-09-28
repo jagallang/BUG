@@ -619,7 +619,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                       hintText: '500',
                       suffix: Text('P', style: TextStyle(color: Colors.purple[700])),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.diamond),
+                      prefixIcon: const Icon(Icons.star),
                     ),
                   ),
                 ),
@@ -929,7 +929,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     decoration: InputDecoration(
                       labelText: '승인 조건',
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.approval),
+                      prefixIcon: const Icon(Icons.check),
                     ),
                     items: _approvalConditions.map((condition) {
                       return DropdownMenuItem(
@@ -1004,7 +1004,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 labelText: '테스팅 가이드라인',
                 hintText: '테스터가 따라야 할 구체적인 테스팅 지침을 작성하세요',
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                prefixIcon: const Icon(Icons.rule),
+                prefixIcon: const Icon(Icons.checklist),
                 alignLabelWithHint: true,
               ),
             ),
