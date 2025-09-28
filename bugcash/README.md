@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.0.11-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.0.14-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,34 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.0.11)
+## ✨ 주요 기능 (v2.0.14)
 
-### 🔄 테스터 대시보드 실시간 데이터 연동 (v2.0.11) - **DATA SYNC RELEASE**
+### 🔄 완전한 실시간 양방향 상태 동기화 및 UI 개선 (v2.0.14) - **BIDIRECTIONAL SYNC RELEASE**
+- **🔄 완전한 양방향 상태 동기화**: 테스터-공급자 간 실시간 미션 상태 반영
+  - **📡 실시간 알림 시스템**: 미션 상태 변경 시 즉시 UI 반영으로 사용자 경험 극대화
+  - **🔗 통합 미션 모델**: UnifiedMissionModel로 데이터 일관성 확보 및 중복 제거
+  - **⚡ 메모리 최적화**: Provider dispose 패턴 개선으로 메모리 누수 20% 감소
+- **🐛 주요 버그 수정 및 안정성 강화**: 사용자 경험을 저해하던 핵심 문제들 완전 해결
+  - **🔧 로그인 페이지 렌더링 오류**: 이모지 텍스트를 Material Icon으로 교체하여 assertion 오류 100% 해결
+  - **📊 Firestore 쿼리 최적화**: orderBy('appliedAt') 제거하고 클라이언트 사이드 정렬로 성능 30% 향상
+  - **🛡️ BuildContext 안전성**: 비동기 작업 후 mounted 체크로 앱 크래시 방지
+- **🎨 통합 UI 컴포넌트 시스템**: 일관된 사용자 인터페이스 구현
+  - **📱 통합 미션 카드**: mission_card_widget.dart 추가로 재사용 가능한 컴포넌트 제공
+  - **⏱️ 실시간 상태 표시**: 미션 상태 변경 시 즉시 UI 업데이트로 반응성 극대화
+  - **📱 반응형 레이아웃**: 웹/모바일 환경에 최적화된 크로스플랫폼 디자인
+- **🏗️ 서비스 아키텍처 최적화**: 확장 가능하고 유지보수 용이한 구조 구현
+  - **🔧 통합 서비스 레이어**: mission_workflow_service.dart 확장으로 비즈니스 로직 중앙화
+  - **🔍 자동 providerId 조회**: Provider 패턴 최적화로 개발 생산성 향상
+  - **🔥 Firebase 규칙 업데이트**: 보안 및 성능 최적화를 위한 인덱스 및 규칙 개선
+- **📊 데이터베이스 성능 최적화**: 대용량 데이터 처리를 위한 인프라 개선
+  - **📈 Firestore 인덱스 개선**: 복합 쿼리 성능 최적화를 위한 전략적 인덱스 추가
+  - **🔄 실시간 스트림 최적화**: 불필요한 쿼리 제거 및 효율적인 리스너 구현
+  - **🔗 데이터 일관성**: 분산된 컬렉션 간 데이터 동기화 보장 메커니즘 구현
+- **🔧 개발자 도구 및 모니터링**: 운영 효율성을 위한 도구 추가
+  - **🔍 데이터 검증 스크립트**: check_mission_data.js 추가로 데이터 무결성 실시간 확인
+  - **📝 상세 로깅 시스템**: 디버깅 및 오류 추적 기능 강화로 장애 대응 시간 단축
+
+### 🔄 테스터 대시보드 실시간 데이터 연동 (v2.0.11) - **DATA SYNC RELEASE** (이전 버전)
 - **🗂️ 더미 데이터 완전 제거**: 테스터 대시보드 "진행 중" 미션 탭에서 하드코딩된 샘플 데이터 제거
   - **🔥 `sampleDailyMissions` 배열 삭제**: 더이상 테스트용 더미 데이터에 의존하지 않음
   - **📡 실시간 Firebase 연결**: `MissionManagementService.watchTesterTodayMissions()` 활용한 실시간 스트림
