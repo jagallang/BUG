@@ -96,9 +96,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ],
                 ),
                 child: const Center(
-                  child: Text(
-                    '🐛💰',
-                    style: TextStyle(fontSize: 48),
+                  child: Icon(
+                    Icons.bug_report,
+                    size: 48,
+                    color: Colors.white,
                   ),
                 ),
               ),

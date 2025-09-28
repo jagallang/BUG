@@ -697,61 +697,65 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     try {
       final activeMissions = <MissionCard>[];
 
-      // 1. 테스터 신청 정보 가져오기 (pending, approved 상태)
-      final testerApplications = await FirebaseFirestore.instance
-          .collection('tester_applications')
+      // 1. 테스터 신청 정보 가져오기 (mission_workflows 에서 pending, approved 상태)
+      final missionWorkflows = await FirebaseFirestore.instance
+          .collection('mission_workflows')
           .where('testerId', isEqualTo: testerId)
-          .where('status', whereIn: ['pending', 'approved'])
+          .where('currentState', whereIn: ['application_submitted', 'approved', 'in_progress'])
           .get();
 
-      // 2. 각 신청에 대해 미션 카드 생성
-      for (final applicationDoc in testerApplications.docs) {
-        final applicationData = applicationDoc.data();
-        final appId = applicationData['appId'];
-        final status = applicationData['status'];
+      // 2. 각 미션 워크플로우에 대해 미션 카드 생성
+      for (final workflowDoc in missionWorkflows.docs) {
+        final workflowData = workflowDoc.data();
+        final appId = workflowData['appId'];
+        final currentState = workflowData['currentState'] ?? 'pending';
+        final status = workflowData['status'] ?? currentState; // 호환성을 위해
 
-        // 앱 정보 가져오기
+        // Projects 에서 앱 정보 가져오기 (appId가 projects의 문서 ID이므로)
         try {
-          final appDoc = await FirebaseFirestore.instance
-              .collection('provider_apps')
-              .doc(appId)
+          final projectDoc = await FirebaseFirestore.instance
+              .collection('projects')
+              .doc(appId.replaceAll('provider_app_', ''))
               .get();
 
-          if (appDoc.exists) {
-            final appData = appDoc.data()!;
+          if (projectDoc.exists) {
+            final projectData = projectDoc.data()!;
+            final appName = workflowData['appName'] ?? projectData['appName'] ?? 'Unknown App';
 
             // 미션 카드 생성
             final missionCard = MissionCard(
-              id: 'tester_app_${applicationDoc.id}', // 고유 ID
-              title: '${appData['appName']} 테스트 미션',
-              description: status == 'pending'
-                  ? '신청 승인 대기 중입니다. 공급자의 승인을 기다려주세요.'
-                  : '테스트를 진행해주세요. 앱을 사용하며 버그나 개선사항을 리포트해주세요.',
+              id: 'mission_workflow_${workflowDoc.id}', // 고유 ID
+              title: '$appName 테스트 미션',
+              description: _getStatusDescription(currentState),
               type: MissionType.featureTesting,
-              rewardPoints: status == 'pending' ? 0 : 5000, // 승인되면 포인트 표시
-              estimatedMinutes: 30,
-              status: status == 'pending' ? MissionStatus.draft : MissionStatus.active,
-              deadline: DateTime.now().add(const Duration(days: 14)), // 기본 14일
+              rewardPoints: _getRewardPoints(currentState, workflowData),
+              estimatedMinutes: (workflowData['totalDays'] ?? 14) * 20, // 일일 예상 시간
+              status: _getMissionStatus(currentState),
+              deadline: _getDeadline(workflowData),
               requiredSkills: ['앱테스트', '버그리포트'],
-              appName: appData['appName'] ?? 'Unknown App',
+              appName: appName,
               currentParticipants: 1,
               maxParticipants: 1,
+              progress: _getProgress(workflowData),
               difficulty: MissionDifficulty.easy,
-              providerId: appData['providerId'] ?? '',
+              providerId: workflowData['providerId'] ?? '',
               isProviderApp: true,
               originalAppData: {
-                'applicationId': applicationDoc.id,
-                'applicationStatus': status,
-                'appliedAt': applicationData['appliedAt'],
+                'workflowId': workflowDoc.id,
+                'currentState': currentState,
+                'appliedAt': workflowData['appliedAt'],
                 'appId': appId,
-                'isFromTesterApplication': true,
+                'isFromMissionWorkflow': true,
+                'currentDay': workflowData['currentDay'] ?? 0,
+                'totalDays': workflowData['totalDays'] ?? 14,
+                'dailyReward': workflowData['dailyReward'] ?? 5000,
               },
             );
 
             activeMissions.add(missionCard);
           }
         } catch (e) {
-          debugPrint('Failed to load app data for appId: $appId, error: $e');
+          debugPrint('Failed to load project data for appId: $appId, error: $e');
         }
       }
 
@@ -828,9 +832,8 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   Future<List<MissionApplicationStatus>> _getPendingApplications(String testerId) async {
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('missionApplications')
+          .collection('mission_workflows')
           .where('testerId', isEqualTo: testerId)
-          .orderBy('appliedAt', descending: true)
           .get();
 
       final applications = <MissionApplicationStatus>[];
@@ -839,15 +842,18 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
         final data = doc.data();
         applications.add(MissionApplicationStatus(
           id: doc.id,
-          missionId: data['missionId'] ?? '',
+          missionId: data['appId'] ?? '', // mission_workflows에서 appId가 missionId 역할
           providerId: data['providerId'] ?? '',
-          status: _parseApplicationStatus(data['status'] ?? 'pending'),
+          status: _parseApplicationStatus(data['currentState'] ?? data['status'] ?? 'pending'),
           appliedAt: (data['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-          reviewedAt: (data['reviewedAt'] as Timestamp?)?.toDate(),
-          message: data['message'] ?? '',
-          responseMessage: data['responseMessage'],
+          reviewedAt: (data['stateUpdatedAt'] as Timestamp?)?.toDate(),
+          message: data['motivation'] ?? '', // 신청 시 동기
+          responseMessage: data['finalFeedback'] ?? '', // 최종 피드백
         ));
       }
+
+      // 클라이언트에서 appliedAt 기준으로 정렬 (최신순)
+      applications.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
 
       return applications;
     } catch (e) {
@@ -941,6 +947,77 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       default:
         return MissionDifficulty.medium;
     }
+  }
+
+  // mission_workflows 특화 헬퍼 메서드들
+  String _getStatusDescription(String currentState) {
+    switch (currentState) {
+      case 'application_submitted':
+        return '신청 승인 대기 중입니다. 공급자의 승인을 기다려주세요.';
+      case 'approved':
+        return '승인되었습니다! 테스트를 시작할 수 있습니다.';
+      case 'in_progress':
+        return '테스트를 진행해주세요. 앱을 사용하며 버그나 개선사항을 리포트해주세요.';
+      case 'completed':
+        return '테스트가 완료되었습니다. 수고하셨습니다!';
+      case 'rejected':
+        return '신청이 거절되었습니다.';
+      default:
+        return '상태를 확인 중입니다.';
+    }
+  }
+
+  int _getRewardPoints(String currentState, Map<String, dynamic> workflowData) {
+    switch (currentState) {
+      case 'application_submitted':
+        return 0; // 승인 전에는 0
+      case 'approved':
+      case 'in_progress':
+      case 'completed':
+        return (workflowData['totalEarnedReward'] ?? workflowData['dailyReward'] ?? 5000) as int;
+      default:
+        return 0;
+    }
+  }
+
+  MissionStatus _getMissionStatus(String currentState) {
+    switch (currentState) {
+      case 'application_submitted':
+        return MissionStatus.draft;
+      case 'approved':
+      case 'in_progress':
+        return MissionStatus.active;
+      case 'completed':
+        return MissionStatus.completed;
+      case 'rejected':
+        return MissionStatus.cancelled;
+      default:
+        return MissionStatus.draft;
+    }
+  }
+
+  DateTime _getDeadline(Map<String, dynamic> workflowData) {
+    final startedAt = workflowData['startedAt'];
+    final totalDays = workflowData['totalDays'] ?? 14;
+
+    if (startedAt != null && startedAt is Timestamp) {
+      return startedAt.toDate().add(Duration(days: totalDays));
+    }
+
+    final appliedAt = workflowData['appliedAt'];
+    if (appliedAt != null && appliedAt is Timestamp) {
+      return appliedAt.toDate().add(Duration(days: totalDays + 7)); // 승인 기간 추가
+    }
+
+    return DateTime.now().add(Duration(days: totalDays));
+  }
+
+  double? _getProgress(Map<String, dynamic> workflowData) {
+    final currentDay = workflowData['currentDay'] ?? 0;
+    final totalDays = workflowData['totalDays'] ?? 14;
+
+    if (totalDays == 0) return 0.0;
+    return (currentDay / totalDays * 100).clamp(0.0, 100.0);
   }
 }
 

@@ -37,16 +37,32 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   int get estimatedMinutes => widget.mission.estimatedMinutes ?? widget.mission.duration ?? 30;
   List<String> get requiredSkills => widget.mission.requiredSkills ?? <String>[];
   String get providerId {
-    try {
-      return widget.mission.providerId ?? '';
-    } catch (e) {
-      try {
-        // createdBy 필드가 있는 경우에만 접근
-        return (widget.mission as dynamic).createdBy ?? '';
-      } catch (e2) {
-        return '';
-      }
+    // 1. 앱 디테일에서 조회된 providerId 우선 사용
+    if (_appDetails != null && _appDetails!['detectedProviderId'] != null) {
+      return _appDetails!['detectedProviderId'];
     }
+
+    // 2. mission 객체에서 providerId 확인
+    try {
+      final missionProviderId = widget.mission.providerId;
+      if (missionProviderId != null && missionProviderId.isNotEmpty) {
+        return missionProviderId;
+      }
+    } catch (e) {
+      // providerId 필드가 없는 경우
+    }
+
+    // 3. createdBy 필드 확인
+    try {
+      final createdBy = (widget.mission as dynamic).createdBy;
+      if (createdBy != null && createdBy.isNotEmpty) {
+        return createdBy;
+      }
+    } catch (e) {
+      // createdBy 필드가 없는 경우
+    }
+
+    return '';
   }
   String? get appId {
     try {
@@ -78,6 +94,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
     try {
       Map<String, dynamic>? appData;
+      String? detectedProviderId;
 
       // 1. appId가 있으면 직접 조회
       if (appId != null && appId!.isNotEmpty) {
@@ -90,6 +107,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
         if (appDoc.exists) {
           appData = appDoc.data();
+          detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
           AppLogger.info('App details loaded from provider_apps by ID', 'MissionDetailPage');
         } else {
           // provider_apps에 없으면 apps 컬렉션에서도 시도
@@ -100,6 +118,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
           if (fallbackDoc.exists) {
             appData = fallbackDoc.data();
+            detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
             AppLogger.info('App details loaded from apps collection by ID', 'MissionDetailPage');
           }
         }
@@ -118,6 +137,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
         if (querySnapshot.docs.isNotEmpty) {
           appData = querySnapshot.docs.first.data();
+          detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
           AppLogger.info('App details loaded from provider_apps by name', 'MissionDetailPage');
         } else {
           // provider_apps에 없으면 apps 컬렉션에서도 검색
@@ -129,6 +149,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
           if (fallbackQuery.docs.isNotEmpty) {
             appData = fallbackQuery.docs.first.data();
+            detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
             AppLogger.info('App details loaded from apps collection by name', 'MissionDetailPage');
           }
         }
@@ -136,6 +157,10 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
       setState(() {
         _appDetails = appData;
+        // detectedProviderId를 appDetails에 추가
+        if (appData != null && detectedProviderId != null) {
+          _appDetails!['detectedProviderId'] = detectedProviderId;
+        }
         _isLoadingAppDetails = false;
       });
 
@@ -183,40 +208,115 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     }
   }
 
-  // 신청 상태 조회
+  // 신청 상태 조회 (개선된 로직)
   Future<String> _getApplicationStatus(String testerId) async {
     try {
-      // mission_applications 컬렉션에서 상태 확인
-      final query = await FirebaseFirestore.instance
+      AppLogger.info('🔍 신청 상태 조회 시작 - testerId: $testerId, missionId: $missionId', 'MissionDetailPage');
+
+      // 1순위: mission_workflows 컬렉션에서 missionId 기준으로 직접 조회
+      final workflowQuery = await FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .where('missionId', isEqualTo: missionId)
+          .where('testerId', isEqualTo: testerId)
+          .limit(1)
+          .get();
+
+      if (workflowQuery.docs.isNotEmpty) {
+        final data = workflowQuery.docs.first.data();
+        final status = data['status'] ?? data['currentState'] ?? 'pending';
+        AppLogger.info('✅ mission_workflows에서 상태 발견: $status', 'MissionDetailPage');
+        return status;
+      }
+
+      // 2순위: mission_workflows 컬렉션에서 appId 기준으로 조회 (하위 호환성)
+      final mission = await MissionService.getMission(missionId);
+      if (mission?.appId != null) {
+        final appBasedQuery = await FirebaseFirestore.instance
+            .collection('mission_workflows')
+            .where('appId', isEqualTo: mission!.appId!)
+            .where('testerId', isEqualTo: testerId)
+            .limit(1)
+            .get();
+
+        if (appBasedQuery.docs.isNotEmpty) {
+          final data = appBasedQuery.docs.first.data();
+          final status = data['status'] ?? data['currentState'] ?? 'pending';
+          AppLogger.info('✅ mission_workflows(appId)에서 상태 발견: $status', 'MissionDetailPage');
+          return status;
+        }
+      }
+
+      // 3순위: mission_applications 컬렉션 확인 (기존 호환성)
+      final applicationQuery = await FirebaseFirestore.instance
           .collection('mission_applications')
           .where('missionId', isEqualTo: missionId)
           .where('testerId', isEqualTo: testerId)
           .limit(1)
           .get();
 
-      if (query.docs.isNotEmpty) {
-        return query.docs.first.data()['status'] ?? 'pending';
+      if (applicationQuery.docs.isNotEmpty) {
+        final status = applicationQuery.docs.first.data()['status'] ?? 'pending';
+        AppLogger.info('✅ mission_applications에서 상태 발견: $status', 'MissionDetailPage');
+        return status;
       }
 
-      // mission_workflows 컬렉션에서도 확인
-      final mission = await MissionService.getMission(missionId);
-      final realAppId = mission?.appId ?? missionId;
-
-      final workflowQuery = await FirebaseFirestore.instance
-          .collection('mission_workflows')
-          .where('appId', isEqualTo: realAppId)
-          .where('testerId', isEqualTo: testerId)
-          .limit(1)
-          .get();
-
-      if (workflowQuery.docs.isNotEmpty) {
-        return workflowQuery.docs.first.data()['status'] ?? 'pending';
-      }
-
-      return 'unknown';
+      AppLogger.info('❌ 모든 컬렉션에서 신청 데이터를 찾을 수 없음', 'MissionDetailPage');
+      return 'not_applied';
     } catch (e) {
       AppLogger.error('신청 상태 조회 실패', 'MissionDetailPage', e);
       return 'unknown';
+    }
+  }
+
+  // 신청 상태 한글 번역 함수
+  String _translateApplicationStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return '검토 중';
+      case 'reviewing':
+        return '검토 중';
+      case 'approved':
+        return '승인됨';
+      case 'accepted':
+        return '승인됨';
+      case 'rejected':
+        return '거부됨';
+      case 'declined':
+        return '거부됨';
+      case 'in_progress':
+        return '진행 중';
+      case 'completed':
+        return '완료됨';
+      case 'not_applied':
+        return '미신청';
+      case 'unknown':
+        return '확인 중';
+      default:
+        return '확인 중';
+    }
+  }
+
+  // 상태별 색상 반환 함수
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+      case 'reviewing':
+        return Colors.orange;
+      case 'approved':
+      case 'accepted':
+        return Colors.green;
+      case 'rejected':
+      case 'declined':
+        return Colors.red;
+      case 'in_progress':
+        return Colors.blue;
+      case 'completed':
+        return Colors.purple;
+      case 'not_applied':
+        return Colors.grey;
+      case 'unknown':
+      default:
+        return Colors.grey;
     }
   }
 
@@ -1073,10 +1173,27 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
   // 신청 현황 페이지로 이동
   void _navigateToApplicationStatus() {
+    final translatedStatus = _translateApplicationStatus(_applicationStatus ?? 'unknown');
+    final statusColor = _getStatusColor(_applicationStatus ?? 'unknown');
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('신청 상태: $_applicationStatus'),
-        backgroundColor: _getButtonColor(false),
+        content: Row(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                color: statusColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text('신청 상태: $translatedStatus'),
+          ],
+        ),
+        backgroundColor: Colors.grey[800],
+        duration: const Duration(seconds: 3),
       ),
     );
 
@@ -1159,7 +1276,8 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pop(context, true);
+          // 미션 신청 성공 시 진행중 탭으로 이동하라는 정보 전달
+          Navigator.pop(context, {'success': true, 'navigateToTab': 1}); // 1번 탭은 '진행 중'
         }
       }
     } catch (e) {

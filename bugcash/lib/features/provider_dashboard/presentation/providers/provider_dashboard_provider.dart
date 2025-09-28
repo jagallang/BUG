@@ -1,9 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/models/provider_model.dart';
 import '../../domain/repositories/provider_dashboard_repository.dart';
 import '../../data/repositories/provider_dashboard_repository_impl.dart';
 import '../../../../models/mission_model.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../shared/providers/unified_mission_provider.dart';
+import '../../../shared/models/unified_mission_model.dart';
 
 // Repository Provider
 final providerDashboardRepositoryProvider = Provider<ProviderDashboardRepository>((ref) {
@@ -359,3 +362,266 @@ final quickActionsProvider = StateNotifierProvider<QuickActionsNotifier, AsyncVa
   final repository = ref.watch(providerDashboardRepositoryProvider);
   return QuickActionsNotifier(repository);
 });
+
+// ========================================
+// 🔔 실시간 알림 시스템 (Bidirectional Sync)
+// ========================================
+
+/// 🔔 공급자별 실시간 테스터 신청 알림 Provider
+/// UnifiedMissionProvider를 사용하여 실시간 동기화
+final providerRealtimeNotificationsProvider = StreamProvider.family<ProviderNotificationState, String>((ref, providerId) {
+  if (kDebugMode) {
+    debugPrint('🔔 PROVIDER_NOTIFICATIONS: 공급자($providerId) 실시간 알림 시작');
+  }
+
+  // UnifiedMissionProvider를 사용하여 공급자별 미션 스트림 구독
+  final providerMissionsStream = ref.watch(providerMissionsProvider(providerId));
+
+  return providerMissionsStream.when(
+    data: (missions) {
+      // 새로운 신청(pending) 카운트
+      final newApplications = missions.where((m) => m.status == 'pending').length;
+
+      // 진행중 미션 카운트
+      final activeMissions = missions.where((m) => m.status == 'in_progress').length;
+
+      // 완료된 미션 카운트
+      final completedMissions = missions.where((m) => m.status == 'completed').length;
+
+      // 최근 신청 (24시간 이내) - 임시로 createdAt 사용
+      final yesterday = DateTime.now().subtract(const Duration(hours: 24));
+      final recentApplications = missions.where((m) {
+        // MissionModel에 appliedAt이 없으므로 createdAt 사용
+        final createdAt = m.createdAt ?? DateTime.now();
+        return createdAt.isAfter(yesterday) && m.status == 'pending';
+      }).toList();
+
+      // MissionModel을 UnifiedMissionModel로 변환하는 임시 리스트
+      final List<UnifiedMissionModel> convertedRecentApplications = [];
+
+      final notificationState = ProviderNotificationState(
+        newApplicationsCount: newApplications,
+        activeMissionsCount: activeMissions,
+        completedMissionsCount: completedMissions,
+        recentApplications: convertedRecentApplications,
+        hasUnreadNotifications: newApplications > 0,
+        lastUpdated: DateTime.now(),
+        isConnected: true,
+      );
+
+      if (kDebugMode) {
+        debugPrint('🔔 PROVIDER_NOTIFICATIONS: 상태 업데이트 - 신규 $newApplications, 진행중 $activeMissions, 완료 $completedMissions');
+      }
+
+      return Stream.value(notificationState);
+    },
+    loading: () => Stream.value(ProviderNotificationState.loading()),
+    error: (error, stack) {
+      debugPrint('🚨 PROVIDER_NOTIFICATIONS: 오류 - $error');
+      return Stream.value(ProviderNotificationState.error(error.toString()));
+    },
+  );
+});
+
+/// 🔔 새로운 신청 감지 Provider (toast 알림용)
+final newApplicationDetectorProvider = StreamProvider.family<List<UnifiedMissionModel>, String>((ref, providerId) {
+  final providerMissions = ref.watch(providerMissionsProvider(providerId));
+
+  return providerMissions.when(
+    data: (missions) {
+      // 최근 5분 이내 신청만 필터링 (toast 알림용) - 임시로 createdAt 사용
+      final fiveMinutesAgo = DateTime.now().subtract(const Duration(minutes: 5));
+      final veryRecentApplications = missions.where((m) {
+        final createdAt = m.createdAt ?? DateTime.now();
+        return createdAt.isAfter(fiveMinutesAgo) && m.status == 'pending';
+      }).toList();
+
+      if (veryRecentApplications.isNotEmpty && kDebugMode) {
+        debugPrint('🔔 NEW_APPLICATION_DETECTOR: ${veryRecentApplications.length}개 신규 신청 감지');
+      }
+
+      // MissionModel을 UnifiedMissionModel로 변환하는 임시 빈 리스트
+      return Stream.value(<UnifiedMissionModel>[]);
+    },
+    loading: () => Stream.value(<UnifiedMissionModel>[]),
+    error: (error, stack) => Stream.value(<UnifiedMissionModel>[]),
+  );
+});
+
+/// 🔔 앱별 테스터 신청 실시간 Provider
+final appTesterApplicationsProvider = StreamProvider.family<List<UnifiedMissionModel>, String>((ref, appId) {
+  if (kDebugMode) {
+    debugPrint('🔔 APP_TESTERS: 앱($appId) 테스터 신청 실시간 감시 시작');
+  }
+
+  // UnifiedMissionProvider의 앱별 테스터 스트림 사용
+  final appTestersStream = ref.watch(appTestersStreamProvider(appId));
+
+  return appTestersStream.when(
+    data: (testers) {
+      if (kDebugMode) {
+        debugPrint('🔔 APP_TESTERS: 앱 $appId - ${testers.length}개 테스터 신청');
+      }
+      return Stream.value(testers);
+    },
+    loading: () => Stream.value(<UnifiedMissionModel>[]),
+    error: (error, stack) {
+      debugPrint('🚨 APP_TESTERS: 앱 $appId 테스터 조회 오류 - $error');
+      return Stream.value(<UnifiedMissionModel>[]);
+    },
+  );
+});
+
+/// 🔔 공급자 대시보드 통합 알림 상태 관리
+class ProviderNotificationNotifier extends StateNotifier<ProviderNotificationState> {
+  ProviderNotificationNotifier() : super(ProviderNotificationState.initial());
+
+  /// 알림 읽음 처리
+  void markNotificationsAsRead() {
+    state = state.copyWith(
+      newApplicationsCount: 0,
+      hasUnreadNotifications: false,
+    );
+
+    if (kDebugMode) {
+      debugPrint('🔔 NOTIFICATION_MANAGER: 알림 읽음 처리 완료');
+    }
+  }
+
+  /// 특정 신청 승인/거부 후 카운트 업데이트
+  void updateAfterApplicationAction(String applicationId, String newStatus) {
+    if (newStatus == 'approved' || newStatus == 'rejected') {
+      final currentCount = state.newApplicationsCount;
+      state = state.copyWith(
+        newApplicationsCount: (currentCount - 1).clamp(0, 999),
+        lastUpdated: DateTime.now(),
+      );
+
+      if (kDebugMode) {
+        debugPrint('🔔 NOTIFICATION_MANAGER: 신청 처리 후 카운트 업데이트 - $applicationId -> $newStatus');
+      }
+    }
+  }
+
+  /// 연결 상태 업데이트
+  void updateConnectionStatus(bool isConnected) {
+    state = state.copyWith(
+      isConnected: isConnected,
+      lastUpdated: DateTime.now(),
+    );
+  }
+}
+
+final providerNotificationNotifierProvider = StateNotifierProvider<ProviderNotificationNotifier, ProviderNotificationState>((ref) {
+  return ProviderNotificationNotifier();
+});
+
+/// 🔔 알림 상태 데이터 클래스
+class ProviderNotificationState {
+  final int newApplicationsCount;
+  final int activeMissionsCount;
+  final int completedMissionsCount;
+  final List<UnifiedMissionModel> recentApplications;
+  final bool hasUnreadNotifications;
+  final bool isConnected;
+  final DateTime lastUpdated;
+  final String? error;
+
+  const ProviderNotificationState({
+    required this.newApplicationsCount,
+    required this.activeMissionsCount,
+    required this.completedMissionsCount,
+    required this.recentApplications,
+    required this.hasUnreadNotifications,
+    required this.isConnected,
+    required this.lastUpdated,
+    this.error,
+  });
+
+  factory ProviderNotificationState.initial() {
+    return ProviderNotificationState(
+      newApplicationsCount: 0,
+      activeMissionsCount: 0,
+      completedMissionsCount: 0,
+      recentApplications: const [],
+      hasUnreadNotifications: false,
+      isConnected: false,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  factory ProviderNotificationState.loading() {
+    return ProviderNotificationState(
+      newApplicationsCount: 0,
+      activeMissionsCount: 0,
+      completedMissionsCount: 0,
+      recentApplications: const [],
+      hasUnreadNotifications: false,
+      isConnected: false,
+      lastUpdated: DateTime.now(),
+    );
+  }
+
+  factory ProviderNotificationState.error(String errorMessage) {
+    return ProviderNotificationState(
+      newApplicationsCount: 0,
+      activeMissionsCount: 0,
+      completedMissionsCount: 0,
+      recentApplications: const [],
+      hasUnreadNotifications: false,
+      isConnected: false,
+      lastUpdated: DateTime.now(),
+      error: errorMessage,
+    );
+  }
+
+  ProviderNotificationState copyWith({
+    int? newApplicationsCount,
+    int? activeMissionsCount,
+    int? completedMissionsCount,
+    List<UnifiedMissionModel>? recentApplications,
+    bool? hasUnreadNotifications,
+    bool? isConnected,
+    DateTime? lastUpdated,
+    String? error,
+  }) {
+    return ProviderNotificationState(
+      newApplicationsCount: newApplicationsCount ?? this.newApplicationsCount,
+      activeMissionsCount: activeMissionsCount ?? this.activeMissionsCount,
+      completedMissionsCount: completedMissionsCount ?? this.completedMissionsCount,
+      recentApplications: recentApplications ?? this.recentApplications,
+      hasUnreadNotifications: hasUnreadNotifications ?? this.hasUnreadNotifications,
+      isConnected: isConnected ?? this.isConnected,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+      error: error ?? this.error,
+    );
+  }
+
+  /// 총 알림 개수
+  int get totalNotifications => newApplicationsCount;
+
+  /// 알림 배지 표시 여부
+  bool get shouldShowBadge => newApplicationsCount > 0;
+
+  /// 연결 상태 텍스트
+  String get connectionStatusText => isConnected ? '실시간 연결됨' : '연결 끊김';
+
+  /// 마지막 업데이트 텍스트
+  String get lastUpdatedText {
+    final now = DateTime.now();
+    final difference = now.difference(lastUpdated);
+
+    if (difference.inMinutes < 1) {
+      return '방금 전';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes}분 전';
+    } else {
+      return '${difference.inHours}시간 전';
+    }
+  }
+
+  @override
+  String toString() {
+    return 'ProviderNotificationState(newApplications: $newApplicationsCount, active: $activeMissionsCount, completed: $completedMissionsCount, connected: $isConnected)';
+  }
+}

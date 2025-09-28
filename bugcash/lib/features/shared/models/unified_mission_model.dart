@@ -54,9 +54,55 @@ class UnifiedMissionModel {
     this.rating,
   });
 
-  // Firestore에서 데이터 읽기 (tester_applications 컬렉션용)
+  // 실제 미션 상태 결정 (status와 currentState 우선순위 적용)
+  String get actualStatus {
+    // 데이터 일관성 처리: status와 currentState가 다를 때 우선순위 적용
+    if (status == 'completed' || completedAt != null) {
+      return 'completed';
+    }
+    if (status == 'in_progress' || startedAt != null) {
+      return 'in_progress';
+    }
+    return status;
+  }
+
+  // 사용자 친화적 상태 표시
+  String get displayStatus {
+    switch (actualStatus) {
+      case 'pending':
+        return '대기중';
+      case 'approved':
+        return '승인됨';
+      case 'rejected':
+        return '거절됨';
+      case 'in_progress':
+        return '진행중';
+      case 'completed':
+        return '완료됨';
+      default:
+        return status;
+    }
+  }
+
+  // Firestore에서 데이터 읽기 (mission_workflows 컬렉션용)
   factory UnifiedMissionModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // currentState와 status 필드 모두 확인하여 우선순위 적용
+    String resolvedStatus = data['status'] ?? 'pending';
+    final currentState = data['currentState'] as String?;
+
+    // currentState가 있으면 참고하여 status 보정
+    if (currentState != null) {
+      if (currentState.contains('completed') || currentState == 'mission_completed') {
+        resolvedStatus = 'completed';
+      } else if (currentState.contains('progress') || currentState == 'mission_started') {
+        resolvedStatus = 'in_progress';
+      } else if (currentState == 'application_approved') {
+        resolvedStatus = 'approved';
+      }
+    }
+
     return UnifiedMissionModel(
       id: doc.id,
       appId: data['appId'] ?? '',
@@ -65,23 +111,23 @@ class UnifiedMissionModel {
       testerName: data['testerName'] ?? '',
       testerEmail: data['testerEmail'] ?? '',
       providerId: data['providerId'] ?? '',
-      status: data['status'] ?? 'pending',
+      status: resolvedStatus,
       experience: data['experience'] ?? '',
       motivation: data['motivation'] ?? '',
       appliedAt: (data['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       processedAt: (data['processedAt'] as Timestamp?)?.toDate(),
       startedAt: (data['startedAt'] as Timestamp?)?.toDate(),
       completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
-      dailyPoints: data['dailyPoints'] ?? 5000,
-      totalPoints: data['totalPoints'] ?? 0,
+      dailyPoints: data['dailyReward'] ?? data['dailyPoints'] ?? 5000,
+      totalPoints: data['totalEarnedReward'] ?? data['totalPoints'] ?? 0,
       currentDay: data['currentDay'] ?? 0,
       totalDays: data['totalDays'] ?? 14,
       progressPercentage: (data['progressPercentage'] ?? 0.0).toDouble(),
       todayCompleted: data['todayCompleted'] ?? false,
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
       requirements: List<String>.from(data['requirements'] ?? []),
-      feedback: data['feedback'],
-      rating: data['rating'],
+      feedback: data['feedback'] ?? data['finalFeedback'],
+      rating: data['rating'] ?? data['finalRating'],
     );
   }
 

@@ -35,11 +35,12 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   late TabController _tabController;
   late ScrollController _scrollController;
   bool _isAppBarExpanded = false;
+  int? _navigateToMissionSubTab; // 미션 서브탭 네비게이션 신호
   
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 4, vsync: this); // 미션 찾기, 진행 중, 완료, 정산
     _scrollController = ScrollController();
     
     // TabController 초기화 완료
@@ -863,7 +864,22 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   Widget _buildMissionTab() {
     return DefaultTabController(
       length: 4,
-      child: Column(
+      initialIndex: _navigateToMissionSubTab ?? 0, // 탭 전환 신호가 있으면 해당 탭으로 시작
+      child: Builder(
+        builder: (context) {
+          // 탭 전환 신호 처리
+          if (_navigateToMissionSubTab != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                DefaultTabController.of(context).animateTo(_navigateToMissionSubTab!);
+                setState(() {
+                  _navigateToMissionSubTab = null; // 신호 초기화
+                });
+              }
+            });
+          }
+
+          return Column(
         children: [
           Expanded(
             child: Container(
@@ -918,6 +934,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ),
           ),
         ],
+          );
+        },
       ),
     );
   }
@@ -1341,9 +1359,34 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ),
           );
 
-          if (result == true) {
-            // 미션 신청 후 대시보드 새로고침
-            ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+          // 미션 신청 결과 처리
+          if (result != null) {
+            if (result is Map<String, dynamic> && result['success'] == true) {
+              // 미션 신청 성공 - 탭 전환 및 데이터 새로고침
+              ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+
+              // 진행중 탭으로 자동 전환 (navigateToTab이 있는 경우)
+              if (result['navigateToTab'] != null) {
+                final tabIndex = result['navigateToTab'] as int;
+                if (tabIndex >= 0 && tabIndex < 4) {
+                  // 하위 TabController에 접근하기 위해 GlobalKey 사용 예정
+                  // 현재는 기본 진행중 탭(인덱스 1)으로 전환
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) {
+                      // 메인 탭바에서 미션 탭이 이미 선택되어 있으므로
+                      // 하위 탭 컨트롤러에만 영향을 줌
+                      setState(() {
+                        // 미션 서브탭에서 진행중 탭으로 전환하도록 신호 전송
+                        _navigateToMissionSubTab = tabIndex;
+                      });
+                    }
+                  });
+                }
+              }
+            } else if (result == true) {
+              // 기존 호환성을 위한 단순 성공 처리
+              ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+            }
           }
         },
         borderRadius: BorderRadius.circular(12.r),

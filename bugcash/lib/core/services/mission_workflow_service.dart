@@ -7,15 +7,15 @@ import '../utils/logger.dart';
 class MissionWorkflowService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // 1단계: 미션 신청 생성
+  // 1단계: 미션 신청 생성 (자동 providerId 조회 포함)
   Future<String> createMissionApplication({
     required String appId,
     required String appName,
     required String testerId,
     required String testerName,
     required String testerEmail,
-    required String providerId,
-    required String providerName,
+    String? providerId, // 옵셔널로 변경 - 자동 조회 기능 추가
+    String? providerName, // 옵셔널로 변경 - 자동 조회 기능 추가
     required String experience,
     required String motivation,
     int totalDays = 14,
@@ -27,10 +27,40 @@ class MissionWorkflowService {
       if (appName.isEmpty) throw ArgumentError('appName cannot be empty');
       if (testerId.isEmpty) throw ArgumentError('testerId cannot be empty');
       if (testerName.isEmpty) throw ArgumentError('testerName cannot be empty');
-      if (providerId.isEmpty) throw ArgumentError('providerId cannot be empty');
-      if (providerName.isEmpty) throw ArgumentError('providerName cannot be empty');
 
       AppLogger.info('Creating mission application for $appName by $testerName', 'MissionWorkflow');
+
+      // 🔍 자동 providerId 조회 기능 (projects 컬렉션에서)
+      String safeProviderId = providerId ?? '';
+      String safeProviderName = providerName ?? '';
+
+      if (safeProviderId.isEmpty || safeProviderName.isEmpty) {
+        AppLogger.info('Auto-looking up provider info from projects collection for appId: $appId', 'MissionWorkflow');
+
+        // appId에서 'provider_app_' 접두사 제거
+        final normalizedAppId = appId.replaceAll('provider_app_', '');
+
+        try {
+          final projectDoc = await _firestore.collection('projects').doc(normalizedAppId).get();
+          if (projectDoc.exists) {
+            final projectData = projectDoc.data()!;
+            safeProviderId = projectData['providerId'] ?? '';
+            safeProviderName = projectData['providerName'] ?? projectData['appName'] ?? 'Unknown Provider';
+
+            AppLogger.info('✅ Auto-lookup successful: providerId=$safeProviderId, providerName=$safeProviderName', 'MissionWorkflow');
+          } else {
+            AppLogger.error('❌ Project not found in projects collection: $normalizedAppId', 'MissionWorkflow');
+            throw ArgumentError('Project not found for appId: $appId');
+          }
+        } catch (e) {
+          AppLogger.error('❌ Failed to auto-lookup provider info: $e', 'MissionWorkflow');
+          throw ArgumentError('Failed to lookup provider info for appId: $appId');
+        }
+      }
+
+      // Final validation
+      if (safeProviderId.isEmpty) throw ArgumentError('providerId could not be determined for appId: $appId');
+      if (safeProviderName.isEmpty) safeProviderName = 'Unknown Provider';
 
       final workflow = MissionWorkflowModel(
         id: '',
@@ -39,8 +69,8 @@ class MissionWorkflowService {
         testerId: testerId,
         testerName: testerName,
         testerEmail: testerEmail,
-        providerId: providerId,
-        providerName: providerName,
+        providerId: safeProviderId,
+        providerName: safeProviderName,
         currentState: MissionWorkflowState.applicationSubmitted,
         stateUpdatedAt: DateTime.now(),
         stateUpdatedBy: testerId,
@@ -57,7 +87,7 @@ class MissionWorkflowService {
 
       // 공급자에게 알림 전송
       await _sendNotificationToProvider(
-        providerId: providerId,
+        providerId: safeProviderId,
         title: '새로운 테스터 신청',
         message: '$testerName님이 $appName 테스트를 신청했습니다.',
         data: {
