@@ -71,6 +71,37 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   final List<String> _dailyTestTimes = ['10분', '20분', '30분', '45분', '60분', '90분', '120분'];
   final List<String> _approvalConditions = ['스크린샷 필수', '녹화영상 필수', '스크린샷+녹화영상'];
 
+  // 레거시 카테고리를 새 카테고리로 매핑하는 함수
+  String _mapLegacyCategory(String? category) {
+    const mapping = {
+      'functional': 'Productivity',
+      'ui_ux': 'Social',
+      'performance': 'Productivity',
+      'security': 'Other',
+      'compatibility': 'Other',
+      'crash': 'Other',
+      'other': 'Other',
+    };
+
+    if (category == null) return _categories.first;
+
+    // 이미 새 카테고리 형식인 경우 그대로 사용 (유효성 검증)
+    if (_categories.contains(category)) {
+      return category;
+    }
+
+    // 레거시 카테고리 매핑
+    return mapping[category.toLowerCase()] ?? _categories.first;
+  }
+
+  // 드롭다운 값이 유효한지 확인하고 안전한 값 반환
+  String _getSafeDropdownValue(String? value, List<String> options) {
+    if (value == null || !options.contains(value)) {
+      return options.first;
+    }
+    return value;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -81,7 +112,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _appNameController = TextEditingController(text: widget.app.appName);
     _appUrlController = TextEditingController(text: widget.app.appUrl);
     _descriptionController = TextEditingController(text: widget.app.description);
-    _selectedCategory = widget.app.category;
+    _selectedCategory = _mapLegacyCategory(widget.app.category);
 
     // 기존 메타데이터에서 정보 가져오기
     final metadata = widget.app.metadata;
@@ -94,12 +125,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _testPeriodController = TextEditingController(text: (metadata['testPeriod'] ?? 14).toString());
     _testTimeController = TextEditingController(text: (metadata['testTime'] ?? 30).toString());
 
-    // 새 필드들 초기화
-    _selectedType = metadata['type'] ?? 'app';
-    _selectedDifficulty = metadata['difficulty'] ?? 'easy';
-    _selectedInstallType = metadata['installType'] ?? 'play_store';
-    _selectedDailyTestTime = metadata['dailyTestTime'] ?? '30분';
-    _selectedApprovalCondition = metadata['approvalCondition'] ?? '스크린샷 필수';
+    // 새 필드들 초기화 (안전한 드롭다운 값 설정)
+    _selectedType = _getSafeDropdownValue(metadata['type'], _types);
+    _selectedDifficulty = _getSafeDropdownValue(metadata['difficulty'], _difficulties);
+    _selectedInstallType = _getSafeDropdownValue(metadata['installType'], _installTypes);
+    _selectedDailyTestTime = _getSafeDropdownValue(metadata['dailyTestTime'], _dailyTestTimes);
+    _selectedApprovalCondition = _getSafeDropdownValue(metadata['approvalCondition'], _approvalConditions);
 
     _minExperienceController = TextEditingController(text: metadata['minExperience'] ?? '');
     _specialRequirementsController = TextEditingController(text: metadata['specialRequirements'] ?? '');
