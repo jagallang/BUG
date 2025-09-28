@@ -40,7 +40,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this); // 미션 찾기, 진행 중, 완료, 정산
+    _tabController = TabController(length: 2, vsync: this); // 미션, 게시판
     _scrollController = ScrollController();
     
     // TabController 초기화 완료

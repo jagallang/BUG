@@ -192,10 +192,13 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         // 신청 상태 조회
         String applicationStatus = await _getApplicationStatus(authState.user!.uid);
 
-        setState(() {
-          _hasAlreadyApplied = true;
-          _applicationStatus = applicationStatus;
-        });
+        // not_applied가 아닌 경우에만 hasAlreadyApplied를 true로 설정
+        if (applicationStatus != 'not_applied') {
+          setState(() {
+            _hasAlreadyApplied = true;
+            _applicationStatus = applicationStatus;
+          });
+        }
 
         AppLogger.info('신청 상태 확인: $_applicationStatus', 'MissionDetailPage');
       }
@@ -1163,8 +1166,10 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           return '신청 현황 보기';
         case 'rejected':
           return '신청 거부됨';
+        case 'not_applied':
+          return '미션 신청하기';
         default:
-          return '신청 현황 보기';
+          return '미션 신청하기';
       }
     }
 
