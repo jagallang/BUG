@@ -28,7 +28,25 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   late TextEditingController _testPeriodController;
   late TextEditingController _testTimeController;
 
+  // 새 필드 컨트롤러들
+  late TextEditingController _minExperienceController;
+  late TextEditingController _specialRequirementsController;
+  late TextEditingController _testingGuidelinesController;
+  late TextEditingController _minOSVersionController;
+  late TextEditingController _appStoreUrlController;
+  late TextEditingController _baseRewardController;
+  late TextEditingController _bonusRewardController;
+  late TextEditingController _dailyMissionPointsController;
+  late TextEditingController _finalCompletionPointsController;
+  late TextEditingController _bonusPointsController;
+
   late String _selectedCategory;
+  late String _selectedType;
+  late String _selectedDifficulty;
+  late String _selectedInstallType;
+  late String _selectedDailyTestTime;
+  late String _selectedApprovalCondition;
+
   bool _hasAnnouncement = false;
   bool _isActive = true;
   bool _isLoading = false;
@@ -46,6 +64,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     'Games',
     'Other',
   ];
+
+  final List<String> _types = ['app', 'website', 'service'];
+  final List<String> _difficulties = ['easy', 'medium', 'hard', 'expert'];
+  final List<String> _installTypes = ['play_store', 'apk_upload'];
+  final List<String> _dailyTestTimes = ['10분', '20분', '30분', '45분', '60분', '90분', '120분'];
+  final List<String> _approvalConditions = ['스크린샷 필수', '녹화영상 필수', '스크린샷+녹화영상'];
 
   @override
   void initState() {
@@ -66,9 +90,29 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _announcementController = TextEditingController(text: metadata['announcement'] ?? '');
     _priceController = TextEditingController(text: (metadata['price'] ?? 0).toString());
     _requirementsController = TextEditingController(text: metadata['requirements'] ?? '');
-    _participantCountController = TextEditingController(text: (metadata['participantCount'] ?? 1).toString());
+    _participantCountController = TextEditingController(text: (metadata['participantCount'] ?? widget.app.totalTesters ?? 1).toString());
     _testPeriodController = TextEditingController(text: (metadata['testPeriod'] ?? 14).toString());
     _testTimeController = TextEditingController(text: (metadata['testTime'] ?? 30).toString());
+
+    // 새 필드들 초기화
+    _selectedType = metadata['type'] ?? 'app';
+    _selectedDifficulty = metadata['difficulty'] ?? 'easy';
+    _selectedInstallType = metadata['installType'] ?? 'play_store';
+    _selectedDailyTestTime = metadata['dailyTestTime'] ?? '30분';
+    _selectedApprovalCondition = metadata['approvalCondition'] ?? '스크린샷 필수';
+
+    _minExperienceController = TextEditingController(text: metadata['minExperience'] ?? '');
+    _specialRequirementsController = TextEditingController(text: metadata['specialRequirements'] ?? '');
+    _testingGuidelinesController = TextEditingController(text: metadata['testingGuidelines'] ?? '');
+    _minOSVersionController = TextEditingController(text: metadata['minOSVersion'] ?? '');
+    _appStoreUrlController = TextEditingController(text: metadata['appStoreUrl'] ?? '');
+
+    // 보상 시스템 필드들
+    _baseRewardController = TextEditingController(text: (metadata['baseReward'] ?? metadata['price'] ?? 5000).toString());
+    _bonusRewardController = TextEditingController(text: (metadata['bonusReward'] ?? 2000).toString());
+    _dailyMissionPointsController = TextEditingController(text: (metadata['dailyMissionPoints'] ?? 100).toString());
+    _finalCompletionPointsController = TextEditingController(text: (metadata['finalCompletionPoints'] ?? 1000).toString());
+    _bonusPointsController = TextEditingController(text: (metadata['bonusPoints'] ?? 500).toString());
   }
 
   @override
@@ -82,13 +126,26 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _participantCountController.dispose();
     _testPeriodController.dispose();
     _testTimeController.dispose();
+
+    // 새 컨트롤러들 dispose
+    _minExperienceController.dispose();
+    _specialRequirementsController.dispose();
+    _testingGuidelinesController.dispose();
+    _minOSVersionController.dispose();
+    _appStoreUrlController.dispose();
+    _baseRewardController.dispose();
+    _bonusRewardController.dispose();
+    _dailyMissionPointsController.dispose();
+    _finalCompletionPointsController.dispose();
+    _bonusPointsController.dispose();
+
     super.dispose();
   }
 
   Future<void> _saveChanges() async {
     if (_appNameController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
-        _priceController.text.isEmpty ||
+        _baseRewardController.text.isEmpty ||
         _participantCountController.text.isEmpty ||
         _testPeriodController.text.isEmpty ||
         _testTimeController.text.isEmpty) {
@@ -103,10 +160,16 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     });
 
     try {
-      // 가격 검증
-      final price = double.tryParse(_priceController.text);
-      if (price == null || price < 0) {
-        throw Exception('올바른 가격을 입력해주세요');
+      // 기본 보상 검증
+      final baseReward = double.tryParse(_baseRewardController.text);
+      if (baseReward == null || baseReward < 0) {
+        throw Exception('올바른 기본 보상을 입력해주세요');
+      }
+
+      // 보너스 보상 검증
+      final bonusReward = double.tryParse(_bonusRewardController.text);
+      if (bonusReward == null || bonusReward < 0) {
+        throw Exception('올바른 보너스 보상을 입력해주세요');
       }
 
       // 참여자 수 검증
@@ -127,22 +190,63 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         throw Exception('테스트 시간은 1분 이상이어야 합니다');
       }
 
+      // 포인트 시스템 검증
+      final dailyMissionPoints = int.tryParse(_dailyMissionPointsController.text);
+      final finalCompletionPoints = int.tryParse(_finalCompletionPointsController.text);
+      final bonusPoints = int.tryParse(_bonusPointsController.text);
+
+      if (dailyMissionPoints == null || dailyMissionPoints < 0) {
+        throw Exception('올바른 일일 미션 포인트를 입력해주세요');
+      }
+      if (finalCompletionPoints == null || finalCompletionPoints < 0) {
+        throw Exception('올바른 최종 완료 포인트를 입력해주세요');
+      }
+      if (bonusPoints == null || bonusPoints < 0) {
+        throw Exception('올바른 보너스 포인트를 입력해주세요');
+      }
+
       final updatedData = {
         'appName': _appNameController.text,
         'appUrl': _appUrlController.text,
         'description': _descriptionController.text,
         'category': _selectedCategory,
+        'totalTesters': participantCount,  // maxTesters와 동기화
         'updatedAt': FieldValue.serverTimestamp(),
         'metadata': {
           ...widget.app.metadata,
+          // 기존 필드들
           'hasAnnouncement': _hasAnnouncement,
           'announcement': _hasAnnouncement ? _announcementController.text : '',
-          'price': price,
           'requirements': _requirementsController.text,
           'participantCount': participantCount,
           'testPeriod': testPeriod,
           'testTime': testTime,
           'isActive': _isActive,
+
+          // 앱 등록 폼과 동기화된 새 필드들
+          'type': _selectedType,
+          'difficulty': _selectedDifficulty,
+          'installType': _selectedInstallType,
+          'dailyTestTime': _selectedDailyTestTime,
+          'approvalCondition': _selectedApprovalCondition,
+
+          // 추가 필수 필드들
+          'minExperience': _minExperienceController.text,
+          'specialRequirements': _specialRequirementsController.text,
+          'testingGuidelines': _testingGuidelinesController.text,
+          'minOSVersion': _minOSVersionController.text,
+          'appStoreUrl': _appStoreUrlController.text,
+
+          // 보상 시스템 (기본 보상으로 price 대체)
+          'price': baseReward,  // 하위 호환성을 위해 유지
+          'baseReward': baseReward,
+          'bonusReward': bonusReward,
+          'dailyMissionPoints': dailyMissionPoints,
+          'finalCompletionPoints': finalCompletionPoints,
+          'bonusPoints': bonusPoints,
+
+          // 최대 테스터 수 (totalTesters와 동기화)
+          'maxTesters': participantCount,
         },
       };
 
@@ -211,11 +315,15 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   SizedBox(height: 24.h),
                   _buildStatusSection(),
                   SizedBox(height: 24.h),
+                  _buildTestTypeSection(),
+                  SizedBox(height: 24.h),
                   _buildAnnouncementSection(),
                   SizedBox(height: 24.h),
-                  _buildPricingSection(),
+                  _buildAdvancedRewardSection(),
                   SizedBox(height: 24.h),
                   _buildTestConfigSection(),
+                  SizedBox(height: 24.h),
+                  _buildNewFeaturesSection(),
                   SizedBox(height: 24.h),
                   _buildRequirementsSection(),
                   SizedBox(height: 32.h),
@@ -415,7 +523,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     );
   }
 
-  Widget _buildPricingSection() {
+  Widget _buildAdvancedRewardSection() {
     return Card(
       elevation: 2,
       child: Padding(
@@ -424,7 +532,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '💰 단가 설정',
+              '💰 고급 보상 시스템',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -433,32 +541,89 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             ),
             SizedBox(height: 8.h),
             Text(
-              '테스터에게 지급할 포인트를 설정하세요',
+              '다양한 보상 체계를 설정하세요',
               style: TextStyle(
                 fontSize: 14.sp,
                 color: Colors.grey[600],
               ),
             ),
             SizedBox(height: 16.h),
-            TextField(
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: '단가 (포인트) *',
-                hintText: '예: 1000',
-                suffix: Text(
-                  'P',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[700],
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _baseRewardController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '기본 보상 *',
+                      hintText: '5000',
+                      suffix: Text('P', style: TextStyle(color: Colors.indigo[700])),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.monetization_on),
+                    ),
                   ),
                 ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: TextField(
+                    controller: _bonusRewardController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '보너스 보상',
+                      hintText: '2000',
+                      suffix: Text('P', style: TextStyle(color: Colors.indigo[700])),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.star),
+                    ),
+                  ),
                 ),
-                prefixIcon: const Icon(Icons.monetization_on),
-              ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _dailyMissionPointsController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '일일 미션 포인트',
+                      hintText: '100',
+                      suffix: Text('P', style: TextStyle(color: Colors.orange[700])),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.today),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: TextField(
+                    controller: _finalCompletionPointsController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '최종 완료 포인트',
+                      hintText: '1000',
+                      suffix: Text('P', style: TextStyle(color: Colors.green[700])),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.check_circle),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: TextField(
+                    controller: _bonusPointsController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: '보너스 포인트',
+                      hintText: '500',
+                      suffix: Text('P', style: TextStyle(color: Colors.purple[700])),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.diamond),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -609,5 +774,270 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildTestTypeSection() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '🔧 테스트 유형 설정',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.indigo[900],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '테스트 대상의 유형과 난이도를 설정하세요',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedType,
+                    decoration: InputDecoration(
+                      labelText: '테스트 유형',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.category),
+                    ),
+                    items: _types.map((type) {
+                      return DropdownMenuItem(
+                        value: type,
+                        child: Text(_getTypeDisplayName(type)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedType = value!;
+                      });
+                    },
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedDifficulty,
+                    decoration: InputDecoration(
+                      labelText: '난이도',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.trending_up),
+                    ),
+                    items: _difficulties.map((difficulty) {
+                      return DropdownMenuItem(
+                        value: difficulty,
+                        child: Text(_getDifficultyDisplayName(difficulty)),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedDifficulty = value!;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            DropdownButtonFormField<String>(
+              value: _selectedInstallType,
+              decoration: InputDecoration(
+                labelText: '설치 유형',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                prefixIcon: const Icon(Icons.download),
+              ),
+              items: _installTypes.map((type) {
+                return DropdownMenuItem(
+                  value: type,
+                  child: Text(_getInstallTypeDisplayName(type)),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedInstallType = value!;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewFeaturesSection() {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '🆕 신규 기능 설정',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.indigo[900],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '일일 테스트 시간과 승인 조건을 설정하세요',
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedDailyTestTime,
+                    decoration: InputDecoration(
+                      labelText: '일일 테스트 시간',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.access_time),
+                    ),
+                    items: _dailyTestTimes.map((time) {
+                      return DropdownMenuItem(
+                        value: time,
+                        child: Text(time),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedDailyTestTime = value!;
+                      });
+                    },
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedApprovalCondition,
+                    decoration: InputDecoration(
+                      labelText: '승인 조건',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.approval),
+                    ),
+                    items: _approvalConditions.map((condition) {
+                      return DropdownMenuItem(
+                        value: condition,
+                        child: Text(condition),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedApprovalCondition = value!;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: _minExperienceController,
+              decoration: InputDecoration(
+                labelText: '최소 경험 레벨',
+                hintText: 'beginner, intermediate, advanced, expert',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                prefixIcon: const Icon(Icons.school),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _minOSVersionController,
+                    decoration: InputDecoration(
+                      labelText: '최소 OS 버전',
+                      hintText: 'Android 8.0+, iOS 13.0+',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.phone_android),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: TextField(
+                    controller: _appStoreUrlController,
+                    decoration: InputDecoration(
+                      labelText: '앱스토어 URL (선택)',
+                      hintText: '이미 출시된 앱의 스토어 링크',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.store),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: _specialRequirementsController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                labelText: '특별 요구사항',
+                hintText: '추가적인 요구사항이나 주의사항을 입력하세요',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                prefixIcon: const Icon(Icons.warning),
+                alignLabelWithHint: true,
+              ),
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: _testingGuidelinesController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                labelText: '테스팅 가이드라인',
+                hintText: '테스터가 따라야 할 구체적인 테스팅 지침을 작성하세요',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                prefixIcon: const Icon(Icons.rule),
+                alignLabelWithHint: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _getTypeDisplayName(String type) {
+    switch (type) {
+      case 'app': return '앱';
+      case 'website': return '웹사이트';
+      case 'service': return '서비스';
+      default: return type;
+    }
+  }
+
+  String _getDifficultyDisplayName(String difficulty) {
+    switch (difficulty) {
+      case 'easy': return '쉬움';
+      case 'medium': return '보통';
+      case 'hard': return '어려움';
+      case 'expert': return '전문가';
+      default: return difficulty;
+    }
+  }
+
+  String _getInstallTypeDisplayName(String type) {
+    switch (type) {
+      case 'play_store': return '구글 플레이 스토어';
+      case 'apk_upload': return 'APK 파일 업로드';
+      default: return type;
+    }
   }
 }
