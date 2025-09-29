@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.1.3-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.1.4-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,19 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.1.3)
+## ✨ 주요 기능 (v2.1.4)
+
+### 🔐 인증 기반 실시간 동기화 안정성 강화 (v2.1.4) - **AUTHENTICATION-BASED SYNC STABILITY RELEASE**
+- **🚨 Permission-denied 오류 완전 해결**: RealtimeSyncService의 인증 전 Firestore 접근 문제 해결
+  - **🔐 인증 상태 기반 제어**: AuthWrapper에서 로그인/로그아웃 시 sync 자동 시작/중지
+  - **⚡ 로그인 후 강제 동기화**: 3초 지연 후 기존 mission_workflows 데이터 일관성 확보
+  - **🛡️ 안전한 데이터 접근**: Firestore 접근 권한 확보 후 실시간 sync 시작으로 오류 방지
+  - **📱 즉시 반영**: 로그인과 동시에 최신 리워드 정보가 테스터 화면에 정확히 표시
+- **🔄 개선된 sync 라이프사이클 관리**:
+  - **🚀 main.dart 최적화**: Firebase 초기화에서 RealtimeSyncService 제거로 앱 시작 속도 개선
+  - **🎯 정확한 타이밍**: 사용자 인증 완료 시점에서만 sync 활성화
+  - **💾 상태 추적**: 이전 사용자와 현재 사용자 비교로 중복 sync 방지
+  - **🔒 안전한 종료**: 로그아웃 시 sync 완전 정리로 메모리 누수 방지
 
 ### 🔥 실시간 리워드 동기화 (v2.1.3) - **REAL-TIME REWARD SYNC RELEASE**
 - **⚡ 실시간 projects ↔ mission_workflows 동기화**: 앱공급자가 리워드 금액을 변경하면 즉시 반영
