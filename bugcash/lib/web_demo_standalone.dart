@@ -1,12 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:google_fonts/google_fonts.dart';
+// Entry point for testing the new modular demo structure
+import 'demo/main.dart' as demo;
 
 void main() {
-  runApp(const BugCashWebDemo());
+  demo.main();
 }
-
-class BugCashWebDemo extends StatelessWidget {
   const BugCashWebDemo({super.key});
 
   @override
