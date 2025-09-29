@@ -19,39 +19,37 @@ class ProjectDetailPage extends StatefulWidget {
 }
 
 class _ProjectDetailPageState extends State<ProjectDetailPage> {
-  // 고급보상시스템 데이터 안전 접근 함수
+  // 3단계 고급보상시스템 데이터 접근 함수
   Map<String, dynamic> get _advancedRewardData {
-    final metadata = widget.projectData['metadata'] as Map<String, dynamic>? ?? {};
-    final rewards = widget.projectData['rewards'] as Map<String, dynamic>? ?? {};
-    return metadata.isNotEmpty ? metadata : rewards;
+    return widget.projectData['rewards'] as Map<String, dynamic>? ?? {};
   }
 
-  // 개별 보상 계산 함수들 (테스터 미션 상세페이지와 동일한 로직)
+  // 3단계 고급보상시스템 개별 포인트 접근 함수들
 
   int get dailyMissionPoints {
-    final data = _advancedRewardData;
-    return (data['dailyMissionPoints'] as num?)?.toInt() ?? 0;
+    final rewards = _advancedRewardData;
+    return (rewards['dailyMissionPoints'] as num?)?.toInt() ?? 0;
   }
 
   int get finalCompletionPoints {
-    final data = _advancedRewardData;
-    return (data['finalCompletionPoints'] as num?)?.toInt() ?? 0;
+    final rewards = _advancedRewardData;
+    return (rewards['finalCompletionPoints'] as num?)?.toInt() ?? 0;
   }
 
   int get bonusPoints {
-    final data = _advancedRewardData;
-    return (data['bonusPoints'] as num?)?.toInt() ?? 0;
+    final rewards = _advancedRewardData;
+    return (rewards['bonusPoints'] as num?)?.toInt() ?? 0;
   }
 
   int get estimatedMinutes {
-    final data = _advancedRewardData;
-    return (data['estimatedMinutes'] as num?)?.toInt() ?? 60;
+    final rewards = _advancedRewardData;
+    return (rewards['estimatedMinutes'] as num?)?.toInt() ?? 60;
   }
 
-  // 고급리워드시스템 총 리워드 계산 (심플화된 3단계 보상)
+  // 3단계 고급보상시스템 총 예상 포인트 계산
   int get totalAdvancedReward {
-    if (_advancedRewardData.isEmpty) {
-      return 0; // 고급보상 데이터가 없으면 0
+    if (!hasAdvancedRewardSystem) {
+      return 0; // 3단계 보상 데이터가 없으면 0
     }
     final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30);
     final progressReward = dailyMissionPoints * estimatedDays;
@@ -60,8 +58,10 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
   }
 
   bool get hasAdvancedRewardSystem {
-    return _advancedRewardData.isNotEmpty &&
-           (dailyMissionPoints > 0 || finalCompletionPoints > 0 || bonusPoints > 0);
+    final rewards = _advancedRewardData;
+    return rewards.containsKey('dailyMissionPoints') ||
+           rewards.containsKey('finalCompletionPoints') ||
+           rewards.containsKey('bonusPoints');
   }
 
   @override

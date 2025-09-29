@@ -22,7 +22,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   late TextEditingController _appUrlController;
   late TextEditingController _descriptionController;
   late TextEditingController _announcementController;
-  late TextEditingController _priceController;
   late TextEditingController _requirementsController;
   late TextEditingController _participantCountController;
   late TextEditingController _testPeriodController;
@@ -117,7 +116,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _hasAnnouncement = metadata['hasAnnouncement'] ?? false;
     _isActive = metadata['isActive'] ?? true;
     _announcementController = TextEditingController(text: metadata['announcement'] ?? '');
-    _priceController = TextEditingController(text: (metadata['price'] ?? 0).toString());
     _requirementsController = TextEditingController(text: metadata['requirements'] ?? '');
     _participantCountController = TextEditingController(text: (metadata['participantCount'] ?? widget.app.totalTesters ?? 1).toString());
     _testPeriodController = TextEditingController(text: (metadata['testPeriod'] ?? 14).toString());
@@ -136,10 +134,24 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _minOSVersionController = TextEditingController(text: metadata['minOSVersion'] ?? '');
     _appStoreUrlController = TextEditingController(text: metadata['appStoreUrl'] ?? '');
 
-    // 보상 시스템 필드들
-    _dailyMissionPointsController = TextEditingController(text: (metadata['dailyMissionPoints'] ?? 100).toString());
-    _finalCompletionPointsController = TextEditingController(text: (metadata['finalCompletionPoints'] ?? 1000).toString());
-    _bonusPointsController = TextEditingController(text: (metadata['bonusPoints'] ?? 500).toString());
+    // 보상 시스템 필드들 - rewards 객체 우선, metadata 폴백
+    // 새로 등록된 앱은 rewards 객체에, 기존 앱은 metadata에 저장됨
+    final rewards = metadata['rewards'] as Map<String, dynamic>?;
+    final legacyPrice = metadata['price'] as int?;
+
+    final dailyMissionPoints = rewards?['dailyMissionPoints'] as int? ??
+                               metadata['dailyMissionPoints'] as int? ??
+                               (legacyPrice != null ? (legacyPrice * 0.1).round() : 100);
+    final finalCompletionPoints = rewards?['finalCompletionPoints'] as int? ??
+                                  metadata['finalCompletionPoints'] as int? ??
+                                  (legacyPrice != null ? (legacyPrice * 0.6).round() : 1000);
+    final bonusPoints = rewards?['bonusPoints'] as int? ??
+                        metadata['bonusPoints'] as int? ??
+                        (legacyPrice != null ? (legacyPrice * 0.3).round() : 500);
+
+    _dailyMissionPointsController = TextEditingController(text: dailyMissionPoints.toString());
+    _finalCompletionPointsController = TextEditingController(text: finalCompletionPoints.toString());
+    _bonusPointsController = TextEditingController(text: bonusPoints.toString());
   }
 
   @override
@@ -148,7 +160,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _appUrlController.dispose();
     _descriptionController.dispose();
     _announcementController.dispose();
-    _priceController.dispose();
     _requirementsController.dispose();
     _participantCountController.dispose();
     _testPeriodController.dispose();

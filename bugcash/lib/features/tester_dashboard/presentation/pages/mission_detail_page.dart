@@ -33,31 +33,26 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   String get missionDescription => widget.mission.description ?? '새로운 테스트 미션에 참여해보세요!';
   int get missionReward => widget.mission.rewardPoints ?? widget.mission.reward ?? 0;
 
-  // 고급보상시스템 데이터 안전 접근 함수들
+  // 3단계 고급보상시스템 데이터 접근 함수
   Map<String, dynamic> get _advancedRewardData {
     if (_appDetails == null) return {};
-
-    final metadata = _appDetails!['metadata'] as Map<String, dynamic>?;
-    final rewards = _appDetails!['rewards'] as Map<String, dynamic>?;
-
-    // metadata 우선, rewards 폴백
-    return metadata ?? rewards ?? {};
+    return _appDetails!['rewards'] as Map<String, dynamic>? ?? {};
   }
 
 
   int get dailyMissionPoints {
-    final data = _advancedRewardData;
-    return (data['dailyMissionPoints'] as num?)?.toInt() ?? 0;
+    final rewards = _advancedRewardData;
+    return (rewards['dailyMissionPoints'] as num?)?.toInt() ?? 0;
   }
 
   int get finalCompletionPoints {
-    final data = _advancedRewardData;
-    return (data['finalCompletionPoints'] as num?)?.toInt() ?? 0;
+    final rewards = _advancedRewardData;
+    return (rewards['finalCompletionPoints'] as num?)?.toInt() ?? 0;
   }
 
   int get bonusPoints {
-    final data = _advancedRewardData;
-    return (data['bonusPoints'] as num?)?.toInt() ?? 0;
+    final rewards = _advancedRewardData;
+    return (rewards['bonusPoints'] as num?)?.toInt() ?? 0;
   }
 
   // 고급보상시스템 총 포인트 계산 (심플화된 3단계 보상)
@@ -77,10 +72,12 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     return progressReward + completionReward;
   }
 
-  // 고급보상 구조가 있는지 확인 (심플화된 3단계 보상)
+  // 3단계 고급보상시스템 활성화 여부 확인
   bool get hasAdvancedRewardSystem {
-    return _advancedRewardData.isNotEmpty &&
-           (dailyMissionPoints > 0 || finalCompletionPoints > 0 || bonusPoints > 0);
+    final rewards = _advancedRewardData;
+    return rewards.containsKey('dailyMissionPoints') ||
+           rewards.containsKey('finalCompletionPoints') ||
+           rewards.containsKey('bonusPoints');
   }
 
   String get missionCategory => widget.mission.type?.toString().split('.').last ?? '기능 테스트';

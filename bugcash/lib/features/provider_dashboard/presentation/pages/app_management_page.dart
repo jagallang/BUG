@@ -151,8 +151,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   List<String> _selectedPlatforms = ['android'];
   int _maxTesters = 10;
   int _testPeriodDays = 14;
-  int _baseReward = 5000;
-  int _bonusReward = 2000;
+  int _dailyMissionPoints = 100;
+  int _finalCompletionPoints = 1000;
+  int _bonusPoints = 500;
 
   // Requirements
   final _minExperienceController = TextEditingController();
@@ -270,7 +271,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         // Extended fields matching database indexes
         'maxTesters': _maxTesters,
         'testPeriodDays': _testPeriodDays,
-        'rewardPoints': _baseReward, // For backward compatibility
+        'rewardPoints': _finalCompletionPoints, // For backward compatibility
         'totalTesters': 0,
         'activeTesters': 0,
         'totalBugs': 0,
@@ -282,10 +283,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         'minOSVersion': _minOSVersionController.text,
         'appStoreUrl': _appStoreUrlController.text,
 
-        // Advanced reward system
+        // 고급 보상 시스템 (3단계)
         'rewards': {
-          'baseReward': _baseReward,
-          'bonusReward': _bonusReward,
+          'dailyMissionPoints': _dailyMissionPoints,
+          'finalCompletionPoints': _finalCompletionPoints,
+          'bonusPoints': _bonusPoints,
           'currency': 'KRW',
         },
 
@@ -361,8 +363,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               _selectedPlatforms = ['android'];
               _maxTesters = 10;
               _testPeriodDays = 14;
-              _baseReward = 5000;
-              _bonusReward = 2000;
+              _dailyMissionPoints = 100;
+              _finalCompletionPoints = 1000;
+              _bonusPoints = 500;
               _requiredSpecializations = [];
             });
           }
@@ -997,43 +1000,55 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             ),
             SizedBox(height: 20.h),
 
-            // Rewards Section
-            _buildSectionHeader('보상 설정'),
+            // 고급 보상 시스템 (3단계)
+            _buildSectionHeader('고급 보상 설정'),
             SizedBox(height: 12.h),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    initialValue: _baseReward.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      _baseReward = int.tryParse(value) ?? 5000;
-                    },
-                    decoration: InputDecoration(
-                      labelText: '기본 보상 (원)',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
+            // 일일 미션 포인트
+            TextFormField(
+              initialValue: _dailyMissionPoints.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                _dailyMissionPoints = int.tryParse(value) ?? 100;
+              },
+              decoration: InputDecoration(
+                labelText: '일일 미션 포인트',
+                hintText: '매일 완료 시 지급되는 포인트',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: TextFormField(
-                    initialValue: _bonusReward.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      _bonusReward = int.tryParse(value) ?? 2000;
-                    },
-                    decoration: InputDecoration(
-                      labelText: '보너스 보상 (원)',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            // 최종 완료 포인트
+            TextFormField(
+              initialValue: _finalCompletionPoints.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                _finalCompletionPoints = int.tryParse(value) ?? 1000;
+              },
+              decoration: InputDecoration(
+                labelText: '최종 완료 포인트',
+                hintText: '전체 미션 완료 시 지급되는 포인트',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
-              ],
+              ),
+            ),
+            SizedBox(height: 12.h),
+            // 보너스 포인트
+            TextFormField(
+              initialValue: _bonusPoints.toString(),
+              keyboardType: TextInputType.number,
+              onChanged: (value) {
+                _bonusPoints = int.tryParse(value) ?? 500;
+              },
+              decoration: InputDecoration(
+                labelText: '보너스 포인트',
+                hintText: '우수한 성과 시 추가 지급되는 포인트',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
             ),
             SizedBox(height: 20.h),
 
