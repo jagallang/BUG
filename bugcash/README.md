@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.1.4-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.1.5-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,22 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.1.4)
+## ✨ 주요 기능 (v2.1.5)
+
+### 💡 리워드 시스템 간소화 (v2.1.5) - **REWARD SYSTEM SIMPLIFICATION RELEASE**
+- **🎯 5단계 → 3단계로 간소화**: 복잡한 리워드 구조를 사용자 친화적으로 단순화
+  - **❌ baseReward (즉시 지급) 제거**: 사용자 혼란 요소 제거
+  - **❌ bonusReward (추가 보너스) 제거**: 중복 리워드 구조 정리
+  - **✅ dailyMissionPoints (일일 미션) 유지**: 테스트 참여 일수별 리워드
+  - **✅ finalCompletionPoints (최종 완료) 유지**: 프로젝트 완료 시 일회성 리워드
+  - **✅ bonusPoints (보너스) 유지**: 특별 성과에 대한 추가 리워드
+- **🔄 전체 시스템 일관성 확보**:
+  - **🏢 Provider 인터페이스**: 앱 등록 시 3단계 리워드만 설정 가능
+  - **📱 Tester 화면**: 간소화된 리워드 계산으로 이해도 향상
+  - **⚙️ Admin 대시보드**: 프로젝트 관리 시 3단계 리워드 체계 적용
+  - **💾 실시간 동기화**: RealtimeSyncService가 3단계 시스템에 맞춰 최적화
+
+## ✨ 이전 버전 기능 (v2.1.4)
 
 ### 🔐 인증 기반 실시간 동기화 안정성 강화 (v2.1.4) - **AUTHENTICATION-BASED SYNC STABILITY RELEASE**
 - **🚨 Permission-denied 오류 완전 해결**: RealtimeSyncService의 인증 전 Firestore 접근 문제 해결
