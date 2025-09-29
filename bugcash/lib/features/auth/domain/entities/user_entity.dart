@@ -127,15 +127,41 @@ class UserEntity extends Equatable {
           .map((role) => UserType.values.byName(role))
           .toList();
     } else if (data['userType'] != null) {
-      // 기존 데이터 호환성
-      roles = [UserType.values.byName(data['userType'])];
+      // 기존 데이터 호환성 - 복합 userType 처리
+      final userTypeStr = data['userType'].toString();
+
+      // "tester, provider" 같은 복합 문자열 처리
+      if (userTypeStr.contains(',')) {
+        final typesList = userTypeStr.split(',').map((s) => s.trim()).toList();
+        roles = typesList
+            .where((type) => ['tester', 'provider', 'admin'].contains(type))
+            .map((type) => UserType.values.byName(type))
+            .toList();
+      } else {
+        // 단일 userType 처리
+        try {
+          roles = [UserType.values.byName(userTypeStr)];
+        } catch (e) {
+          print('⚠️ UserEntity: 알 수 없는 userType: $userTypeStr, 기본값 tester 사용');
+          roles = [UserType.tester];
+        }
+      }
+
+      if (roles.isEmpty) {
+        roles = [UserType.tester];
+      }
     } else {
       roles = [UserType.tester];
     }
 
     UserType primaryRole;
     if (data['primaryRole'] != null) {
-      primaryRole = UserType.values.byName(data['primaryRole']);
+      try {
+        primaryRole = UserType.values.byName(data['primaryRole']);
+      } catch (e) {
+        print('⚠️ UserEntity: 알 수 없는 primaryRole: ${data['primaryRole']}, roles의 첫 번째 값 사용');
+        primaryRole = roles.first;
+      }
     } else {
       primaryRole = roles.first;
     }

@@ -139,6 +139,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final rewards = metadata['rewards'] as Map<String, dynamic>?;
     final legacyPrice = metadata['price'] as int?;
 
+    // 안전한 디버깅 로그 추가
+    print('🔍 AppDetailPage 데이터 로딩 - ${widget.app.appName}');
+    print('📋 metadata keys: ${metadata.keys.toList()}');
+    print('🎁 rewards: $rewards');
+    print('💰 legacyPrice: $legacyPrice');
+
     final dailyMissionPoints = rewards?['dailyMissionPoints'] as int? ??
                                metadata['dailyMissionPoints'] as int? ??
                                (legacyPrice != null ? (legacyPrice * 0.1).round() : 100);
@@ -148,6 +154,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final bonusPoints = rewards?['bonusPoints'] as int? ??
                         metadata['bonusPoints'] as int? ??
                         (legacyPrice != null ? (legacyPrice * 0.3).round() : 500);
+
+    // 최종 계산된 값들 로그
+    print('📊 최종 보상 값 계산됨:');
+    print('   dailyMissionPoints: $dailyMissionPoints');
+    print('   finalCompletionPoints: $finalCompletionPoints');
+    print('   bonusPoints: $bonusPoints');
 
     _dailyMissionPointsController = TextEditingController(text: dailyMissionPoints.toString());
     _finalCompletionPointsController = TextEditingController(text: finalCompletionPoints.toString());

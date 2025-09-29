@@ -22,6 +22,21 @@ class ProviderAppModel extends ProviderAppEntity {
 
   factory ProviderAppModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // 기본 metadata 가져오기
+    final metadata = Map<String, dynamic>.from(data['metadata'] ?? {});
+
+    // 최상위 rewards 필드가 있으면 metadata에 포함시키기
+    final topLevelRewards = data['rewards'] as Map<String, dynamic>?;
+    if (topLevelRewards != null) {
+      metadata['rewards'] = topLevelRewards;
+      // 안전성을 위한 디버깅 로그
+      print('🔄 ProviderAppModel: 최상위 rewards 필드를 metadata에 병합 - ${data['appName']}');
+      print('📊 topLevelRewards: $topLevelRewards');
+    } else {
+      print('⚠️ ProviderAppModel: 최상위 rewards 필드 없음 - ${data['appName']}');
+    }
+
     return ProviderAppModel(
       id: doc.id,
       providerId: data['providerId'] ?? '',
@@ -37,7 +52,7 @@ class ProviderAppModel extends ProviderAppEntity {
       progressPercentage: (data['progressPercentage'] ?? 0).toDouble(),
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      metadata: data['metadata'] ?? {},
+      metadata: metadata,
     );
   }
 
