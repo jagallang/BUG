@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import 'test_data_page.dart';
+import 'project_detail_page.dart';
 import '../../../../utils/migration_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
@@ -1307,15 +1308,6 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     }
   }
 
-  // 통합된 보상 정보 추출 헬퍼 (metadata 우선, rewards 폴백)
-  int _getBaseReward(Map<String, dynamic> data) {
-    final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
-    final rewards = data['rewards'] as Map<String, dynamic>? ?? {};
-
-    return metadata['baseReward'] ??
-           rewards['baseReward'] ??
-           metadata['price'] ?? 0;
-  }
 
   void _approveProject(String projectId) async {
     try {
@@ -1449,35 +1441,13 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   }
 
   void _viewProjectDetails(String projectId, Map<String, dynamic> data) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(data['appName'] ?? '프로젝트 상세'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('프로젝트 ID: $projectId'),
-              SizedBox(height: 8.h),
-              Text('공급자: ${data['providerId'] ?? 'N/A'}'),
-              SizedBox(height: 8.h),
-              Text('상태: ${_getStatusText(data['status'] ?? 'pending')}'),
-              SizedBox(height: 8.h),
-              Text('설명: ${data['description'] ?? 'N/A'}'),
-              SizedBox(height: 8.h),
-              Text('최대 테스터: ${data['maxTesters'] ?? 0}명'),
-              SizedBox(height: 8.h),
-              Text('기본 리워드: ₩${NumberFormat('#,###').format(_getBaseReward(data))}'),
-            ],
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProjectDetailPage(
+          projectId: projectId,
+          projectData: data,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('닫기'),
-          ),
-        ],
       ),
     );
   }
