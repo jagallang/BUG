@@ -28,6 +28,11 @@ enum MissionWorkflowState {
   const MissionWorkflowState(this.code, this.displayName);
 
   static MissionWorkflowState fromCode(String code) {
+    // Firebase 실제 데이터 "approved"를 applicationApproved로 매핑
+    if (code == 'approved') {
+      return MissionWorkflowState.applicationApproved;
+    }
+
     return MissionWorkflowState.values.firstWhere(
       (state) => state.code == code,
       orElse: () => MissionWorkflowState.applicationSubmitted,

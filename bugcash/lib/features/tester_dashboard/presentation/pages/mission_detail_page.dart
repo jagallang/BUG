@@ -414,22 +414,22 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     switch (status.toLowerCase()) {
       case 'pending':
       case 'reviewing':
-        return Colors.orange;
+        return const Color(0xFFFF9800); // Material Orange 500
       case 'approved':
       case 'accepted':
-        return Colors.green;
+        return const Color(0xFF4CAF50); // Material Green 500
       case 'rejected':
       case 'declined':
-        return Colors.red;
+        return const Color(0xFFF44336); // Material Red 500
       case 'in_progress':
-        return Colors.blue;
+        return const Color(0xFF2196F3); // Material Blue 500
       case 'completed':
-        return Colors.purple;
+        return const Color(0xFF9C27B0); // Material Purple 500
       case 'not_applied':
-        return Colors.grey;
+        return const Color(0xFF757575); // Material Grey 600
       case 'unknown':
       default:
-        return Colors.grey;
+        return const Color(0xFF9E9E9E); // Material Grey 500
     }
   }
 
@@ -1296,9 +1296,11 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                 ? SizedBox(
                     width: 20.w,
                     height: 20.w,
-                    child: const CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Theme.of(context).colorScheme.onPrimary,
+                      ),
                     ),
                   )
                 : Text(

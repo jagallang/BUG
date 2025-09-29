@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../shared/widgets/loading_widgets.dart';
 // import '../widgets/earnings_summary_widget.dart';
 // import '../widgets/community_board_widget.dart';
 // import '../widgets/expandable_mission_card.dart';
@@ -513,7 +514,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           // Tab Content
           SliverFillRemaining(
             child: dashboardState.isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const BugCashLoadingWidget(
+                    message: '미션 데이터를 불러오는 중...',
+                  )
                 : dashboardState.error != null
                     ? _buildErrorWidget(dashboardState.error!)
                     : TabBarView(
@@ -864,14 +867,19 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   Widget _buildMissionTab() {
     return DefaultTabController(
       length: 4,
+      animationDuration: const Duration(milliseconds: 350), // 부드러운 애니메이션
       initialIndex: _navigateToMissionSubTab ?? 0, // 탭 전환 신호가 있으면 해당 탭으로 시작
       child: Builder(
         builder: (context) {
-          // 탭 전환 신호 처리
+          // 탭 전환 신호 처리 (개선된 애니메이션)
           if (_navigateToMissionSubTab != null) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
-                DefaultTabController.of(context).animateTo(_navigateToMissionSubTab!);
+                DefaultTabController.of(context).animateTo(
+                  _navigateToMissionSubTab!,
+                  duration: const Duration(milliseconds: 350),
+                  curve: Curves.easeInOutCubic,
+                );
                 setState(() {
                   _navigateToMissionSubTab = null; // 신호 초기화
                 });
@@ -916,6 +924,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 unselectedLabelColor: Colors.grey.shade600,
                 indicatorColor: Colors.green.shade700,
                 indicatorWeight: 3,
+                indicatorPadding: EdgeInsets.symmetric(horizontal: 8.w),
+                splashFactory: InkRipple.splashFactory,
+                overlayColor: WidgetStateProperty.all(Colors.green.withValues(alpha: 0.1)),
                 labelStyle: TextStyle(
                   fontSize: 11.sp, // 폰트 크기 약간 줄임 (4개 탭을 위해)
                   fontWeight: FontWeight.w600,
@@ -999,7 +1010,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       stream: missionService.watchTesterTodayMissions(widget.testerId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const BugCashLoadingWidget(
+            message: '미션 목록을 불러오는 중...',
+          );
         }
 
         if (snapshot.hasError) {
@@ -1749,7 +1762,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       stream: missionService.watchTesterSettlements(widget.testerId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const BugCashLoadingWidget(
+            message: '미션 목록을 불러오는 중...',
+          );
         }
 
         if (snapshot.hasError) {

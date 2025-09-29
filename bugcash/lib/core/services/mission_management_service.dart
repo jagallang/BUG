@@ -244,7 +244,13 @@ class MissionManagementService {
     return _firestore
         .collection(_dailyMissionsCollection)
         .where('testerId', isEqualTo: testerId)
-        .where('currentState', whereIn: ['mission_in_progress', 'daily_mission_started', 'daily_mission_completed'])
+        .where('currentState', whereIn: [
+          'application_submitted',    // 신청 완료 (승인 대기중)
+          'approved',                 // 승인됨 (Firebase 실제 값)
+          'mission_in_progress',      // 미션 진행중
+          'daily_mission_started',    // 일일 미션 시작
+          'daily_mission_completed'   // 일일 미션 완료
+        ])
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) {
@@ -267,6 +273,10 @@ class MissionManagementService {
   /// MissionWorkflowState를 DailyMissionStatus로 변환하는 헬퍼 메서드
   DailyMissionStatus _convertWorkflowStateToDailyMissionStatus(MissionWorkflowState state) {
     switch (state) {
+      case MissionWorkflowState.applicationSubmitted:
+        return DailyMissionStatus.pending; // 승인 대기중
+      case MissionWorkflowState.applicationApproved:
+        return DailyMissionStatus.inProgress; // 승인됨 (미션 시작 가능)
       case MissionWorkflowState.missionInProgress:
       case MissionWorkflowState.dailyMissionStarted:
         return DailyMissionStatus.inProgress;

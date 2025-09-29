@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
+import '../../../../shared/widgets/loading_widgets.dart';
 import 'test_data_page.dart';
 import 'project_detail_page.dart';
 import '../../../../utils/migration_helper.dart';
@@ -38,7 +39,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         Navigator.of(context).pushReplacementNamed('/login');
       });
       return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+        body: const BugCashLoadingWidget(
+          message: '관리자 대시보드를 불러오는 중...',
+        ),
       );
     }
 
@@ -517,7 +520,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   .snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const BugCashLoadingWidget(
+            message: '데이터를 불러오는 중...',
+          );
         }
 
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -801,7 +806,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const BugCashLoadingWidget(
+            message: '데이터를 불러오는 중...',
+          );
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -1029,7 +1036,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const BugCashLoadingWidget(
+            message: '데이터를 불러오는 중...',
+          );
                 }
 
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -1533,7 +1542,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       ]),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
+          return const BugCashLoadingWidget(
+            message: '데이터를 불러오는 중...',
+          );
         }
 
         if (!snapshot.hasData) {
@@ -1863,7 +1874,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       builder: (context) => AlertDialog(
         content: Row(
           children: [
-            const CircularProgressIndicator(),
+            const BugCashLoadingWidget(
+              message: '처리 중...',
+              size: 24.0,
+            ),
             const SizedBox(width: 16),
             Expanded(child: Text(message)),
           ],
