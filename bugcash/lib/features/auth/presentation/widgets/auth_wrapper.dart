@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
@@ -20,29 +19,14 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-
-    // 상태 변화 리스너 추가
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.listen<AuthState>(authProvider, (previous, next) {
-        if (kDebugMode) {
-          debugPrint('🔔 AuthWrapper - State changed: ${previous?.user?.email} → ${next.user?.email}');
-        }
-      });
-    });
+    // Riverpod 상태 관리는 build 메서드에서 처리
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // 디버깅을 위한 로그 (프로덕션에서는 제거)
-    if (kDebugMode) {
-      debugPrint('AuthWrapper - authState.isLoading: ${authState.isLoading}');
-      debugPrint('AuthWrapper - authState.user: ${authState.user?.email}');
-    }
-
     if (authState.isLoading) {
-      debugPrint('AuthWrapper - Showing loading...');
       return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -51,24 +35,13 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
     }
 
     if (authState.user == null) {
-      if (kDebugMode) {
-        debugPrint('AuthWrapper - Showing login page (user is null)');
-      }
       return const LoginPage();
     }
 
     final userData = authState.user!;
-    if (kDebugMode) {
-      debugPrint('AuthWrapper - User roles: ${userData.roles}');
-      debugPrint('AuthWrapper - Primary role: ${userData.primaryRole}');
-      debugPrint('AuthWrapper - Can switch roles: ${userData.canSwitchRoles}');
-    }
 
     // 다중 역할 사용자는 역할 선택 화면으로 이동
     if (userData.canSwitchRoles) {
-      if (kDebugMode) {
-        debugPrint('AuthWrapper - Showing role selection for multi-role user');
-      }
       return RoleSelectionPage(userData: userData);
     }
 
