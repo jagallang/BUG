@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import '../../../../shared/widgets/loading_widgets.dart';
+import '../../../../shared/widgets/responsive_wrapper.dart';
 import 'test_data_page.dart';
 import 'project_detail_page.dart';
 import '../../../../utils/migration_helper.dart';
@@ -144,7 +145,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         children: [
           // 사이드바 네비게이션
           Container(
-            width: 240.w,
+            width: ResponsiveWrapper.isDesktop(context) ? 240.w : 200.w,
             color: Colors.grey[100],
             child: Column(
               children: [
@@ -219,7 +220,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 1. Dashboard Tab - 요약 통계
   Widget _buildDashboardTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
+      padding: ResponsiveWrapper.getResponsivePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -256,7 +257,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 2. Projects Tab - 프로젝트 검수/관리
   Widget _buildProjectsTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
+      padding: ResponsiveWrapper.getResponsivePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -324,7 +325,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 3. Users Tab - 사용자 관리
   Widget _buildUsersTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
+      padding: ResponsiveWrapper.getResponsivePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -349,7 +350,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 4. Finance Tab - 포인트/수익 관리
   Widget _buildFinanceTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
+      padding: ResponsiveWrapper.getResponsivePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -382,7 +383,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 5. Reports Tab - 신고 처리
   Widget _buildReportsTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
+      padding: ResponsiveWrapper.getResponsivePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -415,7 +416,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 6. Settings Tab - 플랫폼 설정
   Widget _buildSettingsTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24.w),
+      padding: ResponsiveWrapper.getResponsivePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1002,7 +1003,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(20.w),
+        padding: ResponsiveWrapper.getResponsivePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1181,7 +1182,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(20.w),
+        padding: ResponsiveWrapper.getResponsivePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1249,7 +1250,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(20.w),
+        padding: ResponsiveWrapper.getResponsivePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1280,7 +1281,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(20.w),
+        padding: ResponsiveWrapper.getResponsivePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

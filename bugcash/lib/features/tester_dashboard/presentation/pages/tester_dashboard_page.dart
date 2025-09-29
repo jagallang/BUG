@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../shared/widgets/loading_widgets.dart';
+import '../../../../shared/widgets/responsive_wrapper.dart';
 // import '../widgets/earnings_summary_widget.dart';
 // import '../widgets/community_board_widget.dart';
 // import '../widgets/expandable_mission_card.dart';
@@ -339,7 +340,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 ),
                 child: SafeArea(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    padding: ResponsiveWrapper.getResponsivePadding(context),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.end,
@@ -528,7 +529,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                           // 게시판 (커뮤니티)
                           Card(
                             child: Padding(
-                              padding: EdgeInsets.all(16.w),
+                              padding: ResponsiveWrapper.getResponsivePadding(context),
                               child: Column(
                                 children: [
                                   Text('커뮤니티 게시판', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
@@ -675,7 +676,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           child: Column(
             children: [
               Container(
-                padding: EdgeInsets.all(16.w),
+                padding: ResponsiveWrapper.getResponsivePadding(context),
                 child: Row(
                   children: [
                     Icon(
@@ -983,7 +984,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
     
     return ListView.builder(
-      padding: EdgeInsets.all(16.w),
+      padding: ResponsiveWrapper.getResponsivePadding(context),
       itemCount: dashboardState.availableMissions.length,
       itemBuilder: (context, index) {
         final mission = dashboardState.availableMissions[index];
@@ -1076,7 +1077,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         }
 
         return ListView.builder(
-          padding: EdgeInsets.all(16.w),
+          padding: ResponsiveWrapper.getResponsivePadding(context),
           itemCount: dailyMissions.length,
           itemBuilder: (context, index) {
             final mission = dailyMissions[index];
@@ -1404,7 +1405,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         },
         borderRadius: BorderRadius.circular(12.r),
         child: Padding(
-          padding: EdgeInsets.all(16.w),
+          padding: ResponsiveWrapper.getResponsivePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1485,7 +1486,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
 
     return ListView.builder(
-      padding: EdgeInsets.all(16.w),
+      padding: ResponsiveWrapper.getResponsivePadding(context),
       itemCount: dashboardState.completedMissions.length,
       itemBuilder: (context, index) {
         final mission = dashboardState.completedMissions[index];
@@ -1544,7 +1545,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Padding(
-        padding: EdgeInsets.all(16.w),
+        padding: ResponsiveWrapper.getResponsivePadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1834,14 +1835,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         }
 
         return ListView.builder(
-          padding: EdgeInsets.all(16.w),
+          padding: ResponsiveWrapper.getResponsivePadding(context),
           itemCount: settlements.length,
           itemBuilder: (context, index) {
             final settlement = settlements[index];
             return Card(
               margin: EdgeInsets.only(bottom: 12.h),
               child: Padding(
-                padding: EdgeInsets.all(16.w),
+                padding: ResponsiveWrapper.getResponsivePadding(context),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
