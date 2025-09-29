@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.1.5-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.0.8-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,14 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.1.5)
+## ✨ 주요 기능 (v2.0.8)
+
+### 🔧 공급자 대시보드 앱 편집 모드 데이터 연동 개선 (v2.0.8) - **PROVIDER DASHBOARD DATA SYNC FIX**
+- **📝 앱 편집 모드 데이터 연동 완벽 해결**:
+  - **✅ 3단계 보상 시스템 데이터 동기화**: 일일 미션, 최종 완료, 보너스 포인트가 정확히 표시
+  - **✅ 복합 userType 파싱 지원**: "tester, provider" 같은 다중 역할 문자열 처리
+  - **✅ Firebase 데이터 구조 호환성**: 최상위 rewards 필드를 metadata에 자동 병합
+  - **✅ 테스터 요구사항/가이드라인 연동**: 모든 앱 정보 필드가 편집 모드에서 정상 표시
 
 ### 💡 리워드 시스템 간소화 (v2.1.5) - **REWARD SYSTEM SIMPLIFICATION RELEASE**
 - **🎯 5단계 → 3단계로 간소화**: 복잡한 리워드 구조를 사용자 친화적으로 단순화
