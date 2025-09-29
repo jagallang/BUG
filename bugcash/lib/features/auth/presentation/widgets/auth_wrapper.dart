@@ -7,6 +7,8 @@ import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart'
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 import '../pages/role_selection_page.dart';
+import '../../../../core/services/realtime_sync_service.dart';
+import '../../../../core/utils/logger.dart';
 
 class AuthWrapper extends ConsumerStatefulWidget {
   const AuthWrapper({super.key});
@@ -16,6 +18,8 @@ class AuthWrapper extends ConsumerStatefulWidget {
 }
 
 class _AuthWrapperState extends ConsumerState<AuthWrapper> {
+  UserEntity? _previousUser;
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +29,9 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+
+    // 🔥 인증 상태 변경에 따른 실시간 동기화 제어
+    _handleAuthStateChange(authState.user);
 
     if (authState.isLoading) {
       return const Scaffold(
@@ -47,6 +54,30 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
 
     // 단일 역할 사용자는 기본 역할로 대시보드 이동
     return _navigateToDashboard(userData, userData.primaryRole);
+  }
+
+  /// 인증 상태 변경에 따른 실시간 동기화 제어
+  void _handleAuthStateChange(UserEntity? currentUser) {
+    // 사용자 상태가 변경된 경우에만 처리
+    if (_previousUser?.uid != currentUser?.uid) {
+      if (currentUser != null) {
+        // 로그인 시: 실시간 동기화 시작
+        AppLogger.info('User logged in: ${currentUser.email} - Starting RealtimeSyncService', 'AuthWrapper');
+        RealtimeSyncService.startRealtimeSync();
+
+        // 로그인 후 기존 데이터 강제 동기화 (3초 지연 후 실행)
+        Future.delayed(const Duration(seconds: 3), () {
+          AppLogger.info('Force syncing all mission_workflows after login', 'AuthWrapper');
+          RealtimeSyncService.forceSyncAll();
+        });
+      } else {
+        // 로그아웃 시: 실시간 동기화 중지
+        AppLogger.info('User logged out - Stopping RealtimeSyncService', 'AuthWrapper');
+        RealtimeSyncService.stopRealtimeSync();
+      }
+
+      _previousUser = currentUser;
+    }
   }
 
   Widget _navigateToDashboard(UserEntity userData, UserType role) {

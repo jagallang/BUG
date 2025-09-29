@@ -8,7 +8,6 @@ import 'generated/l10n/app_localizations.dart';
 import 'core/utils/logger.dart';
 import 'core/config/app_config.dart';
 import 'core/services/api_key_service.dart';
-import 'core/services/realtime_sync_service.dart';
 import 'firebase_options.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'shared/theme/app_theme.dart';
@@ -48,11 +47,7 @@ Future<void> _initializeFirebase() async {
       AppLogger.info('Firebase initialized successfully', 'Main');
     }
 
-    // 🔥 실시간 동기화 서비스 시작
-    RealtimeSyncService.startRealtimeSync();
-    if (AppConfig.enableLogging) {
-      AppLogger.info('Realtime sync service started', 'Main');
-    }
+    // 🔥 실시간 동기화 서비스는 로그인 후에 시작 (AuthWrapper에서 처리)
 
     // Firebase 설정 (선택적)
     if (AppConfig.enableAnalytics) {
