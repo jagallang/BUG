@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.1.2-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.1.3-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,19 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.1.2)
+## ✨ 주요 기능 (v2.1.3)
+
+### 🔥 실시간 리워드 동기화 (v2.1.3) - **REAL-TIME REWARD SYNC RELEASE**
+- **⚡ 실시간 projects ↔ mission_workflows 동기화**: 앱공급자가 리워드 금액을 변경하면 즉시 반영
+  - **🏢 공급자 변경**: projects 컬렉션의 `dailyMissionPoints` 값 수정
+  - **🔄 자동 동기화**: `RealtimeSyncService`가 변경을 감지하여 모든 관련 `mission_workflows` 업데이트
+  - **📱 테스터 실시간 반영**: 진행중인 미션의 리워드 금액이 화면에서 즉시 업데이트
+  - **⚡ 신규 신청 최적화**: `ProjectsService.getDailyMissionPoints()` 활용으로 최신 리워드 정보 보장
+- **🎯 완전 실시간 연동 아키텍처**:
+  - **📊 Firestore Stream 기반**: `projects` 컬렉션 변경 실시간 감지
+  - **🔄 배치 업데이트**: 동일 appId의 모든 mission_workflows 일괄 업데이트
+  - **💾 변경 이력 기록**: `syncedAt`, `syncedFrom` 필드로 동기화 추적
+  - **🛡️ 안전성 우선**: 오류 시에도 기본값으로 안전하게 fallback
 
 ### 🎯 실제 데이터 연동 완성 (v2.1.2) - **REAL DATA INTEGRATION RELEASE**
 - **✅ 더미 데이터 완전 제거**: 테스터 대시보드가 이제 100% 실제 Firebase 데이터로 동작
