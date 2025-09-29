@@ -27,17 +27,6 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
   }
 
   // 개별 보상 계산 함수들 (테스터 미션 상세페이지와 동일한 로직)
-  int get baseReward {
-    final data = _advancedRewardData;
-    return (data['baseReward'] as num?)?.toInt() ??
-           (data['price'] as num?)?.toInt() ??
-           5000;
-  }
-
-  int get bonusReward {
-    final data = _advancedRewardData;
-    return (data['bonusReward'] as num?)?.toInt() ?? 0;
-  }
 
   int get dailyMissionPoints {
     final data = _advancedRewardData;
@@ -59,21 +48,20 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     return (data['estimatedMinutes'] as num?)?.toInt() ?? 60;
   }
 
-  // 고급리워드시스템 총 리워드 계산
+  // 고급리워드시스템 총 리워드 계산 (심플화된 3단계 보상)
   int get totalAdvancedReward {
     if (_advancedRewardData.isEmpty) {
-      return baseReward;
+      return 0; // 고급보상 데이터가 없으면 0
     }
-    final immediateReward = baseReward + bonusReward;
     final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30);
     final progressReward = dailyMissionPoints * estimatedDays;
     final completionReward = finalCompletionPoints + bonusPoints;
-    return immediateReward + progressReward + completionReward;
+    return progressReward + completionReward;
   }
 
   bool get hasAdvancedRewardSystem {
     return _advancedRewardData.isNotEmpty &&
-           (bonusReward > 0 || dailyMissionPoints > 0 || finalCompletionPoints > 0 || bonusPoints > 0);
+           (dailyMissionPoints > 0 || finalCompletionPoints > 0 || bonusPoints > 0);
   }
 
   @override
@@ -213,8 +201,6 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
                   SizedBox(height: 12.h),
                   Divider(color: Colors.green[300]),
                   SizedBox(height: 8.h),
-                  _buildRewardRow('기본리워드', baseReward),
-                  if (bonusReward > 0) _buildRewardRow('보너스리워드', bonusReward),
                   if (dailyMissionPoints > 0) ...[
                     _buildRewardRow('일일미션리워드', dailyMissionPoints, isDaily: true),
                     Text(
@@ -228,36 +214,19 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
               ),
             ),
           ] else ...[
-            // 기본리워드만 설정된 경우
+            // 고급보상시스템이 설정되지 않은 경우
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: Colors.grey[50],
                 borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.blue[200]!),
+                border: Border.all(color: Colors.grey[300]!),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '기본리워드',
-                    style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500),
-                  ),
-                  Text(
-                    '₩${NumberFormat('#,###').format(baseReward)}',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue[700],
-                    ),
-                  ),
-                ],
+              child: Text(
+                '⚠️ 고급보상시스템이 설정되지 않았습니다.',
+                style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
               ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '💡 고급리워드시스템이 설정되지 않아 기본리워드만 지급됩니다.',
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
             ),
           ],
         ],

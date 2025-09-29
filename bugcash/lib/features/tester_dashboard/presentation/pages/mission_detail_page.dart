@@ -44,17 +44,6 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     return metadata ?? rewards ?? {};
   }
 
-  int get baseReward {
-    final data = _advancedRewardData;
-    return (data['baseReward'] as num?)?.toInt() ??
-           (data['price'] as num?)?.toInt() ??
-           missionReward;
-  }
-
-  int get bonusReward {
-    final data = _advancedRewardData;
-    return (data['bonusReward'] as num?)?.toInt() ?? 0;
-  }
 
   int get dailyMissionPoints {
     final data = _advancedRewardData;
@@ -71,15 +60,12 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     return (data['bonusPoints'] as num?)?.toInt() ?? 0;
   }
 
-  // 고급보상시스템 총 포인트 계산
+  // 고급보상시스템 총 포인트 계산 (심플화된 3단계 보상)
   int get totalAdvancedReward {
     // 고급보상 데이터가 없으면 기존 방식 사용
     if (_advancedRewardData.isEmpty) {
       return missionReward;
     }
-
-    // 즉시 지급 보상
-    final immediateReward = baseReward + bonusReward;
 
     // 진행 중 보상 (예상 테스트 일수 기반)
     final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30); // 최소 1일, 최대 30일
@@ -88,13 +74,13 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     // 완료 시 추가 보상
     final completionReward = finalCompletionPoints + bonusPoints;
 
-    return immediateReward + progressReward + completionReward;
+    return progressReward + completionReward;
   }
 
-  // 고급보상 구조가 있는지 확인
+  // 고급보상 구조가 있는지 확인 (심플화된 3단계 보상)
   bool get hasAdvancedRewardSystem {
     return _advancedRewardData.isNotEmpty &&
-           (baseReward > 0 || bonusReward > 0 || dailyMissionPoints > 0 || finalCompletionPoints > 0);
+           (dailyMissionPoints > 0 || finalCompletionPoints > 0 || bonusPoints > 0);
   }
 
   String get missionCategory => widget.mission.type?.toString().split('.').last ?? '기능 테스트';
@@ -1006,14 +992,6 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
     return Column(
       children: [
-        if (baseReward > 0 || bonusReward > 0)
-          _buildRewardRow(
-            '즉시 지급',
-            baseReward + bonusReward,
-            Icons.flash_on,
-            Colors.orange,
-            '기본 ${NumberFormat('#,###').format(baseReward)}P + 보너스 ${NumberFormat('#,###').format(bonusReward)}P',
-          ),
 
         if (dailyMissionPoints > 0)
           _buildRewardRow(

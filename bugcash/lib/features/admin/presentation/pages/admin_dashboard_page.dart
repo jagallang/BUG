@@ -566,11 +566,6 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     // 보상 정보 읽기 - metadata 우선, rewards 폴백
     final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
     final rewards = data['rewards'] as Map<String, dynamic>? ?? {};
-    final baseReward = metadata['baseReward'] ??
-                      rewards['baseReward'] ??
-                      metadata['price'] ?? 0;
-    final bonusReward = metadata['bonusReward'] ??
-                       rewards['bonusReward'] ?? 0;
     final dailyMissionPoints = metadata['dailyMissionPoints'] ??
                               rewards['dailyMissionPoints'] ?? 0;
     final finalCompletionPoints = metadata['finalCompletionPoints'] ??
@@ -580,10 +575,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     final estimatedMinutes = metadata['estimatedMinutes'] ??
                             rewards['estimatedMinutes'] ?? 60;
 
-    // 총보상 계산
+    // 총보상 계산 (심플화된 3단계 보상)
     final totalReward = _calculateTotalReward(
-      baseReward: baseReward,
-      bonusReward: bonusReward,
       dailyMissionPoints: dailyMissionPoints,
       finalCompletionPoints: finalCompletionPoints,
       bonusPoints: bonusPoints,
@@ -1886,22 +1879,19 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     );
   }
 
-  // 총보상 계산 헬퍼 메서드
+  // 총보상 계산 헬퍼 메서드 (심플화된 3단계 보상)
   int _calculateTotalReward({
-    required int baseReward,
-    required int bonusReward,
     required int dailyMissionPoints,
     required int finalCompletionPoints,
     required int bonusPoints,
     required int estimatedMinutes,
   }) {
-    // project_detail_page.dart와 동일한 계산 로직
-    final immediateReward = baseReward + bonusReward;
+    // 심플화된 계산 로직: 진행 중 보상 + 완료 시 보상
     final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30);
     final progressReward = dailyMissionPoints * estimatedDays;
     final completionReward = finalCompletionPoints + bonusPoints;
 
-    return immediateReward + progressReward + completionReward;
+    return progressReward + completionReward;
   }
 
   // 오류 다이얼로그 표시

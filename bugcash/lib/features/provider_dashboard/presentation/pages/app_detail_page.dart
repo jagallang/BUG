@@ -34,8 +34,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   late TextEditingController _testingGuidelinesController;
   late TextEditingController _minOSVersionController;
   late TextEditingController _appStoreUrlController;
-  late TextEditingController _baseRewardController;
-  late TextEditingController _bonusRewardController;
   late TextEditingController _dailyMissionPointsController;
   late TextEditingController _finalCompletionPointsController;
   late TextEditingController _bonusPointsController;
@@ -139,8 +137,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _appStoreUrlController = TextEditingController(text: metadata['appStoreUrl'] ?? '');
 
     // 보상 시스템 필드들
-    _baseRewardController = TextEditingController(text: (metadata['baseReward'] ?? metadata['price'] ?? 5000).toString());
-    _bonusRewardController = TextEditingController(text: (metadata['bonusReward'] ?? 2000).toString());
     _dailyMissionPointsController = TextEditingController(text: (metadata['dailyMissionPoints'] ?? 100).toString());
     _finalCompletionPointsController = TextEditingController(text: (metadata['finalCompletionPoints'] ?? 1000).toString());
     _bonusPointsController = TextEditingController(text: (metadata['bonusPoints'] ?? 500).toString());
@@ -164,8 +160,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _testingGuidelinesController.dispose();
     _minOSVersionController.dispose();
     _appStoreUrlController.dispose();
-    _baseRewardController.dispose();
-    _bonusRewardController.dispose();
     _dailyMissionPointsController.dispose();
     _finalCompletionPointsController.dispose();
     _bonusPointsController.dispose();
@@ -176,7 +170,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   Future<void> _saveChanges() async {
     if (_appNameController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
-        _baseRewardController.text.isEmpty ||
         _participantCountController.text.isEmpty ||
         _testPeriodController.text.isEmpty ||
         _testTimeController.text.isEmpty) {
@@ -191,17 +184,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     });
 
     try {
-      // 기본 보상 검증
-      final baseReward = double.tryParse(_baseRewardController.text);
-      if (baseReward == null || baseReward < 0) {
-        throw Exception('올바른 기본 보상을 입력해주세요');
-      }
-
-      // 보너스 보상 검증
-      final bonusReward = double.tryParse(_bonusRewardController.text);
-      if (bonusReward == null || bonusReward < 0) {
-        throw Exception('올바른 보너스 보상을 입력해주세요');
-      }
 
       // 참여자 수 검증
       final participantCount = int.tryParse(_participantCountController.text);
@@ -268,10 +250,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           'minOSVersion': _minOSVersionController.text,
           'appStoreUrl': _appStoreUrlController.text,
 
-          // 보상 시스템 (기본 보상으로 price 대체)
-          'price': baseReward,  // 하위 호환성을 위해 유지
-          'baseReward': baseReward,
-          'bonusReward': bonusReward,
+          // 보상 시스템 (심플화된 3단계 보상)
           'dailyMissionPoints': dailyMissionPoints,
           'finalCompletionPoints': finalCompletionPoints,
           'bonusPoints': bonusPoints,
@@ -280,10 +259,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           'maxTesters': participantCount,
         },
 
-        // 테스터/관리자 모드와의 호환성을 위한 rewards 객체 (앱 공급자 입력이 소스)
+        // 테스터/관리자 모드와의 호환성을 위한 rewards 객체 (심플화된 3단계 보상)
         'rewards': {
-          'baseReward': baseReward,
-          'bonusReward': bonusReward,
           'dailyMissionPoints': dailyMissionPoints,
           'finalCompletionPoints': finalCompletionPoints,
           'bonusPoints': bonusPoints,
@@ -593,38 +570,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 fontSize: 14.sp,
                 color: Colors.grey[600],
               ),
-            ),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _baseRewardController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: '기본 보상 *',
-                      hintText: '5000',
-                      suffix: Text('P', style: TextStyle(color: Colors.indigo[700])),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.monetization_on),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: TextField(
-                    controller: _bonusRewardController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: '보너스 보상',
-                      hintText: '2000',
-                      suffix: Text('P', style: TextStyle(color: Colors.indigo[700])),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.star),
-                    ),
-                  ),
-                ),
-              ],
             ),
             SizedBox(height: 16.h),
             Row(
