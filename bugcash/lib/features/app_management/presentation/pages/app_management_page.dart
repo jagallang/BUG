@@ -232,11 +232,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           SizedBox(height: 24.h),
           ElevatedButton.icon(
             onPressed: _showCreateAppDialog,
+            icon: Icon(Icons.add, size: 20.sp),
             label: Text(
               '앱 추가',
               style: TextStyle(fontSize: 14.sp),
             ),
-            icon: Icon(Icons.add, size: 20.sp),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
