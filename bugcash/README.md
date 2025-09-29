@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.1.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.1.2-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,9 +13,9 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.1.0)
+## ✨ 주요 기능 (v2.1.2)
 
-### 🎯 실제 데이터 연동 완성 (v2.1.0) - **REAL DATA INTEGRATION RELEASE**
+### 🎯 실제 데이터 연동 완성 (v2.1.2) - **REAL DATA INTEGRATION RELEASE**
 - **✅ 더미 데이터 완전 제거**: 테스터 대시보드가 이제 100% 실제 Firebase 데이터로 동작
   - **🔥 하드코딩된 "일일 테스트 미션" 제거**: `mission_management_service.dart`에서 더미 타이틀/설명/보상 삭제
   - **📱 실제 앱명 표시**: "스마트키즈 한글쓰기333 테스트" 같은 실제 앱 이름으로 미션 타이틀 개인화
