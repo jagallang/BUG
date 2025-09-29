@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.0.8-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.1.8-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,14 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.0.8)
+## ✨ 주요 기능 (v2.1.8)
+
+### 🚀 프로덕션 배포 및 안정화 (v2.1.8) - **PRODUCTION DEPLOYMENT**
+- **🌐 Firebase 프로덕션 배포 완료**:
+  - **✅ Flutter 웹 빌드 최적화**: Tree-shaking으로 98.9% 폰트 크기 감소
+  - **✅ Firebase Hosting 배포**: https://bugcash.web.app 라이브
+  - **✅ v2.0.8 버그 수정 사항 프로덕션 적용**: 모든 데이터 연동 문제 해결
+  - **✅ 33개 파일 성공적으로 업로드 및 배포**
 
 ### 🔧 공급자 대시보드 앱 편집 모드 데이터 연동 개선 (v2.0.8) - **PROVIDER DASHBOARD DATA SYNC FIX**
 - **📝 앱 편집 모드 데이터 연동 완벽 해결**:
