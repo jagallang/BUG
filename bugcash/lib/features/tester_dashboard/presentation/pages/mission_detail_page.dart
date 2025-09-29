@@ -32,6 +32,71 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   String get missionAppName => widget.mission.appName ?? '앱 테스트';
   String get missionDescription => widget.mission.description ?? '새로운 테스트 미션에 참여해보세요!';
   int get missionReward => widget.mission.rewardPoints ?? widget.mission.reward ?? 0;
+
+  // 고급보상시스템 데이터 안전 접근 함수들
+  Map<String, dynamic> get _advancedRewardData {
+    if (_appDetails == null) return {};
+
+    final metadata = _appDetails!['metadata'] as Map<String, dynamic>?;
+    final rewards = _appDetails!['rewards'] as Map<String, dynamic>?;
+
+    // metadata 우선, rewards 폴백
+    return metadata ?? rewards ?? {};
+  }
+
+  int get baseReward {
+    final data = _advancedRewardData;
+    return (data['baseReward'] as num?)?.toInt() ??
+           (data['price'] as num?)?.toInt() ??
+           missionReward;
+  }
+
+  int get bonusReward {
+    final data = _advancedRewardData;
+    return (data['bonusReward'] as num?)?.toInt() ?? 0;
+  }
+
+  int get dailyMissionPoints {
+    final data = _advancedRewardData;
+    return (data['dailyMissionPoints'] as num?)?.toInt() ?? 0;
+  }
+
+  int get finalCompletionPoints {
+    final data = _advancedRewardData;
+    return (data['finalCompletionPoints'] as num?)?.toInt() ?? 0;
+  }
+
+  int get bonusPoints {
+    final data = _advancedRewardData;
+    return (data['bonusPoints'] as num?)?.toInt() ?? 0;
+  }
+
+  // 고급보상시스템 총 포인트 계산
+  int get totalAdvancedReward {
+    // 고급보상 데이터가 없으면 기존 방식 사용
+    if (_advancedRewardData.isEmpty) {
+      return missionReward;
+    }
+
+    // 즉시 지급 보상
+    final immediateReward = baseReward + bonusReward;
+
+    // 진행 중 보상 (예상 테스트 일수 기반)
+    final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30); // 최소 1일, 최대 30일
+    final progressReward = dailyMissionPoints * estimatedDays;
+
+    // 완료 시 추가 보상
+    final completionReward = finalCompletionPoints + bonusPoints;
+
+    return immediateReward + progressReward + completionReward;
+  }
+
+  // 고급보상 구조가 있는지 확인
+  bool get hasAdvancedRewardSystem {
+    return _advancedRewardData.isNotEmpty &&
+           (baseReward > 0 || bonusReward > 0 || dailyMissionPoints > 0 || finalCompletionPoints > 0);
+  }
+
   String get missionCategory => widget.mission.type?.toString().split('.').last ?? '기능 테스트';
   int get currentParticipants => widget.mission.currentParticipants ?? widget.mission.testers ?? 0;
   int get maxParticipants => widget.mission.maxParticipants ?? widget.mission.maxTesters ?? 10;
@@ -883,7 +948,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               Icon(Icons.attach_money, color: Colors.green[600], size: 20.w),
               SizedBox(width: 8.w),
               Text(
-                '💰 보상정보',
+                '💰 포인트 정보',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
@@ -893,6 +958,16 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
             ],
           ),
           SizedBox(height: 16.h),
+
+          // 고급보상시스템이 있는 경우 상세 표시
+          if (hasAdvancedRewardSystem) ...[
+            _buildAdvancedRewardDetails(),
+            SizedBox(height: 12.h),
+            Divider(color: Colors.grey[300]),
+            SizedBox(height: 12.h),
+          ],
+
+          // 총 포인트 표시
           Container(
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
@@ -903,14 +978,14 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '총 보상: ',
+                  '총 포인트: ',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: Colors.grey[700],
                   ),
                 ),
                 Text(
-                  '${NumberFormat('#,###').format(missionReward)}원',
+                  '${NumberFormat('#,###').format(hasAdvancedRewardSystem ? totalAdvancedReward : missionReward)}P',
                   style: TextStyle(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
@@ -918,6 +993,87 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                   ),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 고급보상시스템 상세 정보 위젯
+  Widget _buildAdvancedRewardDetails() {
+    final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30);
+
+    return Column(
+      children: [
+        if (baseReward > 0 || bonusReward > 0)
+          _buildRewardRow(
+            '즉시 지급',
+            baseReward + bonusReward,
+            Icons.flash_on,
+            Colors.orange,
+            '기본 ${NumberFormat('#,###').format(baseReward)}P + 보너스 ${NumberFormat('#,###').format(bonusReward)}P',
+          ),
+
+        if (dailyMissionPoints > 0)
+          _buildRewardRow(
+            '진행 보상',
+            dailyMissionPoints * estimatedDays,
+            Icons.calendar_today,
+            Colors.blue,
+            '일일 ${NumberFormat('#,###').format(dailyMissionPoints)}P × ${estimatedDays}일',
+          ),
+
+        if (finalCompletionPoints > 0 || bonusPoints > 0)
+          _buildRewardRow(
+            '완료 보상',
+            finalCompletionPoints + bonusPoints,
+            Icons.check_circle,
+            Colors.green,
+            '완료 ${NumberFormat('#,###').format(finalCompletionPoints)}P + 추가 ${NumberFormat('#,###').format(bonusPoints)}P',
+          ),
+      ],
+    );
+  }
+
+  // 보상 항목 행 위젯
+  Widget _buildRewardRow(String label, int amount, IconData icon, Color color, String detail) {
+    if (amount <= 0) return const SizedBox.shrink();
+
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.h),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 16.w),
+          SizedBox(width: 8.w),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                Text(
+                  detail,
+                  style: TextStyle(
+                    fontSize: 10.sp,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            '${NumberFormat('#,###').format(amount)}P',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
         ],
@@ -1068,7 +1224,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '리워드',
+                  '총 포인트',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: Colors.white70,
@@ -1076,7 +1232,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                   ),
                 ),
                 Text(
-                  '${missionReward}P',
+                  '${NumberFormat('#,###').format(hasAdvancedRewardSystem ? totalAdvancedReward : missionReward)}P',
                   style: TextStyle(
                     fontSize: 24.sp,
                     color: Colors.white,
