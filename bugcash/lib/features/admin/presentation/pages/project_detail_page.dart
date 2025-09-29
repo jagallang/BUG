@@ -59,7 +59,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     return (data['estimatedMinutes'] as num?)?.toInt() ?? 60;
   }
 
-  // 고급보상시스템 총 포인트 계산
+  // 고급리워드시스템 총 리워드 계산
   int get totalAdvancedReward {
     if (_advancedRewardData.isEmpty) {
       return baseReward;
@@ -177,7 +177,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '💰 고급보상시스템',
+            '💰 고급리워드시스템',
             style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16.h),
@@ -197,7 +197,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '총 포인트 (예상)',
+                        '총 리워드 (예상)',
                         style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
                       ),
                       Text(
@@ -213,22 +213,22 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
                   SizedBox(height: 12.h),
                   Divider(color: Colors.green[300]),
                   SizedBox(height: 8.h),
-                  _buildRewardRow('기본보상', baseReward),
-                  if (bonusReward > 0) _buildRewardRow('보너스보상', bonusReward),
+                  _buildRewardRow('기본리워드', baseReward),
+                  if (bonusReward > 0) _buildRewardRow('보너스리워드', bonusReward),
                   if (dailyMissionPoints > 0) ...[
-                    _buildRewardRow('일일미션포인트', dailyMissionPoints, isDaily: true),
+                    _buildRewardRow('일일미션리워드', dailyMissionPoints, isDaily: true),
                     Text(
                       '  └ 예상 ${(estimatedMinutes / (24 * 60)).ceil().clamp(1, 30)}일 × ₩${NumberFormat('#,###').format(dailyMissionPoints)}',
                       style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
                     ),
                   ],
-                  if (finalCompletionPoints > 0) _buildRewardRow('최종완료포인트', finalCompletionPoints),
-                  if (bonusPoints > 0) _buildRewardRow('추가보너스포인트', bonusPoints),
+                  if (finalCompletionPoints > 0) _buildRewardRow('최종완료리워드', finalCompletionPoints),
+                  if (bonusPoints > 0) _buildRewardRow('추가보너스리워드', bonusPoints),
                 ],
               ),
             ),
           ] else ...[
-            // 기본보상만 설정된 경우
+            // 기본리워드만 설정된 경우
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
@@ -240,7 +240,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '기본보상',
+                    '기본리워드',
                     style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.w500),
                   ),
                   Text(
@@ -256,7 +256,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             ),
             SizedBox(height: 8.h),
             Text(
-              '💡 고급보상시스템이 설정되지 않아 기본보상만 지급됩니다.',
+              '💡 고급리워드시스템이 설정되지 않아 기본리워드만 지급됩니다.',
               style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
             ),
           ],

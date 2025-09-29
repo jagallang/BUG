@@ -948,7 +948,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               Icon(Icons.attach_money, color: Colors.green[600], size: 20.w),
               SizedBox(width: 8.w),
               Text(
-                '💰 포인트 정보',
+                '💰 리워드 정보',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
@@ -978,7 +978,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '총 포인트: ',
+                  '총 리워드: ',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: Colors.grey[700],
@@ -1017,7 +1017,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
         if (dailyMissionPoints > 0)
           _buildRewardRow(
-            '진행 보상',
+            '진행 리워드',
             dailyMissionPoints * estimatedDays,
             Icons.calendar_today,
             Colors.blue,
@@ -1026,7 +1026,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
         if (finalCompletionPoints > 0 || bonusPoints > 0)
           _buildRewardRow(
-            '완료 보상',
+            '완료 리워드',
             finalCompletionPoints + bonusPoints,
             Icons.check_circle,
             Colors.green,
@@ -1224,7 +1224,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '총 포인트',
+                  '총 리워드',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: Colors.white70,
