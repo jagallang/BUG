@@ -262,9 +262,15 @@ class MissionManagementService {
                 testerId: workflowData.testerId,
                 missionDate: workflowData.appliedAt, // appliedAt을 missionDate로 사용
                 status: _convertWorkflowStateToDailyMissionStatus(workflowData.currentState),
-                missionTitle: '일일 테스트 미션',
-                missionDescription: '앱의 주요 기능들을 테스트하고 발견된 이슈를 리포트해주세요.',
-                baseReward: 5000,
+                missionTitle: workflowData.appName.isNotEmpty
+                    ? '${workflowData.appName} 테스트'
+                    : '일일 테스트 미션',
+                missionDescription: workflowData.appName.isNotEmpty
+                    ? '${workflowData.appName} 앱의 주요 기능들을 테스트하고 발견된 이슈를 리포트해주세요.'
+                    : '앱의 주요 기능들을 테스트하고 발견된 이슈를 리포트해주세요.',
+                baseReward: workflowData.dailyReward > 0
+                    ? workflowData.dailyReward
+                    : 5000,
               );
             })
             .toList());
