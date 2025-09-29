@@ -566,6 +566,24 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                       metadata['price'] ?? 0;
     final bonusReward = metadata['bonusReward'] ??
                        rewards['bonusReward'] ?? 0;
+    final dailyMissionPoints = metadata['dailyMissionPoints'] ??
+                              rewards['dailyMissionPoints'] ?? 0;
+    final finalCompletionPoints = metadata['finalCompletionPoints'] ??
+                                 rewards['finalCompletionPoints'] ?? 0;
+    final bonusPoints = metadata['bonusPoints'] ??
+                       rewards['bonusPoints'] ?? 0;
+    final estimatedMinutes = metadata['estimatedMinutes'] ??
+                            rewards['estimatedMinutes'] ?? 60;
+
+    // 총보상 계산
+    final totalReward = _calculateTotalReward(
+      baseReward: baseReward,
+      bonusReward: bonusReward,
+      dailyMissionPoints: dailyMissionPoints,
+      finalCompletionPoints: finalCompletionPoints,
+      bonusPoints: bonusPoints,
+      estimatedMinutes: estimatedMinutes,
+    );
 
     Color statusColor;
     IconData statusIcon;
@@ -661,7 +679,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     ),
                     SizedBox(height: 8.h),
                     Text(
-                      '₩${NumberFormat('#,###').format(baseReward)}',
+                      '₩${NumberFormat('#,###').format(totalReward)}',
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.bold,
@@ -1852,6 +1870,24 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ),
       ),
     );
+  }
+
+  // 총보상 계산 헬퍼 메서드
+  int _calculateTotalReward({
+    required int baseReward,
+    required int bonusReward,
+    required int dailyMissionPoints,
+    required int finalCompletionPoints,
+    required int bonusPoints,
+    required int estimatedMinutes,
+  }) {
+    // project_detail_page.dart와 동일한 계산 로직
+    final immediateReward = baseReward + bonusReward;
+    final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30);
+    final progressReward = dailyMissionPoints * estimatedDays;
+    final completionReward = finalCompletionPoints + bonusPoints;
+
+    return immediateReward + progressReward + completionReward;
   }
 
   // 오류 다이얼로그 표시
