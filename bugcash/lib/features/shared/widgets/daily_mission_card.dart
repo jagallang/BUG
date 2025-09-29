@@ -173,7 +173,7 @@ class DailyMissionCard extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: onStart,
             icon: Icon(Icons.play_arrow, size: 18.sp),
-            label: Text('미션 시작'),
+            label: const Text('미션 시작'),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,

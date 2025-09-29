@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 /// Feature Flag 시스템
 /// 새로운 기능을 안전하게 활성화/비활성화하기 위한 설정
 class FeatureFlags {
@@ -124,7 +126,7 @@ class FeatureFlagUtils {
   /// 로깅 메시지 출력 (Feature Flag 기반)
   static void logFeatureUsage(String feature, String userId) {
     if (FeatureFlags.enableDebugLogging) {
-      print('[FeatureFlag] $feature used by user: $userId at ${DateTime.now()}');
+      debugPrint('[FeatureFlag] $feature used by user: $userId at ${DateTime.now()}');
     }
   }
 }

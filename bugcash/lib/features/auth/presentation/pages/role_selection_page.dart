@@ -145,7 +145,7 @@ class _RoleSelectionPageState extends ConsumerState<RoleSelectionPage> {
 
     return Card(
       elevation: isSelected ? 4 : 1,
-      color: isSelected ? Theme.of(context).primaryColor.withOpacity(0.1) : null,
+      color: isSelected ? Theme.of(context).primaryColor.withValues(alpha: 0.1) : null,
       child: InkWell(
         onTap: () {
           setState(() {
@@ -162,7 +162,7 @@ class _RoleSelectionPageState extends ConsumerState<RoleSelectionPage> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: roleInfo['color'].withOpacity(0.2),
+                  color: roleInfo['color'].withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(

@@ -289,9 +289,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             length: 4,
             child: Column(
               children: [
-                TabBar(
+                const TabBar(
                   labelColor: Colors.deepPurple,
-                  tabs: const [
+                  tabs: [
                     Tab(text: '승인 대기'),
                     Tab(text: '승인됨'),
                     Tab(text: '거부됨'),
@@ -457,7 +457,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -472,7 +472,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Icon(icon, color: color, size: 24.sp),
@@ -658,7 +658,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16.r),
                       ),
                       child: Row(
@@ -776,7 +776,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -929,7 +929,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -944,7 +944,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16.h),
-          Text('빠른 작업 버튼들이 여기에 표시됩니다.'),
+          const Text('빠른 작업 버튼들이 여기에 표시됩니다.'),
         ],
       ),
     );
@@ -958,7 +958,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -994,7 +994,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1133,7 +1133,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1171,7 +1171,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1188,7 +1188,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.h),
-            Text('거래 내역 테이블이 여기에 표시됩니다.'),
+            const Text('거래 내역 테이블이 여기에 표시됩니다.'),
           ],
         ),
       ),
@@ -1203,7 +1203,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1239,7 +1239,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1256,7 +1256,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16.h),
-            Text('신고 목록이 여기에 표시됩니다.'),
+            const Text('신고 목록이 여기에 표시됩니다.'),
           ],
         ),
       ),
@@ -1270,7 +1270,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1339,7 +1339,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           'approve': true,
         });
       } catch (cloudError) {
-        print('Cloud Functions not available, using direct Firestore update: $cloudError');
+        debugPrint('Cloud Functions not available, using direct Firestore update: $cloudError');
         // Fallback to direct Firestore update
         await FirebaseFirestore.instance
             .collection('projects')
@@ -1389,7 +1389,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           'rejectionReason': reason,
         });
       } catch (cloudError) {
-        print('Cloud Functions not available, using direct Firestore update: $cloudError');
+        debugPrint('Cloud Functions not available, using direct Firestore update: $cloudError');
         // Fallback to direct Firestore update
         await FirebaseFirestore.instance
             .collection('projects')
