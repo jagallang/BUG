@@ -403,13 +403,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: AppColors.cardShadowMedium,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -520,13 +514,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.cardShadowMedium,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1212,13 +1200,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
               color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+              boxShadow: AppColors.cardShadowMedium,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/constants/app_colors.dart';
 import 'app_management_page.dart';
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
@@ -325,14 +326,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.cardShadowMedium,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,14 +369,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.cardShadowMedium,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,14 +395,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.cardShadowMedium,
       ),
       child: Column(
         children: [
@@ -576,14 +556,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.cardShadowMedium,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
