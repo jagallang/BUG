@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -91,9 +92,9 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
   // 탭 1: 신청 관리
   Widget _buildApplicationsTab() {
     final cleanAppId = _getCleanAppId();
-    print('🔍 Provider TesterManagement - Original appId: ${widget.app.id}');
-    print('🔍 Provider TesterManagement - Clean appId: $cleanAppId');
-    print('🔍 Provider TesterManagement - Querying workflows for appId: $cleanAppId');
+    debugPrint('🔍 Provider TesterManagement - Original appId: ${widget.app.id}');
+    debugPrint('🔍 Provider TesterManagement - Clean appId: $cleanAppId');
+    debugPrint('🔍 Provider TesterManagement - Querying workflows for appId: $cleanAppId');
 
     return StreamBuilder<List<MissionWorkflowModel>>(
       stream: _workflowService.getAppWorkflows(cleanAppId),
@@ -107,15 +108,15 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
         }
 
         final workflows = snapshot.data ?? [];
-        print('🔍 Provider TesterManagement - Total workflows found: ${workflows.length}');
+        debugPrint('🔍 Provider TesterManagement - Total workflows found: ${workflows.length}');
         for (int i = 0; i < workflows.length; i++) {
           final w = workflows[i];
-          print('🔍 Provider TesterManagement - Workflow $i: appId=${w.appId}, testerId=${w.testerId}, state=${w.currentState.name}');
+          debugPrint('🔍 Provider TesterManagement - Workflow $i: appId=${w.appId}, testerId=${w.testerId}, state=${w.currentState.name}');
         }
 
         final pendingApplications = workflows.where((w) =>
           w.currentState == MissionWorkflowState.applicationSubmitted).toList();
-        print('🔍 Provider TesterManagement - Pending applications: ${pendingApplications.length}');
+        debugPrint('🔍 Provider TesterManagement - Pending applications: ${pendingApplications.length}');
 
         if (pendingApplications.isEmpty) {
           return _buildEmptyState(

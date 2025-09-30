@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -6,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/mission_service.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../shared/extensions/responsive_extensions.dart';
 
 class MissionDetailPage extends ConsumerStatefulWidget {
   final dynamic mission; // MissionModel 또는 MissionCard
@@ -520,7 +522,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           Text(
             missionTitle,
             style: TextStyle(
-              fontSize: 20.sp,
+              fontSize: 20.responsiveFont(context),
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
@@ -529,7 +531,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           Text(
             missionAppName,
             style: TextStyle(
-              fontSize: 16.sp,
+              fontSize: 16.responsiveFont(context),
               color: Colors.grey[600],
               fontWeight: FontWeight.w500,
             ),
@@ -1256,7 +1258,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
       child: SafeArea(
         child: SizedBox(
           width: double.infinity,
-          height: 48.h,
+          height: context.isMobile ? 56.h : 48.h, // 모바일에서 더 큰 버튼
           child: ElevatedButton(
             onPressed: _getButtonAction(authState, isFull),
             style: ElevatedButton.styleFrom(
@@ -1281,7 +1283,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                 : Text(
                     _getButtonText(isFull),
                     style: TextStyle(
-                      fontSize: 16.sp,
+                      fontSize: 16.responsiveFont(context),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1414,7 +1416,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           providerName = data['displayName'] ?? data['name'] ?? 'Unknown Provider';
         }
       } catch (e) {
-        print('Provider name lookup failed: $e');
+        debugPrint('Provider name lookup failed: $e');
       }
 
       final applicationData = {
@@ -1440,9 +1442,9 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         },
       };
 
-      print('🎯 UI - 미션 신청 버튼 클릭됨! missionId: $missionId');
-      print('🎯 UI - testerId: ${authState.user!.uid}');
-      print('🎯 UI - providerId: $providerId');
+      debugPrint('🎯 UI - 미션 신청 버튼 클릭됨! missionId: $missionId');
+      debugPrint('🎯 UI - testerId: ${authState.user!.uid}');
+      debugPrint('🎯 UI - providerId: $providerId');
 
       await missionService.applyToMission(missionId, applicationData);
 

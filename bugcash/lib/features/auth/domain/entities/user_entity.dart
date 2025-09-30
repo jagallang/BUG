@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 
 enum UserType { tester, provider, admin }
 
@@ -142,7 +143,7 @@ class UserEntity extends Equatable {
         try {
           roles = [UserType.values.byName(userTypeStr)];
         } catch (e) {
-          print('⚠️ UserEntity: 알 수 없는 userType: $userTypeStr, 기본값 tester 사용');
+          debugPrint('⚠️ UserEntity: 알 수 없는 userType: $userTypeStr, 기본값 tester 사용');
           roles = [UserType.tester];
         }
       }
@@ -159,7 +160,7 @@ class UserEntity extends Equatable {
       try {
         primaryRole = UserType.values.byName(data['primaryRole']);
       } catch (e) {
-        print('⚠️ UserEntity: 알 수 없는 primaryRole: ${data['primaryRole']}, roles의 첫 번째 값 사용');
+        debugPrint('⚠️ UserEntity: 알 수 없는 primaryRole: ${data['primaryRole']}, roles의 첫 번째 값 사용');
         primaryRole = roles.first;
       }
     } else {

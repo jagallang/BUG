@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -140,10 +141,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     final legacyPrice = metadata['price'] as int?;
 
     // 안전한 디버깅 로그 추가
-    print('🔍 AppDetailPage 데이터 로딩 - ${widget.app.appName}');
-    print('📋 metadata keys: ${metadata.keys.toList()}');
-    print('🎁 rewards: $rewards');
-    print('💰 legacyPrice: $legacyPrice');
+    debugPrint('🔍 AppDetailPage 데이터 로딩 - ${widget.app.appName}');
+    debugPrint('📋 metadata keys: ${metadata.keys.toList()}');
+    debugPrint('🎁 rewards: $rewards');
+    debugPrint('💰 legacyPrice: $legacyPrice');
 
     final dailyMissionPoints = rewards?['dailyMissionPoints'] as int? ??
                                metadata['dailyMissionPoints'] as int? ??
@@ -156,10 +157,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         (legacyPrice != null ? (legacyPrice * 0.3).round() : 500);
 
     // 최종 계산된 값들 로그
-    print('📊 최종 보상 값 계산됨:');
-    print('   dailyMissionPoints: $dailyMissionPoints');
-    print('   finalCompletionPoints: $finalCompletionPoints');
-    print('   bonusPoints: $bonusPoints');
+    debugPrint('📊 최종 보상 값 계산됨:');
+    debugPrint('   dailyMissionPoints: $dailyMissionPoints');
+    debugPrint('   finalCompletionPoints: $finalCompletionPoints');
+    debugPrint('   bonusPoints: $bonusPoints');
 
     _dailyMissionPointsController = TextEditingController(text: dailyMissionPoints.toString());
     _finalCompletionPointsController = TextEditingController(text: finalCompletionPoints.toString());

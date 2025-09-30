@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/provider_app_entity.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../shared/extensions/responsive_extensions.dart';
 import 'app_status_badge.dart';
 
 class AppCardWidget extends StatelessWidget {
@@ -26,13 +27,7 @@ class AppCardWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.cardShadowMedium,
       ),
       child: InkWell(
         onTap: onTap,
@@ -68,7 +63,7 @@ class AppCardWidget extends StatelessWidget {
                       Text(
                         app.appName,
                         style: TextStyle(
-                          fontSize: 16.sp,
+                          fontSize: 16.responsiveFont(context),
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),
@@ -77,7 +72,7 @@ class AppCardWidget extends StatelessWidget {
                       Text(
                         app.category,
                         style: TextStyle(
-                          fontSize: 14.sp,
+                          fontSize: 14.responsiveFont(context),
                           color: Colors.grey[600],
                         ),
                       ),

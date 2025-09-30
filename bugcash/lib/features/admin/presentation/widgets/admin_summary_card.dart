@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../shared/extensions/responsive_extensions.dart';
 
 /// 관리자 대시보드 요약 카드 위젯
 class AdminSummaryCard extends StatelessWidget {
@@ -25,14 +27,7 @@ class AdminSummaryCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: AppColors.cardShadowMedium,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +51,7 @@ class AdminSummaryCard extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              fontSize: 24.sp,
+              fontSize: 24.responsiveFont(context),
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
@@ -64,7 +59,7 @@ class AdminSummaryCard extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontSize: 14.sp,
+              fontSize: 14.responsiveFont(context),
               color: Colors.grey[600],
             ),
           ),
