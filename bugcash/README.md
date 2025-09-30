@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.1.12-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.3.1-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,24 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.1.12)
+## ✨ 주요 기능 (v2.3.1)
+
+### 🎨 전역 카드 입체감 시스템 확립 (v2.3.1) - **GLOBAL CARD DEPTH SYSTEM**
+- **🌐 모든 카드에 일관된 3D 입체감 적용**: 전체 앱에 통일된 디자인 언어 구축
+  - **✅ CardTheme 전역 설정**: elevation 2 + shadow alpha 0.08 자동 적용
+  - **✅ 사용자 타입별 shadow 강도 통일**: Tester/Provider/Admin 모두 동일한 입체감
+  - **✅ Material Design 3 준수**: 8dp elevation 상당의 자연스러운 그림자
+  - **⚡ 성능 최적화**: 중복 shadow 코드 제거로 렌더링 효율 향상
+
+- **🔧 기술적 세부사항**:
+  - **Shadow System**: Primary alpha 0.08 (12px blur) + Secondary alpha 0.06 (24px blur)
+  - **Extension Method**: `.withUserTypeCard()` 사용자 타입별 그라디언트 + 호버 효과
+  - **Clean Code**: 약한 하드코딩 shadow (alpha 0.1) 제거, 중앙화된 상수 사용
+
+- **🎯 적용 범위**:
+  - **✅ Tester Dashboard**: 미션 카드, 진행 상태 카드 입체감 적용
+  - **✅ Provider Dashboard**: 앱 관리 카드, 통계 카드, 최근 활동 카드 입체감 적용
+  - **✅ Admin Dashboard**: 모든 카드 자동 적용 (CardTheme 상속)
 
 ### 🌟 전역 반응형 폰트 + 3D UI 효과 시스템 (v2.1.12) - **GLOBAL RESPONSIVE FONT + 3D UI PILOT**
 - **🔧 MediaQuery 전역 폰트 스케일링**: 467개 .sp 파일 수정 없이 전역 반응형 적용
