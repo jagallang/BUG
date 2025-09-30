@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../shared/widgets/loading_widgets.dart';
 import '../../../../shared/widgets/responsive_wrapper.dart';
+import '../../../../shared/extensions/responsive_extensions.dart';
 import '../../../../core/constants/app_colors.dart';
 // import '../widgets/earnings_summary_widget.dart';
 // import '../widgets/community_board_widget.dart';
@@ -1360,121 +1361,119 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     required String deadline,
     required String participants,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: InkWell(
-        onTap: () async {
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MissionDetailPage(mission: mission),
-            ),
-          );
-
-          // 미션 신청 결과 처리
-          if (result != null) {
-            if (result is Map<String, dynamic> && result['success'] == true) {
-              // 미션 신청 성공 - 탭 전환 및 데이터 새로고침
-              ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
-
-              // 진행중 탭으로 자동 전환 (navigateToTab이 있는 경우)
-              if (result['navigateToTab'] != null) {
-                final tabIndex = result['navigateToTab'] as int;
-                if (tabIndex >= 0 && tabIndex < 4) {
-                  // 하위 TabController에 접근하기 위해 GlobalKey 사용 예정
-                  // 현재는 기본 진행중 탭(인덱스 1)으로 전환
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      // 메인 탭바에서 미션 탭이 이미 선택되어 있으므로
-                      // 하위 탭 컨트롤러에만 영향을 줌
-                      setState(() {
-                        // 미션 서브탭에서 진행중 탭으로 전환하도록 신호 전송
-                        _navigateToMissionSubTab = tabIndex;
-                      });
-                    }
-                  });
-                }
-              }
-            } else if (result == true) {
-              // 기존 호환성을 위한 단순 성공 처리
-              ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
-            }
-          }
-        },
-        borderRadius: BorderRadius.circular(12.r),
-        child: Padding(
-          padding: ResponsiveWrapper.getResponsivePadding(context),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                    decoration: BoxDecoration(
-                      color: AppColors.accentGoldBg,
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Text(
-                      reward,
-                      style: TextStyle(
-                        color: AppColors.accentGold,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.sp,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                description,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
-              SizedBox(height: 12.h),
-              Row(
-                children: [
-                  Icon(Icons.access_time, size: 16.w, color: Colors.grey[600]),
-                  SizedBox(width: 4.w),
-                  Flexible(
-                    child: Text(
-                      deadline,
-                      style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Icon(Icons.people, size: 16.w, color: Colors.grey[600]),
-                  SizedBox(width: 4.w),
-                  Flexible(
-                    child: Text(
-                      participants,
-                      style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+    return InkWell(
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MissionDetailPage(mission: mission),
           ),
+        );
+
+        // 미션 신청 결과 처리
+        if (result != null) {
+          if (result is Map<String, dynamic> && result['success'] == true) {
+            // 미션 신청 성공 - 탭 전환 및 데이터 새로고침
+            ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+
+            // 진행중 탭으로 자동 전환 (navigateToTab이 있는 경우)
+            if (result['navigateToTab'] != null) {
+              final tabIndex = result['navigateToTab'] as int;
+              if (tabIndex >= 0 && tabIndex < 4) {
+                // 하위 TabController에 접근하기 위해 GlobalKey 사용 예정
+                // 현재는 기본 진행중 탭(인덱스 1)으로 전환
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    // 메인 탭바에서 미션 탭이 이미 선택되어 있으므로
+                    // 하위 탭 컨트롤러에만 영향을 줌
+                    setState(() {
+                      // 미션 서브탭에서 진행중 탭으로 전환하도록 신호 전송
+                      _navigateToMissionSubTab = tabIndex;
+                    });
+                  }
+                });
+              }
+            }
+          } else if (result == true) {
+            // 기존 호환성을 위한 단순 성공 처리
+            ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+          }
+        }
+      },
+      borderRadius: BorderRadius.circular(12.r),
+      child: Padding(
+        padding: ResponsiveWrapper.getResponsivePadding(context),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentGoldBg,
+                    borderRadius: BorderRadius.circular(12.r),
+                  ),
+                  child: Text(
+                    reward,
+                    style: TextStyle(
+                      color: AppColors.accentGold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.sp,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Icon(Icons.access_time, size: 16.w, color: Colors.grey[600]),
+                SizedBox(width: 4.w),
+                Flexible(
+                  child: Text(
+                    deadline,
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                Icon(Icons.people, size: 16.w, color: Colors.grey[600]),
+                SizedBox(width: 4.w),
+                Flexible(
+                  child: Text(
+                    participants,
+                    style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
+    ).withUserTypeCard(
+      userType: 'tester',
+      borderRadius: 12.r,
+      withHover: true,
     );
   }
 

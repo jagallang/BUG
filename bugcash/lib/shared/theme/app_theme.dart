@@ -36,7 +36,8 @@ class AppTheme {
       ),
       
       cardTheme: CardTheme(
-        elevation: 0,
+        elevation: 2,  // Material elevation 사용 (일관된 입체감)
+        shadowColor: Colors.black.withValues(alpha: 0.08),  // 통일된 shadow
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
         ),

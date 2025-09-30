@@ -80,8 +80,8 @@ class ResponsiveBreakpoints {
   /// 웹 모바일 180%, 작은 태블릿 130%로 강화된 스케일링
   /// 최소 폰트 크기 보장으로 사용성 개선
   static const double mobileFontScale = 1.1; // 모바일에서 110% 확대
-  static const double webMobileFontScale = 1.65; // 웹 모바일 180% 확대
-  static const double smallTabletFontScale = 1.45; // 작은 태블릿에서 130% 확대
+  static const double webMobileFontScale = 1.4; // 웹 모바일 180% 확대
+  static const double smallTabletFontScale = 1.3; // 작은 태블릿에서 130% 확대
   static const double tabletFontScale = 1.0;
   static const double desktopFontScale = 1.1;
   static const double wideDesktopFontScale = 1.2;

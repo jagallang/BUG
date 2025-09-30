@@ -230,13 +230,13 @@ class AppColors {
   ];
   static List<BoxShadow> testerCardShadow = [
     BoxShadow(
-      color: testerPrimary.withValues(alpha: 0.15),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.05),
-      blurRadius: 20,
+      color: Colors.black.withValues(alpha: 0.06),
+      blurRadius: 24,
       offset: const Offset(0, 8),
     ),
   ];
@@ -251,13 +251,13 @@ class AppColors {
   ];
   static List<BoxShadow> providerCardShadow = [
     BoxShadow(
-      color: providerPrimary.withValues(alpha: 0.15),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.05),
-      blurRadius: 20,
+      color: Colors.black.withValues(alpha: 0.06),
+      blurRadius: 24,
       offset: const Offset(0, 8),
     ),
   ];
@@ -272,13 +272,13 @@ class AppColors {
   ];
   static List<BoxShadow> adminCardShadow = [
     BoxShadow(
-      color: adminPrimary.withValues(alpha: 0.15),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: Colors.black.withValues(alpha: 0.05),
-      blurRadius: 20,
+      color: Colors.black.withValues(alpha: 0.06),
+      blurRadius: 24,
       offset: const Offset(0, 8),
     ),
   ];
