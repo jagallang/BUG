@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.1.9-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.1.12-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,11 +13,33 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.1.9)
+## ✨ 주요 기능 (v2.1.12)
 
-### 🖥️ 반응형 웹 디자인 구현 (v2.1.9) - **RESPONSIVE WEB DESIGN RELEASE**
-- **📱 ResponsiveWrapper 시스템 구현**: 대형 모니터에서 최적화된 사용자 경험 제공
-  - **✅ 컨텐츠 최대 너비 1200px 제한**: 대형 화면에서 가독성 향상
+### 🌟 전역 반응형 폰트 + 3D UI 효과 시스템 (v2.1.12) - **GLOBAL RESPONSIVE FONT + 3D UI PILOT**
+- **🔧 MediaQuery 전역 폰트 스케일링**: 467개 .sp 파일 수정 없이 전역 반응형 적용
+  - **✅ 웹 모바일(<600px) 180% 확대**: 작은 화면에서 극대화된 가독성
+  - **✅ 작은 태블릿(600-768px) 130% 확대**: 중간 화면 크기 최적화
+  - **✅ Hot Reload 지원**: 실시간 폰트 크기 조정 확인 가능
+  - **⚡ ResponsiveBreakpoints.getFontScale() 활용**: 정교한 크기별 스케일링
+
+- **🎨 3D UI 디자인 시스템 파일럿 적용**:
+  - **✅ daily_mission_card에 withUserTypeCard() 적용**: 테스터 타입 그라디언트 + 호버 애니메이션
+  - **✅ Glassmorphism & Neumorphism 효과**: 현대적인 3D 디자인 요소
+  - **🎯 사용자 타입별 차별화**: 역할에 따른 맞춤형 카드 스타일
+  - **⚡ const 생성자 추가**: 성능 최적화 및 분석 경고 해결
+
+### 🖥️ 완전한 반응형 시스템 구축 (v2.1.11) - **COMPLETE RESPONSIVE SYSTEM RELEASE**
+- **🔧 고도화된 ResponsiveWrapper 시스템**: 모든 디바이스에서 최적화된 사용자 경험
+  - **✅ 스마트 브레이크포인트 시스템**: Mobile (600px) / Tablet (1024px) / Desktop (1200px+)
+  - **⚡ 성능 최적화**: MediaQuery 캐싱으로 렌더링 성능 향상
+  - **🎨 반응형 테마 시스템**: 디바이스별 최적화된 스타일링
+  - **📦 모듈화된 컴포넌트**: 재사용 가능한 위젯 아키텍처
+
+### 🏗️ 아키텍처 개선 (v2.1.11)
+- **🧩 컴포넌트 모듈화**: 역할별 대시보드 위젯 분리
+- **🔧 Extension 시스템**: 직관적인 개발자 경험 제공
+- **📈 확장성 강화**: 새로운 기능 추가 용이성 확보
+- **🛡️ 코드 품질 개선**: debugPrint 적용 및 문제 파일 제거
   - **✅ 중앙 정렬 및 박스 섀도우**: 시각적 깊이감과 집중도 향상
   - **✅ 브레이크포인트 기반 반응형**: Mobile(<600px), Tablet(600-1024px), Desktop(>1024px)
   - **✅ 적응형 패딩 시스템**: 화면 크기별 최적화된 여백 적용
