@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/unified_mission_model.dart';
+import '../../../core/constants/app_colors.dart';
 
 /// 🎯 미션 상태 배지 컴포넌트
 /// 양방향 실시간 동기화를 위한 상태 표시 UI
@@ -83,49 +84,43 @@ class MissionStatusBadge extends StatelessWidget {
         return _StatusInfo(
           displayText: '신청 대기',
           icon: Icons.hourglass_empty,
-          backgroundColor: Colors.orange.shade100,
-          textColor: Colors.orange.shade800,
-          accentColor: Colors.orange.shade400,
+          backgroundColor: AppColors.statusPendingBg,
+          textColor: AppColors.statusPending,
+          accentColor: AppColors.statusPending,
         );
       case 'approved':
-        return _StatusInfo(
-          displayText: '승인됨',
-          icon: Icons.check_circle,
-          backgroundColor: Colors.blue.shade100,
-          textColor: Colors.blue.shade800,
-          accentColor: Colors.blue.shade400,
-        );
       case 'in_progress':
+        // approved와 in_progress를 Primary 색상으로 통합
         return _StatusInfo(
-          displayText: '진행중',
-          icon: Icons.play_circle,
-          backgroundColor: Colors.purple.shade100,
-          textColor: Colors.purple.shade800,
-          accentColor: Colors.purple.shade400,
+          displayText: status == 'approved' ? '승인됨' : '진행중',
+          icon: status == 'approved' ? Icons.check_circle : Icons.play_circle,
+          backgroundColor: AppColors.statusActiveBg,
+          textColor: AppColors.statusActive,
+          accentColor: AppColors.statusActive,
         );
       case 'completed':
         return _StatusInfo(
           displayText: '완료',
           icon: Icons.check_circle_outline,
-          backgroundColor: Colors.green.shade100,
-          textColor: Colors.green.shade800,
-          accentColor: Colors.green.shade400,
+          backgroundColor: AppColors.statusSuccessBg,
+          textColor: AppColors.statusSuccess,
+          accentColor: AppColors.statusSuccess,
         );
       case 'rejected':
         return _StatusInfo(
           displayText: '거절됨',
           icon: Icons.cancel,
-          backgroundColor: Colors.red.shade100,
-          textColor: Colors.red.shade800,
-          accentColor: Colors.red.shade400,
+          backgroundColor: AppColors.statusErrorBg,
+          textColor: AppColors.statusError,
+          accentColor: AppColors.statusError,
         );
       default:
         return _StatusInfo(
           displayText: '알 수 없음',
           icon: Icons.help_outline,
-          backgroundColor: Colors.grey.shade100,
-          textColor: Colors.grey.shade800,
-          accentColor: Colors.grey.shade400,
+          backgroundColor: AppColors.neutral100,
+          textColor: AppColors.neutral600,
+          accentColor: AppColors.neutral500,
         );
     }
   }
@@ -255,13 +250,13 @@ class MissionCardWidget extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  Icon(Icons.monetization_on, size: 14.w, color: Colors.amber),
+                  Icon(Icons.monetization_on, size: 14.w, color: AppColors.accentGold),
                   SizedBox(width: 4.w),
                   Text(
                     '${mission.dailyPoints}P/일',
                     style: TextStyle(
                       fontSize: 12.sp,
-                      color: Colors.amber[700],
+                      color: AppColors.accentGold,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -301,11 +296,11 @@ class MissionCardWidget extends StatelessWidget {
         SizedBox(height: 6.h),
         LinearProgressIndicator(
           value: mission.progressPercentage / 100,
-          backgroundColor: Colors.grey[300],
+          backgroundColor: AppColors.neutral200,
           valueColor: AlwaysStoppedAnimation<Color>(
             mission.progressPercentage >= 100
-              ? Colors.green
-              : Colors.blue,
+              ? AppColors.statusSuccess
+              : AppColors.primary,
           ),
         ),
         SizedBox(height: 4.h),
@@ -460,13 +455,13 @@ class _RealtimeSyncIndicatorState extends State<RealtimeSyncIndicator>
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
         color: widget.isConnected
-          ? Colors.green.shade50
-          : Colors.red.shade50,
+          ? AppColors.statusSuccessBg
+          : AppColors.statusErrorBg,
         borderRadius: BorderRadius.circular(12.r),
         border: Border.all(
           color: widget.isConnected
-            ? Colors.green.shade200
-            : Colors.red.shade200,
+            ? AppColors.statusSuccess
+            : AppColors.statusError,
         ),
       ),
       child: Row(
@@ -482,8 +477,8 @@ class _RealtimeSyncIndicatorState extends State<RealtimeSyncIndicator>
                   height: 6.w,
                   decoration: BoxDecoration(
                     color: widget.isConnected
-                      ? Colors.green
-                      : Colors.red,
+                      ? AppColors.statusSuccess
+                      : AppColors.statusError,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -496,8 +491,8 @@ class _RealtimeSyncIndicatorState extends State<RealtimeSyncIndicator>
             style: TextStyle(
               fontSize: 10.sp,
               color: widget.isConnected
-                ? Colors.green.shade700
-                : Colors.red.shade700,
+                ? AppColors.statusSuccess
+                : AppColors.statusError,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -572,21 +567,21 @@ class MissionQuickActions extends StatelessWidget {
         if (mission.status == 'pending') ...[
           _QuickActionButton(
             icon: Icons.check,
-            color: Colors.green,
+            color: AppColors.statusSuccess,
             onTap: onApprove,
             tooltip: '승인',
           ),
           SizedBox(width: 4.w),
           _QuickActionButton(
             icon: Icons.close,
-            color: Colors.red,
+            color: AppColors.statusError,
             onTap: onReject,
             tooltip: '거절',
           ),
         ] else if (mission.status == 'in_progress') ...[
           _QuickActionButton(
             icon: Icons.timeline,
-            color: Colors.blue,
+            color: AppColors.primary,
             onTap: onProgress,
             tooltip: '진행현황',
           ),

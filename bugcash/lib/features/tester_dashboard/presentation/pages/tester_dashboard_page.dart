@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../../shared/widgets/loading_widgets.dart';
 import '../../../../shared/widgets/responsive_wrapper.dart';
+import '../../../../core/constants/app_colors.dart';
 // import '../widgets/earnings_summary_widget.dart';
 // import '../widgets/community_board_widget.dart';
 // import '../widgets/expandable_mission_card.dart';
@@ -910,10 +911,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           Container(
             height: 60.h + MediaQuery.of(context).padding.bottom, // 시스템 내비게이션 바 높이 추가
             decoration: BoxDecoration(
-              color: Colors.green.shade50, // 연한 녹색 배경
+              color: Colors.white, // 배경 중립화
               border: Border(
                 top: BorderSide(
-                  color: Colors.grey.shade200,
+                  color: AppColors.neutral200,
                   width: 1,
                 ),
               ),
@@ -921,13 +922,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             child: Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom), // 하단 세이프 에리어 패딩
               child: TabBar(
-                labelColor: Colors.green.shade700,
-                unselectedLabelColor: Colors.grey.shade600,
-                indicatorColor: Colors.green.shade700,
-                indicatorWeight: 3,
+                labelColor: AppColors.neutral800,
+                unselectedLabelColor: AppColors.neutral500,
+                indicatorColor: AppColors.primary,
+                indicatorWeight: 2,
                 indicatorPadding: EdgeInsets.symmetric(horizontal: 8.w),
                 splashFactory: InkRipple.splashFactory,
-                overlayColor: WidgetStateProperty.all(Colors.green.withValues(alpha: 0.1)),
+                overlayColor: WidgetStateProperty.all(AppColors.neutral100),
                 labelStyle: TextStyle(
                   fontSize: 11.sp, // 폰트 크기 약간 줄임 (4개 탭을 위해)
                   fontWeight: FontWeight.w600,

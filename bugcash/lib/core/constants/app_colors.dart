@@ -100,6 +100,34 @@ class AppColors {
   static const Color bronzeBadge = Color(0xFFCD7F32);
 
   // ============================================
+  // Phase 5: Refined Color System (v2.2.0)
+  // ============================================
+
+  /// Neutral Palette (Monochrome Base)
+  static const Color neutral50 = Color(0xFFFAFAFA);
+  static const Color neutral100 = Color(0xFFF5F5F5);
+  static const Color neutral200 = Color(0xFFEEEEEE);
+  static const Color neutral300 = Color(0xFFE0E0E0);
+  static const Color neutral500 = Color(0xFF9E9E9E);
+  static const Color neutral600 = Color(0xFF757575);
+  static const Color neutral700 = Color(0xFF616161);
+  static const Color neutral800 = Color(0xFF424242);
+
+  /// Status Badge Colors (Semantic)
+  static const Color statusPending = Color(0xFFFF9800);      // 주황 (대기)
+  static const Color statusPendingBg = Color(0xFFFFF3E0);
+  static const Color statusActive = Color(0xFF00BFA5);       // Primary (승인/진행)
+  static const Color statusActiveBg = Color(0xFFE0F7F4);
+  static const Color statusSuccess = Color(0xFF4CAF50);      // 녹색 (완료)
+  static const Color statusSuccessBg = Color(0xFFE8F5E9);
+  static const Color statusError = Color(0xFFF44336);        // 빨강 (거절)
+  static const Color statusErrorBg = Color(0xFFFFEBEE);
+
+  /// Accent for Points/Money
+  static const Color accentGold = Color(0xFFFFA726);         // 부드러운 골드
+  static const Color accentGoldBg = Color(0xFFFFF8E1);
+
+  // ============================================
   // Phase 3: Advanced 3D Design System
   // ============================================
 
