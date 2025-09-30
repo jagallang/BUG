@@ -41,9 +41,51 @@ class AppColors {
   static const Color primaryDark = Color(0xFF00998A);
   static const Color cashGreen = Color(0xFF00BFA5);
   
-  // Shadow Colors
+  // Enhanced Shadow Colors for Material Design 3
   static Color shadowLight = Colors.black.withValues(alpha: 0.05);
   static Color shadowMedium = Colors.black.withValues(alpha: 0.1);
+  static Color shadowDark = Colors.black.withValues(alpha: 0.15);
+  static Color shadowElevated = Colors.black.withValues(alpha: 0.2);
+
+  // Card Specific Shadows (더 입체적인 효과)
+  static List<BoxShadow> cardShadowLight = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.06),
+      blurRadius: 8,
+      offset: const Offset(0, 2),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.04),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
+    ),
+  ];
+
+  static List<BoxShadow> cardShadowMedium = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.08),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.06),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  static List<BoxShadow> cardShadowElevated = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.12),
+      blurRadius: 16,
+      offset: const Offset(0, 6),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.08),
+      blurRadius: 32,
+      offset: const Offset(0, 12),
+    ),
+  ];
   
   // Overlay Colors
   static Color overlayLight = Colors.white.withValues(alpha: 0.2);
@@ -56,4 +98,200 @@ class AppColors {
   static const Color goldBadge = Color(0xFFFFD700);
   static const Color silverBadge = Color(0xFFC0C0C0);
   static const Color bronzeBadge = Color(0xFFCD7F32);
+
+  // ============================================
+  // Phase 3: Advanced 3D Design System
+  // ============================================
+
+  // Glassmorphism Colors
+  static Color glassBackground = Colors.white.withValues(alpha: 0.25);
+  static Color glassBackgroundDark = Colors.black.withValues(alpha: 0.15);
+  static Color glassBorder = Colors.white.withValues(alpha: 0.3);
+  static Color glassBorderDark = Colors.white.withValues(alpha: 0.1);
+
+  // Neumorphism Colors
+  static const Color neuLight = Color(0xFFF0F0F3);
+  static const Color neuDark = Color(0xFFD1D1D4);
+  static const Color neuHighlight = Color(0xFFFFFFFF);
+  static const Color neuShadow = Color(0xFFA3A3A3);
+
+  // Advanced Gradients
+  static const List<Color> primaryGradient = [
+    Color(0xFF00BFA5),
+    Color(0xFF4EDBC5),
+  ];
+
+  static const List<Color> heroGradient = [
+    Color(0xFF667eea),
+    Color(0xFF764ba2),
+  ];
+
+  static const List<Color> successGradient = [
+    Color(0xFF4CAF50),
+    Color(0xFF81C784),
+  ];
+
+  static const List<Color> warningGradient = [
+    Color(0xFFFF9800),
+    Color(0xFFFFB74D),
+  ];
+
+  static const List<Color> cardGradientLight = [
+    Color(0xFFFDFDFD),
+    Color(0xFFF8F9FA),
+  ];
+
+  static const List<Color> cardGradientSubtle = [
+    Color(0xFFFFFFFF),
+    Color(0xFFF5F7FA),
+  ];
+
+  // Glass Effect Shadows
+  static List<BoxShadow> glassShadow = [
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.1),
+      blurRadius: 40,
+      offset: const Offset(0, 8),
+    ),
+    BoxShadow(
+      color: Colors.white.withValues(alpha: 0.05),
+      blurRadius: 1,
+      offset: const Offset(0, 1),
+      blurStyle: BlurStyle.inner,
+    ),
+  ];
+
+  // Neumorphism Shadows
+  static List<BoxShadow> neuShadowConvex = [
+    BoxShadow(
+      color: neuShadow.withValues(alpha: 0.5),
+      blurRadius: 15,
+      offset: const Offset(5, 5),
+    ),
+    const BoxShadow(
+      color: neuHighlight,
+      blurRadius: 15,
+      offset: Offset(-5, -5),
+    ),
+  ];
+
+  static List<BoxShadow> neuShadowConcave = [
+    const BoxShadow(
+      color: neuHighlight,
+      blurRadius: 15,
+      offset: Offset(5, 5),
+    ),
+    BoxShadow(
+      color: neuShadow.withValues(alpha: 0.5),
+      blurRadius: 15,
+      offset: const Offset(-5, -5),
+    ),
+  ];
+
+  // ============================================
+  // Phase 4: 사용자 타입별 맞춤화 색상 시스템
+  // ============================================
+
+  /// Tester 전용 색상 (활동적이고 게임화된 느낌)
+  static const Color testerPrimary = Color(0xFF4CAF50);
+  static const Color testerSecondary = Color(0xFF81C784);
+  static const Color testerAccent = Color(0xFF00E676);
+  static const List<Color> testerGradient = [
+    Color(0xFF4CAF50),
+    Color(0xFF8BC34A),
+  ];
+  static List<BoxShadow> testerCardShadow = [
+    BoxShadow(
+      color: testerPrimary.withValues(alpha: 0.15),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 20,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  /// Provider 전용 색상 (전문적이고 비즈니스 친화적)
+  static const Color providerPrimary = Color(0xFF2196F3);
+  static const Color providerSecondary = Color(0xFF64B5F6);
+  static const Color providerAccent = Color(0xFF0288D1);
+  static const List<Color> providerGradient = [
+    Color(0xFF2196F3),
+    Color(0xFF3F51B5),
+  ];
+  static List<BoxShadow> providerCardShadow = [
+    BoxShadow(
+      color: providerPrimary.withValues(alpha: 0.15),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 20,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  /// Admin 전용 색상 (권위있고 고급스러운 느낌)
+  static const Color adminPrimary = Color(0xFF9C27B0);
+  static const Color adminSecondary = Color(0xFFBA68C8);
+  static const Color adminAccent = Color(0xFF7B1FA2);
+  static const List<Color> adminGradient = [
+    Color(0xFF9C27B0),
+    Color(0xFF673AB7),
+  ];
+  static List<BoxShadow> adminCardShadow = [
+    BoxShadow(
+      color: adminPrimary.withValues(alpha: 0.15),
+      blurRadius: 12,
+      offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.05),
+      blurRadius: 20,
+      offset: const Offset(0, 8),
+    ),
+  ];
+
+  /// 사용자 타입별 색상 헬퍼 메서드
+  static Color getPrimaryColor(String userType) {
+    switch (userType.toLowerCase()) {
+      case 'tester':
+        return testerPrimary;
+      case 'provider':
+        return providerPrimary;
+      case 'admin':
+        return adminPrimary;
+      default:
+        return primary;
+    }
+  }
+
+  static List<Color> getGradientColors(String userType) {
+    switch (userType.toLowerCase()) {
+      case 'tester':
+        return testerGradient;
+      case 'provider':
+        return providerGradient;
+      case 'admin':
+        return adminGradient;
+      default:
+        return primaryGradient;
+    }
+  }
+
+  static List<BoxShadow> getCardShadow(String userType) {
+    switch (userType.toLowerCase()) {
+      case 'tester':
+        return testerCardShadow;
+      case 'provider':
+        return providerCardShadow;
+      case 'admin':
+        return adminCardShadow;
+      default:
+        return cardShadowMedium;
+    }
+  }
 }

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/mission_management_model.dart';
 import 'mission_status_badge.dart';
 import '../../../core/constants/app_colors.dart';
+import '../../../shared/extensions/responsive_extensions.dart';
 
 /// 일일 미션 카드 위젯
 class DailyMissionCard extends StatelessWidget {
@@ -23,17 +24,12 @@ class DailyMissionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16.r),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16.r),
-        child: Padding(
-          padding: EdgeInsets.all(16.w),
-          child: Column(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16.r),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 헤더: 타이틀과 상태 배지
@@ -161,8 +157,11 @@ class DailyMissionCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
+      ).withUserTypeCard(
+        userType: 'tester',
+        borderRadius: 16.r,
+        withHover: true,
+      );
   }
 
   Widget _buildActionButton() {
@@ -191,7 +190,7 @@ class DailyMissionCard extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: onSubmit,
             icon: Icon(Icons.upload, size: 18.sp),
-            label: Text('미션 제출'),
+            label: const Text('미션 제출'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
@@ -209,7 +208,7 @@ class DailyMissionCard extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: null,
             icon: Icon(Icons.pending, size: 18.sp),
-            label: Text('검토 대기 중'),
+            label: const Text('검토 대기 중'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
               foregroundColor: Colors.white,
@@ -227,7 +226,7 @@ class DailyMissionCard extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: null,
             icon: Icon(Icons.check_circle, size: 18.sp),
-            label: Text('승인 완료'),
+            label: const Text('승인 완료'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
@@ -245,7 +244,7 @@ class DailyMissionCard extends StatelessWidget {
           child: ElevatedButton.icon(
             onPressed: onResubmit,
             icon: Icon(Icons.refresh, size: 18.sp),
-            label: Text('재제출'),
+            label: const Text('재제출'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,

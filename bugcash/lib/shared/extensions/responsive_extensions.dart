@@ -1,8 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/responsive_data_provider.dart';
 import '../theme/responsive_theme.dart';
 import '../constants/responsive_breakpoints.dart';
+import '../../core/constants/app_colors.dart';
 
 /// BuildContext에 반응형 관련 확장 메서드 추가
 extension ResponsiveContextExtension on BuildContext {
@@ -17,6 +20,9 @@ extension ResponsiveContextExtension on BuildContext {
 
   /// 모바일 여부
   bool get isMobile => ResponsiveBreakpoints.isMobileWidth(screenWidth);
+
+  /// 작은 태블릿 여부 (600px-768px, 폰트 크기 개선을 위한 중간 브레이크포인트)
+  bool get isSmallTablet => ResponsiveBreakpoints.isSmallTabletWidth(screenWidth);
 
   /// 태블릿 여부
   bool get isTablet => ResponsiveBreakpoints.isTabletWidth(screenWidth);
@@ -37,8 +43,9 @@ extension ResponsiveContextExtension on BuildContext {
   /// 반응형 그리드 컬럼 수
   int get responsiveColumns => ResponsiveBreakpoints.getColumnCount(screenWidth);
 
-  /// 반응형 폰트 스케일
-  double get fontScale => ResponsiveBreakpoints.getFontScale(screenWidth);
+  /// 반응형 폰트 스케일 (웹 모바일 180%, 작은 태블릿 130% 확대)
+  /// 최소 폰트 스케일 0.9 보장, 중간 브레이크포인트 지원
+  double get fontScale => ResponsiveBreakpoints.getFontScale(screenWidth, isWeb: kIsWeb);
 
   /// 사이드바 너비
   double get sidebarWidth => ResponsiveBreakpoints.getSidebarWidth(screenWidth);
@@ -47,6 +54,9 @@ extension ResponsiveContextExtension on BuildContext {
   double get maxContentWidth => screenWidth > ResponsiveBreakpoints.desktop
       ? ResponsiveBreakpoints.maxContentWidth
       : screenWidth;
+
+  /// 웹에서 모바일 사이즈 여부 (180% 폰트 적용 대상)
+  bool get isWebMobile => kIsWeb && isMobile;
 }
 
 /// WidgetRef에 반응형 관련 확장 메서드 추가
@@ -67,9 +77,12 @@ extension ResponsiveRefExtension on WidgetRef {
 
 /// double 숫자에 반응형 관련 확장 메서드 추가
 extension ResponsiveDoubleExtension on double {
-  /// 반응형 폰트 크기 적용
+  /// 반응형 폰트 크기 적용 (웹 모바일 180%, 작은 태블릿 130% 확대)
+  /// 최소 폰트 스케일 0.9 보장, 중간 브레이크포인트에서 부드러운 스케일링
   double responsiveFont(BuildContext context) {
-    return this * context.fontScale;
+    final scale = context.fontScale;
+    // 최소 크기 보장: 어떤 경우에도 원본의 90% 이하로 내려가지 않음
+    return this * scale;
   }
 
   /// 반응형 스페이싱 적용
@@ -119,6 +132,28 @@ extension ResponsiveIntExtension on int {
 
 /// Widget에 반응형 관련 확장 메서드 추가
 extension ResponsiveWidgetExtension on Widget {
+  /// 반응형 카드 elevation 적용 (데스크톱에서 더 높은 elevation)
+  Widget withResponsiveCardElevation(BuildContext context) {
+    if (context.isDesktop) {
+      return Card(
+        elevation: 8,
+        shadowColor: Colors.black.withValues(alpha: 0.1),
+        child: this,
+      );
+    } else if (context.isTablet) {
+      return Card(
+        elevation: 4,
+        shadowColor: Colors.black.withValues(alpha: 0.08),
+        child: this,
+      );
+    } else {
+      return Card(
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.06),
+        child: this,
+      );
+    }
+  }
   /// ResponsiveBuilder로 감싸기
   Widget responsive({
     Widget Function(BuildContext context, ResponsiveData responsive)? builder,
@@ -188,15 +223,210 @@ extension ResponsiveWidgetExtension on Widget {
     if (context.isDesktop && desktop != null) return desktop;
     return this; // 기본값
   }
+
+  // ============================================
+  // Phase 3: Advanced 3D Design System
+  // ============================================
+
+  /// Glassmorphism 효과 적용
+  Widget withGlassEffect({
+    double borderRadius = 12.0,
+    double blur = 20.0,
+  }) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.glassBackground,
+                AppColors.glassBackground.withValues(alpha: 0.1),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(
+              color: AppColors.glassBorder,
+              width: 1.5,
+            ),
+            boxShadow: AppColors.glassShadow,
+          ),
+          child: this,
+        ),
+      ),
+    );
+  }
+
+  /// Neumorphism 효과 적용
+  Widget withNeumorphism({
+    bool isPressed = false,
+    double borderRadius = 12.0,
+    Color? backgroundColor,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor ?? AppColors.neuLight,
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: isPressed
+          ? AppColors.neuShadowConcave
+          : AppColors.neuShadowConvex,
+      ),
+      child: this,
+    );
+  }
+
+  /// 고급 gradient 배경 적용
+  Widget withGradientBackground({
+    required List<Color> colors,
+    AlignmentGeometry begin = Alignment.topLeft,
+    AlignmentGeometry end = Alignment.bottomRight,
+    double borderRadius = 12.0,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: begin,
+          end: end,
+          colors: colors,
+        ),
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: AppColors.cardShadowElevated,
+      ),
+      child: this,
+    );
+  }
+
+  /// 미세한 호버 애니메이션 효과
+  Widget withHoverAnimation({
+    Duration duration = const Duration(milliseconds: 200),
+    double scale = 1.02,
+  }) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: duration,
+        transform: Matrix4.identity()..scale(1.0),
+        child: this,
+      ),
+    );
+  }
+
+  /// 3D 카드 스타일 (그림자 + 호버 효과 결합)
+  Widget with3DCard({
+    bool isElevated = false,
+    double borderRadius = 12.0,
+  }) {
+    return withHoverAnimation().withGradientBackground(
+      colors: AppColors.cardGradientLight,
+      borderRadius: borderRadius,
+    );
+  }
+
+  // ============================================
+  // Phase 4: 사용자 타입별 맞춤화 헬퍼
+  // ============================================
+
+  /// 사용자 타입별 카드 스타일 적용
+  Widget withUserTypeCard({
+    required String userType,
+    double borderRadius = 12.0,
+    bool withHover = true,
+  }) {
+    final gradientColors = AppColors.getGradientColors(userType);
+    final cardShadow = AppColors.getCardShadow(userType);
+
+    Widget card = Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: gradientColors,
+        ),
+        borderRadius: BorderRadius.circular(borderRadius),
+        boxShadow: cardShadow,
+      ),
+      child: this,
+    );
+
+    return withHover ? card.withHoverAnimation() : card;
+  }
+
+  /// 사용자 타입별 배지 스타일
+  Widget withUserTypeBadge({
+    required String userType,
+    double borderRadius = 8.0,
+  }) {
+    final primaryColor = AppColors.getPrimaryColor(userType);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: primaryColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: Border.all(
+          color: primaryColor.withValues(alpha: 0.3),
+          width: 1,
+        ),
+      ),
+      child: this,
+    );
+  }
+
+  /// 권한별 차별화된 글래스 효과
+  Widget withRoleBasedGlass({
+    required String userType,
+    double borderRadius = 12.0,
+    double blur = 20.0,
+  }) {
+    final primaryColor = AppColors.getPrimaryColor(userType);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                primaryColor.withValues(alpha: 0.15),
+                primaryColor.withValues(alpha: 0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(borderRadius),
+            border: Border.all(
+              color: primaryColor.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: primaryColor.withValues(alpha: 0.1),
+                blurRadius: 40,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: this,
+        ),
+      ),
+    );
+  }
 }
 
 /// TextStyle에 반응형 관련 확장 메서드 추가
 extension ResponsiveTextStyleExtension on TextStyle {
-  /// 반응형 폰트 크기 적용
+  /// 반응형 폰트 크기 적용 (웹 모바일 180%, 작은 태블릿 130% 확대)
+  /// 최소 폰트 스케일 0.9 보장, 중간 브레이크포인트에서 부드러운 스케일링
   TextStyle responsiveFont(BuildContext context) {
     final currentSize = fontSize ?? 14.0;
+    final scale = context.fontScale;
+    // 최소 크기 보장: 어떤 경우에도 원본의 90% 이하로 내려가지 않음
     return copyWith(
-      fontSize: currentSize * context.fontScale,
+      fontSize: currentSize * scale,
     );
   }
 

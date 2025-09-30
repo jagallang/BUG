@@ -12,6 +12,7 @@ import 'firebase_options.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'shared/theme/app_theme.dart';
 import 'shared/widgets/responsive_wrapper.dart';
+import 'shared/constants/responsive_breakpoints.dart';
 
 // 웹용 반응형 크기 헬퍼 - 깔끔한 크기로 조정
 extension ResponsiveText on num {
@@ -70,6 +71,14 @@ Future<void> _initializeFirebase() async {
 class BugCashWebApp extends StatelessWidget {
   const BugCashWebApp({super.key});
 
+  /// 웹에서 반응형 텍스트 스케일 계산
+  double _getWebResponsiveTextScale(BuildContext context) {
+    if (!kIsWeb) return 1.0; // 모바일 앱은 기본값
+
+    final width = MediaQuery.of(context).size.width;
+    return ResponsiveBreakpoints.getFontScale(width, isWeb: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
@@ -77,23 +86,28 @@ class BugCashWebApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       builder: (context, child) {
-        return MaterialApp(
-          title: 'BugCash - 웹 앱 테스트 플랫폼',
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [
-            Locale('en', ''),
-            Locale('ko', ''),
-          ],
-          locale: const Locale('ko', ''),  // 기본 언어를 한글로 설정
-          home: const ResponsiveWrapper(
-            child: AuthWrapper(),
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(_getWebResponsiveTextScale(context)),
+          ),
+          child: MaterialApp(
+            title: 'BugCash - 웹 앱 테스트 플랫폼',
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en', ''),
+              Locale('ko', ''),
+            ],
+            locale: const Locale('ko', ''),  // 기본 언어를 한글로 설정
+            home: const ResponsiveWrapper(
+              child: AuthWrapper(),
+            ),
           ),
         );
       },

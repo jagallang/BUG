@@ -12,6 +12,9 @@ class ResponsiveBreakpoints {
   /// Mobile breakpoint (phones)
   static const double mobile = 600;
 
+  /// Small tablet breakpoint (small tablets)
+  static const double smallTablet = 768;
+
   /// Tablet breakpoint (tablets and small laptops)
   static const double tablet = 1024;
 
@@ -52,9 +55,9 @@ class ResponsiveBreakpoints {
   // Padding & Margins
   // ============================================
 
-  /// Mobile padding
-  static const double mobilePaddingHorizontal = 16.0;
-  static const double mobilePaddingVertical = 16.0;
+  /// Mobile padding (모바일에서 더 큰 패딩으로 가독성 향상)
+  static const double mobilePaddingHorizontal = 20.0;
+  static const double mobilePaddingVertical = 20.0;
 
   /// Tablet padding
   static const double tabletPaddingHorizontal = 24.0;
@@ -73,10 +76,18 @@ class ResponsiveBreakpoints {
   // ============================================
 
   /// Font size scale factors
-  static const double mobileFontScale = 0.9;
+  /// 작은 화면에서 가독성을 위해 크게 확대하여 사용성 향상
+  /// 웹 모바일 180%, 작은 태블릿 130%로 강화된 스케일링
+  /// 최소 폰트 크기 보장으로 사용성 개선
+  static const double mobileFontScale = 1.1; // 모바일에서 110% 확대
+  static const double webMobileFontScale = 1.8; // 웹 모바일 180% 확대
+  static const double smallTabletFontScale = 1.3; // 작은 태블릿에서 130% 확대
   static const double tabletFontScale = 1.0;
   static const double desktopFontScale = 1.1;
   static const double wideDesktopFontScale = 1.2;
+
+  /// 최소 폰트 스케일 (어떤 화면 크기에서도 이 값 이하로 내려가지 않음)
+  static const double minFontScale = 0.9;
 
   // ============================================
   // Component Sizes
@@ -104,8 +115,11 @@ class ResponsiveBreakpoints {
   /// Check if screen width is mobile
   static bool isMobileWidth(double width) => width < mobile;
 
+  /// Check if screen width is small tablet
+  static bool isSmallTabletWidth(double width) => width >= mobile && width < smallTablet;
+
   /// Check if screen width is tablet
-  static bool isTabletWidth(double width) => width >= mobile && width < tablet;
+  static bool isTabletWidth(double width) => width >= smallTablet && width < tablet;
 
   /// Check if screen width is desktop
   static bool isDesktopWidth(double width) => width >= tablet && width < desktop;
@@ -137,11 +151,28 @@ class ResponsiveBreakpoints {
   }
 
   /// Get appropriate font scale for screen width
-  static double getFontScale(double width) {
-    if (isMobileWidth(width)) return mobileFontScale;
-    if (isTabletWidth(width)) return tabletFontScale;
-    if (isDesktopWidth(width)) return desktopFontScale;
-    return wideDesktopFontScale;
+  /// 웹 전용: 작은 화면(<600px) 180%, 작은 태블릿(600-768px) 130% 확대
+  /// 모바일 앱: 기존 110% 스케일 유지
+  /// 최소 폰트 스케일 보장으로 가독성 개선
+  static double getFontScale(double width, {bool isWeb = false}) {
+    double scale;
+
+    if (isMobileWidth(width)) {
+      // 웹: 180% 확대, 모바일 앱: 110% 확대
+      scale = isWeb ? webMobileFontScale : mobileFontScale;
+    } else if (isSmallTabletWidth(width)) {
+      // 웹에서만 130% 확대, 모바일 앱은 기본값 사용
+      scale = isWeb ? smallTabletFontScale : tabletFontScale;
+    } else if (isTabletWidth(width)) {
+      scale = tabletFontScale;
+    } else if (isDesktopWidth(width)) {
+      scale = desktopFontScale;
+    } else {
+      scale = wideDesktopFontScale;
+    }
+
+    // 최소 폰트 스케일 보장 (어떤 경우에도 minFontScale 이하로 내려가지 않음)
+    return scale < minFontScale ? minFontScale : scale;
   }
 
   /// Get appropriate sidebar width for screen width
