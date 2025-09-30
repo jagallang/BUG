@@ -192,7 +192,7 @@ class DailyMissionCard extends StatelessWidget {
             icon: Icon(Icons.upload, size: 18.sp),
             label: const Text('미션 제출'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
+              backgroundColor: AppColors.statusPending,
               foregroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: 12.h),
               shape: RoundedRectangleBorder(

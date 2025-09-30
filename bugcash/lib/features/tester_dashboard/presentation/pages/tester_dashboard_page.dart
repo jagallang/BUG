@@ -1425,13 +1425,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   Container(
                     padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade100,
+                      color: AppColors.accentGoldBg,
                       borderRadius: BorderRadius.circular(12.r),
                     ),
                     child: Text(
                       reward,
                       style: TextStyle(
-                        color: Colors.green.shade700,
+                        color: AppColors.accentGold,
                         fontWeight: FontWeight.bold,
                         fontSize: 12.sp,
                       ),

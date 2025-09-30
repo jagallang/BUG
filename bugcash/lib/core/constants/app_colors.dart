@@ -220,13 +220,13 @@ class AppColors {
   // Phase 4: 사용자 타입별 맞춤화 색상 시스템
   // ============================================
 
-  /// Tester 전용 색상 (활동적이고 게임화된 느낌)
-  static const Color testerPrimary = Color(0xFF4CAF50);
-  static const Color testerSecondary = Color(0xFF81C784);
-  static const Color testerAccent = Color(0xFF00E676);
+  /// Tester 전용 색상 (심플하고 중립적인 느낌)
+  static const Color testerPrimary = Color(0xFFF5F5F5);
+  static const Color testerSecondary = Color(0xFFEEEEEE);
+  static const Color testerAccent = Color(0xFFE0E0E0);
   static const List<Color> testerGradient = [
-    Color(0xFF4CAF50),
-    Color(0xFF8BC34A),
+    Color(0xFFFAFAFA),  // neutral50
+    Color(0xFFF5F5F5),  // neutral100
   ];
   static List<BoxShadow> testerCardShadow = [
     BoxShadow(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/mission_management_model.dart';
+import '../../../core/constants/app_colors.dart';
 
 /// 미션 상태를 표시하는 배지 위젯
 class MissionStatusBadge extends StatelessWidget {
@@ -59,31 +60,31 @@ class MissionStatusBadge extends StatelessWidget {
     switch (status) {
       case DailyMissionStatus.pending:
         return _BadgeData(
-          color: const Color(0xFF9E9E9E), // 회색
+          color: AppColors.neutral500, // 회색
           icon: Icons.schedule,
           text: '대기중',
         );
       case DailyMissionStatus.inProgress:
         return _BadgeData(
-          color: const Color(0xFF2196F3), // 파란색
+          color: AppColors.primary, // 청록색 (Primary)
           icon: Icons.play_circle,
           text: '진행중',
         );
       case DailyMissionStatus.completed:
         return _BadgeData(
-          color: const Color(0xFFFF9800), // 주황색
+          color: AppColors.statusPending, // 주황색
           icon: Icons.pending,
           text: '검토대기',
         );
       case DailyMissionStatus.approved:
         return _BadgeData(
-          color: const Color(0xFF4CAF50), // 초록색
+          color: AppColors.statusSuccess, // 녹색
           icon: Icons.check_circle,
           text: '승인완료',
         );
       case DailyMissionStatus.rejected:
         return _BadgeData(
-          color: const Color(0xFFF44336), // 빨간색
+          color: AppColors.statusError, // 빨간색
           icon: Icons.cancel,
           text: '수정필요',
         );
