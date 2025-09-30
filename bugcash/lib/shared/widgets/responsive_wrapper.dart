@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../constants/responsive_breakpoints.dart';
 
 /// 반응형 레이아웃을 위한 Wrapper 위젯
 /// 대형 모니터에서 콘텐츠 최대 너비를 제한하고 중앙 정렬
@@ -12,7 +13,7 @@ class ResponsiveWrapper extends StatelessWidget {
   const ResponsiveWrapper({
     super.key,
     required this.child,
-    this.maxWidth = 1200, // 기본 최대 너비 1200px
+    this.maxWidth = ResponsiveBreakpoints.maxContentWidth,
     this.backgroundColor,
     this.showShadow = true,
   });
@@ -25,8 +26,7 @@ class ResponsiveWrapper extends StatelessWidget {
     }
 
     final screenWidth = MediaQuery.of(context).size.width;
-    final bool isDesktop = screenWidth > 1024;
-    final bool isTablet = screenWidth > 600 && screenWidth <= 1024;
+    final bool isDesktop = ResponsiveBreakpoints.isDesktopWidth(screenWidth);
 
     return Container(
       color: backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
@@ -58,80 +58,59 @@ class ResponsiveWrapper extends StatelessWidget {
   static EdgeInsets getResponsivePadding(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
-    if (screenWidth > 1024) {
-      // Desktop
-      return const EdgeInsets.symmetric(horizontal: 32, vertical: 24);
-    } else if (screenWidth > 600) {
-      // Tablet
-      return const EdgeInsets.symmetric(horizontal: 24, vertical: 20);
-    } else {
-      // Mobile
-      return const EdgeInsets.symmetric(horizontal: 16, vertical: 16);
-    }
+    return EdgeInsets.symmetric(
+      horizontal: ResponsiveBreakpoints.getPaddingHorizontal(screenWidth),
+      vertical: ResponsiveBreakpoints.getPaddingVertical(screenWidth),
+    );
   }
 
   /// 화면 크기에 따른 그리드 컬럼 수 반환
   static int getResponsiveGridColumns(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-
-    if (screenWidth > 1200) {
-      return 4;
-    } else if (screenWidth > 900) {
-      return 3;
-    } else if (screenWidth > 600) {
-      return 2;
-    } else {
-      return 1;
-    }
+    return ResponsiveBreakpoints.getColumnCount(screenWidth);
   }
 
   /// 화면 크기에 따른 카드 너비 반환
   static double getResponsiveCardWidth(BuildContext context, {int columns = 3}) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final maxContentWidth = screenWidth > 1200 ? 1200.0 : screenWidth;
+    final maxContentWidth = screenWidth > ResponsiveBreakpoints.desktop
+        ? ResponsiveBreakpoints.maxContentWidth
+        : screenWidth;
     final padding = getResponsivePadding(context);
     final availableWidth = maxContentWidth - padding.horizontal;
 
     // 화면 크기에 따른 컬럼 수 조정
-    int actualColumns = columns;
-    if (screenWidth <= 600) {
-      actualColumns = 1;
-    } else if (screenWidth <= 900) {
-      actualColumns = 2;
-    } else if (screenWidth <= 1200) {
-      actualColumns = columns > 3 ? 3 : columns;
+    int actualColumns = ResponsiveBreakpoints.getColumnCount(screenWidth);
+    if (actualColumns < columns) {
+      actualColumns = actualColumns; // Use breakpoint-based columns
+    } else {
+      actualColumns = columns; // Use requested columns if screen allows
     }
 
     // 카드 간격 고려
-    const spacing = 16.0;
+    const spacing = ResponsiveBreakpoints.gridSpacing;
     return (availableWidth - (spacing * (actualColumns - 1))) / actualColumns;
   }
 
   /// 브레이크포인트 확인 헬퍼 메서드들
   static bool isMobile(BuildContext context) {
-    return MediaQuery.of(context).size.width < 600;
+    return ResponsiveBreakpoints.isMobileWidth(MediaQuery.of(context).size.width);
   }
 
   static bool isTablet(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    return width >= 600 && width < 1024;
+    return ResponsiveBreakpoints.isTabletWidth(MediaQuery.of(context).size.width);
   }
 
   static bool isDesktop(BuildContext context) {
-    return MediaQuery.of(context).size.width >= 1024;
+    final width = MediaQuery.of(context).size.width;
+    return ResponsiveBreakpoints.isDesktopWidth(width) || ResponsiveBreakpoints.isWideDesktopWidth(width);
   }
 
   /// 반응형 폰트 크기 계산
   static double getResponsiveFontSize(BuildContext context, double baseSize) {
     final screenWidth = MediaQuery.of(context).size.width;
-
-    if (screenWidth > 1200) {
-      return baseSize * 1.1; // Desktop: 10% 크게
-    } else if (screenWidth > 600) {
-      return baseSize; // Tablet: 기본 크기
-    } else {
-      return baseSize * 0.9; // Mobile: 10% 작게
-    }
+    final scale = ResponsiveBreakpoints.getFontScale(screenWidth);
+    return baseSize * scale;
   }
 }
 
@@ -155,7 +134,7 @@ class ResponsiveScaffold extends StatelessWidget {
     this.drawer,
     this.backgroundColor,
     this.showShadow = true,
-    this.maxWidth = 1200,
+    this.maxWidth = ResponsiveBreakpoints.maxContentWidth,
   });
 
   @override

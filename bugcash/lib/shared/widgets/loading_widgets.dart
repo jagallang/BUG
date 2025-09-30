@@ -181,8 +181,8 @@ class _MissionCardSkeletonState extends State<MissionCardSkeleton>
                         width: double.infinity,
                         height: 12.h,
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withOpacity(
-                            0.3 + (0.3 * _animation.value),
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.3 + (0.3 * _animation.value),
                           ),
                           borderRadius: BorderRadius.circular(4.r),
                         ),
@@ -192,8 +192,8 @@ class _MissionCardSkeletonState extends State<MissionCardSkeleton>
                         width: 180.w,
                         height: 12.h,
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withOpacity(
-                            0.3 + (0.3 * _animation.value),
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.3 + (0.3 * _animation.value),
                           ),
                           borderRadius: BorderRadius.circular(4.r),
                         ),
@@ -204,8 +204,8 @@ class _MissionCardSkeletonState extends State<MissionCardSkeleton>
                         width: double.infinity,
                         height: 40.h,
                         decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest.withOpacity(
-                            0.3 + (0.3 * _animation.value),
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.3 + (0.3 * _animation.value),
                           ),
                           borderRadius: BorderRadius.circular(20.r),
                         ),

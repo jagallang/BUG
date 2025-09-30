@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import '../../domain/entities/provider_app_entity.dart';
 
 class ProviderAppModel extends ProviderAppEntity {
@@ -31,10 +32,10 @@ class ProviderAppModel extends ProviderAppEntity {
     if (topLevelRewards != null) {
       metadata['rewards'] = topLevelRewards;
       // 안전성을 위한 디버깅 로그
-      print('🔄 ProviderAppModel: 최상위 rewards 필드를 metadata에 병합 - ${data['appName']}');
-      print('📊 topLevelRewards: $topLevelRewards');
+      debugPrint('🔄 ProviderAppModel: 최상위 rewards 필드를 metadata에 병합 - ${data['appName']}');
+      debugPrint('📊 topLevelRewards: $topLevelRewards');
     } else {
-      print('⚠️ ProviderAppModel: 최상위 rewards 필드 없음 - ${data['appName']}');
+      debugPrint('⚠️ ProviderAppModel: 최상위 rewards 필드 없음 - ${data['appName']}');
     }
 
     return ProviderAppModel(
