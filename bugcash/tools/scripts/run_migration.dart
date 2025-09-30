@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:bugcash/utils/migration_helper.dart';
-import 'package:bugcash/firebase_options.dart';
+import '../../firebase_options.dart';
 
 void main() async {
   debugPrint('🚀 BugCash 마이그레이션 시작');
