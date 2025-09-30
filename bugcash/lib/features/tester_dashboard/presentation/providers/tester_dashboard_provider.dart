@@ -667,37 +667,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       return <MissionCard>[];
     }
   }
-  
-  MissionType _parseMissionType(String? type) {
-    switch (type?.toLowerCase()) {
-      case 'functional':
-        return MissionType.functional;
-      case 'ui':
-      case 'uiux':
-        return MissionType.uiUx;
-      case 'performance':
-        return MissionType.performance;
-      case 'security':
-        return MissionType.security;
-      case 'usability':
-        return MissionType.usabilityTest;
-      case 'bug':
-      case 'bugreport':
-        return MissionType.bugReport;
-      case 'feature':
-      case 'featuretesting':
-        return MissionType.featureTesting;
-      case 'performancetest':
-        return MissionType.performanceTest;
-      case 'survey':
-        return MissionType.survey;
-      case 'feedback':
-        return MissionType.feedback;
-      default:
-        return MissionType.functional;
-    }
-  }
-  
+
 
   Future<List<MissionCard>> _getActiveMissionsFromFirestore(String testerId) async {
     try {
@@ -715,7 +685,6 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
         final workflowData = workflowDoc.data();
         final appId = workflowData['appId'];
         final currentState = workflowData['currentState'] ?? 'pending';
-        final status = workflowData['status'] ?? currentState; // 호환성을 위해
 
         // Projects 에서 앱 정보 가져오기 (appId가 projects의 문서 ID이므로)
         try {

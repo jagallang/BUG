@@ -11,7 +11,6 @@ import '../../../../core/constants/app_colors.dart';
 // import '../widgets/expandable_mission_card.dart';
 // import '../widgets/active_test_session_card.dart';
 import '../providers/tester_dashboard_provider.dart';
-import '../../../../services/test_session_service.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 // 채팅 기능 제거됨
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -722,73 +721,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  Widget _buildNotificationItem(String title, String message, DateTime time, bool isUnread) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16.w, vertical: 4.h),
-      decoration: BoxDecoration(
-        color: isUnread ? Colors.green.shade50 : Colors.transparent,
-        borderRadius: BorderRadius.circular(8.r),
-      ),
-      child: ListTile(
-        leading: Container(
-          width: 40.w,
-          height: 40.w,
-          decoration: BoxDecoration(
-            color: isUnread 
-                ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.1)
-                : Colors.grey.shade200,
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            Icons.notification_important,
-            color: isUnread ? Theme.of(context).colorScheme.primary : Colors.grey,
-            size: 20.w,
-          ),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(message),
-            SizedBox(height: 2.h),
-            Text(
-              _formatNotificationTime(time),
-              style: TextStyle(
-                fontSize: 10.sp,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-        trailing: isUnread 
-            ? Container(
-                width: 8.w,
-                height: 8.w,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
-                  shape: BoxShape.circle,
-                ),
-              )
-            : null,
-      ),
-    );
-  }
-
-  void _navigateToProviderDashboard(BuildContext context) {
-    // Provider Dashboard로 이동
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => ProviderDashboardPage(
-          providerId: widget.testerId, // 테스터 ID를 임시로 사용
-        ),
-      ),
-    );
-  }
 
   void _navigateToSettings(BuildContext context) {
     Navigator.of(context).push(
@@ -852,20 +784,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  String _formatNotificationTime(DateTime time) {
-    final now = DateTime.now();
-    final difference = now.difference(time);
-    
-    if (difference.inDays > 0) {
-      return '${difference.inDays}일 전';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours}시간 전';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes}분 전';
-    } else {
-      return '방금 전';
-    }
-  }
 
   Widget _buildMissionTab() {
     return DefaultTabController(
