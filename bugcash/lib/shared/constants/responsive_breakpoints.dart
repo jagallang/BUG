@@ -86,7 +86,8 @@ class ResponsiveBreakpoints {
   static const double desktopFontScale = 1.1;
   static const double wideDesktopFontScale = 1.2;
 
-  /// 최소 폰트 스케일 (어떤 화면 크기에서도 이 값 이하로 내려가지 않음)
+  /// 최소 폰트 스케일 (접근성 보장을 위한 최소 크기)
+  /// 어떤 화면 크기에서도 이 값 이하로 내려가지 않음
   static const double minFontScale = 0.9;
 
   // ============================================
@@ -129,10 +130,11 @@ class ResponsiveBreakpoints {
 
   /// Get appropriate column count for screen width
   static int getColumnCount(double width) {
-    if (isMobileWidth(width)) return mobileColumns;
-    if (isTabletWidth(width)) return tabletColumns;
-    if (isDesktopWidth(width)) return desktopColumns;
-    return wideDesktopColumns;
+    if (isMobileWidth(width)) return mobileColumns;        // <600px: 1열
+    if (isSmallTabletWidth(width)) return tabletColumns;   // 600-768px: 2열
+    if (isTabletWidth(width)) return tabletColumns;        // 768-1024px: 2열
+    if (isDesktopWidth(width)) return desktopColumns;      // 1024-1200px: 3열
+    return wideDesktopColumns;                             // >=1200px: 4열
   }
 
   /// Get appropriate padding for screen width
@@ -151,17 +153,17 @@ class ResponsiveBreakpoints {
   }
 
   /// Get appropriate font scale for screen width
-  /// 웹 전용: 작은 화면(<600px) 180%, 작은 태블릿(600-768px) 130% 확대
+  /// 웹 전용: 작은 화면(<600px) 165%, 작은 태블릿(600-768px) 145% 확대
   /// 모바일 앱: 기존 110% 스케일 유지
   /// 최소 폰트 스케일 보장으로 가독성 개선
   static double getFontScale(double width, {bool isWeb = false}) {
     double scale;
 
     if (isMobileWidth(width)) {
-      // 웹: 180% 확대, 모바일 앱: 110% 확대
+      // 웹: 165% 확대, 모바일 앱: 110% 확대
       scale = isWeb ? webMobileFontScale : mobileFontScale;
     } else if (isSmallTabletWidth(width)) {
-      // 웹에서만 130% 확대, 모바일 앱은 기본값 사용
+      // 웹에서만 145% 확대, 모바일 앱은 기본값 사용
       scale = isWeb ? smallTabletFontScale : tabletFontScale;
     } else if (isTabletWidth(width)) {
       scale = tabletFontScale;
