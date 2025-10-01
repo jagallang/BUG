@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.3.1-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.4.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,39 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.3.1)
+## ✨ 주요 기능 (v2.4.0)
+
+### 📅 일일 미션 워크플로우 시스템 (v2.4.0) - **DAILY MISSION WORKFLOW SYSTEM**
+- **🔄 완전한 일일 미션 생애주기 관리**: 테스터와 공급자 간 양방향 워크플로우 구현
+  - **Phase 1: 테스터 일일 제출 시스템** (v2.4.0-phase1)
+    - 📸 이미지 업로드 위젯 (다중 이미지 선택/미리보기/삭제)
+    - 📝 일일 미션 제출 페이지 (피드백 입력 + 스크린샷)
+    - 🔥 Firebase Storage 통합 (자동 경로 관리)
+    - ⚡ MissionWorkflowService 확장 (submitDailyMission)
+
+  - **Phase 2: 미션 진행 추적 페이지** (v2.4.0-phase2)
+    - 📊 타임라인 형식 진행 상황 표시
+    - 🎯 Day별 상태 아이콘 (대기/진행중/완료/승인)
+    - 📈 진행률 및 리워드 오버뷰
+    - 🔄 실시간 Firestore Stream 동기화
+
+  - **Phase 3: 공급자 검토 시스템** (v2.4.0-phase3)
+    - 🖼️ 스크린샷 갤러리 (가로 스크롤 + 전체화면)
+    - ⭐ 별점 평가 시스템 (1-5점)
+    - 💬 공급자 피드백 입력
+    - ✅ 승인/거부 워크플로우
+
+- **🎨 디자인 시스템**:
+  - **Material Design 3 Dialog**: 전문적인 검토 인터페이스
+  - **반응형 레이아웃**: flutter_screenutil 기반 화면 대응
+  - **상태 기반 UI**: 미션 상태별 차별화된 시각적 표현
+  - **인터랙티브 갤러리**: InteractiveViewer로 이미지 확대/축소
+
+- **🔧 기술적 특징**:
+  - **StreamBuilder 패턴**: 실시간 데이터 동기화
+  - **Service Layer 분리**: MissionWorkflowService 확장 메서드
+  - **에러 핸들링**: 포괄적인 try-catch 및 사용자 피드백
+  - **메모리 관리**: 자동 컨트롤러 dispose 및 구독 정리
 
 ### 🎨 전역 카드 입체감 시스템 확립 (v2.3.1) - **GLOBAL CARD DEPTH SYSTEM**
 - **🌐 모든 카드에 일관된 3D 입체감 적용**: 전체 앱에 통일된 디자인 언어 구축
