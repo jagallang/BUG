@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.5.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.6.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,41 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.5.0)
+## ✨ 주요 기능 (v2.6.0)
+
+### 🎨 미션 카드 UI/UX 개선 (v2.6.0) - **MISSION CARD UI/UX IMPROVEMENTS**
+- **4개 버튼 가로 배치 시스템**
+  - ✅ 삭제-시작-완료-제출 버튼을 가로 한 줄로 재배치
+  - 👁️ 모든 미션 단계를 한눈에 볼 수 있는 직관적인 레이아웃
+  - 🔄 순차적 워크플로우 명확화 (왼쪽→오른쪽 진행)
+  - 📱 반응형 디자인으로 모바일/웹 모두 최적화
+
+- **🔒 삭제 버튼 2단계 확인 시스템**
+  - **1단계**: 회색(비활성) → 1회 클릭 시 빨간색(활성화)
+  - **2단계**: 빨간색 상태에서 다시 클릭 시 확인 모달 표시
+  - ↩️ 취소 시 회색으로 자동 복귀
+  - 🛡️ 실수로 인한 삭제 방지 강화
+  - ✨ 모든 삭제 버튼에 일관되게 적용 (승인 대기, 진행중, 검토 대기 등)
+
+- **📖 시작 버튼 가이드 다이얼로그**
+  - 🚀 미션 시작 전 가이드 안내 표시
+  - ⏱️ 10분 테스트 시간 및 요구사항 명시
+  - 🔗 "앱 테스트 시작" 버튼으로 새 탭에서 앱 직접 오픈
+  - ✅ 사용자 확인 후에만 타임스탬프 기록
+
+- **🔧 기술적 개선**
+  - StatefulWidget 전환 (`DailyMissionCard`)
+  - `_deleteConfirmMode` 상태 관리 추가
+  - GridView 2x2 → Row 가로 배치로 변경
+  - `_build4ButtonRow()` 메서드로 레이아웃 최적화
+  - `_handleDeleteClick()` 2단계 확인 로직
+  - `_showDeleteConfirmDialog()` 모달 다이얼로그
+
+- **🎯 적용 범위**
+  - 공급자 승인 대기 중 상태
+  - 미션 진행 중 상태 (4개 버튼 레이아웃)
+  - 제출 완료 (검토 대기) 상태
+  - 상태 확인 중 기본 상태
 
 ### 🗑️ 미션 삭제 시스템 (v2.5.0) - **ENHANCED MISSION DELETION SYSTEM**
 - **🔄 완전한 양방향 삭제 워크플로우**: 테스터 요청 → 공급자 확인 → 영구 삭제
