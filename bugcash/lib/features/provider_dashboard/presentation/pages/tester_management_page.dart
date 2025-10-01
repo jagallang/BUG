@@ -9,6 +9,7 @@ import '../../../../core/services/mission_workflow_service.dart';
 import '../../../../core/services/mission_management_service.dart';
 import '../../../shared/models/mission_management_model.dart';
 import 'app_management_page.dart';
+import '../widgets/daily_submission_review_dialog.dart';
 
 class TesterManagementPage extends ConsumerStatefulWidget {
   final ProviderAppModel app;
@@ -472,7 +473,16 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
                         children: [
                           Expanded(
                             child: ElevatedButton.icon(
-                              onPressed: () => _showApprovalDialog(workflow, todayInteraction),
+                              onPressed: () => showDialog(
+                                context: context,
+                                builder: (context) => DailySubmissionReviewDialog(
+                                  workflowId: workflow.id,
+                                  dayNumber: todayInteraction.dayNumber,
+                                  interaction: todayInteraction,
+                                  providerId: widget.app.providerId,
+                                  onReviewed: () => setState(() {}),
+                                ),
+                              ),
                               icon: const Icon(Icons.check_circle, size: 16),
                               label: const Text('미션 승인'),
                               style: ElevatedButton.styleFrom(
@@ -1019,81 +1029,6 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     }
   }
 
-  void _showApprovalDialog(MissionWorkflowModel workflow, DailyMissionInteraction interaction) {
-    final feedbackController = TextEditingController();
-    int rating = 5;
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text('${interaction.dayNumber}일차 미션 승인'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('테스터: ${workflow.testerName}'),
-              SizedBox(height: 16.h),
-              const Text('평점'),
-              Row(
-                children: List.generate(5, (index) => IconButton(
-                  onPressed: () => setState(() => rating = index + 1),
-                  icon: Icon(
-                    Icons.star,
-                    color: index < rating ? Colors.amber : Colors.grey[300],
-                  ),
-                )),
-              ),
-              TextField(
-                controller: feedbackController,
-                decoration: const InputDecoration(
-                  labelText: '피드백 (선택사항)',
-                  hintText: '테스터에게 전달할 피드백을 입력하세요',
-                ),
-                maxLines: 3,
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('취소'),
-            ),
-            ElevatedButton(
-              onPressed: () => _showRejectionDialog(workflow, interaction),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('거절'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await _workflowService.approveDailyMission(
-                  workflowId: workflow.id,
-                  providerId: widget.app.providerId,
-                  dayNumber: interaction.dayNumber,
-                  providerFeedback: feedbackController.text.isNotEmpty
-                    ? feedbackController.text : null,
-                  rating: rating,
-                );
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('일일 미션을 승인했습니다'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              },
-              child: const Text('승인'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showFinalApprovalDialog(MissionWorkflowModel workflow) {
     final feedbackController = TextEditingController();
