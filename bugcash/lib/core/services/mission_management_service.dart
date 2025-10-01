@@ -119,12 +119,30 @@ class MissionManagementService {
 
   /// 테스터 신청 목록 조회 (mission_workflows 컬렉션에서 application_submitted 상태만 조회)
   Stream<List<TesterApplicationModel>> watchTesterApplications(String appId) {
+    AppLogger.info('🔍 [대기목록] 조회 시작 - appId: $appId', 'MissionManagement');
+
     return _firestore
         .collection(_dailyMissionsCollection) // mission_workflows 컬렉션 사용
         .where('appId', isEqualTo: appId)
         .where('currentState', isEqualTo: 'application_submitted') // 신청 대기 상태만 조회
         .snapshots()
         .map((snapshot) {
+          AppLogger.info('📊 [대기목록] Firestore 조회 결과: ${snapshot.docs.length}개 문서', 'MissionManagement');
+
+          // 각 문서 상세 정보 로그
+          for (final doc in snapshot.docs) {
+            final data = doc.data();
+            AppLogger.info(
+              '📄 [문서] ID: ${doc.id}\n'
+              '   ├─ appId: ${data['appId']}\n'
+              '   ├─ currentState: ${data['currentState']}\n'
+              '   ├─ status: ${data['status']}\n'
+              '   ├─ testerName: ${data['testerName']}\n'
+              '   └─ appliedAt: ${data['appliedAt']}',
+              'MissionManagement'
+            );
+          }
+
           final results = snapshot.docs
               .map((doc) => _convertMissionWorkflowToTesterApplication(doc.data(), doc.id))
               .toList();
@@ -132,6 +150,7 @@ class MissionManagementService {
           // 클라이언트 사이드 정렬 (appliedAt 기준 내림차순)
           results.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
 
+          AppLogger.info('✅ [대기목록] 변환 완료: ${results.length}개 신청자', 'MissionManagement');
           return results;
         });
   }

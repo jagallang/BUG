@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/mission_management_service.dart';
 import '../../../../core/config/feature_flags.dart';
+import '../../../../core/utils/logger.dart';
 import '../../../../features/shared/models/mission_management_model.dart';
 import '../../../provider_dashboard/presentation/pages/app_management_page.dart';
 
@@ -30,6 +31,15 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
+
+    // 미션관리 페이지 진입 로그
+    AppLogger.info(
+      '📱 [미션관리] 페이지 초기화\n'
+      '   ├─ appId: ${widget.app.id}\n'
+      '   ├─ appName: ${widget.app.appName}\n'
+      '   └─ providerId: ${widget.app.providerId}',
+      'MissionManagement'
+    );
 
     // Feature Flag 로깅
     FeatureFlagUtils.logFeatureUsage('mission_management_page', widget.app.providerId);

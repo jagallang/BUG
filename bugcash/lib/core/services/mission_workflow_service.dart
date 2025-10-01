@@ -34,7 +34,14 @@ class MissionWorkflowService {
       if (testerId.isEmpty) throw ArgumentError('testerId cannot be empty');
       if (testerName.isEmpty) throw ArgumentError('testerName cannot be empty');
 
-      AppLogger.info('Creating mission application for $appName by $testerName', 'MissionWorkflow');
+      AppLogger.info(
+        '🔥 [미션신청] 생성 시작\n'
+        '   ├─ appId (입력): $appId\n'
+        '   ├─ appName: $appName\n'
+        '   ├─ testerId: $testerId\n'
+        '   └─ testerName: $testerName',
+        'MissionWorkflow'
+      );
 
       // 🔍 자동 providerId 조회 기능 (projects 컬렉션에서)
       String safeProviderId = providerId ?? '';
@@ -45,6 +52,7 @@ class MissionWorkflowService {
 
         // appId에서 'provider_app_' 접두사 제거
         final normalizedAppId = appId.replaceAll('provider_app_', '');
+        AppLogger.info('   ├─ normalizedAppId: $normalizedAppId', 'MissionWorkflow');
 
         try {
           final projectDoc = await _firestore.collection('projects').doc(normalizedAppId).get();
@@ -90,6 +98,15 @@ class MissionWorkflowService {
       final docRef = await _firestore
           .collection('mission_workflows')
           .add(workflow.toFirestore());
+
+      AppLogger.info(
+        '✅ [미션신청] Firestore 저장 완료\n'
+        '   ├─ workflowId: ${docRef.id}\n'
+        '   ├─ appId (저장됨): $appId\n'
+        '   ├─ currentState: ${workflow.currentState.code}\n'
+        '   └─ providerId: $safeProviderId',
+        'MissionWorkflow'
+      );
 
       // 공급자에게 알림 전송
       await _sendNotificationToProvider(
