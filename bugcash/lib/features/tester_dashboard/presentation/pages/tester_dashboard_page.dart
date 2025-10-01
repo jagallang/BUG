@@ -1,5 +1,6 @@
 import 'dart:html' as html;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -24,6 +25,7 @@ import 'mission_tracking_page.dart';
 import '../../../../core/services/mission_management_service.dart';
 import '../../../shared/widgets/daily_mission_card.dart';
 import '../../../shared/models/mission_management_model.dart';
+import '../widgets/mission_timer_floating_button.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -43,6 +45,11 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   late ScrollController _scrollController;
   bool _isAppBarExpanded = false;
   int? _navigateToMissionSubTab; // 미션 서브탭 네비게이션 신호
+
+  // 타이머 관련 상태
+  bool _showStartOverlay = false;
+  DateTime? _missionStartTime;
+  String? _currentMissionWorkflowId;
   
   @override
   void initState() {
@@ -316,8 +323,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   @override
   Widget build(BuildContext context) {
     final dashboardState = ref.watch(testerDashboardProvider);
-    
-    return Scaffold(
+
+    return Stack(
+      children: [
+        Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
         slivers: [
@@ -873,6 +882,73 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           );
         },
       ),
+        ),
+
+        // 미션 시작 전체 화면 오버레이
+        if (_showStartOverlay)
+          MissionStartTimerOverlay(
+            displayDuration: Duration(seconds: 3),
+            onComplete: () {
+              setState(() {
+                _showStartOverlay = false;
+              });
+            },
+          ),
+
+        // 미션 타이머 플로팅 버튼
+        if (_missionStartTime != null && !_showStartOverlay)
+          MissionTimerFloatingButton(
+            startedAt: _missionStartTime!,
+            onScreenshot: () async {
+              // 스크린샷 기능 (나중에 구현)
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('📸 스크린샷 기능은 개발 중입니다'),
+                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            onComplete: () async {
+              // 완료 버튼 클릭 시
+              if (_currentMissionWorkflowId != null) {
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('mission_workflows')
+                      .doc(_currentMissionWorkflowId)
+                      .update({
+                    'status': 'submission_required',
+                  });
+
+                  setState(() {
+                    _missionStartTime = null;
+                    _currentMissionWorkflowId = null;
+                  });
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('✅ 테스트가 완료되었습니다! 이제 결과를 제출해주세요.'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('❌ 완료 처리 중 오류가 발생했습니다'),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+          ),
+      ],
     );
   }
 
@@ -1512,60 +1588,246 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               ),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: EdgeInsets.all(12.w),
-                decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '📋 미션 가이드',
-                      style: TextStyle(
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.blue[700],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // 앱 링크 섹션
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: Colors.grey[300]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.link, size: 16.sp, color: Colors.blue),
+                          SizedBox(width: 4.w),
+                          Text(
+                            '🔗 앱 링크',
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(height: 8.h),
-                    Text(
-                      '✅ 10분 동안 앱을 테스트해주세요\n'
-                      '📱 버그나 개선사항을 찾아주세요\n'
-                      '📸 스크린샷을 캡처해주세요\n'
-                      '⏱️ 10분 후 완료 버튼이 활성화됩니다',
-                      style: TextStyle(fontSize: 13.sp, height: 1.6),
-                    ),
-                  ],
+                      SizedBox(height: 8.h),
+                      SelectableText(
+                        appUrl,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.grey[700],
+                        ),
+                        maxLines: 2,
+                      ),
+                      SizedBox(height: 8.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: () async {
+                                await Clipboard.setData(ClipboardData(text: appUrl));
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('📋 링크가 복사되었습니다'),
+                                      backgroundColor: Colors.green,
+                                      duration: Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              },
+                              icon: Icon(Icons.copy, size: 14.sp),
+                              label: Text('복사', style: TextStyle(fontSize: 12.sp)),
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(vertical: 8.h),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 8.w),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                html.window.open(appUrl, '_blank');
+                              },
+                              icon: Icon(Icons.open_in_new, size: 14.sp),
+                              label: Text('바로가기', style: TextStyle(fontSize: 12.sp)),
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(vertical: 8.h),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                '아래 버튼을 눌러 앱 테스트를 시작하세요!',
-                style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500),
-              ),
-            ],
+
+                SizedBox(height: 12.h),
+
+                // 미션 가이드 섹션
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '📋 미션 가이드',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.blue[700],
+                        ),
+                      ),
+                      SizedBox(height: 8.h),
+                      Text(
+                        '✅ 10분 동안 앱을 테스트해주세요\n'
+                        '📱 버그나 개선사항을 찾아주세요\n'
+                        '📸 스크린샷을 캡처해주세요\n'
+                        '⏱️ 10분 후 완료 버튼이 활성화됩니다',
+                        style: TextStyle(fontSize: 13.sp, height: 1.6),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 12.h),
+
+                Text(
+                  '아래 버튼을 눌러 앱 테스트를 시작하세요!',
+                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
               child: Text('취소'),
             ),
-            ElevatedButton.icon(
+            OutlinedButton.icon(
               onPressed: () {
                 html.window.open(appUrl, '_blank');
-                Navigator.pop(context, true);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('📱 앱을 설치한 후 "미션시작" 버튼을 눌러주세요'),
+                      backgroundColor: Colors.blue,
+                      duration: Duration(seconds: 3),
+                    ),
+                  );
+                }
               },
-              icon: Icon(Icons.open_in_new, size: 16.sp),
-              label: Text('앱 테스트 시작'),
+              icon: Icon(Icons.download, size: 16.sp),
+              label: Text('설치하기'),
+              style: OutlinedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              ),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                // 설치 확인 다이얼로그
+                final installConfirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Row(
+                      children: [
+                        Icon(Icons.check_circle_outline, color: Colors.orange, size: 24.sp),
+                        SizedBox(width: 8.w),
+                        Text('설치 확인', style: TextStyle(fontSize: 16.sp)),
+                      ],
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '⚠️ 앱 설치를 완료하셨나요?',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.orange[800],
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Container(
+                          padding: EdgeInsets.all(12.w),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '✅ 미션 시작 전 확인사항:',
+                                style: TextStyle(
+                                  fontSize: 13.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                '• 앱을 다운로드하고 설치했나요?\n'
+                                '• 앱을 실행해서 정상 작동하나요?\n'
+                                '• 10분간 테스트할 준비가 되었나요?',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  height: 1.5,
+                                  color: Colors.grey[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 12.h),
+                        Text(
+                          '💡 "확인" 버튼을 누르면 10분 타이머가 시작됩니다.',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.grey[600],
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text('아직 설치 안함'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: Text('설치 완료, 시작!'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (installConfirmed == true && mounted) {
+                  Navigator.pop(context, true);
+                }
+              },
+              icon: Icon(Icons.play_arrow, size: 16.sp),
+              label: Text('미션시작'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               ),
@@ -1574,7 +1836,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         ),
       );
 
-      // 3. 사용자가 시작을 확인한 경우에만 타임스탬프 기록
+      // 3. 사용자가 시작을 확인한 경우에만 타임스탬프 기록 및 타이머 시작
       if (confirmed == true && mounted) {
         if (mission.workflowId != null) {
           await FirebaseFirestore.instance
@@ -1582,6 +1844,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               .doc(mission.workflowId)
               .update({
             'startedAt': FieldValue.serverTimestamp(),
+          });
+
+          // 타이머 상태 설정
+          setState(() {
+            _showStartOverlay = true;
+            _missionStartTime = DateTime.now();
+            _currentMissionWorkflowId = mission.workflowId;
           });
         }
 
@@ -1593,7 +1862,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               duration: Duration(seconds: 4),
             ),
           );
-          setState(() {}); // UI 새로고침
         }
       }
     } catch (e) {
