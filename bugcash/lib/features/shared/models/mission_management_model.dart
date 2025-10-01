@@ -216,6 +216,11 @@ class DailyMissionModel {
   final int? dayNumber;
   final String? currentState; // mission_workflows의 실제 currentState (application_submitted, approved, mission_in_progress 등)
 
+  // 삭제 관련 필드
+  final String? deletionReason;
+  final DateTime? deletedAt;
+  final bool deletionAcknowledged;
+
   DailyMissionModel({
     required this.id,
     required this.appId,
@@ -234,6 +239,9 @@ class DailyMissionModel {
     this.workflowId,
     this.dayNumber,
     this.currentState,
+    this.deletionReason,
+    this.deletedAt,
+    this.deletionAcknowledged = false,
   });
 
   factory DailyMissionModel.fromFirestore(DocumentSnapshot doc) {
@@ -259,6 +267,9 @@ class DailyMissionModel {
       workflowId: data['workflowId'],
       dayNumber: data['dayNumber'],
       currentState: data['currentState'],
+      deletionReason: data['deletionReason'],
+      deletedAt: (data['deletedAt'] as Timestamp?)?.toDate(),
+      deletionAcknowledged: data['deletionAcknowledged'] ?? false,
     );
   }
 
@@ -280,6 +291,9 @@ class DailyMissionModel {
       'workflowId': workflowId,
       'dayNumber': dayNumber,
       'currentState': currentState,
+      'deletionReason': deletionReason,
+      'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
+      'deletionAcknowledged': deletionAcknowledged,
     };
   }
 
@@ -372,5 +386,74 @@ class MissionSettlementModel {
   /// 완료율 계산
   double get completionRate {
     return totalDays > 0 ? (completedMissions / totalDays) : 0.0;
+  }
+}
+
+/// 미션 삭제 모델
+class MissionDeletionModel {
+  final String deletionId;
+  final String workflowId;
+  final String testerId;
+  final String testerName;
+  final String providerId;
+  final String appId;
+  final String appName;
+  final String missionTitle;
+  final int dayNumber;
+  final String deletionReason;
+  final DateTime deletedAt;
+  final bool providerAcknowledged;
+  final DateTime? acknowledgedAt;
+
+  MissionDeletionModel({
+    required this.deletionId,
+    required this.workflowId,
+    required this.testerId,
+    required this.testerName,
+    required this.providerId,
+    required this.appId,
+    required this.appName,
+    required this.missionTitle,
+    required this.dayNumber,
+    required this.deletionReason,
+    required this.deletedAt,
+    this.providerAcknowledged = false,
+    this.acknowledgedAt,
+  });
+
+  factory MissionDeletionModel.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return MissionDeletionModel(
+      deletionId: doc.id,
+      workflowId: data['workflowId'] ?? '',
+      testerId: data['testerId'] ?? '',
+      testerName: data['testerName'] ?? '',
+      providerId: data['providerId'] ?? '',
+      appId: data['appId'] ?? '',
+      appName: data['appName'] ?? '',
+      missionTitle: data['missionTitle'] ?? '',
+      dayNumber: data['dayNumber'] ?? 0,
+      deletionReason: data['deletionReason'] ?? '',
+      deletedAt: (data['deletedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      providerAcknowledged: data['providerAcknowledged'] ?? false,
+      acknowledgedAt: (data['acknowledgedAt'] as Timestamp?)?.toDate(),
+    );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'workflowId': workflowId,
+      'testerId': testerId,
+      'testerName': testerName,
+      'providerId': providerId,
+      'appId': appId,
+      'appName': appName,
+      'missionTitle': missionTitle,
+      'dayNumber': dayNumber,
+      'deletionReason': deletionReason,
+      'deletedAt': Timestamp.fromDate(deletedAt),
+      'providerAcknowledged': providerAcknowledged,
+      'acknowledgedAt': acknowledgedAt != null ? Timestamp.fromDate(acknowledgedAt!) : null,
+    };
   }
 }

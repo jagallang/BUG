@@ -30,7 +30,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
 
     // 미션관리 페이지 진입 로그
     AppLogger.info(
@@ -97,6 +97,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
             Tab(text: '오늘'),
             Tab(text: '완료'),
             Tab(text: '종료'),
+            Tab(text: '삭제요청'),
           ],
         ),
       ),
@@ -107,6 +108,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
           _buildTodayMissionsTab(),
           _buildCompletedMissionsTab(),
           _buildSettlementTab(),
+          _buildDeletionRequestsTab(),
         ],
       ),
     );
@@ -1004,6 +1006,337 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
           ),
         );
       }
+    }
+  }
+
+  /// 삭제요청 탭 - 테스터가 요청한 미션 삭제 목록
+  Widget _buildDeletionRequestsTab() {
+    return StreamBuilder<List<MissionDeletionModel>>(
+      stream: _missionService.watchDeletionRequests(widget.app.providerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48.w, color: Colors.red[300]),
+                SizedBox(height: 16.h),
+                Text(
+                  '데이터를 불러올 수 없습니다',
+                  style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  snapshot.error.toString(),
+                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        }
+
+        final deletionRequests = (snapshot.data ?? [])
+            .where((deletion) => !deletion.providerAcknowledged)
+            .toList();
+
+        if (deletionRequests.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.delete_sweep, size: 64.w, color: Colors.grey[400]),
+                SizedBox(height: 16.h),
+                Text(
+                  '삭제 요청이 없습니다',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  '테스터의 미션 삭제 요청이 표시됩니다',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return ListView.builder(
+          padding: EdgeInsets.all(16.w),
+          itemCount: deletionRequests.length,
+          itemBuilder: (context, index) {
+            final deletion = deletionRequests[index];
+            return Card(
+              margin: EdgeInsets.only(bottom: 12.h),
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // 헤더: 미션 정보
+                    Row(
+                      children: [
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(4.r),
+                          ),
+                          child: Text(
+                            'Day ${deletion.dayNumber}',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.red[700],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 8.w),
+                        Expanded(
+                          child: Text(
+                            deletion.missionTitle,
+                            style: TextStyle(
+                              fontSize: 15.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // 앱 이름
+                    Row(
+                      children: [
+                        Icon(Icons.apps, size: 16.sp, color: Colors.grey[600]),
+                        SizedBox(width: 6.w),
+                        Text(
+                          deletion.appName,
+                          style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+
+                    // 테스터 정보
+                    Row(
+                      children: [
+                        Icon(Icons.person, size: 16.sp, color: Colors.grey[600]),
+                        SizedBox(width: 6.w),
+                        Text(
+                          deletion.testerName,
+                          style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 8.h),
+
+                    // 삭제 요청 시간
+                    Row(
+                      children: [
+                        Icon(Icons.access_time, size: 16.sp, color: Colors.grey[600]),
+                        SizedBox(width: 6.w),
+                        Text(
+                          _formatDateTime(deletion.deletedAt),
+                          style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 12.h),
+
+                    // 삭제 사유
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(12.w),
+                      decoration: BoxDecoration(
+                        color: Colors.orange.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.chat_bubble_outline, size: 14.sp, color: Colors.orange[700]),
+                              SizedBox(width: 4.w),
+                              Text(
+                                '삭제 사유',
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.orange[700],
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 6.h),
+                          Text(
+                            deletion.deletionReason,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: Colors.black87,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+
+                    // 확인 버튼
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _acknowledgeDeletion(deletion),
+                        icon: Icon(Icons.check_circle, size: 18.sp),
+                        label: Text('확인 및 삭제', style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(vertical: 14.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// 삭제 확인 및 영구 삭제
+  Future<void> _acknowledgeDeletion(MissionDeletionModel deletion) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24.sp),
+            SizedBox(width: 8.w),
+            Text('삭제 확인', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '이 미션을 영구적으로 삭제하시겠습니까?',
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              '미션: ${deletion.missionTitle}',
+              style: TextStyle(fontSize: 13.sp),
+            ),
+            Text(
+              '테스터: ${deletion.testerName}',
+              style: TextStyle(fontSize: 13.sp),
+            ),
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(6.r),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, size: 16.sp, color: Colors.red),
+                  SizedBox(width: 6.w),
+                  Expanded(
+                    child: Text(
+                      '이 작업은 되돌릴 수 없습니다',
+                      style: TextStyle(fontSize: 12.sp, color: Colors.red[700]),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text('삭제', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await _missionService.acknowledgeDeletion(
+          deletionId: deletion.deletionId,
+          workflowId: deletion.workflowId,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ 미션이 영구 삭제되었습니다'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 삭제 처리 실패: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  /// 날짜 포맷팅
+  String _formatDateTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inMinutes < 1) {
+      return '방금 전';
+    } else if (difference.inHours < 1) {
+      return '${difference.inMinutes}분 전';
+    } else if (difference.inDays < 1) {
+      return '${difference.inHours}시간 전';
+    } else if (difference.inDays < 7) {
+      return '${difference.inDays}일 전';
+    } else {
+      return '${dateTime.year}.${dateTime.month.toString().padLeft(2, '0')}.${dateTime.day.toString().padLeft(2, '0')}';
     }
   }
 }

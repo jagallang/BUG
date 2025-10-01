@@ -588,4 +588,46 @@ class MissionManagementService {
       rethrow;
     }
   }
+
+  /// 공급자가 삭제 요청 목록 조회
+  Stream<List<MissionDeletionModel>> watchDeletionRequests(String providerId) {
+    return _firestore
+        .collection('mission_deletions')
+        .where('providerId', isEqualTo: providerId)
+        .where('providerAcknowledged', isEqualTo: false)
+        .orderBy('deletedAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => MissionDeletionModel.fromFirestore(doc))
+          .toList();
+    });
+  }
+
+  /// 공급자가 삭제 확인 및 영구 삭제
+  Future<void> acknowledgeDeletion({
+    required String deletionId,
+    required String workflowId,
+  }) async {
+    try {
+      // 1. mission_deletions 업데이트 (확인 완료)
+      await _firestore.collection('mission_deletions').doc(deletionId).update({
+        'providerAcknowledged': true,
+        'acknowledgedAt': FieldValue.serverTimestamp(),
+      });
+
+      // 2. mission_workflows 영구 삭제
+      await _firestore.collection('mission_workflows').doc(workflowId).delete();
+
+      AppLogger.info(
+        'Mission deletion acknowledged and workflow deleted\n'
+        '   ├─ deletionId: $deletionId\n'
+        '   └─ workflowId: $workflowId',
+        'MissionManagementService'
+      );
+    } catch (e) {
+      AppLogger.error('Failed to acknowledge deletion', 'MissionManagementService', e);
+      rethrow;
+    }
+  }
 }

@@ -9,7 +9,9 @@ import '../../../shared/extensions/responsive_extensions.dart';
 class DailyMissionCard extends StatelessWidget {
   final DailyMissionModel mission;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
   final VoidCallback? onStart;
+  final VoidCallback? onComplete;
   final VoidCallback? onSubmit;
   final VoidCallback? onResubmit;
 
@@ -17,7 +19,9 @@ class DailyMissionCard extends StatelessWidget {
     super.key,
     required this.mission,
     this.onTap,
+    this.onDelete,
     this.onStart,
+    this.onComplete,
     this.onSubmit,
     this.onResubmit,
   });
@@ -165,120 +169,320 @@ class DailyMissionCard extends StatelessWidget {
   }
 
   Widget _buildActionButton() {
-    switch (mission.status) {
-      case DailyMissionStatus.pending:
-        // currentState가 'application_submitted'면 승인 대기 중
-        if (mission.currentState == 'application_submitted') {
-          return SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: null, // 비활성화
-              icon: Icon(Icons.hourglass_empty, size: 18.sp),
-              label: const Text('공급자 승인 대기 중'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: Colors.orange.withValues(alpha: 0.6),
-                disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
-                padding: EdgeInsets.symmetric(vertical: 12.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
+    // 디버그 로그
+    print('🔍 [DailyMissionCard] _buildActionButton()');
+    print('   ├─ currentState: ${mission.currentState}');
+    print('   ├─ startedAt: ${mission.startedAt}');
+    print('   ├─ completedAt: ${mission.completedAt}');
+    print('   └─ status: ${mission.status}');
+
+    // 1. 공급자 승인 대기 중 (application_submitted)
+    if (mission.currentState == 'application_submitted') {
+      return Row(
+        children: [
+          // 삭제 버튼
+          if (onDelete != null)
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: onDelete,
+                icon: Icon(Icons.delete, size: 14.sp),
+                label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                 ),
               ),
             ),
-          );
-        }
-
-        // currentState가 'approved'면 미션 시작 가능
-        return SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: onStart,
-            icon: Icon(Icons.play_arrow, size: 18.sp),
-            label: const Text('미션 시작'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 12.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+          if (onDelete != null) SizedBox(width: 6.w),
+          // 승인 대기 버튼
+          Expanded(
+            flex: 2,
+            child: ElevatedButton.icon(
+              onPressed: null,
+              icon: Icon(Icons.hourglass_empty, size: 16.sp),
+              label: Text('공급자 승인 대기 중', style: TextStyle(fontSize: 13.sp)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                disabledBackgroundColor: Colors.orange.withValues(alpha: 0.6),
+                disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
               ),
             ),
           ),
-        );
+        ],
+      );
+    }
 
-      case DailyMissionStatus.inProgress:
-        return SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: onSubmit,
-            icon: Icon(Icons.upload, size: 18.sp),
-            label: const Text('미션 제출'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.statusPending,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 12.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
+    // 2. 미션 시작 전 (application_approved + startedAt 없음)
+    if (mission.currentState == 'application_approved' && mission.startedAt == null) {
+      return Row(
+        children: [
+          // 삭제 버튼 (빨강)
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: onDelete,
+              icon: Icon(Icons.delete, size: 14.sp),
+              label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 10.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
               ),
             ),
           ),
-        );
+          SizedBox(width: 6.w),
+          // 시작 버튼 (파랑)
+          Expanded(
+            flex: 2,
+            child: ElevatedButton.icon(
+              onPressed: onStart,
+              icon: Icon(Icons.play_arrow, size: 14.sp),
+              label: Text('시작', style: TextStyle(fontSize: 12.sp)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 10.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
 
-      case DailyMissionStatus.completed:
-        return SizedBox(
-          width: double.infinity,
+    // 3. 미션 진행 중 (startedAt 있음 + completedAt 없음)
+    if (mission.startedAt != null && mission.completedAt == null) {
+      final elapsed = DateTime.now().difference(mission.startedAt!);
+      final canComplete = elapsed.inMinutes >= 10;
+
+      return Column(
+        children: [
+          // 타이머 표시 (10분 미경과 시)
+          if (!canComplete) ...[
+            Container(
+              padding: EdgeInsets.all(8.w),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3), width: 1),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.timer, size: 16.sp, color: Colors.orange),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '남은 시간: ${10 - elapsed.inMinutes}분 ${59 - (elapsed.inSeconds % 60)}초',
+                    style: TextStyle(fontSize: 12.sp, color: Colors.orange[700], fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 8.h),
+          ],
+
+          // 완료 버튼과 삭제 버튼
+          Row(
+            children: [
+              // 삭제 버튼
+              if (onDelete != null)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: onDelete,
+                    icon: Icon(Icons.delete, size: 14.sp),
+                    label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(vertical: 12.h),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                    ),
+                  ),
+                ),
+              if (onDelete != null) SizedBox(width: 6.w),
+              // 완료 버튼
+              Expanded(
+                flex: 2,
+                child: ElevatedButton.icon(
+                  onPressed: canComplete ? onComplete : null,
+                  icon: Icon(Icons.check_circle, size: 14.sp),
+                  label: Text(
+                    canComplete ? '미션 완료' : '10분 후 활성화',
+                    style: TextStyle(fontSize: 12.sp),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: canComplete ? Colors.orange : Colors.grey,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey.withValues(alpha: 0.6),
+                    disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    // 4. 완료됨 + 제출 대기 (completedAt 있음 + status != completed)
+    if (mission.completedAt != null && mission.status != DailyMissionStatus.completed) {
+      return Row(
+        children: [
+          // 삭제 버튼
+          if (onDelete != null)
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: onDelete,
+                icon: Icon(Icons.delete, size: 14.sp),
+                label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                ),
+              ),
+            ),
+          if (onDelete != null) SizedBox(width: 6.w),
+          // 제출 버튼
+          Expanded(
+            flex: 2,
+            child: ElevatedButton.icon(
+              onPressed: onSubmit,
+              icon: Icon(Icons.upload, size: 14.sp),
+              label: Text('미션 제출', style: TextStyle(fontSize: 13.sp)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 5. 제출 완료 (공급자 검토 대기)
+    if (mission.status == DailyMissionStatus.completed) {
+      return Row(
+        children: [
+          // 삭제 버튼
+          if (onDelete != null)
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: onDelete,
+                icon: Icon(Icons.delete, size: 14.sp),
+                label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+                ),
+              ),
+            ),
+          if (onDelete != null) SizedBox(width: 6.w),
+          // 검토 대기 버튼
+          Expanded(
+            flex: 2,
+            child: ElevatedButton.icon(
+              onPressed: null,
+              icon: Icon(Icons.pending, size: 14.sp),
+              label: Text('검토 대기 중', style: TextStyle(fontSize: 13.sp)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey,
+                disabledBackgroundColor: Colors.grey.withValues(alpha: 0.7),
+                disabledForegroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // 6. 승인 완료
+    if (mission.status == DailyMissionStatus.approved) {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: null,
+          icon: Icon(Icons.check_circle, size: 14.sp),
+          label: Text('승인 완료', style: TextStyle(fontSize: 13.sp)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            disabledBackgroundColor: Colors.green.withValues(alpha: 0.7),
+            disabledForegroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(vertical: 12.h),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+          ),
+        ),
+      );
+    }
+
+    // 7. 거절됨 (재제출)
+    if (mission.status == DailyMissionStatus.rejected) {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: onResubmit,
+          icon: Icon(Icons.refresh, size: 14.sp),
+          label: Text('재제출', style: TextStyle(fontSize: 13.sp)),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            padding: EdgeInsets.symmetric(vertical: 12.h),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+          ),
+        ),
+      );
+    }
+
+    // 기본값 (예상치 못한 상태)
+    return Row(
+      children: [
+        // 삭제 버튼
+        if (onDelete != null)
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed: onDelete,
+              icon: Icon(Icons.delete, size: 14.sp),
+              label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+              ),
+            ),
+          ),
+        if (onDelete != null) SizedBox(width: 6.w),
+        // 상태 확인 중 버튼
+        Expanded(
+          flex: 2,
           child: ElevatedButton.icon(
             onPressed: null,
-            icon: Icon(Icons.pending, size: 18.sp),
-            label: const Text('검토 대기 중'),
+            icon: Icon(Icons.help_outline, size: 14.sp),
+            label: Text('상태 확인 중', style: TextStyle(fontSize: 13.sp)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
-              foregroundColor: Colors.white,
+              disabledBackgroundColor: Colors.grey.withValues(alpha: 0.5),
+              disabledForegroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: 12.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
             ),
           ),
-        );
-
-      case DailyMissionStatus.approved:
-        return SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: null,
-            icon: Icon(Icons.check_circle, size: 18.sp),
-            label: const Text('승인 완료'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 12.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-            ),
-          ),
-        );
-
-      case DailyMissionStatus.rejected:
-        return SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: onResubmit,
-            icon: Icon(Icons.refresh, size: 18.sp),
-            label: const Text('재제출'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(vertical: 12.h),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-            ),
-          ),
-        );
-    }
+        ),
+      ],
+    );
   }
 
   String _formatDate(DateTime date) {

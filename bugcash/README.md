@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.3.4-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.5.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,59 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.3.4)
+## ✨ 주요 기능 (v2.5.0)
+
+### 🗑️ 미션 삭제 시스템 (v2.5.0) - **ENHANCED MISSION DELETION SYSTEM**
+- **🔄 완전한 양방향 삭제 워크플로우**: 테스터 요청 → 공급자 확인 → 영구 삭제
+  - **테스터 미션 삭제 기능**
+    - ✅ 모든 미션 상태에서 삭제 버튼 제공 (공급자 승인 대기중, 진행중, 완료, 제출 완료 등)
+    - 🔐 비밀번호 재인증 필수 (보안 강화)
+    - 📝 삭제 사유 입력 필수 (최소 10자)
+    - 💾 서버 기록 보관 (mission_deletions 컬렉션)
+    - 🚫 테스터 대시보드에서 자동 숨김 (deleted_by_tester 상태)
+
+  - **공급자 삭제 관리 시스템**
+    - 🆕 "삭제요청" 탭 추가 (미션관리 페이지 5번째 탭)
+    - 📋 삭제 요청 목록 실시간 표시 (테스터 정보, 삭제 사유, 요청 시간)
+    - ✅ "확인 및 삭제" 버튼으로 최종 승인
+    - 🗑️ 공급자 확인 후 mission_workflows 영구 삭제
+    - 📊 삭제 히스토리 보관 (mission_deletions 컬렉션)
+
+- **🎨 일관된 삭제 버튼 UI 디자인**
+  - 빨간 배경 + 흰색 텍스트 (시각적으로 명확)
+  - 아이콘 크기 14.sp, 텍스트 12.sp, 패딩 12.h (통일된 사이즈)
+  - ElevatedButton 스타일 (입체감 있는 디자인)
+  - Row 레이아웃 (삭제 버튼 1 : 메인 버튼 2 비율)
+
+- **🔒 강화된 보안 및 검증**
+  - Firebase Authentication 재인증
+  - 삭제 사유 최소 길이 검증 (10자 이상)
+  - 최종 확인 대화상자 (되돌릴 수 없다는 경고)
+  - 공급자 이중 확인 프로세스
+
+- **📊 Firestore 데이터 구조**
+  - **mission_deletions 컬렉션**: 삭제 요청 기록 보관
+    - workflowId, testerId, providerId, appId
+    - missionTitle, dayNumber, deletionReason
+    - deletedAt, providerAcknowledged, acknowledgedAt
+  - **복합 인덱스**: providerId + providerAcknowledged + deletedAt (descending)
+
+- **🎯 삭제 워크플로우**:
+  ```
+  1. 테스터: 진행중 탭 → 미션 카드 → 삭제 버튼 클릭
+  2. 테스터: 비밀번호 + 삭제 사유 (10자↑) 입력
+  3. 시스템: mission_deletions 생성, mission_workflows.currentState = 'deleted_by_tester'
+  4. 테스터: 대시보드에서 미션 자동 숨김
+  5. 공급자: 미션관리 → 삭제요청 탭에서 확인
+  6. 공급자: 삭제 사유 검토 → "확인 및 삭제" 클릭
+  7. 시스템: mission_deletions.providerAcknowledged = true, mission_workflows 영구 삭제
+  ```
+
+- **🐛 버그 수정**
+  - ✅ 앱관리 탭 앱카드 삭제 대화상자 버그 수정
+    - **Before**: 비밀번호 입력 시 삭제 버튼 활성화 안됨, 비밀번호 보이기 아이콘 클릭 시에만 활성화
+    - **After**: TextFormField에 onChanged 콜백 추가, 비밀번호 입력 즉시 버튼 상태 업데이트
+    - **원인**: setState() 호출 누락으로 UI 상태 동기화 실패
 
 ### 🔧 미션 관리 접근성 개선 (v2.3.4) - **MISSION MANAGEMENT ACCESSIBILITY FIX**
 - **앱 상태와 관계없이 미션 관리 가능**

@@ -2048,6 +2048,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                       controller: passwordController,
                       obscureText: !showPassword,
                       autofocus: true,
+                      onChanged: (value) {
+                        setState(() {}); // 비밀번호 입력 시 버튼 상태 업데이트
+                      },
                       decoration: InputDecoration(
                         hintText: '현재 계정 비밀번호를 입력하세요',
                         hintStyle: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),

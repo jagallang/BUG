@@ -1,7 +1,9 @@
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../shared/widgets/loading_widgets.dart';
 import '../../../../shared/widgets/responsive_wrapper.dart';
 import '../../../../shared/extensions/responsive_extensions.dart';
@@ -968,7 +970,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           );
         }
 
-        final dailyMissions = snapshot.data ?? [];
+        // 삭제 요청된 미션 필터링 (deleted_by_tester 상태 제외)
+        final dailyMissions = (snapshot.data ?? [])
+            .where((mission) => mission.currentState != 'deleted_by_tester')
+            .toList();
 
         if (dailyMissions.isEmpty) {
           return Center(
@@ -1022,14 +1027,25 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     _showMissionDetail(mission);
                   }
                 },
-                // currentState가 'approved'일 때만 미션 시작 버튼 활성화
-                // application_submitted는 공급자 승인 대기 중이므로 비활성화
-                onStart: mission.currentState == 'approved'
+                // 삭제 버튼 (승인 완료 전까지 모든 상태에서 가능)
+                onDelete: mission.status != DailyMissionStatus.approved
+                    ? () => _deleteMissionEnhanced(mission)
+                    : null,
+                // 시작 버튼 (application_approved + startedAt 없음)
+                onStart: mission.currentState == 'application_approved' && mission.startedAt == null
                     ? () => _startMission(mission)
                     : null,
-                onSubmit: mission.status == DailyMissionStatus.inProgress
+                // 완료 버튼 (startedAt 있음 + 10분 경과 + completedAt 없음)
+                onComplete: mission.startedAt != null &&
+                            DateTime.now().difference(mission.startedAt!).inMinutes >= 10 &&
+                            mission.completedAt == null
+                    ? () => _completeMission(mission)
+                    : null,
+                // 제출 버튼 (completedAt 있음 + status != completed)
+                onSubmit: mission.completedAt != null && mission.status != DailyMissionStatus.completed
                     ? () => _submitMission(mission)
                     : null,
+                // 재제출 버튼
                 onResubmit: mission.status == DailyMissionStatus.rejected
                     ? () => _resubmitMission(mission)
                     : null,
@@ -1094,60 +1110,478 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  void _startMission(DailyMissionModel mission) {
-    showDialog(
+  // 미션 삭제 (비밀번호 재인증 필요)
+  Future<void> _deleteMission(DailyMissionModel mission) async {
+    final passwordController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('미션 시작'),
-        content: Text('${mission.missionTitle} 미션을 시작하시겠습니까?'),
+        title: Row(
+          children: [
+            Icon(Icons.security, color: Colors.red, size: 24.sp),
+            SizedBox(width: 8.w),
+            Text('미션 삭제', style: TextStyle(color: Colors.red)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '미션을 삭제하려면 비밀번호를 입력하세요.',
+              style: TextStyle(fontSize: 14.sp),
+            ),
+            SizedBox(height: 16.h),
+            TextField(
+              controller: passwordController,
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: '비밀번호',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.lock),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              '⚠️ 이 작업은 되돌릴 수 없습니다.',
+              style: TextStyle(fontSize: 12.sp, color: Colors.red[700]),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+            onPressed: () {
+              passwordController.dispose();
+              Navigator.pop(context, false);
+            },
+            child: Text('취소'),
           ),
           ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                // MissionManagementService를 사용해서 미션 상태를 inProgress로 변경
-                await MissionManagementService().updateMissionStatus(
-                  missionId: mission.id,
-                  status: DailyMissionStatus.inProgress,
-                );
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ 미션이 시작되었습니다!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('❌ 미션 시작 실패: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
+            onPressed: () {
+              Navigator.pop(context, true);
             },
-            child: const Text('시작'),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text('삭제', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
     );
+
+    if (confirmed == true && mounted) {
+      try {
+        // 비밀번호 재인증
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null || user.email == null) {
+          throw Exception('로그인된 사용자를 찾을 수 없습니다');
+        }
+
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: passwordController.text,
+        );
+        await user.reauthenticateWithCredential(credential);
+
+        // mission_workflows 삭제
+        if (mission.workflowId != null) {
+          await FirebaseFirestore.instance
+              .collection('mission_workflows')
+              .doc(mission.workflowId)
+              .delete();
+        }
+
+        passwordController.dispose();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ 미션이 삭제되었습니다'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          setState(() {}); // UI 새로고침
+        }
+      } on FirebaseAuthException catch (e) {
+        passwordController.dispose();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                e.code == 'wrong-password' || e.code == 'invalid-credential'
+                    ? '❌ 비밀번호가 올바르지 않습니다'
+                    : '❌ 인증 실패: ${e.message}',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        passwordController.dispose();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 미션 삭제 실패: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } else {
+      passwordController.dispose();
+    }
   }
 
-  void _submitMission(DailyMissionModel mission) async {
-    // workflowId와 dayNumber가 없으면 에러 표시
-    if (mission.workflowId == null || mission.dayNumber == null) {
+  // 미션 삭제 강화 버전 (삭제 사유 + 서버 기록)
+  Future<void> _deleteMissionEnhanced(DailyMissionModel mission) async {
+    final passwordController = TextEditingController();
+    final reasonController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24.sp),
+            SizedBox(width: 8.w),
+            Text('미션 삭제', style: TextStyle(color: Colors.red, fontSize: 18.sp, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 안내 메시지
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 16.sp, color: Colors.orange[700]),
+                        SizedBox(width: 4.w),
+                        Text(
+                          '삭제 요청 절차',
+                          style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600, color: Colors.orange[700]),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 6.h),
+                    Text(
+                      '• 공급자에게 삭제 요청이 전송됩니다\n• 공급자 확인 후 영구 삭제됩니다\n• 삭제 사유는 공급자에게 공유됩니다',
+                      style: TextStyle(fontSize: 12.sp, color: Colors.orange[900], height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // 비밀번호 입력
+              Text('비밀번호 확인', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600)),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: '비밀번호',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.lock),
+                  hintText: '계정 비밀번호를 입력하세요',
+                ),
+              ),
+              SizedBox(height: 16.h),
+
+              // 삭제 사유 입력
+              Text('삭제 사유 *', style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600)),
+              SizedBox(height: 8.h),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                maxLength: 200,
+                decoration: InputDecoration(
+                  labelText: '삭제 사유 (최소 10자)',
+                  border: OutlineInputBorder(),
+                  hintText: '미션을 삭제하는 이유를 구체적으로 작성해주세요',
+                  prefixIcon: Icon(Icons.edit_note),
+                ),
+              ),
+              SizedBox(height: 8.h),
+
+              // 경고 메시지
+              Container(
+                padding: EdgeInsets.all(8.w),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, size: 16.sp, color: Colors.red),
+                    SizedBox(width: 6.w),
+                    Expanded(
+                      child: Text(
+                        '이 작업은 공급자 확인 후 취소할 수 없습니다',
+                        style: TextStyle(fontSize: 11.sp, color: Colors.red[700]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              passwordController.dispose();
+              reasonController.dispose();
+              Navigator.pop(context, false);
+            },
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // 삭제 사유 최소 길이 검증
+              if (reasonController.text.trim().length < 10) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('❌ 삭제 사유는 최소 10자 이상 입력해주세요')),
+                );
+                return;
+              }
+              Navigator.pop(context, true);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: Text('삭제 요청', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        // 1. 비밀번호 재인증
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null || user.email == null) {
+          throw Exception('로그인된 사용자를 찾을 수 없습니다');
+        }
+
+        final credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: passwordController.text,
+        );
+        await user.reauthenticateWithCredential(credential);
+
+        // 2. 앱 및 공급자 정보 가져오기
+        final workflowDoc = await FirebaseFirestore.instance
+            .collection('mission_workflows')
+            .doc(mission.workflowId)
+            .get();
+
+        final workflowData = workflowDoc.data();
+        final providerId = workflowData?['providerId'] as String?;
+        final appId = workflowData?['appId'] as String?;
+
+        if (providerId == null || appId == null) {
+          throw Exception('미션 정보를 찾을 수 없습니다');
+        }
+
+        // 앱 이름 가져오기
+        final appDoc = await FirebaseFirestore.instance.collection('projects').doc(appId).get();
+        final appName = appDoc.data()?['title'] as String? ?? '알 수 없는 앱';
+
+        // 테스터 이름 가져오기
+        final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final testerName = userDoc.data()?['displayName'] as String? ?? user.email!;
+
+        // 3. mission_deletions 컬렉션에 삭제 요청 기록
+        await FirebaseFirestore.instance.collection('mission_deletions').add({
+          'workflowId': mission.workflowId,
+          'testerId': user.uid,
+          'testerName': testerName,
+          'providerId': providerId,
+          'appId': appId,
+          'appName': appName,
+          'missionTitle': mission.missionTitle,
+          'dayNumber': mission.dayNumber ?? 0,
+          'deletionReason': reasonController.text.trim(),
+          'deletedAt': FieldValue.serverTimestamp(),
+          'providerAcknowledged': false,
+        });
+
+        // 4. mission_workflows 업데이트 (currentState 변경)
+        await FirebaseFirestore.instance
+            .collection('mission_workflows')
+            .doc(mission.workflowId)
+            .update({
+          'currentState': 'deleted_by_tester',
+          'deletionReason': reasonController.text.trim(),
+          'deletedAt': FieldValue.serverTimestamp(),
+          'deletionAcknowledged': false,
+        });
+
+        passwordController.dispose();
+        reasonController.dispose();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ 삭제 요청이 공급자에게 전송되었습니다'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          setState(() {}); // UI 새로고침
+        }
+      } on FirebaseAuthException catch (e) {
+        passwordController.dispose();
+        reasonController.dispose();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                e.code == 'wrong-password' || e.code == 'invalid-credential'
+                    ? '❌ 비밀번호가 올바르지 않습니다'
+                    : '❌ 인증 실패: ${e.message}',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        passwordController.dispose();
+        reasonController.dispose();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 삭제 요청 실패: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } else {
+      passwordController.dispose();
+      reasonController.dispose();
+    }
+  }
+
+  // 미션 시작 (타임스탬프 기록 + 새 탭에서 앱 열기)
+  Future<void> _startMission(DailyMissionModel mission) async {
+    try {
+      // 1. startedAt 타임스탬프 기록
+      if (mission.workflowId != null) {
+        await FirebaseFirestore.instance
+            .collection('mission_workflows')
+            .doc(mission.workflowId)
+            .update({
+          'startedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // 2. 앱 URL 가져오기 (projects 컬렉션에서)
+      final projectDoc = await FirebaseFirestore.instance
+          .collection('projects')
+          .doc(mission.appId)
+          .get();
+
+      final appUrl = projectDoc.data()?['appUrl'] as String?;
+
+      if (appUrl != null && appUrl.isNotEmpty) {
+        // 3. 새 탭에서 앱 열기
+        html.window.open(appUrl, '_blank');
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🚀 미션이 시작되었습니다! 10분 후 완료 버튼이 활성화됩니다.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 4),
+            ),
+          );
+          setState(() {}); // UI 새로고침
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 앱 URL이 설정되지 않았습니다'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ 워크플로우 정보가 없습니다. 이 기능은 미션 워크플로우와 연동된 미션에서만 사용 가능합니다.'),
+          SnackBar(
+            content: Text('❌ 미션 시작 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // 미션 완료 (제출 페이지로 이동)
+  Future<void> _completeMission(DailyMissionModel mission) async {
+    // DailyMissionSubmissionPage로 이동 (이미 존재하는 페이지)
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DailyMissionSubmissionPage(
+          workflowId: mission.workflowId!,
+          dayNumber: mission.dayNumber!,
+          missionTitle: mission.missionTitle,
+        ),
+      ),
+    );
+
+    // 제출 완료 시 completedAt 기록
+    if (result == true && mounted) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('mission_workflows')
+            .doc(mission.workflowId)
+            .update({
+          'completedAt': FieldValue.serverTimestamp(),
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ 미션 작성이 완료되었습니다! 제출 버튼을 눌러주세요.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          setState(() {}); // UI 새로고침
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 완료 시간 기록 실패: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // 미션 제출 (공급자에게 최종 제출)
+  Future<void> _submitMission(DailyMissionModel mission) async {
+    // 제출 데이터 확인 (attachments가 있어야 함)
+    if (mission.attachments.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ 스크린샷이 업로드되지 않았습니다. 미션 완료 버튼을 먼저 눌러주세요.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1155,21 +1589,54 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       return;
     }
 
-    // 새로운 DailyMissionSubmissionPage로 네비게이션
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DailyMissionSubmissionPage(
-          workflowId: mission.workflowId!, // mission_workflows 문서 ID
-          dayNumber: mission.dayNumber!,
-          missionTitle: mission.missionTitle,
-        ),
+    // 확인 다이얼로그
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('미션 제출'),
+        content: Text('미션을 제출하시겠습니까?\n제출 후에는 수정할 수 없습니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: Text('제출', style: TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
 
-    // 제출 완료 시 새로고침
-    if (result == true && mounted) {
-      setState(() {});
+    if (confirmed == true && mounted) {
+      try {
+        // status를 'completed'로 변경 (공급자 검토 대기)
+        await MissionManagementService().updateMissionStatus(
+          missionId: mission.id,
+          status: DailyMissionStatus.completed,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ 미션이 제출되었습니다! 공급자 검토를 기다려주세요.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 3),
+            ),
+          );
+          setState(() {}); // UI 새로고침
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 미션 제출 실패: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
