@@ -1784,9 +1784,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   }
 
   /// 미션관리 기능 사용 가능 여부 확인
-  /// 앱 상태가 'open'(모집중)일 때만 활성화
+  /// 앱 상태가 'draft', 'pending', 'open'일 때 활성화 (테스터 신청 접수 및 승인 가능)
   bool _canUseMissionManagement(ProviderAppModel app) {
-    return app.status == 'open';
+    return app.status == 'open' || app.status == 'draft' || app.status == 'pending';
   }
 
   // === Unified Button Methods ===

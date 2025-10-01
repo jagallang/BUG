@@ -179,6 +179,8 @@ class MissionManagementService {
     String? reviewNote,
   }) async {
     try {
+      AppLogger.info('🎯 [승인처리] 시작 - applicationId: $applicationId, status: ${status.name}', 'MissionManagement');
+
       // TesterApplicationStatus를 MissionWorkflow state로 변환
       String newState;
       switch (status) {
@@ -193,6 +195,24 @@ class MissionManagementService {
           break;
       }
 
+      AppLogger.info('📝 [승인처리] currentState 변경: application_submitted → $newState', 'MissionManagement');
+
+      // Firestore 업데이트 전 문서 확인
+      final docSnapshot = await _firestore.collection(_dailyMissionsCollection).doc(applicationId).get();
+      if (!docSnapshot.exists) {
+        AppLogger.error('❌ [승인처리] 문서를 찾을 수 없음: $applicationId', 'MissionManagement', null);
+        throw Exception('Mission workflow document not found: $applicationId');
+      }
+
+      final beforeData = docSnapshot.data();
+      AppLogger.info(
+        '📄 [승인처리] 업데이트 전 데이터\n'
+        '   ├─ currentState: ${beforeData?['currentState']}\n'
+        '   ├─ appId: ${beforeData?['appId']}\n'
+        '   └─ testerName: ${beforeData?['testerName']}',
+        'MissionManagement'
+      );
+
       await _firestore.collection(_dailyMissionsCollection).doc(applicationId).update({
         'currentState': newState,
         'stateUpdatedAt': FieldValue.serverTimestamp(),
@@ -200,9 +220,20 @@ class MissionManagementService {
         'reviewNote': reviewNote,
       });
 
-      AppLogger.info('Tester application reviewed: $applicationId -> $newState', 'MissionManagementService');
+      AppLogger.info('✅ [승인처리] Firestore 업데이트 완료 - $applicationId → $newState', 'MissionManagement');
+
+      // 업데이트 후 문서 확인
+      final afterSnapshot = await _firestore.collection(_dailyMissionsCollection).doc(applicationId).get();
+      final afterData = afterSnapshot.data();
+      AppLogger.info(
+        '✨ [승인처리] 업데이트 후 데이터\n'
+        '   ├─ currentState: ${afterData?['currentState']}\n'
+        '   ├─ stateUpdatedAt: ${afterData?['stateUpdatedAt']}\n'
+        '   └─ stateUpdatedBy: ${afterData?['stateUpdatedBy']}',
+        'MissionManagement'
+      );
     } catch (e) {
-      AppLogger.error('Failed to review tester application', 'MissionManagementService', e);
+      AppLogger.error('❌ [승인처리] 실패', 'MissionManagement', e);
       rethrow;
     }
   }

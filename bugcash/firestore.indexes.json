@@ -541,6 +541,20 @@
           "order": "DESCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "mission_workflows",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "appId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "currentState",
+          "order": "ASCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": [
