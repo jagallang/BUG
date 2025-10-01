@@ -6,7 +6,7 @@ import '../../../core/constants/app_colors.dart';
 import '../../../shared/extensions/responsive_extensions.dart';
 
 /// 일일 미션 카드 위젯
-class DailyMissionCard extends StatelessWidget {
+class DailyMissionCard extends StatefulWidget {
   final DailyMissionModel mission;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
@@ -27,9 +27,16 @@ class DailyMissionCard extends StatelessWidget {
   });
 
   @override
+  State<DailyMissionCard> createState() => _DailyMissionCardState();
+}
+
+class _DailyMissionCardState extends State<DailyMissionCard> {
+  bool _deleteConfirmMode = false;
+
+  @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: widget.onTap,
       borderRadius: BorderRadius.circular(16.r),
       child: Padding(
         padding: EdgeInsets.all(16.w),
@@ -41,7 +48,7 @@ class DailyMissionCard extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      mission.missionTitle,
+                      widget.mission.missionTitle,
                       style: TextStyle(
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
@@ -51,7 +58,7 @@ class DailyMissionCard extends StatelessWidget {
                   ),
                   SizedBox(width: 8.w),
                   MissionStatusBadge(
-                    status: mission.status,
+                    status: widget.mission.status,
                     isLarge: true,
                   ),
                 ],
@@ -61,7 +68,7 @@ class DailyMissionCard extends StatelessWidget {
 
               // 미션 설명
               Text(
-                mission.missionDescription,
+                widget.mission.missionDescription,
                 style: TextStyle(
                   fontSize: 14.sp,
                   color: AppColors.textSecondary,
@@ -83,7 +90,7 @@ class DailyMissionCard extends StatelessWidget {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    _formatDate(mission.missionDate),
+                    _formatDate(widget.mission.missionDate),
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: AppColors.textSecondary,
@@ -97,7 +104,7 @@ class DailyMissionCard extends StatelessWidget {
                   ),
                   SizedBox(width: 4.w),
                   Text(
-                    '${mission.baseReward.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
+                    '${widget.mission.baseReward.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: AppColors.primary,
@@ -108,7 +115,7 @@ class DailyMissionCard extends StatelessWidget {
               ),
 
               // 거절 사유 표시 (거절된 경우)
-              if (mission.status == DailyMissionStatus.rejected && mission.reviewNote != null) ...[
+              if (widget.mission.status == DailyMissionStatus.rejected && widget.mission.reviewNote != null) ...[
                 SizedBox(height: 12.h),
                 Container(
                   padding: EdgeInsets.all(12.w),
@@ -143,7 +150,7 @@ class DailyMissionCard extends StatelessWidget {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        mission.reviewNote!,
+                        widget.mission.reviewNote!,
                         style: TextStyle(
                           fontSize: 12.sp,
                           color: Colors.red[700],
@@ -171,31 +178,31 @@ class DailyMissionCard extends StatelessWidget {
   Widget _buildActionButton() {
     // 디버그 로그
     print('🔍 [DailyMissionCard] _buildActionButton()');
-    print('   ├─ currentState: ${mission.currentState}');
-    print('   ├─ startedAt: ${mission.startedAt}');
-    print('   ├─ completedAt: ${mission.completedAt}');
-    print('   └─ status: ${mission.status}');
+    print('   ├─ currentState: ${widget.mission.currentState}');
+    print('   ├─ startedAt: ${widget.mission.startedAt}');
+    print('   ├─ completedAt: ${widget.mission.completedAt}');
+    print('   └─ status: ${widget.mission.status}');
 
     // 1. 공급자 승인 대기 중 (application_submitted)
-    if (mission.currentState == 'application_submitted') {
+    if (widget.mission.currentState == 'application_submitted') {
       return Row(
         children: [
-          // 삭제 버튼
-          if (onDelete != null)
+          // 삭제 버튼 - 2단계 확인 시스템
+          if (widget.onDelete != null)
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: onDelete,
+                onPressed: _handleDeleteClick,
                 icon: Icon(Icons.delete, size: 14.sp),
                 label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: _deleteConfirmMode ? Colors.red : Colors.grey,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 12.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                 ),
               ),
             ),
-          if (onDelete != null) SizedBox(width: 6.w),
+          if (widget.onDelete != null) SizedBox(width: 6.w),
           // 승인 대기 버튼
           Expanded(
             flex: 2,
@@ -217,178 +224,61 @@ class DailyMissionCard extends StatelessWidget {
     }
 
     // 2. 미션 시작 전 (application_approved + startedAt 없음)
-    if (mission.currentState == 'application_approved' && mission.startedAt == null) {
-      return Row(
-        children: [
-          // 삭제 버튼 (빨강)
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed: onDelete,
-              icon: Icon(Icons.delete, size: 14.sp),
-              label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 10.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-              ),
-            ),
-          ),
-          SizedBox(width: 6.w),
-          // 시작 버튼 (파랑)
-          Expanded(
-            flex: 2,
-            child: ElevatedButton.icon(
-              onPressed: onStart,
-              icon: Icon(Icons.play_arrow, size: 14.sp),
-              label: Text('시작', style: TextStyle(fontSize: 12.sp)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 10.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-              ),
-            ),
-          ),
-        ],
+    if (widget.mission.currentState == 'application_approved' && widget.mission.startedAt == null) {
+      return _build4ButtonRow(
+        canDelete: widget.onDelete != null,
+        canStart: widget.onStart != null,
+        canComplete: false,
+        canSubmit: false,
+        startedAt: null,
       );
     }
 
     // 3. 미션 진행 중 (startedAt 있음 + completedAt 없음)
-    if (mission.startedAt != null && mission.completedAt == null) {
-      final elapsed = DateTime.now().difference(mission.startedAt!);
+    if (widget.mission.startedAt != null && widget.mission.completedAt == null) {
+      final elapsed = DateTime.now().difference(widget.mission.startedAt!);
       final canComplete = elapsed.inMinutes >= 10;
 
-      return Column(
-        children: [
-          // 타이머 표시 (10분 미경과 시)
-          if (!canComplete) ...[
-            Container(
-              padding: EdgeInsets.all(8.w),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.orange.withValues(alpha: 0.3), width: 1),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.timer, size: 16.sp, color: Colors.orange),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '남은 시간: ${10 - elapsed.inMinutes}분 ${59 - (elapsed.inSeconds % 60)}초',
-                    style: TextStyle(fontSize: 12.sp, color: Colors.orange[700], fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 8.h),
-          ],
-
-          // 완료 버튼과 삭제 버튼
-          Row(
-            children: [
-              // 삭제 버튼
-              if (onDelete != null)
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: onDelete,
-                    icon: Icon(Icons.delete, size: 14.sp),
-                    label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(vertical: 12.h),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                    ),
-                  ),
-                ),
-              if (onDelete != null) SizedBox(width: 6.w),
-              // 완료 버튼
-              Expanded(
-                flex: 2,
-                child: ElevatedButton.icon(
-                  onPressed: canComplete ? onComplete : null,
-                  icon: Icon(Icons.check_circle, size: 14.sp),
-                  label: Text(
-                    canComplete ? '미션 완료' : '10분 후 활성화',
-                    style: TextStyle(fontSize: 12.sp),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: canComplete ? Colors.orange : Colors.grey,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: Colors.grey.withValues(alpha: 0.6),
-                    disabledForegroundColor: Colors.white.withValues(alpha: 0.7),
-                    padding: EdgeInsets.symmetric(vertical: 12.h),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+      return _build4ButtonRow(
+        canDelete: widget.onDelete != null,
+        canStart: false,
+        canComplete: canComplete && widget.onComplete != null,
+        canSubmit: false,
+        startedAt: widget.mission.startedAt,
       );
     }
 
     // 4. 완료됨 + 제출 대기 (completedAt 있음 + status != completed)
-    if (mission.completedAt != null && mission.status != DailyMissionStatus.completed) {
-      return Row(
-        children: [
-          // 삭제 버튼
-          if (onDelete != null)
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: onDelete,
-                icon: Icon(Icons.delete, size: 14.sp),
-                label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-                ),
-              ),
-            ),
-          if (onDelete != null) SizedBox(width: 6.w),
-          // 제출 버튼
-          Expanded(
-            flex: 2,
-            child: ElevatedButton.icon(
-              onPressed: onSubmit,
-              icon: Icon(Icons.upload, size: 14.sp),
-              label: Text('미션 제출', style: TextStyle(fontSize: 13.sp)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 12.h),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-              ),
-            ),
-          ),
-        ],
+    if (widget.mission.completedAt != null && widget.mission.status != DailyMissionStatus.completed) {
+      return _build4ButtonRow(
+        canDelete: widget.onDelete != null,
+        canStart: false,
+        canComplete: false,
+        canSubmit: widget.onSubmit != null,
+        startedAt: widget.mission.startedAt,
       );
     }
 
     // 5. 제출 완료 (공급자 검토 대기)
-    if (mission.status == DailyMissionStatus.completed) {
+    if (widget.mission.status == DailyMissionStatus.completed) {
       return Row(
         children: [
-          // 삭제 버튼
-          if (onDelete != null)
+          // 삭제 버튼 - 2단계 확인 시스템
+          if (widget.onDelete != null)
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: onDelete,
+                onPressed: _handleDeleteClick,
                 icon: Icon(Icons.delete, size: 14.sp),
                 label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: _deleteConfirmMode ? Colors.red : Colors.grey,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 12.h),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                 ),
               ),
             ),
-          if (onDelete != null) SizedBox(width: 6.w),
+          if (widget.onDelete != null) SizedBox(width: 6.w),
           // 검토 대기 버튼
           Expanded(
             flex: 2,
@@ -410,7 +300,7 @@ class DailyMissionCard extends StatelessWidget {
     }
 
     // 6. 승인 완료
-    if (mission.status == DailyMissionStatus.approved) {
+    if (widget.mission.status == DailyMissionStatus.approved) {
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
@@ -429,11 +319,11 @@ class DailyMissionCard extends StatelessWidget {
     }
 
     // 7. 거절됨 (재제출)
-    if (mission.status == DailyMissionStatus.rejected) {
+    if (widget.mission.status == DailyMissionStatus.rejected) {
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton.icon(
-          onPressed: onResubmit,
+          onPressed: widget.onResubmit,
           icon: Icon(Icons.refresh, size: 14.sp),
           label: Text('재제출', style: TextStyle(fontSize: 13.sp)),
           style: ElevatedButton.styleFrom(
@@ -449,22 +339,22 @@ class DailyMissionCard extends StatelessWidget {
     // 기본값 (예상치 못한 상태)
     return Row(
       children: [
-        // 삭제 버튼
-        if (onDelete != null)
+        // 삭제 버튼 - 2단계 확인 시스템
+        if (widget.onDelete != null)
           Expanded(
             child: ElevatedButton.icon(
-              onPressed: onDelete,
+              onPressed: _handleDeleteClick,
               icon: Icon(Icons.delete, size: 14.sp),
               label: Text('삭제', style: TextStyle(fontSize: 12.sp)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
+                backgroundColor: _deleteConfirmMode ? Colors.red : Colors.grey,
                 foregroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
               ),
             ),
           ),
-        if (onDelete != null) SizedBox(width: 6.w),
+        if (widget.onDelete != null) SizedBox(width: 6.w),
         // 상태 확인 중 버튼
         Expanded(
           flex: 2,
@@ -482,6 +372,223 @@ class DailyMissionCard extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  /// 4개 버튼 가로 레이아웃 (삭제-시작-완료-제출)
+  Widget _build4ButtonRow({
+    required bool canDelete,
+    required bool canStart,
+    required bool canComplete,
+    required bool canSubmit,
+    required DateTime? startedAt,
+  }) {
+    // 타이머 정보 계산
+    Duration? elapsed;
+    bool showTimer = false;
+    int remainingMinutes = 0;
+    int remainingSeconds = 0;
+
+    if (startedAt != null) {
+      elapsed = DateTime.now().difference(startedAt);
+      showTimer = elapsed.inMinutes < 10;
+      if (showTimer) {
+        remainingMinutes = 10 - elapsed.inMinutes - 1;
+        remainingSeconds = 60 - (elapsed.inSeconds % 60);
+      }
+    }
+
+    return Column(
+      children: [
+        // 타이머 바
+        if (showTimer)
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(8.w),
+            margin: EdgeInsets.only(bottom: 8.h),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.timer, size: 16.sp, color: Colors.orange),
+                SizedBox(width: 6.w),
+                Text(
+                  '⏱️ 남은 시간: ${remainingMinutes}분 ${remainingSeconds}초',
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: Colors.orange[700],
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // 4개 버튼 가로 배치
+        Row(
+          children: [
+            // [삭제] 버튼 - 2단계 확인 시스템
+            Expanded(
+              child: _buildRowButton(
+                icon: Icons.delete,
+                label: '삭제',
+                color: _deleteConfirmMode ? Colors.red : Colors.grey,
+                enabled: canDelete,
+                onPressed: canDelete ? _handleDeleteClick : null,
+              ),
+            ),
+            SizedBox(width: 6.w),
+            // [시작] 버튼
+            Expanded(
+              child: _buildRowButton(
+                icon: canStart ? Icons.play_arrow : Icons.check,
+                label: canStart ? '시작' : '시작됨',
+                color: Colors.blue,
+                enabled: canStart,
+                onPressed: canStart ? widget.onStart : null,
+              ),
+            ),
+            SizedBox(width: 6.w),
+            // [완료] 버튼
+            Expanded(
+              child: _buildRowButton(
+                icon: Icons.check_circle,
+                label: '완료',
+                color: Colors.orange,
+                enabled: canComplete,
+                onPressed: canComplete ? widget.onComplete : null,
+              ),
+            ),
+            SizedBox(width: 6.w),
+            // [제출] 버튼
+            Expanded(
+              child: _buildRowButton(
+                icon: Icons.upload,
+                label: '제출',
+                color: Colors.green,
+                enabled: canSubmit,
+                onPressed: canSubmit ? widget.onSubmit : null,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// 삭제 버튼 클릭 핸들러 (2단계 확인)
+  void _handleDeleteClick() {
+    if (!_deleteConfirmMode) {
+      // 1단계: 회색 → 빨간색 활성화
+      setState(() {
+        _deleteConfirmMode = true;
+      });
+    } else {
+      // 2단계: 모달 다이얼로그 표시
+      _showDeleteConfirmDialog();
+    }
+  }
+
+  /// 삭제 확인 다이얼로그
+  Future<void> _showDeleteConfirmDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.red, size: 28.sp),
+            SizedBox(width: 8.w),
+            Text('미션 삭제', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '정말로 이 미션을 삭제하시겠습니까?',
+              style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '삭제된 미션은 복구할 수 없습니다.',
+              style: TextStyle(fontSize: 13.sp, color: Colors.red[700]),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+              setState(() {
+                _deleteConfirmMode = false; // 취소 시 회색으로 복귀
+              });
+            },
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context, true);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      widget.onDelete?.call();
+    }
+
+    // 다이얼로그 닫힌 후 확인 모드 리셋
+    if (mounted) {
+      setState(() {
+        _deleteConfirmMode = false;
+      });
+    }
+  }
+
+  /// 가로 버튼 빌더
+  Widget _buildRowButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required bool enabled,
+    required VoidCallback? onPressed,
+  }) {
+    return ElevatedButton(
+      onPressed: enabled ? onPressed : null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: enabled ? color : Colors.grey,
+        foregroundColor: Colors.white,
+        disabledBackgroundColor: Colors.grey.withValues(alpha: 0.5),
+        disabledForegroundColor: Colors.white.withValues(alpha: 0.6),
+        padding: EdgeInsets.symmetric(vertical: 10.h),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+        elevation: enabled ? 2 : 0,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16.sp),
+          SizedBox(height: 2.h),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -1471,20 +1471,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
   }
 
-  // 미션 시작 (타임스탬프 기록 + 새 탭에서 앱 열기)
+  // 미션 시작 (가이드 대화상자 + 앱 열기)
   Future<void> _startMission(DailyMissionModel mission) async {
     try {
-      // 1. startedAt 타임스탬프 기록
-      if (mission.workflowId != null) {
-        await FirebaseFirestore.instance
-            .collection('mission_workflows')
-            .doc(mission.workflowId)
-            .update({
-          'startedAt': FieldValue.serverTimestamp(),
-        });
-      }
-
-      // 2. 앱 URL 가져오기 (projects 컬렉션에서)
+      // 1. 앱 URL 먼저 가져오기
       final projectDoc = await FirebaseFirestore.instance
           .collection('projects')
           .doc(mission.appId)
@@ -1492,9 +1482,108 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
       final appUrl = projectDoc.data()?['appUrl'] as String?;
 
-      if (appUrl != null && appUrl.isNotEmpty) {
-        // 3. 새 탭에서 앱 열기
-        html.window.open(appUrl, '_blank');
+      if (appUrl == null || appUrl.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 앱 URL이 설정되지 않았습니다'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // 2. 가이드 대화상자 표시
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.rocket_launch, color: Colors.blue, size: 28.sp),
+              SizedBox(width: 8.w),
+              Text(
+                '🚀 미션 시작',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '📋 미션 가이드',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue[700],
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    Text(
+                      '✅ 10분 동안 앱을 테스트해주세요\n'
+                      '📱 버그나 개선사항을 찾아주세요\n'
+                      '📸 스크린샷을 캡처해주세요\n'
+                      '⏱️ 10분 후 완료 버튼이 활성화됩니다',
+                      style: TextStyle(fontSize: 13.sp, height: 1.6),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 16.h),
+              Text(
+                '아래 버튼을 눌러 앱 테스트를 시작하세요!',
+                style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text('취소'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                html.window.open(appUrl, '_blank');
+                Navigator.pop(context, true);
+              },
+              icon: Icon(Icons.open_in_new, size: 16.sp),
+              label: Text('앱 테스트 시작'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      // 3. 사용자가 시작을 확인한 경우에만 타임스탬프 기록
+      if (confirmed == true && mounted) {
+        if (mission.workflowId != null) {
+          await FirebaseFirestore.instance
+              .collection('mission_workflows')
+              .doc(mission.workflowId)
+              .update({
+            'startedAt': FieldValue.serverTimestamp(),
+          });
+        }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1505,15 +1594,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ),
           );
           setState(() {}); // UI 새로고침
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ 앱 URL이 설정되지 않았습니다'),
-              backgroundColor: Colors.red,
-            ),
-          );
         }
       }
     } catch (e) {
