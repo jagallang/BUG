@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.4.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.3.3-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,37 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.4.0)
+## ✨ 주요 기능 (v2.3.3)
+
+### 🔄 미션 승인 워크플로우 개선 (v2.3.3) - **MISSION APPROVAL WORKFLOW**
+- **공급자-테스터 간 승인 프로세스 정교화**
+  - **공급자 대시보드 "오늘" 탭 개선**
+    - 승인된 테스터를 "오늘" 탭에 자동 표시
+    - "미션 시작" 버튼으로 일일 미션 시작 트리거
+    - 승인 후 대기 탭 → 오늘 탭 자동 이동
+
+  - **테스터 미션 상태 명확화**
+    - `application_submitted`: "공급자 승인 대기 중" (버튼 비활성화)
+    - `approved`: "미션 시작" 버튼 활성화
+    - currentState 기반 정확한 UI 상태 표시
+
+  - **버그 수정**
+    - 공급자 승인 전 테스터가 미션 시작할 수 없도록 수정
+    - 진행중 탭에서 상태별 정확한 버튼 활성화 로직
+
+- **🎯 개선된 워크플로우**:
+  ```
+  1. 테스터 미션 신청 → application_submitted
+     └─ 진행중 탭: "공급자 승인 대기 중" (비활성화)
+
+  2. 공급자 승인 → approved
+     ├─ 공급자 "대기" 탭에서 사라짐
+     ├─ 공급자 "오늘" 탭에 표시
+     └─ 테스터 진행중 탭: "미션 시작" 활성화
+
+  3. 공급자 "미션 시작" 클릭 → mission_in_progress
+     └─ 일일 미션 워크플로우 시작
+  ```
 
 ### 📅 일일 미션 워크플로우 시스템 (v2.4.0) - **DAILY MISSION WORKFLOW SYSTEM**
 - **🔄 완전한 일일 미션 생애주기 관리**: 테스터와 공급자 간 양방향 워크플로우 구현
