@@ -174,51 +174,127 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
     );
   }
 
-  /// 오늘미션 탭 - 오늘의 미션 관리
+  /// 오늘미션 탭 - 승인된 테스터 + 오늘의 미션 관리
   Widget _buildTodayMissionsTab() {
-    return StreamBuilder<List<DailyMissionModel>>(
-      stream: _missionService.watchTodayMissions(widget.app.id),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 섹션 1: 승인된 테스터 (미션 시작 대기중)
+          StreamBuilder<List<TesterApplicationModel>>(
+            stream: _missionService.watchApprovedTesters(widget.app.id),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              }
 
-        if (snapshot.hasError) {
-          return Center(child: Text('오류가 발생했습니다: ${snapshot.error}'));
-        }
+              final approvedTesters = snapshot.data ?? [];
 
-        final missions = snapshot.data ?? [];
+              if (approvedTesters.isEmpty) {
+                return const SizedBox.shrink(); // 승인된 테스터 없으면 숨김
+              }
 
-        if (missions.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.assignment_outlined, size: 48.sp, color: Colors.grey),
-                SizedBox(height: 16.h),
-                Text(
-                  '오늘 생성된 미션이 없습니다',
-                  style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
-                ),
-                SizedBox(height: 16.h),
-                ElevatedButton(
-                  onPressed: _generateTodayMissions,
-                  child: const Text('오늘 미션 생성'),
-                ),
-              ],
-            ),
-          );
-        }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+                    child: Text(
+                      '승인된 테스터 (미션 시작 대기)',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    itemCount: approvedTesters.length,
+                    itemBuilder: (context, index) {
+                      final tester = approvedTesters[index];
+                      return _buildApprovedTesterCard(tester);
+                    },
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+              );
+            },
+          ),
 
-        return ListView.builder(
-          padding: EdgeInsets.all(16.w),
-          itemCount: missions.length,
-          itemBuilder: (context, index) {
-            final mission = missions[index];
-            return _buildDailyMissionCard(mission);
-          },
-        );
-      },
+          // 섹션 2: 오늘의 일일 미션
+          StreamBuilder<List<DailyMissionModel>>(
+            stream: _missionService.watchTodayMissions(widget.app.id),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Center(child: Text('오류가 발생했습니다: ${snapshot.error}')),
+                );
+              }
+
+              final missions = snapshot.data ?? [];
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (missions.isNotEmpty)
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 8.h),
+                      child: Text(
+                        '오늘의 일일 미션',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  if (missions.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.all(16.w),
+                      child: Center(
+                        child: Column(
+                          children: [
+                            Icon(Icons.assignment_outlined, size: 48.sp, color: Colors.grey),
+                            SizedBox(height: 16.h),
+                            Text(
+                              '오늘 생성된 미션이 없습니다',
+                              style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  else
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      padding: EdgeInsets.symmetric(horizontal: 16.w),
+                      itemCount: missions.length,
+                      itemBuilder: (context, index) {
+                        final mission = missions[index];
+                        return _buildDailyMissionCard(mission);
+                      },
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 
@@ -392,6 +468,89 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                 ],
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 승인된 테스터 카드 위젯 (미션 시작 대기중)
+  Widget _buildApprovedTesterCard(TesterApplicationModel application) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 20.r,
+                  backgroundColor: Colors.green.withValues(alpha: 0.1),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 24.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        application.testerName,
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        application.testerEmail,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Text(
+                    '승인됨',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.green,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _startMission(application.id),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                ),
+                icon: const Icon(Icons.play_arrow, color: Colors.white),
+                label: const Text(
+                  '미션 시작',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -738,6 +897,31 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('오류가 발생했습니다: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  /// 미션 시작 (승인된 테스터)
+  Future<void> _startMission(String workflowId) async {
+    try {
+      await _missionService.startMissionForTester(workflowId: workflowId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('미션이 시작되었습니다'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('미션 시작 중 오류가 발생했습니다: $e'),
             backgroundColor: Colors.red,
           ),
         );

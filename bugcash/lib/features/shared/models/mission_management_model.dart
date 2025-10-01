@@ -214,6 +214,7 @@ class DailyMissionModel {
   // 워크플로우 연동 필드
   final String? workflowId;
   final int? dayNumber;
+  final String? currentState; // mission_workflows의 실제 currentState (application_submitted, approved, mission_in_progress 등)
 
   DailyMissionModel({
     required this.id,
@@ -232,6 +233,7 @@ class DailyMissionModel {
     this.attachments = const [],
     this.workflowId,
     this.dayNumber,
+    this.currentState,
   });
 
   factory DailyMissionModel.fromFirestore(DocumentSnapshot doc) {
@@ -256,6 +258,7 @@ class DailyMissionModel {
       attachments: List<String>.from(data['attachments'] ?? []),
       workflowId: data['workflowId'],
       dayNumber: data['dayNumber'],
+      currentState: data['currentState'],
     );
   }
 
@@ -276,6 +279,7 @@ class DailyMissionModel {
       'attachments': attachments,
       'workflowId': workflowId,
       'dayNumber': dayNumber,
+      'currentState': currentState,
     };
   }
 

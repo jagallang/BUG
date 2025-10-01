@@ -207,6 +207,26 @@ class MissionManagementService {
     }
   }
 
+  /// 승인된 테스터의 미션 시작 (approved → mission_in_progress)
+  Future<void> startMissionForTester({
+    required String workflowId,
+  }) async {
+    try {
+      AppLogger.info('🚀 [미션시작] 시작 - workflowId: $workflowId', 'MissionManagement');
+
+      await _firestore.collection(_dailyMissionsCollection).doc(workflowId).update({
+        'currentState': 'mission_in_progress',
+        'stateUpdatedAt': FieldValue.serverTimestamp(),
+        'missionStartedAt': FieldValue.serverTimestamp(),
+      });
+
+      AppLogger.info('✅ [미션시작] 완료 - currentState: mission_in_progress', 'MissionManagement');
+    } catch (e) {
+      AppLogger.error('Failed to start mission for tester', 'MissionManagementService', e);
+      rethrow;
+    }
+  }
+
   /// 일일 미션 생성
   Future<String> createDailyMission({
     required String appId,
@@ -238,6 +258,29 @@ class MissionManagementService {
       AppLogger.error('Failed to create daily mission', 'MissionManagementService', e);
       rethrow;
     }
+  }
+
+  /// 승인된 테스터 조회 (미션 시작 대기중) - mission_workflows에서 approved 상태만 조회
+  Stream<List<TesterApplicationModel>> watchApprovedTesters(String appId) {
+    AppLogger.info('🔍 [승인된테스터] 조회 시작 - appId: $appId', 'MissionManagement');
+
+    return _firestore
+        .collection(_dailyMissionsCollection) // mission_workflows 컬렉션
+        .where('appId', isEqualTo: appId)
+        .where('currentState', isEqualTo: 'approved') // 승인됨, 미션 시작 대기중
+        .snapshots()
+        .map((snapshot) {
+          AppLogger.info('📊 [승인된테스터] Firestore 조회 결과: ${snapshot.docs.length}개', 'MissionManagement');
+
+          final results = snapshot.docs
+              .map((doc) => _convertMissionWorkflowToTesterApplication(doc.data(), doc.id))
+              .toList();
+
+          results.sort((a, b) => b.appliedAt.compareTo(a.appliedAt));
+
+          AppLogger.info('✅ [승인된테스터] 변환 완료: ${results.length}개', 'MissionManagement');
+          return results;
+        });
   }
 
   /// 오늘 미션 조회 (앱 기반)
@@ -290,6 +333,8 @@ class MissionManagementService {
                 baseReward: workflowData.dailyReward > 0
                     ? workflowData.dailyReward
                     : 5000,
+                workflowId: workflowData.id,
+                currentState: workflowData.currentState.code, // 실제 currentState 전달
               );
             })
             .toList());

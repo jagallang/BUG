@@ -167,6 +167,29 @@ class DailyMissionCard extends StatelessWidget {
   Widget _buildActionButton() {
     switch (mission.status) {
       case DailyMissionStatus.pending:
+        // currentState가 'application_submitted'면 승인 대기 중
+        if (mission.currentState == 'application_submitted') {
+          return SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: null, // 비활성화
+              icon: Icon(Icons.hourglass_empty, size: 18.sp),
+              label: const Text('공급자 승인 대기 중'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: Colors.orange.withValues(alpha: 0.6),
+                disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                padding: EdgeInsets.symmetric(vertical: 12.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+              ),
+            ),
+          );
+        }
+
+        // currentState가 'approved'면 미션 시작 가능
         return SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(

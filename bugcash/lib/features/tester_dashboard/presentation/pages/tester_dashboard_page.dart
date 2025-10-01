@@ -1022,7 +1022,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     _showMissionDetail(mission);
                   }
                 },
-                onStart: mission.status == DailyMissionStatus.pending
+                // currentState가 'approved'일 때만 미션 시작 버튼 활성화
+                // application_submitted는 공급자 승인 대기 중이므로 비활성화
+                onStart: mission.currentState == 'approved'
                     ? () => _startMission(mission)
                     : null,
                 onSubmit: mission.status == DailyMissionStatus.inProgress
