@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.3.3-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.3.4-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,25 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.3.3)
+## ✨ 주요 기능 (v2.3.4)
+
+### 🔧 미션 관리 접근성 개선 (v2.3.4) - **MISSION MANAGEMENT ACCESSIBILITY FIX**
+- **앱 상태와 관계없이 미션 관리 가능**
+  - **Before**: 앱 상태가 'open'일 때만 "미션" 버튼 활성화
+  - **After**: 'draft', 'pending', 'open' 상태에서 모두 활성화
+  - **수정 이유**: 테스터 신청은 앱 상태와 무관하게 발생하므로, 공급자가 언제든지 승인할 수 있어야 함
+
+- **버그 수정**
+  - ✅ 앱 등록 후 테스터 신청이 들어왔지만 공급자가 승인할 수 없던 문제 해결
+  - ✅ "미션" 버튼 비활성화로 인한 워크플로우 차단 문제 해결
+  - ✅ Firestore 복합 인덱스 추가 (mission_workflows: appId + currentState)
+
+- **개선된 워크플로우**:
+  ```
+  앱 등록 (draft/pending) → 테스터 신청 → 공급자 "미션" 버튼 활성화 ✅
+  └─ 이전: 앱이 'open' 상태가 되기 전까지 승인 불가능 ❌
+  └─ 현재: 언제든지 즉시 승인 가능 ✅
+  ```
 
 ### 🔄 미션 승인 워크플로우 개선 (v2.3.3) - **MISSION APPROVAL WORKFLOW**
 - **공급자-테스터 간 승인 프로세스 정교화**
