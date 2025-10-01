@@ -211,6 +211,10 @@ class DailyMissionModel {
   final String? reviewNote;
   final List<String> attachments;
 
+  // 워크플로우 연동 필드
+  final String? workflowId;
+  final int? dayNumber;
+
   DailyMissionModel({
     required this.id,
     required this.appId,
@@ -226,6 +230,8 @@ class DailyMissionModel {
     this.completionNote,
     this.reviewNote,
     this.attachments = const [],
+    this.workflowId,
+    this.dayNumber,
   });
 
   factory DailyMissionModel.fromFirestore(DocumentSnapshot doc) {
@@ -248,6 +254,8 @@ class DailyMissionModel {
       completionNote: data['completionNote'],
       reviewNote: data['reviewNote'],
       attachments: List<String>.from(data['attachments'] ?? []),
+      workflowId: data['workflowId'],
+      dayNumber: data['dayNumber'],
     );
   }
 
@@ -266,6 +274,8 @@ class DailyMissionModel {
       'completionNote': completionNote,
       'reviewNote': reviewNote,
       'attachments': attachments,
+      'workflowId': workflowId,
+      'dayNumber': dayNumber,
     };
   }
 

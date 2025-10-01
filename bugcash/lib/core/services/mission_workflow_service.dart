@@ -1,6 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/shared/models/mission_workflow_model.dart';
 import '../utils/logger.dart';
+
+/// MissionWorkflowService Provider
+final missionWorkflowServiceProvider = Provider<MissionWorkflowService>((ref) {
+  return MissionWorkflowService();
+});
 
 /// 미션 워크플로우 서비스
 /// 테스터-공급자 간 미션 상호작용 관리
@@ -230,6 +236,24 @@ class MissionWorkflowService {
       AppLogger.error('Failed to start daily mission', e.toString());
       rethrow;
     }
+  }
+
+  // 5단계: 테스터가 일일 미션 제출 (별칭 메서드)
+  Future<void> submitDailyMission({
+    required String workflowId,
+    required int dayNumber,
+    required String feedback,
+    required List<String> screenshots,
+  }) async {
+    // completeDailyMission의 간소화된 래퍼
+    final workflow = await getMissionWorkflow(workflowId);
+    return completeDailyMission(
+      workflowId: workflowId,
+      testerId: workflow.testerId,
+      dayNumber: dayNumber,
+      feedback: feedback,
+      screenshots: screenshots,
+    );
   }
 
   // 5단계: 테스터가 일일 미션 완료

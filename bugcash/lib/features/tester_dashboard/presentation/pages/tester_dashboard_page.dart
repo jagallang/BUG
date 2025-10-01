@@ -17,6 +17,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/auth_wrapper.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import 'mission_detail_page.dart';
+import 'daily_mission_submission_page.dart';
 import '../../../../core/services/mission_management_service.dart';
 import '../../../shared/widgets/daily_mission_card.dart';
 import '../../../shared/models/mission_management_model.dart';
@@ -1126,69 +1127,36 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  void _submitMission(DailyMissionModel mission) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('미션 제출'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('${mission.missionTitle} 미션을 제출하시겠습니까?'),
-            SizedBox(height: 16.h),
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: const Text(
-                '📸 스크린샷과 테스트 결과를 첨부해주세요.',
-                style: TextStyle(fontSize: 14),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('취소'),
+  void _submitMission(DailyMissionModel mission) async {
+    // workflowId와 dayNumber가 없으면 에러 표시
+    if (mission.workflowId == null || mission.dayNumber == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ 워크플로우 정보가 없습니다. 이 기능은 미션 워크플로우와 연동된 미션에서만 사용 가능합니다.'),
+            backgroundColor: Colors.red,
           ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                // MissionManagementService를 사용해서 미션 상태를 completed로 변경
-                await MissionManagementService().updateMissionStatus(
-                  missionId: mission.id,
-                  status: DailyMissionStatus.completed,
-                  note: '미션 완료 제출',
-                );
+        );
+      }
+      return;
+    }
 
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ 미션이 제출되었습니다! 검토 대기 중입니다.'),
-                      backgroundColor: Colors.orange,
-                    ),
-                  );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('❌ 미션 제출 실패: $e'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
-              }
-            },
-            child: const Text('제출'),
-          ),
-        ],
+    // 새로운 DailyMissionSubmissionPage로 네비게이션
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DailyMissionSubmissionPage(
+          workflowId: mission.workflowId!, // mission_workflows 문서 ID
+          dayNumber: mission.dayNumber!,
+          missionTitle: mission.missionTitle,
+        ),
       ),
     );
+
+    // 제출 완료 시 새로고침
+    if (result == true && mounted) {
+      setState(() {});
+    }
   }
 
   void _resubmitMission(DailyMissionModel mission) {
