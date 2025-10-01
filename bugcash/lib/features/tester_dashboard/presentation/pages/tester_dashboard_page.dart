@@ -327,241 +327,308 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     return Stack(
       children: [
         Scaffold(
-      body: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          // App Bar with Profile
-          SliverAppBar(
-            expandedHeight: _isAppBarExpanded ? 200.h : kToolbarHeight,
-            collapsedHeight: kToolbarHeight,
-            floating: false,
-            pinned: true,
-            elevation: 0,
-            backgroundColor: Theme.of(context).colorScheme.primary,
-            snap: false,
-            automaticallyImplyLeading: false,
-            flexibleSpace: _isAppBarExpanded ? FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+          body: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // App Bar with Profile
+              SliverAppBar(
+                expandedHeight: _isAppBarExpanded ? 200.h : kToolbarHeight,
+                collapsedHeight: kToolbarHeight,
+                floating: false,
+                pinned: true,
+                elevation: 0,
+                backgroundColor: Theme.of(context).colorScheme.primary,
+                snap: false,
+                automaticallyImplyLeading: false,
+                flexibleSpace: _isAppBarExpanded ? FlexibleSpaceBar(
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Theme.of(context).colorScheme.primary,
+                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
+                        ],
+                      ),
+                    ),
+                    child: SafeArea(
+                      child: Padding(
+                        padding: ResponsiveWrapper.getResponsivePadding(context),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            // Top spacing to avoid overlap with title
+                            SizedBox(height: 60.h),
+
+                            // Greeting and notifications
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '안녕하세요! 👋',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16.sp,
+                                        ),
+                                      ),
+                                      Text(
+                                        '오늘도 화이팅!',
+                                        style: TextStyle(
+                                          color: Colors.white.withValues(alpha: 0.8),
+                                          fontSize: 14.sp,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Notification and settings
+                                IconButton(
+                                  onPressed: () => _showNotifications(context),
+                                  icon: Badge(
+                                    label: Text('${dashboardState.unreadNotifications}'),
+                                    isLabelVisible: dashboardState.unreadNotifications > 0,
+                                    child: const Icon(
+                                      Icons.notifications,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: () => _showProfileSettings(context),
+                                  icon: const Icon(
+                                    Icons.account_circle,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: 16.h),
+
+                            // Quick stats
+                            if (dashboardState.testerProfile != null)
+                              _buildQuickStats(context, dashboardState.testerProfile!),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ) : null,
+                title: GestureDetector(
+                  onTap: _toggleAppBar,
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 16.w,
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                        child: Icon(
+                          Icons.person,
+                          color: Colors.white,
+                          size: 18.w,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          dashboardState.testerProfile?.name ?? '테스터',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(
+                        _isAppBarExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                        color: Colors.white,
+                      ),
                     ],
                   ),
                 ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: ResponsiveWrapper.getResponsivePadding(context),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        // Top spacing to avoid overlap with title
-                        SizedBox(height: 60.h),
-                        
-                        // Greeting and notifications
-                        Row(
+                actions: [
+                  // Hamburger menu
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.menu, color: Colors.white),
+                    offset: Offset(0, 50.h),
+                    onSelected: (String value) {
+                      debugPrint('🔵 PopupMenu 선택됨: $value');
+                      switch (value) {
+                        case 'provider':
+                          debugPrint('🔵 공급자 신청 메뉴 선택');
+                          _showProviderApplicationDialog(context);
+                          break;
+                        case 'settings':
+                          debugPrint('🔵 설정 메뉴 선택');
+                          _navigateToSettings(context);
+                          break;
+                        case 'logout':
+                          debugPrint('🔵 로그아웃 메뉴 선택 - _showLogoutConfirmation 호출');
+                          _showLogoutConfirmation(context);
+                          break;
+                      }
+                    },
+                    itemBuilder: (BuildContext context) => [
+                      PopupMenuItem<String>(
+                        value: 'provider',
+                        child: Row(
                           children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '안녕하세요! 👋',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16.sp,
-                                    ),
-                                  ),
-                                  Text(
-                                    '오늘도 화이팅!',
-                                    style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.8),
-                                      fontSize: 14.sp,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Notification and settings
-                            IconButton(
-                              onPressed: () => _showNotifications(context),
-                              icon: Badge(
-                                label: Text('${dashboardState.unreadNotifications}'),
-                                isLabelVisible: dashboardState.unreadNotifications > 0,
-                                child: const Icon(
-                                  Icons.notifications,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: () => _showProfileSettings(context),
-                              icon: const Icon(
-                                Icons.account_circle,
-                                color: Colors.white,
-                              ),
-                            ),
+                            Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
+                            SizedBox(width: 12.w),
+                            const Text('공급자 신청'),
                           ],
                         ),
-                        
-                        SizedBox(height: 16.h),
-                        
-                        // Quick stats
-                        if (dashboardState.testerProfile != null)
-                          _buildQuickStats(context, dashboardState.testerProfile!),
-                      ],
-                    ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'settings',
+                        child: Row(
+                          children: [
+                            Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
+                            SizedBox(width: 12.w),
+                            const Text('설정'),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'logout',
+                        child: Row(
+                          children: [
+                            Icon(Icons.logout, color: Colors.red[600]),
+                            SizedBox(width: 12.w),
+                            const Text('로그아웃', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              // Tab Bar
+              SliverPersistentHeader(
+                delegate: _SliverTabBarDelegate(
+                  TabBar(
+                    controller: _tabController,
+                    tabs: const [
+                      Tab(text: '미션', icon: Icon(Icons.assignment)),
+                      Tab(text: '게시판', icon: Icon(Icons.forum)),
+                    ],
+                    labelColor: Theme.of(context).colorScheme.primary,
+                    unselectedLabelColor: Colors.grey,
+                    indicatorColor: Theme.of(context).colorScheme.primary,
                   ),
                 ),
+                pinned: true,
               ),
-            ) : null,
-            title: GestureDetector(
-              onTap: _toggleAppBar,
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 16.w,
-                    backgroundColor: Colors.white.withValues(alpha: 0.2),
-                    child: Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 18.w,
-                    ),
-                  ),
-                  SizedBox(width: 8.w),
-                  Expanded(
-                    child: Text(
-                      dashboardState.testerProfile?.name ?? '테스터',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  Icon(
-                    _isAppBarExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                    color: Colors.white,
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              // Hamburger menu
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                offset: Offset(0, 50.h),
-                onSelected: (String value) {
-                  debugPrint('🔵 PopupMenu 선택됨: $value');
-                  switch (value) {
-                    case 'provider':
-                      debugPrint('🔵 공급자 신청 메뉴 선택');
-                      _showProviderApplicationDialog(context);
-                      break;
-                    case 'settings':
-                      debugPrint('🔵 설정 메뉴 선택');
-                      _navigateToSettings(context);
-                      break;
-                    case 'logout':
-                      debugPrint('🔵 로그아웃 메뉴 선택 - _showLogoutConfirmation 호출');
-                      _showLogoutConfirmation(context);
-                      break;
-                  }
-                },
-                itemBuilder: (BuildContext context) => [
-                  PopupMenuItem<String>(
-                    value: 'provider',
-                    child: Row(
-                      children: [
-                        Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
-                        SizedBox(width: 12.w),
-                        const Text('공급자 신청'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'settings',
-                    child: Row(
-                      children: [
-                        Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
-                        SizedBox(width: 12.w),
-                        const Text('설정'),
-                      ],
-                    ),
-                  ),
-                  PopupMenuItem<String>(
-                    value: 'logout',
-                    child: Row(
-                      children: [
-                        Icon(Icons.logout, color: Colors.red[600]),
-                        SizedBox(width: 12.w),
-                        const Text('로그아웃', style: TextStyle(color: Colors.red)),
-                      ],
-                    ),
-                  ),
-                ],
+
+              // Tab Content
+              SliverFillRemaining(
+                child: dashboardState.isLoading
+                    ? const BugCashLoadingWidget(
+                        message: '미션 데이터를 불러오는 중...',
+                      )
+                    : dashboardState.error != null
+                        ? _buildErrorWidget(dashboardState.error!)
+                        : TabBarView(
+                            controller: _tabController,
+                            children: [
+                              // 미션 (미션 찾기 + 진행 중인 미션 통합)
+                              _buildMissionTab(),
+
+                              // 게시판 (커뮤니티)
+                              Card(
+                                child: Padding(
+                                  padding: ResponsiveWrapper.getResponsivePadding(context),
+                                  child: Column(
+                                    children: [
+                                      Text('커뮤니티 게시판', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+                                      SizedBox(height: 8.h),
+                                      Text('테스터 커뮤니티 준비 중'),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
               ),
             ],
           ),
-          
-          // Tab Bar
-          SliverPersistentHeader(
-            delegate: _SliverTabBarDelegate(
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: '미션', icon: Icon(Icons.assignment)),
-                  Tab(text: '게시판', icon: Icon(Icons.forum)),
-                ],
-                labelColor: Theme.of(context).colorScheme.primary,
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: Theme.of(context).colorScheme.primary,
-              ),
-            ),
-            pinned: true,
-          ),
-          
-          // Tab Content
-          SliverFillRemaining(
-            child: dashboardState.isLoading
-                ? const BugCashLoadingWidget(
-                    message: '미션 데이터를 불러오는 중...',
-                  )
-                : dashboardState.error != null
-                    ? _buildErrorWidget(dashboardState.error!)
-                    : TabBarView(
-                        controller: _tabController,
-                        children: [
-                          // 미션 (미션 찾기 + 진행 중인 미션 통합)
-                          _buildMissionTab(),
 
-                          // 게시판 (커뮤니티)
-                          Card(
-                            child: Padding(
-                              padding: ResponsiveWrapper.getResponsivePadding(context),
-                              child: Column(
-                                children: [
-                                  Text('커뮤니티 게시판', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-                                  SizedBox(height: 8.h),
-                                  Text('테스터 커뮤니티 준비 중'),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+          // Floating Action Button for chat
+          floatingActionButton: _buildChatFAB(),
+          floatingActionButtonLocation: _CustomFabLocation(), // 모든 탭에서 동일한 중간 위치로 고정
+        ),
+
+        // 미션 시작 전체 화면 오버레이
+        if (_showStartOverlay)
+          MissionStartTimerOverlay(
+            displayDuration: const Duration(seconds: 3),
+            onComplete: () {
+              setState(() {
+                _showStartOverlay = false;
+              });
+            },
           ),
-        ],
-      ),
-      
-      // Floating Action Button for chat
-      floatingActionButton: _buildChatFAB(),
-      floatingActionButtonLocation: _CustomFabLocation(), // 모든 탭에서 동일한 중간 위치로 고정
+
+        // 미션 타이머 플로팅 버튼
+        if (_missionStartTime != null && !_showStartOverlay)
+          MissionTimerFloatingButton(
+            startedAt: _missionStartTime!,
+            onScreenshot: () async {
+              // 스크린샷 기능 (나중에 구현)
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('📸 스크린샷 기능은 개발 중입니다'),
+                  backgroundColor: Colors.orange,
+                  duration: Duration(seconds: 2),
+                ),
+              );
+            },
+            onComplete: () async {
+              // 완료 버튼 클릭 시
+              if (_currentMissionWorkflowId != null) {
+                try {
+                  await FirebaseFirestore.instance
+                      .collection('mission_workflows')
+                      .doc(_currentMissionWorkflowId)
+                      .update({
+                    'status': 'submission_required',
+                  });
+
+                  setState(() {
+                    _missionStartTime = null;
+                    _currentMissionWorkflowId = null;
+                  });
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('✅ 테스트가 완료되었습니다! 이제 결과를 제출해주세요.'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 4),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('❌ 완료 처리 중 오류가 발생했습니다'),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                }
+              }
+            },
+          ),
+      ],
     );
   }
 
@@ -878,77 +945,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               ),
             ),
           ),
-        ],
+            ],
           );
         },
       ),
-        ),
-
-        // 미션 시작 전체 화면 오버레이
-        if (_showStartOverlay)
-          MissionStartTimerOverlay(
-            displayDuration: Duration(seconds: 3),
-            onComplete: () {
-              setState(() {
-                _showStartOverlay = false;
-              });
-            },
-          ),
-
-        // 미션 타이머 플로팅 버튼
-        if (_missionStartTime != null && !_showStartOverlay)
-          MissionTimerFloatingButton(
-            startedAt: _missionStartTime!,
-            onScreenshot: () async {
-              // 스크린샷 기능 (나중에 구현)
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('📸 스크린샷 기능은 개발 중입니다'),
-                  backgroundColor: Colors.orange,
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-            onComplete: () async {
-              // 완료 버튼 클릭 시
-              if (_currentMissionWorkflowId != null) {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('mission_workflows')
-                      .doc(_currentMissionWorkflowId)
-                      .update({
-                    'status': 'submission_required',
-                  });
-
-                  setState(() {
-                    _missionStartTime = null;
-                    _currentMissionWorkflowId = null;
-                  });
-
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('✅ 테스트가 완료되었습니다! 이제 결과를 제출해주세요.'),
-                        backgroundColor: Colors.green,
-                        duration: Duration(seconds: 4),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('❌ 완료 처리 중 오류가 발생했습니다'),
-                        backgroundColor: Colors.red,
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                  }
-                }
-              }
-            },
-          ),
-      ],
     );
   }
 
