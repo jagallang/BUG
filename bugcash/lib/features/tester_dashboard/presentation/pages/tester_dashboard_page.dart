@@ -18,6 +18,7 @@ import '../../../auth/presentation/widgets/auth_wrapper.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import 'mission_detail_page.dart';
 import 'daily_mission_submission_page.dart';
+import 'mission_tracking_page.dart';
 import '../../../../core/services/mission_management_service.dart';
 import '../../../shared/widgets/daily_mission_card.dart';
 import '../../../shared/models/mission_management_model.dart';
@@ -1007,8 +1008,19 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               child: DailyMissionCard(
                 mission: mission,
                 onTap: () {
-                  // 미션 상세 보기
-                  _showMissionDetail(mission);
+                  // 미션 진행 상황 페이지로 이동
+                  if (mission.workflowId != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MissionTrackingPage(
+                          workflowId: mission.workflowId!,
+                        ),
+                      ),
+                    );
+                  } else {
+                    _showMissionDetail(mission);
+                  }
                 },
                 onStart: mission.status == DailyMissionStatus.pending
                     ? () => _startMission(mission)
