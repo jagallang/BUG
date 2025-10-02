@@ -1869,6 +1869,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 // 미션 시작 - 타이머 모달창 표시
                 if (confirmed == true && mounted) {
                   if (mission.workflowId != null) {
+                    debugPrint('🔵 [Dashboard] 미션 시작 - startedAt 업데이트');
+
                     // startedAt 업데이트
                     await FirebaseFirestore.instance
                         .collection('mission_workflows')
@@ -1878,15 +1880,30 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       'currentState': 'in_progress',
                     });
 
+                    debugPrint('🔵 [Dashboard] Firestore 업데이트 완료, 테스트 앱 열기');
+
                     // 테스트용 앱을 새 창에서 열기
                     html.window.open(testUrl, '_blank');
 
                     // UI 새로고침
+                    debugPrint('🔵 [Dashboard] Provider 리로드 (미션 시작 후)');
                     ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
 
                     // 타이머 모달창 표시
                     if (mounted) {
-                      await _showTimerModal(context, mission.workflowId!);
+                      debugPrint('🔵 [Dashboard] 타이머 모달창 표시');
+                      final result = await _showTimerModal(context, mission.workflowId!);
+                      debugPrint('🔵 [Dashboard] 타이머 모달창 종료, result=$result');
+
+                      // 타이머 종료 후 UI 새로고침
+                      if (result != null && mounted) {
+                        debugPrint('🔵 [Dashboard] Provider 리로드 (타이머 종료 후, 300ms delay)');
+                        await Future.delayed(Duration(milliseconds: 300));
+                        if (mounted) {
+                          ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+                          debugPrint('🔵 [Dashboard] Provider 리로드 완료');
+                        }
+                      }
                     }
                   }
                 }
@@ -2052,8 +2069,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   // 타이머 모달창 표시
-  Future<void> _showTimerModal(BuildContext context, String workflowId) async {
-    await showDialog(
+  Future<String?> _showTimerModal(BuildContext context, String workflowId) async {
+    return await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) => TimerDialog(
@@ -2926,6 +2943,8 @@ class _TimerDialogState extends State<TimerDialog> {
   Future<void> _autoComplete() async {
     _timer.cancel();
 
+    debugPrint('🟢 [TimerDialog] _autoComplete 시작');
+
     await FirebaseFirestore.instance
         .collection('mission_workflows')
         .doc(widget.workflowId)
@@ -2934,14 +2953,19 @@ class _TimerDialogState extends State<TimerDialog> {
       'currentState': 'testing_completed',
     });
 
+    debugPrint('🟢 [TimerDialog] Firestore 업데이트 완료');
+
     if (mounted) {
-      Navigator.pop(context);
-      widget.providerRef.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+      debugPrint('🟢 [TimerDialog] Navigator.pop 실행 (rootNavigator: false)');
+      Navigator.of(context, rootNavigator: false).pop('completed');
+      debugPrint('🟢 [TimerDialog] Navigator.pop 완료');
     }
   }
 
   // 수동 중지
   Future<void> _manualStop() async {
+    debugPrint('🟡 [TimerDialog] _manualStop 시작');
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -2966,8 +2990,9 @@ class _TimerDialogState extends State<TimerDialog> {
 
     if (confirmed == true && mounted) {
       _timer.cancel();
-      Navigator.pop(context);
-      widget.providerRef.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+      debugPrint('🟡 [TimerDialog] Navigator.pop 실행 (rootNavigator: false)');
+      Navigator.of(context, rootNavigator: false).pop('stopped');
+      debugPrint('🟡 [TimerDialog] Navigator.pop 완료');
     }
   }
 
