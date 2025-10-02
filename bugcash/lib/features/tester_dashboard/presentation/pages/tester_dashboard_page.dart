@@ -1750,73 +1750,37 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ElevatedButton.icon(
               onPressed: () async {
                 // 설치 확인 다이얼로그
-                final installConfirmed = await showDialog<bool>(
+                final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: Row(
-                      children: [
-                        Icon(Icons.check_circle_outline, color: Colors.orange, size: 24.sp),
-                        SizedBox(width: 8.w),
-                        Text('설치 확인', style: TextStyle(fontSize: 16.sp)),
-                      ],
-                    ),
+                    title: Text('미션 시작 확인'),
                     content: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           isWebApp
-                              ? '⚠️ 웹 앱을 여셨나요?'
-                              : '⚠️ 앱 설치를 완료하셨나요?',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.orange[800],
-                          ),
+                              ? '웹 앱이 실행 가능한가요?'
+                              : '앱이 설치되고 실행 가능한가요?',
+                          style: TextStyle(fontSize: 14.sp),
                         ),
-                        SizedBox(height: 12.h),
+                        SizedBox(height: 16.h),
                         Container(
                           padding: EdgeInsets.all(12.w),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.1),
+                            color: Colors.blue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8.r),
-                            border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          child: Row(
                             children: [
-                              Text(
-                                '✅ 미션 시작 전 확인사항:',
-                                style: TextStyle(
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                isWebApp
-                                    ? '• 웹 앱을 새 탭에서 열었나요?\n'
-                                      '• 앱이 정상적으로 작동하나요?\n'
-                                      '• 10분간 테스트할 준비가 되었나요?'
-                                    : '• 앱을 다운로드하고 설치했나요?\n'
-                                      '• 앱을 실행해서 정상 작동하나요?\n'
-                                      '• 10분간 테스트할 준비가 되었나요?',
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  height: 1.5,
-                                  color: Colors.grey[700],
+                              Icon(Icons.info_outline, size: 16.sp, color: Colors.blue),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  '확인을 누르면 10분 타이머가 시작됩니다.',
+                                  style: TextStyle(fontSize: 12.sp, color: Colors.blue[700]),
                                 ),
                               ),
                             ],
-                          ),
-                        ),
-                        SizedBox(height: 12.h),
-                        Text(
-                          '💡 "확인" 버튼을 누르면 10분 타이머가 시작됩니다.',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.grey[600],
-                            fontStyle: FontStyle.italic,
                           ),
                         ),
                       ],
@@ -1824,7 +1788,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: Text(isWebApp ? '아직 안 열음' : '아직 설치 안함'),
+                        child: Text('취소'),
                       ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context, true),
@@ -1832,12 +1796,40 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
                         ),
-                        child: Text(isWebApp ? '준비 완료, 시작!' : '설치 완료, 시작!'),
+                        child: Text('확인'),
                       ),
                     ],
                   ),
                 );
 
+                // 타이머 시작
+                if (confirmed == true && mounted) {
+                  if (mission.workflowId != null) {
+                    await FirebaseFirestore.instance
+                        .collection('mission_workflows')
+                        .doc(mission.workflowId)
+                        .update({
+                      'startedAt': FieldValue.serverTimestamp(),
+                    });
+
+                    setState(() {
+                      _showStartOverlay = true;
+                      _missionStartTime = DateTime.now();
+                      _currentMissionWorkflowId = mission.workflowId;
+                    });
+                  }
+
+                  if (mounted) {
+                    Navigator.pop(context); // 첫 번째 다이얼로그 닫기
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('🚀 미션이 시작되었습니다!'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                }
               },
               icon: Icon(Icons.play_arrow, size: 16.sp),
               label: Text('미션시작'),
@@ -1850,35 +1842,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           ],
         ),
       );
-
-      // 3. 사용자가 시작을 확인한 경우에만 타임스탬프 기록 및 타이머 시작
-      if (confirmed == true && mounted) {
-        if (mission.workflowId != null) {
-          await FirebaseFirestore.instance
-              .collection('mission_workflows')
-              .doc(mission.workflowId)
-              .update({
-            'startedAt': FieldValue.serverTimestamp(),
-          });
-
-          // 타이머 상태 설정
-          setState(() {
-            _showStartOverlay = true;
-            _missionStartTime = DateTime.now();
-            _currentMissionWorkflowId = mission.workflowId;
-          });
-        }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('🚀 미션이 시작되었습니다! 10분 후 완료 버튼이 활성화됩니다.'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 4),
-            ),
-          );
-        }
-      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
