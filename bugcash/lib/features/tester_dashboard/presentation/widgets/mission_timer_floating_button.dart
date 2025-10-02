@@ -5,7 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 /// 미션 테스트 중 표시되는 플로팅 타이머 버튼
 ///
 /// 기능:
-/// - 10분 카운트다운 타이머 표시
+/// - 0분부터 카운트업 타이머 표시
+/// - 5분, 10분 경과 시 알림
 /// - 스크린샷 버튼 (항상 활성화)
 /// - 완료 버튼 (10분 경과 후 활성화)
 /// - 확장/축소 가능한 UI
@@ -36,9 +37,11 @@ class MissionTimerFloatingButton extends StatefulWidget {
 
 class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton> {
   Timer? _timer;
-  Duration _remaining = Duration.zero;
+  Duration _elapsed = Duration.zero;
   bool _isExpanded = false;
   bool _isCompleted = false;
+  bool _has5MinuteNotified = false;
+  bool _has10MinuteNotified = false;
 
   @override
   void initState() {
@@ -53,29 +56,82 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
   }
 
   void _startTimer() {
-    _updateRemaining();
+    _updateElapsed();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
-          _updateRemaining();
+          _updateElapsed();
         });
       }
     });
   }
 
-  void _updateRemaining() {
+  void _updateElapsed() {
     final now = DateTime.now();
-    final elapsed = now.difference(widget.startedAt);
-    final remaining = widget.duration - elapsed;
+    _elapsed = now.difference(widget.startedAt);
 
-    if (remaining.isNegative) {
-      _remaining = Duration.zero;
+    // 10분 경과 시 완료 상태로 변경
+    if (_elapsed >= widget.duration) {
       _isCompleted = true;
-      _timer?.cancel();
+
+      // 10분 알림 (한 번만)
+      if (!_has10MinuteNotified) {
+        _has10MinuteNotified = true;
+        _showTimeNotification('10분 경과', '테스트가 완료되었습니다! 완료 버튼을 눌러주세요.', Colors.green);
+      }
     } else {
-      _remaining = remaining;
       _isCompleted = false;
+
+      // 5분 알림 (한 번만)
+      if (_elapsed >= Duration(minutes: 5) && !_has5MinuteNotified) {
+        _has5MinuteNotified = true;
+        _showTimeNotification('5분 경과', '벌써 5분이 지났습니다! 계속 테스트해주세요.', Colors.blue);
+      }
     }
+  }
+
+  /// 시간 경과 알림 표시
+  void _showTimeNotification(String title, String message, Color color) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.timer, color: Colors.white),
+            SizedBox(width: 12.w),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    message,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: color,
+        duration: Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.all(16.w),
+      ),
+    );
   }
 
   String _formatTime(Duration duration) {
@@ -86,8 +142,80 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
 
   Color _getTimerColor() {
     if (_isCompleted) return Colors.green;
-    if (_remaining.inMinutes < 3) return Colors.orange;
-    return Colors.blue;
+    if (_elapsed >= Duration(minutes: 7)) return Colors.orange;
+    if (_elapsed >= Duration(minutes: 5)) return Colors.blue;
+    return Colors.grey[700]!;
+  }
+
+  /// 조기 완료 경고 다이얼로그 표시
+  Future<void> _showEarlyCompleteDialog() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning, color: Colors.orange, size: 24.sp),
+            SizedBox(width: 8.w),
+            Text(
+              '조기 완료',
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '10분이 지나지 않았습니다.',
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '경과 시간: ${_formatTime(_elapsed)}',
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: Colors.orange,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              '정말 지금 완료하시겠습니까?',
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('완료'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      widget.onComplete();
+    }
   }
 
   @override
@@ -137,7 +265,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
             ),
             SizedBox(height: 2.h),
             Text(
-              _formatTime(_remaining),
+              _formatTime(_elapsed),
               style: TextStyle(
                 fontSize: 8.sp,
                 fontWeight: FontWeight.bold,
@@ -181,11 +309,11 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
             ],
           ),
 
-          // 중앙: 남은 시간
+          // 중앙: 경과 시간
           Column(
             children: [
               Text(
-                _formatTime(_remaining),
+                _formatTime(_elapsed),
                 style: TextStyle(
                   fontSize: 32.sp,
                   fontWeight: FontWeight.bold,
@@ -194,7 +322,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
               ),
               SizedBox(height: 4.h),
               Text(
-                _isCompleted ? '✅ 테스트 완료!' : '남은 시간',
+                _isCompleted ? '✅ 테스트 완료!' : '경과 시간',
                 style: TextStyle(
                   fontSize: 11.sp,
                   color: Colors.grey[600],
@@ -227,7 +355,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _isCompleted ? widget.onComplete : null,
+                  onPressed: _isCompleted ? widget.onComplete : _showEarlyCompleteDialog,
                   icon: Icon(
                     _isCompleted ? Icons.check_circle : Icons.lock,
                     size: 14.sp,
@@ -240,8 +368,6 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
                     backgroundColor: _isCompleted ? Colors.green : Colors.grey[300],
                     foregroundColor: _isCompleted ? Colors.white : Colors.grey[600],
                     padding: EdgeInsets.symmetric(vertical: 8.h),
-                    disabledBackgroundColor: Colors.grey[300],
-                    disabledForegroundColor: Colors.grey[600],
                   ),
                 ),
               ),

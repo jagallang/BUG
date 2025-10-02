@@ -25,6 +25,7 @@ import 'mission_tracking_page.dart';
 import '../../../../core/services/mission_management_service.dart';
 import '../../../shared/widgets/daily_mission_card.dart';
 import '../../../shared/models/mission_management_model.dart';
+import '../../../../core/services/screenshot_service.dart';
 import '../widgets/mission_timer_floating_button.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
@@ -50,6 +51,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   bool _showStartOverlay = false;
   DateTime? _missionStartTime;
   String? _currentMissionWorkflowId;
+
+  // 스크린샷 서비스
+  final ScreenshotService _screenshotService = ScreenshotService();
   
   @override
   void initState() {
@@ -580,14 +584,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           MissionTimerFloatingButton(
             startedAt: _missionStartTime!,
             onScreenshot: () async {
-              // 스크린샷 기능 (나중에 구현)
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('📸 스크린샷 기능은 개발 중입니다'),
-                  backgroundColor: Colors.orange,
-                  duration: Duration(seconds: 2),
-                ),
-              );
+              // 스크린샷 촬영 방법 안내
+              await _screenshotService.showScreenshotGuide(context);
             },
             onComplete: () async {
               // 완료 버튼 클릭 시
