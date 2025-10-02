@@ -8,6 +8,8 @@ enum MissionWorkflowState {
   applicationRejected('application_rejected', '신청 거부'),
 
   // 2단계: 일일 미션
+  inProgress('in_progress', '미션 진행중'),           // v2.8+ 새 상태
+  testingCompleted('testing_completed', '테스트 완료'), // v2.8+ 10분 완료
   missionInProgress('mission_in_progress', '미션 진행중'),
   dailyMissionStarted('daily_mission_started', '일일 미션 시작'),
   dailyMissionCompleted('daily_mission_completed', '일일 미션 완료'),

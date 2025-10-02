@@ -340,9 +340,11 @@ class MissionManagementService {
         .where('currentState', whereIn: [
           'application_submitted',    // 신청 완료 (승인 대기중)
           'approved',                 // 승인됨 (Firebase 실제 값)
-          'mission_in_progress',      // 미션 진행중
-          'daily_mission_started',    // 일일 미션 시작
-          'daily_mission_completed'   // 일일 미션 완료
+          'in_progress',              // 미션 진행중 (미션 시작 후)
+          'testing_completed',        // 테스트 완료 (10분 완료 후)
+          'mission_in_progress',      // 미션 진행중 (레거시)
+          'daily_mission_started',    // 일일 미션 시작 (레거시)
+          'daily_mission_completed'   // 일일 미션 완료 (레거시)
         ])
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -378,6 +380,8 @@ class MissionManagementService {
         return DailyMissionStatus.pending; // 승인 대기중
       case MissionWorkflowState.applicationApproved:
         return DailyMissionStatus.inProgress; // 승인됨 (미션 시작 가능)
+      case MissionWorkflowState.inProgress:           // v2.8+ 미션 진행중
+      case MissionWorkflowState.testingCompleted:     // v2.8+ 테스트 완료
       case MissionWorkflowState.missionInProgress:
       case MissionWorkflowState.dailyMissionStarted:
         return DailyMissionStatus.inProgress;
