@@ -460,12 +460,26 @@ class MissionManagementService {
     }
   }
 
-  /// 완료된 미션 조회
+  /// 완료된 미션 조회 (승인 대기중)
+  /// v2.11.0: completed 상태만 조회 (승인 전)
   Stream<List<DailyMissionModel>> watchCompletedMissions(String appId) {
     return _firestore
         .collection(_dailyMissionsCollection)
         .where('appId', isEqualTo: appId)
-        .where('status', isEqualTo: DailyMissionStatus.approved.name)
+        .where('status', isEqualTo: DailyMissionStatus.completed.name)
+        .orderBy('completedAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => DailyMissionModel.fromFirestore(doc))
+            .toList());
+  }
+
+  /// v2.11.0: 종료된 미션 조회 (settled 상태)
+  Stream<List<DailyMissionModel>> watchSettledMissions(String appId) {
+    return _firestore
+        .collection(_dailyMissionsCollection)
+        .where('appId', isEqualTo: appId)
+        .where('status', isEqualTo: DailyMissionStatus.settled.name)
         .orderBy('approvedAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs
@@ -495,6 +509,10 @@ class MissionManagementService {
           if (attachments != null) updateData['attachments'] = attachments;
           break;
         case DailyMissionStatus.approved:
+          updateData['approvedAt'] = FieldValue.serverTimestamp();
+          if (note != null) updateData['reviewNote'] = note;
+          break;
+        case DailyMissionStatus.settled: // v2.11.0: 종료/정산 상태
           updateData['approvedAt'] = FieldValue.serverTimestamp();
           if (note != null) updateData['reviewNote'] = note;
           break;

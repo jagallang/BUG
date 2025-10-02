@@ -343,10 +343,11 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
     );
   }
 
-  /// 종료 탭 - 프로젝트 완료 후 정산
+  /// 종료 탭 - 승인 완료된 미션 (settled)
+  /// v2.11.0: 공급자가 승인한 미션을 표시
   Widget _buildSettlementTab() {
-    return StreamBuilder<List<MissionSettlementModel>>(
-      stream: _missionService.watchSettlements(widget.app.id),
+    return StreamBuilder<List<DailyMissionModel>>(
+      stream: _missionService.watchSettledMissions(widget.app.id),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -356,22 +357,22 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
           return Center(child: Text('오류가 발생했습니다: ${snapshot.error}'));
         }
 
-        final settlements = snapshot.data ?? [];
+        final settledMissions = snapshot.data ?? [];
 
-        if (settlements.isEmpty) {
+        if (settledMissions.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.calculate_outlined, size: 48.sp, color: Colors.grey),
+                Icon(Icons.check_circle_outline, size: 48.sp, color: Colors.grey),
                 SizedBox(height: 16.h),
                 Text(
-                  '정산 내역이 없습니다',
+                  '종료된 미션이 없습니다',
                   style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  '14일 프로젝트가 완료되면 정산이 생성됩니다',
+                  '완료 탭에서 미션을 승인하면 여기에 표시됩니다',
                   style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
                 ),
               ],
@@ -381,10 +382,10 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
 
         return ListView.builder(
           padding: EdgeInsets.all(16.w),
-          itemCount: settlements.length,
+          itemCount: settledMissions.length,
           itemBuilder: (context, index) {
-            final settlement = settlements[index];
-            return _buildSettlementCard(settlement);
+            final mission = settledMissions[index];
+            return _buildSettledMissionCard(mission);
           },
         );
       },
@@ -690,6 +691,71 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
     );
   }
 
+  /// v2.11.0: 종료된 미션 카드 위젯 (settled)
+  Widget _buildSettledMissionCard(DailyMissionModel mission) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // v2.10.0: 일련번호 표시
+            if (mission.serialNumber != null) ...[
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(6.r),
+                ),
+                child: Text(
+                  mission.serialNumber!,
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade700,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+              SizedBox(height: 8.h),
+            ],
+            Row(
+              children: [
+                Icon(Icons.check_circle, size: 20.sp, color: Colors.blue),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    mission.missionTitle,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${mission.baseReward}원',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              '종료일: ${mission.approvedAt?.toString().substring(0, 10) ?? 'N/A'}',
+              style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   /// 정산 카드 위젯
   Widget _buildSettlementCard(MissionSettlementModel settlement) {
     return Card(
@@ -836,6 +902,10 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
         color = Colors.red;
         text = '거부됨';
         break;
+      case DailyMissionStatus.settled: // v2.11.0
+        color = Colors.blue;
+        text = '종료';
+        break;
     }
 
     return Container(
@@ -932,17 +1002,23 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
   }
 
   /// 미션 검토
+  /// v2.11.0: 승인 시 settled 상태로 변경하여 종료/정산 탭으로 이동
   Future<void> _reviewMission(String missionId, DailyMissionStatus status) async {
     try {
+      // v2.11.0: 승인 시 approved 대신 settled 사용
+      final finalStatus = status == DailyMissionStatus.approved
+          ? DailyMissionStatus.settled
+          : status;
+
       await _missionService.updateMissionStatus(
         missionId: missionId,
-        status: status,
+        status: finalStatus,
       );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(status == DailyMissionStatus.approved ? '미션을 승인했습니다' : '미션을 거부했습니다'),
+            content: Text(status == DailyMissionStatus.approved ? '미션을 승인했습니다 (종료 탭으로 이동)' : '미션을 거부했습니다'),
             backgroundColor: status == DailyMissionStatus.approved ? Colors.green : Colors.red,
           ),
         );

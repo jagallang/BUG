@@ -15,6 +15,7 @@ enum DailyMissionStatus {
   completed,     // 완료 요청
   approved,      // 승인됨
   rejected,      // 거부됨
+  settled,       // v2.11.0: 종료/정산 (공급자: 종료, 테스터: 정산)
 }
 
 /// 테스터 신청 상태

@@ -88,6 +88,12 @@ class MissionStatusBadge extends StatelessWidget {
           icon: Icons.cancel,
           text: '수정필요',
         );
+      case DailyMissionStatus.settled: // v2.11.0
+        return _BadgeData(
+          color: AppColors.primary, // 파란색
+          icon: Icons.check_circle_outline,
+          text: '종료',
+        );
     }
   }
 }
