@@ -595,7 +595,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       .collection('mission_workflows')
                       .doc(_currentMissionWorkflowId)
                       .update({
-                    'status': 'submission_required',
+                    'completedAt': FieldValue.serverTimestamp(),
+                    'currentState': 'testing_completed',
                   });
 
                   setState(() {
@@ -603,10 +604,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     _currentMissionWorkflowId = null;
                   });
 
+                  // UI 즉시 새로고침
                   if (mounted) {
+                    ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('✅ 테스트가 완료되었습니다! 이제 결과를 제출해주세요.'),
+                        content: Text('✅ 테스트가 완료되었습니다! 완료 버튼을 눌러 결과를 제출해주세요.'),
                         backgroundColor: Colors.green,
                         duration: Duration(seconds: 4),
                       ),
@@ -615,8 +619,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 } catch (e) {
                   if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('❌ 완료 처리 중 오류가 발생했습니다'),
+                      SnackBar(
+                        content: Text('❌ 완료 처리 중 오류가 발생했습니다: $e'),
                         backgroundColor: Colors.red,
                         duration: Duration(seconds: 3),
                       ),
@@ -1109,16 +1113,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 onStart: mission.currentState == 'application_approved' && mission.startedAt == null
                     ? () => _startMission(mission)
                     : null,
-                // 완료 버튼 (startedAt 있음 + 10분 경과 + completedAt 없음)
-                onComplete: mission.startedAt != null &&
-                            DateTime.now().difference(mission.startedAt!).inMinutes >= 10 &&
-                            mission.completedAt == null
+                // 완료 버튼 (타이머 완료 후: completedAt 있음 + status != completed/approved)
+                onComplete: mission.completedAt != null &&
+                            mission.status != DailyMissionStatus.completed &&
+                            mission.status != DailyMissionStatus.approved
                     ? () => _completeMission(mission)
                     : null,
-                // 제출 버튼 (completedAt 있음 + status != completed)
-                onSubmit: mission.completedAt != null && mission.status != DailyMissionStatus.completed
-                    ? () => _submitMission(mission)
-                    : null,
+                // 제출 버튼 (현재는 사용하지 않음 - 완료 버튼에서 직접 제출)
+                onSubmit: null,
                 // 재제출 버튼
                 onResubmit: mission.status == DailyMissionStatus.rejected
                     ? () => _resubmitMission(mission)
@@ -1889,9 +1891,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
   }
 
-  // 미션 완료 (제출 페이지로 이동)
+  // 미션 완료 (스크린샷 + 피드백 입력 → 즉시 제출)
   Future<void> _completeMission(DailyMissionModel mission) async {
-    // DailyMissionSubmissionPage로 이동 (이미 존재하는 페이지)
+    // DailyMissionSubmissionPage로 이동
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -1903,30 +1905,44 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       ),
     );
 
-    // 제출 완료 시 completedAt 기록
+    // 제출 완료 시 상태 업데이트
     if (result == true && mounted) {
       try {
+        // mission_workflows 업데이트
         await FirebaseFirestore.instance
             .collection('mission_workflows')
             .doc(mission.workflowId)
             .update({
-          'completedAt': FieldValue.serverTimestamp(),
+          'currentState': 'submission_completed',
+          'submittedAt': FieldValue.serverTimestamp(),
+        });
+
+        // mission_management 업데이트
+        await FirebaseFirestore.instance
+            .collection('mission_management')
+            .doc(mission.id)
+            .update({
+          'status': 'completed',
+          'currentState': 'submission_completed',
         });
 
         if (mounted) {
+          // UI 새로고침
+          ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('✅ 미션 작성이 완료되었습니다! 제출 버튼을 눌러주세요.'),
+              content: Text('✅ 미션이 제출되었습니다! 공급자 검토를 기다려주세요.'),
               backgroundColor: Colors.green,
+              duration: Duration(seconds: 4),
             ),
           );
-          setState(() {}); // UI 새로고침
         }
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('❌ 완료 시간 기록 실패: $e'),
+              content: Text('❌ 미션 제출 실패: $e'),
               backgroundColor: Colors.red,
             ),
           );

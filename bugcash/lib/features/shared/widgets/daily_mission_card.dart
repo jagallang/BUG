@@ -236,25 +236,25 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
 
     // 3. 미션 진행 중 (startedAt 있음 + completedAt 없음)
     if (widget.mission.startedAt != null && widget.mission.completedAt == null) {
-      final elapsed = DateTime.now().difference(widget.mission.startedAt!);
-      final canComplete = elapsed.inMinutes >= 10;
-
+      // 타이머가 실행 중 - 완료 버튼 비활성화 (타이머에서만 완료 가능)
       return _build4ButtonRow(
         canDelete: widget.onDelete != null,
         canStart: false,
-        canComplete: canComplete && widget.onComplete != null,
+        canComplete: false, // 타이머로만 완료 가능
         canSubmit: false,
         startedAt: widget.mission.startedAt,
       );
     }
 
-    // 4. 완료됨 + 제출 대기 (completedAt 있음 + status != completed)
-    if (widget.mission.completedAt != null && widget.mission.status != DailyMissionStatus.completed) {
+    // 4. 타이머 완료 후 제출 대기 (completedAt 있음 + status != completed/approved)
+    if (widget.mission.completedAt != null &&
+        widget.mission.status != DailyMissionStatus.completed &&
+        widget.mission.status != DailyMissionStatus.approved) {
       return _build4ButtonRow(
         canDelete: widget.onDelete != null,
         canStart: false,
-        canComplete: false,
-        canSubmit: widget.onSubmit != null,
+        canComplete: widget.onComplete != null, // ✅ 완료 버튼 활성화
+        canSubmit: false,
         startedAt: widget.mission.startedAt,
       );
     }
