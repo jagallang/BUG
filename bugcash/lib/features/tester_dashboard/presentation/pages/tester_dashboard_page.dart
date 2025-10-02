@@ -47,10 +47,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   bool _isAppBarExpanded = false;
   int? _navigateToMissionSubTab; // 미션 서브탭 네비게이션 신호
 
-  // 타이머 관련 상태
-  bool _showStartOverlay = false;
-  DateTime? _missionStartTime;
-  String? _currentMissionWorkflowId;
+  // [MVP] 타이머 UI 제거 - 백그라운드에서만 작동
+  // bool _showStartOverlay = false;
+  // DateTime? _missionStartTime;
+  // String? _currentMissionWorkflowId;
 
   // 스크린샷 서비스
   final ScreenshotService _screenshotService = ScreenshotService();
@@ -107,7 +107,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
       // 10분 이상 경과했는지 확인
       if (elapsed >= const Duration(minutes: 10)) {
-        // 자동 완료 처리
+        // [MVP] 자동 완료 처리 - 백그라운드에서만
         await FirebaseFirestore.instance
             .collection('mission_workflows')
             .doc(latestDoc.id)
@@ -128,15 +128,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ),
           );
         }
-      } else {
-        // 타이머 복원
-        if (mounted) {
-          setState(() {
-            _missionStartTime = startedAt;
-            _currentMissionWorkflowId = latestDoc.id;
-          });
-        }
       }
+      // [MVP] else 블록 제거 - 타이머 UI 복원 불필요
     } catch (e) {
       debugPrint('❌ 타이머 상태 복원 실패: $e');
     }
@@ -641,68 +634,65 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           floatingActionButtonLocation: _CustomFabLocation(), // 모든 탭에서 동일한 중간 위치로 고정
         ),
 
-        // 미션 시작 전체 화면 오버레이
-        if (_showStartOverlay)
-          MissionStartTimerOverlay(
-            displayDuration: const Duration(seconds: 3),
-            onComplete: () {
-              setState(() {
-                _showStartOverlay = false;
-              });
-            },
-          ),
+        // [MVP] 타이머 UI 제거 - 백그라운드에서만 작동
+        // // 미션 시작 전체 화면 오버레이
+        // if (_showStartOverlay)
+        //   MissionStartTimerOverlay(
+        //     displayDuration: const Duration(seconds: 3),
+        //     onComplete: () {
+        //       setState(() {
+        //         _showStartOverlay = false;
+        //       });
+        //     },
+        //   ),
 
-        // 미션 타이머 플로팅 버튼
-        if (_missionStartTime != null && !_showStartOverlay)
-          MissionTimerFloatingButton(
-            startedAt: _missionStartTime!,
-            onScreenshot: () async {
-              // 스크린샷 촬영 방법 안내
-              await _screenshotService.showScreenshotGuide(context);
-            },
-            onComplete: () async {
-              // 완료 버튼 클릭 시
-              if (_currentMissionWorkflowId != null) {
-                try {
-                  await FirebaseFirestore.instance
-                      .collection('mission_workflows')
-                      .doc(_currentMissionWorkflowId)
-                      .update({
-                    'completedAt': FieldValue.serverTimestamp(),
-                    'currentState': 'testing_completed',
-                  });
+        // // 미션 타이머 플로팅 버튼
+        // if (_missionStartTime != null && !_showStartOverlay)
+        //   MissionTimerFloatingButton(
+        //     startedAt: _missionStartTime!,
+        //     onScreenshot: () async {
+        //       await _screenshotService.showScreenshotGuide(context);
+        //     },
+        //     onComplete: () async {
+        //       if (_currentMissionWorkflowId != null) {
+        //         try {
+        //           await FirebaseFirestore.instance
+        //               .collection('mission_workflows')
+        //               .doc(_currentMissionWorkflowId)
+        //               .update({
+        //             'completedAt': FieldValue.serverTimestamp(),
+        //             'currentState': 'testing_completed',
+        //           });
 
-                  setState(() {
-                    _missionStartTime = null;
-                    _currentMissionWorkflowId = null;
-                  });
+        //           setState(() {
+        //             _missionStartTime = null;
+        //             _currentMissionWorkflowId = null;
+        //           });
 
-                  // UI 즉시 새로고침
-                  if (mounted) {
-                    ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('✅ 테스트가 완료되었습니다! 완료 버튼을 눌러 결과를 제출해주세요.'),
-                        backgroundColor: Colors.green,
-                        duration: Duration(seconds: 4),
-                      ),
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('❌ 완료 처리 중 오류가 발생했습니다: $e'),
-                        backgroundColor: Colors.red,
-                        duration: Duration(seconds: 3),
-                      ),
-                    );
-                  }
-                }
-              }
-            },
-          ),
+        //           if (mounted) {
+        //             ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+        //             ScaffoldMessenger.of(context).showSnackBar(
+        //               const SnackBar(
+        //                 content: Text('✅ 테스트가 완료되었습니다! 완료 버튼을 눌러 결과를 제출해주세요.'),
+        //                 backgroundColor: Colors.green,
+        //                 duration: Duration(seconds: 4),
+        //               ),
+        //             );
+        //           }
+        //         } catch (e) {
+        //           if (mounted) {
+        //             ScaffoldMessenger.of(context).showSnackBar(
+        //               SnackBar(
+        //                 content: Text('❌ 완료 처리 중 오류가 발생했습니다: $e'),
+        //                 backgroundColor: Colors.red,
+        //                 duration: Duration(seconds: 3),
+        //               ),
+        //             );
+        //           }
+        //         }
+        //       }
+        //     },
+        //   ),
       ],
     );
   }
@@ -1875,45 +1865,38 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   ),
                 );
 
-                // 타이머 시작
+                // [MVP] 미션 시작 - 간소화 버전
                 if (confirmed == true && mounted) {
                   if (mission.workflowId != null) {
+                    // startedAt 업데이트 (백그라운드 타이머 시작)
                     await FirebaseFirestore.instance
                         .collection('mission_workflows')
                         .doc(mission.workflowId)
                         .update({
                       'startedAt': FieldValue.serverTimestamp(),
+                      'currentState': 'in_progress',
                     });
 
-                    setState(() {
-                      _showStartOverlay = true;
-                      _missionStartTime = DateTime.now();
-                      _currentMissionWorkflowId = mission.workflowId;
-                    });
+                    // [MVP] setState 제거 - 타이머 UI 없음
+                    // setState(() {
+                    //   _showStartOverlay = true;
+                    //   _missionStartTime = DateTime.now();
+                    //   _currentMissionWorkflowId = mission.workflowId;
+                    // });
                   }
 
                   if (mounted) {
-                    Navigator.pop(context); // 첫 번째 다이얼로그 닫기
-
-                    // 브라우저 창 축소 (왼쪽 1/4 크기로)
-                    try {
-                      final screenWidth = html.window.screen?.width ?? 1920;
-                      final screenHeight = html.window.screen?.height ?? 1080;
-                      final smallWidth = (screenWidth * 0.25).toInt();
-                      final smallHeight = (screenHeight * 0.8).toInt();
-
-                      // 브라우저 창 크기 조정
-                      html.window.resizeTo(smallWidth, smallHeight);
-                    } catch (e) {
-                      debugPrint('브라우저 창 축소 실패: $e');
-                    }
+                    Navigator.pop(context); // 다이얼로그 닫기
 
                     // 테스트용 앱을 새 창에서 열기
                     html.window.open(testUrl, '_blank');
 
+                    // UI 새로고침 (완료 버튼 상태 업데이트)
+                    ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('🚀 미션이 시작되었습니다! 테스트 앱이 새 창에서 열렸습니다.'),
+                        content: Text('🚀 테스트가 시작되었습니다! 10분 후 자동으로 완료 버튼이 활성화됩니다.'),
                         backgroundColor: Colors.green,
                         duration: Duration(seconds: 4),
                       ),
