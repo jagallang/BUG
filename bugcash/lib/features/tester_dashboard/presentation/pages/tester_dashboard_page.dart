@@ -60,13 +60,86 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     super.initState();
     _tabController = TabController(length: 2, vsync: this); // 미션, 게시판
     _scrollController = ScrollController();
-    
+
     // TabController 초기화 완료
-    
-    // 초기 데이터 로드
+
+    // 초기 데이터 로드 및 타이머 상태 복원
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+      _restoreTimerState();
     });
+  }
+
+  /// 브라우저 재시작 시 타이머 상태 복원
+  Future<void> _restoreTimerState() async {
+    try {
+      // 진행 중인 미션 찾기
+      final snapshot = await FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .where('testerId', isEqualTo: widget.testerId)
+          .where('currentState', whereIn: ['in_progress', 'testing_completed'])
+          .where('startedAt', isNull: false)
+          .get();
+
+      if (snapshot.docs.isEmpty) return;
+
+      // 가장 최근 시작된 미션 찾기
+      final docs = snapshot.docs.toList()
+        ..sort((a, b) {
+          final aStarted = (a.data()['startedAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+          final bStarted = (b.data()['startedAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
+          return bStarted.compareTo(aStarted); // 최신순
+        });
+
+      final latestDoc = docs.first;
+      final data = latestDoc.data();
+      final startedAt = (data['startedAt'] as Timestamp?)?.toDate();
+      final completedAt = data['completedAt'] as Timestamp?;
+      final currentState = data['currentState'] as String?;
+
+      if (startedAt == null) return;
+
+      // 이미 완료된 미션은 복원하지 않음
+      if (completedAt != null) return;
+
+      // 경과 시간 계산
+      final elapsed = DateTime.now().difference(startedAt);
+
+      // 10분 이상 경과했는지 확인
+      if (elapsed >= const Duration(minutes: 10)) {
+        // 자동 완료 처리
+        await FirebaseFirestore.instance
+            .collection('mission_workflows')
+            .doc(latestDoc.id)
+            .update({
+          'completedAt': FieldValue.serverTimestamp(),
+          'currentState': 'testing_completed',
+        });
+
+        if (mounted) {
+          // UI 새로고침
+          ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ 10분 테스트가 완료되었습니다! 완료 버튼을 눌러 결과를 제출해주세요.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+      } else {
+        // 타이머 복원
+        if (mounted) {
+          setState(() {
+            _missionStartTime = startedAt;
+            _currentMissionWorkflowId = latestDoc.id;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ 타이머 상태 복원 실패: $e');
+    }
   }
 
   @override
@@ -1821,11 +1894,28 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
                   if (mounted) {
                     Navigator.pop(context); // 첫 번째 다이얼로그 닫기
+
+                    // 브라우저 창 축소 (왼쪽 1/4 크기로)
+                    try {
+                      final screenWidth = html.window.screen?.width ?? 1920;
+                      final screenHeight = html.window.screen?.height ?? 1080;
+                      final smallWidth = (screenWidth * 0.25).toInt();
+                      final smallHeight = (screenHeight * 0.8).toInt();
+
+                      html.window.resizeTo(smallWidth, smallHeight);
+                      html.window.moveTo(0, 50);
+                    } catch (e) {
+                      debugPrint('브라우저 창 축소 실패: $e');
+                    }
+
+                    // 테스트용 앱을 새 창에서 열기
+                    html.window.open(testUrl, '_blank');
+
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('🚀 미션이 시작되었습니다!'),
+                        content: Text('🚀 미션이 시작되었습니다! 테스트 앱이 새 창에서 열렸습니다.'),
                         backgroundColor: Colors.green,
-                        duration: Duration(seconds: 3),
+                        duration: Duration(seconds: 4),
                       ),
                     );
                   }
