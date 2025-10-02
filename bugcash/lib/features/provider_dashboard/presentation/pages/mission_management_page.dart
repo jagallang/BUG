@@ -9,7 +9,7 @@ import '../../../../features/shared/models/mission_management_model.dart';
 import '../../../provider_dashboard/presentation/pages/app_management_page.dart';
 
 /// 새로운 미션관리 페이지
-/// 4개 탭: 대기 → 오늘 → 완료 → 종료
+/// v2.10.0: 5개 탭: 테스터 → 오늘 → 완료 → 종료 → 삭제요청
 class MissionManagementPage extends ConsumerStatefulWidget {
   final ProviderAppModel app;
 
@@ -93,7 +93,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
             fontWeight: FontWeight.normal,
           ),
           tabs: const [
-            Tab(text: '대기'),
+            Tab(text: '테스터'), // v2.10.0: 대기 → 테스터로 변경
             Tab(text: '오늘'),
             Tab(text: '완료'),
             Tab(text: '종료'),
@@ -114,7 +114,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
     );
   }
 
-  /// 대기 탭 - 테스터 신청 대기 및 관리
+  /// v2.10.0: 테스터 탭 - 승인된 테스터 목록 항상 표시
   Widget _buildTesterRecruitmentTab() {
     return StreamBuilder<List<TesterApplicationModel>>(
       stream: _missionService.watchTesterApplications(widget.app.id),

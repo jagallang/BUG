@@ -10,10 +10,12 @@ import 'daily_mission_submission_page.dart';
 /// 테스터가 현재 진행 중인 미션의 전체 일정과 진행률을 확인
 class MissionTrackingPage extends ConsumerStatefulWidget {
   final String workflowId;
+  final String appId; // v2.9.0: 공급자 질문 로드용
 
   const MissionTrackingPage({
     super.key,
     required this.workflowId,
+    required this.appId,
   });
 
   @override
@@ -425,6 +427,7 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
           workflowId: widget.workflowId,
           dayNumber: dayNumber,
           missionTitle: missionTitle,
+          appId: widget.appId, // v2.9.0
         ),
       ),
     );

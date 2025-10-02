@@ -1,24 +1,24 @@
-import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import '../utils/logger.dart';
 
-/// Firebase Storage 서비스
-/// 미션 스크린샷 업로드 관리
+/// v2.9.0: Firebase Storage 서비스 (웹/모바일 통합)
+/// 미션 스크린샷 업로드 관리 - XFile 기반
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  /// 미션 스크린샷 업로드
+  /// v2.9.0: 미션 스크린샷 업로드 (XFile 지원)
   ///
   /// [workflowId]: 미션 워크플로우 ID
   /// [dayNumber]: 일차 (1부터 시작)
-  /// [file]: 업로드할 이미지 파일
+  /// [file]: 업로드할 이미지 파일 (XFile)
   ///
   /// Returns: Firebase Storage 다운로드 URL
   /// Throws: 파일 크기 초과, 타입 불일치, 업로드 실패 등
   Future<String> uploadMissionScreenshot({
     required String workflowId,
     required int dayNumber,
-    required File file,
+    required XFile file,
   }) async {
     try {
       // 1. 파일 크기 검증 (5MB)
@@ -30,7 +30,7 @@ class StorageService {
       }
 
       // 2. 파일 타입 검증 (이미지만 허용)
-      final fileName = file.path.split('/').last.toLowerCase();
+      final fileName = file.name.toLowerCase();
       final allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
       final extension = fileName.split('.').last;
 
@@ -44,9 +44,10 @@ class StorageService {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final path = 'mission_screenshots/$workflowId/day_$dayNumber/$timestamp.$extension';
 
-      // 4. 파일 업로드
+      // 4. v2.9.0: XFile 업로드 (웹/모바일 통합)
       final ref = _storage.ref().child(path);
-      final uploadTask = await ref.putFile(file);
+      final bytes = await file.readAsBytes();
+      final uploadTask = await ref.putData(bytes);
 
       // 5. 다운로드 URL 획득
       final downloadUrl = await uploadTask.ref.getDownloadURL();
@@ -63,13 +64,13 @@ class StorageService {
     }
   }
 
-  /// 여러 스크린샷 일괄 업로드
+  /// v2.9.0: 여러 스크린샷 일괄 업로드 (XFile 지원)
   ///
   /// Returns: 업로드된 URL 목록
   Future<List<String>> uploadMultipleScreenshots({
     required String workflowId,
     required int dayNumber,
-    required List<File> files,
+    required List<XFile> files,
   }) async {
     final urls = <String>[];
 

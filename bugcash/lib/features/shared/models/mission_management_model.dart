@@ -216,6 +216,9 @@ class DailyMissionModel {
   final int? dayNumber;
   final String? currentState; // mission_workflows의 실제 currentState (application_submitted, approved, mission_in_progress 등)
 
+  // v2.10.0: 일련번호 시스템
+  final String? serialNumber; // 형식: a{YYMMDD}-m{0001} 예: a251002-m0001
+
   // 삭제 관련 필드
   final String? deletionReason;
   final DateTime? deletedAt;
@@ -239,6 +242,7 @@ class DailyMissionModel {
     this.workflowId,
     this.dayNumber,
     this.currentState,
+    this.serialNumber, // v2.10.0
     this.deletionReason,
     this.deletedAt,
     this.deletionAcknowledged = false,
@@ -267,6 +271,7 @@ class DailyMissionModel {
       workflowId: data['workflowId'],
       dayNumber: data['dayNumber'],
       currentState: data['currentState'],
+      serialNumber: data['serialNumber'], // v2.10.0: 기존 데이터는 null
       deletionReason: data['deletionReason'],
       deletedAt: (data['deletedAt'] as Timestamp?)?.toDate(),
       deletionAcknowledged: data['deletionAcknowledged'] ?? false,
@@ -291,6 +296,7 @@ class DailyMissionModel {
       'workflowId': workflowId,
       'dayNumber': dayNumber,
       'currentState': currentState,
+      if (serialNumber != null) 'serialNumber': serialNumber, // v2.10.0: null이 아닐 때만 저장
       'deletionReason': deletionReason,
       'deletedAt': deletedAt != null ? Timestamp.fromDate(deletedAt!) : null,
       'deletionAcknowledged': deletionAcknowledged,

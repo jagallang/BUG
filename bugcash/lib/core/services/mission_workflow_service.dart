@@ -255,21 +255,30 @@ class MissionWorkflowService {
     }
   }
 
-  // 5단계: 테스터가 일일 미션 제출 (별칭 메서드)
+  // v2.9.0: 테스터가 일일 미션 제출 (공급자 질문 답변 + 버그리포트)
   Future<void> submitDailyMission({
     required String workflowId,
     required int dayNumber,
     required String feedback,
     required List<String> screenshots,
+    String? bugReport, // v2.9.0: 버그 리포트
+    Map<String, String>? questionAnswers, // v2.9.0: 공급자 질문 답변
   }) async {
-    // completeDailyMission의 간소화된 래퍼
     final workflow = await getMissionWorkflow(workflowId);
+
+    // v2.9.0: 추가 데이터 구성
+    final additionalData = <String, dynamic>{
+      if (bugReport != null && bugReport.isNotEmpty) 'bugReport': bugReport,
+      if (questionAnswers != null && questionAnswers.isNotEmpty) 'questionAnswers': questionAnswers,
+    };
+
     return completeDailyMission(
       workflowId: workflowId,
       testerId: workflow.testerId,
       dayNumber: dayNumber,
       feedback: feedback,
       screenshots: screenshots,
+      additionalData: additionalData.isNotEmpty ? additionalData : null,
     );
   }
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:html' as html;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -1162,6 +1163,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       MaterialPageRoute(
                         builder: (context) => MissionTrackingPage(
                           workflowId: mission.workflowId!,
+                          appId: mission.appId, // v2.9.0
                         ),
                       ),
                     );
@@ -1173,14 +1175,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 onDelete: mission.status != DailyMissionStatus.approved
                     ? () => _deleteMissionEnhanced(mission)
                     : null,
-                // 시작 버튼 (application_approved + startedAt 없음)
-                onStart: mission.currentState == 'application_approved' && mission.startedAt == null
+                // v2.8.9: 시작 버튼 (application_approved 또는 approved 상태 + startedAt 없음)
+                onStart: (mission.currentState == 'application_approved' || mission.currentState == 'approved') &&
+                         mission.startedAt == null
                     ? () => _startMission(mission)
                     : null,
-                // 완료 버튼 (타이머 완료 후: completedAt 있음 + status != completed/approved)
-                onComplete: mission.completedAt != null &&
-                            mission.status != DailyMissionStatus.completed &&
-                            mission.status != DailyMissionStatus.approved
+                // v2.8.9: 완료 버튼 (시간 기반 체크 - 10분 경과 여부)
+                onComplete: _canCompleteMission(mission)
                     ? () => _completeMission(mission)
                     : null,
                 // 제출 버튼 (현재는 사용하지 않음 - 완료 버튼에서 직접 제출)
@@ -1840,7 +1841,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                               SizedBox(width: 8.w),
                               Expanded(
                                 child: Text(
-                                  '확인을 누르면 10분 타이머가 시작됩니다.',
+                                  '확인을 누르면 10분 타이머가 시작됩니다. (10분 후 완료 버튼 활성화)',
                                   style: TextStyle(fontSize: 12.sp, color: Colors.blue[700]),
                                 ),
                               ),
@@ -1931,141 +1932,118 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
   }
 
-  // 미션 완료 (스크린샷 + 피드백 입력 → 즉시 제출)
+  // v2.8.9: 미션 완료 (스크린샷 + 피드백 입력 → 즉시 제출)
+  // 10분 체크는 _canCompleteMission()에서 처리되므로 여기서는 제거
   Future<void> _completeMission(DailyMissionModel mission) async {
-    // [MVP] 10분 체크 - 남은 시간 표시
-    if (mission.startedAt != null) {
-      final elapsed = DateTime.now().difference(mission.startedAt!);
-      final remaining = const Duration(minutes: 10) - elapsed;
+    // v2.8.9: 10분 체크 제거 - 완료 버튼이 활성화된 상태에서만 호출됨
 
-      if (remaining.inSeconds > 0) {
-        // 10분이 안 된 경우 - 경고 다이얼로그
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.warning, color: Colors.orange),
-                SizedBox(width: 8.w),
-                Text('10분 미만 테스트'),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '아직 10분이 지나지 않았습니다.',
-                  style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
-                ),
-                SizedBox(height: 12.h),
-                Container(
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.timer, color: Colors.orange, size: 20.sp),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          '남은 시간: ${remaining.inMinutes}분 ${remaining.inSeconds % 60}초',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange[700],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  '그래도 완료하시겠습니까?',
-                  style: TextStyle(fontSize: 13.sp),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text('취소'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text('완료하기'),
-              ),
-            ],
+    // v2.10.1: appId 유효성 검증
+    if (mission.appId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ 미션 appId가 없습니다. 관리자에게 문의하세요.'),
+            backgroundColor: Colors.red,
           ),
         );
-
-        if (confirmed != true) return; // 취소 시 종료
       }
+      return;
     }
 
-    // DailyMissionSubmissionPage로 이동
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DailyMissionSubmissionPage(
-          workflowId: mission.workflowId!,
-          dayNumber: mission.dayNumber!,
-          missionTitle: mission.missionTitle,
+    // v2.10.1: 안전한 네비게이션 (try-catch)
+    try {
+      // v2.9.0: DailyMissionSubmissionPage로 이동 (appId 전달)
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DailyMissionSubmissionPage(
+            workflowId: mission.workflowId!,
+            dayNumber: mission.dayNumber!,
+            missionTitle: mission.missionTitle,
+            appId: mission.appId, // v2.9.0: 공급자 질문 로드용
+          ),
         ),
-      ),
-    );
+      );
 
-    // 제출 완료 시 상태 업데이트
-    if (result == true && mounted) {
-      try {
-        // mission_workflows 업데이트
-        await FirebaseFirestore.instance
-            .collection('mission_workflows')
-            .doc(mission.workflowId)
-            .update({
-          'currentState': 'submission_completed',
-          'submittedAt': FieldValue.serverTimestamp(),
-        });
+      // 제출 완료 시 상태 업데이트
+      if (result == true && mounted) {
+        try {
+          // mission_workflows 업데이트
+          await FirebaseFirestore.instance
+              .collection('mission_workflows')
+              .doc(mission.workflowId)
+              .update({
+            'currentState': 'submission_completed',
+            'submittedAt': FieldValue.serverTimestamp(),
+          });
 
-        // mission_management 업데이트
-        await FirebaseFirestore.instance
-            .collection('mission_management')
-            .doc(mission.id)
-            .update({
-          'status': 'completed',
-          'currentState': 'submission_completed',
-        });
+          // mission_management 업데이트
+          await FirebaseFirestore.instance
+              .collection('mission_management')
+              .doc(mission.id)
+              .update({
+            'status': 'completed',
+            'currentState': 'submission_completed',
+          });
 
-        if (mounted) {
-          // UI 새로고침
-          ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+          if (mounted) {
+            // UI 새로고침
+            ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('✅ 미션이 제출되었습니다! 공급자 검토를 기다려주세요.'),
-              backgroundColor: Colors.green,
-              duration: Duration(seconds: 4),
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ 미션 제출 실패: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('✅ 미션이 제출되었습니다! 공급자 검토를 기다려주세요.'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 4),
+              ),
+            );
+          }
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('❌ 미션 제출 실패: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
         }
       }
+    } catch (e) {
+      // v2.10.1: 네비게이션 실패 에러 처리
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('❌ 페이지 로드 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
+  }
+
+  // v2.8.9: 미션 완료 가능 여부 체크 (순수 시간 기반)
+  bool _canCompleteMission(DailyMissionModel mission) {
+    // 이미 완료되었거나 승인된 미션은 완료 불가
+    if (mission.status == DailyMissionStatus.completed ||
+        mission.status == DailyMissionStatus.approved) {
+      return false;
+    }
+
+    // 시작하지 않은 미션은 완료 불가
+    if (mission.startedAt == null) {
+      return false;
+    }
+
+    // 시작 시간으로부터 10분 경과 여부 확인
+    final elapsed = DateTime.now().difference(mission.startedAt!);
+    final canComplete = elapsed.inMinutes >= 10;
+
+    if (kDebugMode) {
+      debugPrint('🔍 [Complete Check] mission=${mission.id}, startedAt=${mission.startedAt}, elapsed=${elapsed.inMinutes}분, canComplete=$canComplete');
+    }
+
+    return canComplete;
   }
 
   // 타이머 모달창 표시
@@ -2915,7 +2893,7 @@ class _TimerDialogState extends State<TimerDialog> {
     super.initState();
     _startTime = DateTime.now();
 
-    // 1초마다 타이머 업데이트
+    // v2.8.9: 타이머는 UI 표시 전용 (자동완료 로직 제거)
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
@@ -2926,10 +2904,8 @@ class _TimerDialogState extends State<TimerDialog> {
         _elapsedSeconds = DateTime.now().difference(_startTime).inSeconds;
       });
 
-      // 10분 체크 (600초)
-      if (_elapsedSeconds >= 600) {
-        _autoComplete();
-      }
+      // ❌ 자동완료 제거 - 백그라운드 throttle 이슈 방지
+      // 완료 버튼 활성화는 _canCompleteMission()에서 순수 시간 계산으로 처리
     });
   }
 
@@ -2939,38 +2915,13 @@ class _TimerDialogState extends State<TimerDialog> {
     super.dispose();
   }
 
-  // 자동 완료
-  Future<void> _autoComplete() async {
-    _timer.cancel();
-
-    debugPrint('🟢 [TimerDialog] _autoComplete 시작');
-
-    await FirebaseFirestore.instance
-        .collection('mission_workflows')
-        .doc(widget.workflowId)
-        .update({
-      'completedAt': FieldValue.serverTimestamp(),
-      'currentState': 'testing_completed',
-    });
-
-    debugPrint('🟢 [TimerDialog] Firestore 업데이트 완료');
-
-    if (mounted) {
-      debugPrint('🟢 [TimerDialog] Navigator.pop 실행 (rootNavigator: false)');
-      Navigator.of(context, rootNavigator: false).pop('completed');
-      debugPrint('🟢 [TimerDialog] Navigator.pop 완료');
-    }
-  }
-
   // 수동 중지
   Future<void> _manualStop() async {
-    debugPrint('🟡 [TimerDialog] _manualStop 시작');
-
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text('테스트 중지'),
-        content: Text('테스트를 중지하시겠습니까?\n진행 시간이 기록됩니다.'),
+        content: Text('테스트를 중지하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -2990,9 +2941,7 @@ class _TimerDialogState extends State<TimerDialog> {
 
     if (confirmed == true && mounted) {
       _timer.cancel();
-      debugPrint('🟡 [TimerDialog] Navigator.pop 실행 (rootNavigator: false)');
       Navigator.of(context, rootNavigator: false).pop('stopped');
-      debugPrint('🟡 [TimerDialog] Navigator.pop 완료');
     }
   }
 
@@ -3031,14 +2980,14 @@ class _TimerDialogState extends State<TimerDialog> {
               ),
             ),
             SizedBox(height: 16.h),
-            // 안내 문구
+            // v2.8.9: 안내 문구 - 완료 버튼 활성화로 변경
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.info_outline, size: 16.sp, color: Colors.grey[600]),
                 SizedBox(width: 4.w),
                 Text(
-                  '10분 후 자동 종료',
+                  '10분 후 자동으로 완료 버튼 활성화',
                   style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
                 ),
               ],

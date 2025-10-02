@@ -1,14 +1,14 @@
-import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/utils/logger.dart';
 
-/// 미션 제출용 이미지 업로드 위젯
-/// 최대 5장 이미지 선택 및 미리보기
+/// v2.9.0: 웹/모바일 통합 이미지 업로드 위젯
+/// XFile 기반으로 웹 환경 지원
 class ImageUploadWidget extends StatefulWidget {
-  final List<File> selectedImages;
-  final ValueChanged<List<File>> onImagesChanged;
+  final List<XFile> selectedImages;
+  final ValueChanged<List<XFile>> onImagesChanged;
   final int maxImages;
   final String emptyStateText;
 
@@ -52,29 +52,18 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
         return;
       }
 
-      // 최대 개수 제한 확인
+      // v2.9.0: 최대 개수 제한 확인
       final imagesToAdd = images.take(remainingSlots).toList();
 
       if (images.length > remainingSlots) {
         _showMessage('${remainingSlots}장만 추가됩니다.');
       }
 
-      // File 리스트로 변환
-      final newFiles = <File>[];
-      for (var xfile in imagesToAdd) {
-        if (kIsWeb) {
-          // 웹 환경에서는 XFile을 직접 사용 (추후 웹 대응 필요)
-          AppLogger.warning('Web platform image upload needs implementation', 'ImageUploadWidget');
-        } else {
-          newFiles.add(File(xfile.path));
-        }
-      }
-
-      // 업데이트된 리스트 전달
-      final updatedList = [...widget.selectedImages, ...newFiles];
+      // v2.9.0: XFile을 그대로 사용 (웹/모바일 모두 호환)
+      final updatedList = [...widget.selectedImages, ...imagesToAdd];
       widget.onImagesChanged(updatedList);
 
-      AppLogger.info('Images selected: ${newFiles.length} added, total: ${updatedList.length}', 'ImageUploadWidget');
+      AppLogger.info('Images selected: ${imagesToAdd.length} added, total: ${updatedList.length}', 'ImageUploadWidget');
 
     } catch (e) {
       AppLogger.error('Failed to pick images: $e', 'ImageUploadWidget');
@@ -185,64 +174,74 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
     );
   }
 
-  /// 썸네일 카드 빌드
-  Widget _buildThumbnail(File file, int index) {
-    return Stack(
-      children: [
-        // 이미지
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-            image: DecorationImage(
-              image: FileImage(file),
-              fit: BoxFit.cover,
-            ),
-          ),
-        ),
-
-        // 삭제 버튼
-        Positioned(
-          top: 4,
-          right: 4,
-          child: GestureDetector(
-            onTap: () => _removeImage(index),
-            child: Container(
-              padding: const EdgeInsets.all(4),
+  /// v2.9.0: 썸네일 카드 빌드 (XFile 지원)
+  Widget _buildThumbnail(XFile file, int index) {
+    return FutureBuilder<Uint8List>(
+      future: file.readAsBytes(),
+      builder: (context, snapshot) {
+        return Stack(
+          children: [
+            // 이미지
+            Container(
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.6),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+                image: snapshot.hasData
+                    ? DecorationImage(
+                        image: MemoryImage(snapshot.data!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
-              child: const Icon(
-                Icons.close,
-                color: Colors.white,
-                size: 18,
-              ),
+              child: snapshot.hasData
+                  ? null
+                  : Center(child: CircularProgressIndicator(strokeWidth: 2)),
             ),
-          ),
-        ),
 
-        // 인덱스 표시
-        Positioned(
-          bottom: 4,
-          left: 4,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.6),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              '${index + 1}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+            // 삭제 버튼
+            Positioned(
+              top: 4,
+              right: 4,
+              child: GestureDetector(
+                onTap: () => _removeImage(index),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close,
+                    color: Colors.white,
+                    size: 18,
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ],
+
+            // 인덱스 표시
+            Positioned(
+              bottom: 4,
+              left: 4,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${index + 1}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

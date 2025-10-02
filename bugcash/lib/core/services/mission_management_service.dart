@@ -258,6 +258,48 @@ class MissionManagementService {
     }
   }
 
+  /// v2.10.0: 일련번호 생성 헬퍼 (Transaction 사용)
+  /// 형식: a{YYMMDD}-m{0001} 예: a251002-m0001
+  Future<String> _generateSerialNumber(String appId, DateTime missionDate) async {
+    try {
+      // 날짜 포맷: YYMMDD
+      final dateStr = '${missionDate.year.toString().substring(2)}${missionDate.month.toString().padLeft(2, '0')}${missionDate.day.toString().padLeft(2, '0')}';
+
+      // appId 앞 6자리 (최소 6자리, 부족하면 패딩)
+      final appPrefix = appId.length >= 6 ? appId.substring(0, 6) : appId.padRight(6, '0');
+
+      // 카운터 문서 ID: {appId}_{YYMMDD}
+      final counterDocId = '${appId}_$dateStr';
+      final counterRef = _firestore.collection('mission_counters').doc(counterDocId);
+
+      // Transaction으로 카운터 증가 (race condition 방지)
+      final serialNumber = await _firestore.runTransaction<String>((transaction) async {
+        final counterDoc = await transaction.get(counterRef);
+
+        int nextCounter = 1;
+        if (counterDoc.exists) {
+          nextCounter = (counterDoc.data()?['counter'] ?? 0) + 1;
+        }
+
+        transaction.set(counterRef, {
+          'counter': nextCounter,
+          'lastUpdated': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+
+        // 일련번호 생성: a{appPrefix}-{dateStr}-m{0001}
+        final formattedCounter = nextCounter.toString().padLeft(4, '0');
+        return 'a$appPrefix-$dateStr-m$formattedCounter';
+      });
+
+      AppLogger.info('🔢 Serial number generated: $serialNumber', 'MissionManagement');
+      return serialNumber;
+    } catch (e) {
+      AppLogger.error('❌ Failed to generate serial number: $e', 'MissionManagement', e);
+      // Fallback: 일련번호 생성 실패 시 타임스탬프 사용
+      return 'a${appId.substring(0, 6)}-${DateTime.now().millisecondsSinceEpoch}';
+    }
+  }
+
   /// 일일 미션 생성
   Future<String> createDailyMission({
     required String appId,
@@ -268,6 +310,15 @@ class MissionManagementService {
     required int baseReward,
   }) async {
     try {
+      // v2.10.0: 일련번호 생성
+      String? serialNumber;
+      try {
+        serialNumber = await _generateSerialNumber(appId, missionDate);
+      } catch (e) {
+        AppLogger.error('⚠️ Serial number generation failed, continuing without it', 'MissionManagement', e);
+        // 일련번호 생성 실패해도 미션은 생성됨 (null 허용)
+      }
+
       final docRef = _firestore.collection(_dailyMissionsCollection).doc();
 
       final mission = DailyMissionModel(
@@ -279,11 +330,12 @@ class MissionManagementService {
         missionTitle: missionTitle,
         missionDescription: missionDescription,
         baseReward: baseReward,
+        serialNumber: serialNumber, // v2.10.0
       );
 
       await docRef.set(mission.toFirestore());
 
-      AppLogger.info('Daily mission created: $testerId for ${missionDate.toString()}', 'MissionManagementService');
+      AppLogger.info('✅ Daily mission created: $testerId for ${missionDate.toString()} [${serialNumber ?? "no serial"}]', 'MissionManagementService');
       return docRef.id;
     } catch (e) {
       AppLogger.error('Failed to create daily mission', 'MissionManagementService', e);

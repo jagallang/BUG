@@ -43,6 +43,27 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
         child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // v2.10.0: 일련번호 표시 (있는 경우)
+              if (widget.mission.serialNumber != null) ...[
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(6.r),
+                  ),
+                  child: Text(
+                    widget.mission.serialNumber!,
+                    style: TextStyle(
+                      fontSize: 11.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade700,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+                SizedBox(height: 8.h),
+              ],
+
               // 헤더: 타이틀과 상태 배지
               Row(
                 children: [
