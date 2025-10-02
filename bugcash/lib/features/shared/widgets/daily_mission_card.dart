@@ -223,8 +223,8 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
       );
     }
 
-    // 2. 미션 시작 전 (application_approved + startedAt 없음)
-    if (widget.mission.currentState == 'application_approved' && widget.mission.startedAt == null) {
+    // 2. 미션 시작 전 (approved + startedAt 없음)
+    if (widget.mission.currentState == 'approved' && widget.mission.startedAt == null) {
       return _build4ButtonRow(
         canDelete: widget.onDelete != null,
         canStart: widget.onStart != null,
@@ -234,15 +234,13 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
       );
     }
 
-    // 3. 미션 진행 중 (startedAt 있음 + status != completed/approved)
-    // [MVP] 완료 버튼 항상 활성화 - 10분 미만 시 경고 다이얼로그 표시
-    if (widget.mission.startedAt != null &&
-        widget.mission.status != DailyMissionStatus.completed &&
-        widget.mission.status != DailyMissionStatus.approved) {
+    // 3. 미션 진행 중 (in_progress 또는 testing_completed)
+    // 완료 버튼 활성화 (10분 미만 시 경고 다이얼로그 표시)
+    if (widget.mission.currentState == 'in_progress' || widget.mission.currentState == 'testing_completed') {
       return _build4ButtonRow(
         canDelete: widget.onDelete != null,
         canStart: false,
-        canComplete: widget.onComplete != null, // ✅ 항상 활성화
+        canComplete: widget.onComplete != null,
         canSubmit: false,
         startedAt: widget.mission.startedAt,
       );

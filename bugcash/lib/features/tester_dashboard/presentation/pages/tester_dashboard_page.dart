@@ -1865,10 +1865,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   ),
                 );
 
-                // [MVP] 미션 시작 - 간소화 버전
+                // 미션 시작 - 타이머 모달창 표시
                 if (confirmed == true && mounted) {
                   if (mission.workflowId != null) {
-                    // startedAt 업데이트 (백그라운드 타이머 시작)
+                    // startedAt 업데이트
                     await FirebaseFirestore.instance
                         .collection('mission_workflows')
                         .doc(mission.workflowId)
@@ -1877,30 +1877,16 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       'currentState': 'in_progress',
                     });
 
-                    // [MVP] setState 제거 - 타이머 UI 없음
-                    // setState(() {
-                    //   _showStartOverlay = true;
-                    //   _missionStartTime = DateTime.now();
-                    //   _currentMissionWorkflowId = mission.workflowId;
-                    // });
-                  }
-
-                  if (mounted) {
-                    Navigator.pop(context); // 다이얼로그 닫기
-
                     // 테스트용 앱을 새 창에서 열기
                     html.window.open(testUrl, '_blank');
 
-                    // UI 새로고침 (완료 버튼 상태 업데이트)
+                    // UI 새로고침
                     ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('🚀 테스트가 시작되었습니다! 10분 후 자동으로 완료 버튼이 활성화됩니다.'),
-                        backgroundColor: Colors.green,
-                        duration: Duration(seconds: 4),
-                      ),
-                    );
+                    // 타이머 모달창 표시
+                    if (mounted) {
+                      await _showTimerModal(context, mission.workflowId!);
+                    }
                   }
                 }
               },
@@ -2062,6 +2048,136 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         }
       }
     }
+  }
+
+  // 타이머 모달창 표시
+  Future<void> _showTimerModal(BuildContext context, String workflowId) async {
+    final startTime = DateTime.now();
+    bool isTimerRunning = true;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          // 10분 체크 및 자동 종료
+          Future.delayed(Duration(seconds: 1), () async {
+            if (!isTimerRunning) return;
+
+            final elapsed = DateTime.now().difference(startTime);
+            if (elapsed.inMinutes >= 10) {
+              // 10분 경과 - 자동 완료
+              isTimerRunning = false;
+              await FirebaseFirestore.instance
+                  .collection('mission_workflows')
+                  .doc(workflowId)
+                  .update({
+                'completedAt': FieldValue.serverTimestamp(),
+                'currentState': 'testing_completed',
+              });
+
+              if (context.mounted) {
+                Navigator.pop(dialogContext);
+                ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+              }
+            } else {
+              // 타이머 업데이트
+              if (context.mounted) {
+                setDialogState(() {});
+              }
+            }
+          });
+
+          final elapsed = DateTime.now().difference(startTime);
+          final minutes = elapsed.inMinutes;
+          final seconds = elapsed.inSeconds % 60;
+
+          return WillPopScope(
+            onWillPop: () async => false, // 뒤로가기 방지
+            child: AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.timer, color: Colors.green),
+                  SizedBox(width: 8.w),
+                  Text('앱 테스트 중입니다'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 타이머 표시
+                  Container(
+                    padding: EdgeInsets.all(24.w),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Text(
+                      '$minutes:${seconds.toString().padLeft(2, '0')}',
+                      style: TextStyle(
+                        fontSize: 48.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16.h),
+                  // 안내 문구
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.info_outline, size: 16.sp, color: Colors.grey[600]),
+                      SizedBox(width: 4.w),
+                      Text(
+                        '10분 후 자동 종료',
+                        style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                // 중지 버튼
+                TextButton(
+                  onPressed: () async {
+                    final confirmed = await showDialog<bool>(
+                      context: dialogContext,
+                      builder: (ctx) => AlertDialog(
+                        title: Text('테스트 중지'),
+                        content: Text('테스트를 중지하시겠습니까?\n진행 시간이 기록됩니다.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: Text('취소'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.orange,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: Text('중지'),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirmed == true) {
+                      isTimerRunning = false;
+                      if (dialogContext.mounted) {
+                        Navigator.pop(dialogContext);
+                        ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+                      }
+                    }
+                  },
+                  child: Text('중지', style: TextStyle(color: Colors.orange)),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
   }
 
   // 미션 제출 (공급자에게 최종 제출)
