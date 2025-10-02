@@ -3,6 +3,7 @@ class ProviderAppEntity {
   final String providerId;
   final String appName;
   final String appUrl;
+  final String? appTestUrl; // 웹 앱 시연 URL (옵션)
   final String description;
   final String category;
   final String status;
@@ -20,6 +21,7 @@ class ProviderAppEntity {
     required this.providerId,
     required this.appName,
     required this.appUrl,
+    this.appTestUrl,
     required this.description,
     required this.category,
     required this.status,
@@ -38,6 +40,7 @@ class ProviderAppEntity {
     String? providerId,
     String? appName,
     String? appUrl,
+    String? appTestUrl,
     String? description,
     String? category,
     String? status,
@@ -55,6 +58,7 @@ class ProviderAppEntity {
       providerId: providerId ?? this.providerId,
       appName: appName ?? this.appName,
       appUrl: appUrl ?? this.appUrl,
+      appTestUrl: appTestUrl ?? this.appTestUrl,
       description: description ?? this.description,
       category: category ?? this.category,
       status: status ?? this.status,

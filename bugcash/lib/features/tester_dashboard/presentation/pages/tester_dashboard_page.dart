@@ -1557,8 +1557,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           .get();
 
       final appUrl = projectDoc.data()?['appUrl'] as String?;
+      final appTestUrl = projectDoc.data()?['appTestUrl'] as String?;
 
-      if (appUrl == null || appUrl.isEmpty) {
+      // appTestUrl 우선, 없으면 appUrl 사용
+      final testUrl = appTestUrl ?? appUrl;
+      final isWebApp = appTestUrl != null;
+
+      if (testUrl == null || testUrl.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1619,7 +1624,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       ),
                       SizedBox(height: 8.h),
                       SelectableText(
-                        appUrl,
+                        testUrl,
                         style: TextStyle(
                           fontSize: 12.sp,
                           color: Colors.grey[700],
@@ -1632,7 +1637,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                           Expanded(
                             child: OutlinedButton.icon(
                               onPressed: () async {
-                                await Clipboard.setData(ClipboardData(text: appUrl));
+                                await Clipboard.setData(ClipboardData(text: testUrl));
                                 if (mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
@@ -1654,7 +1659,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                           Expanded(
                             child: ElevatedButton.icon(
                               onPressed: () {
-                                html.window.open(appUrl, '_blank');
+                                html.window.open(testUrl, '_blank');
                               },
                               icon: Icon(Icons.open_in_new, size: 14.sp),
                               label: Text('바로가기', style: TextStyle(fontSize: 12.sp)),
@@ -1692,10 +1697,15 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       ),
                       SizedBox(height: 8.h),
                       Text(
-                        '✅ 10분 동안 앱을 테스트해주세요\n'
-                        '📱 버그나 개선사항을 찾아주세요\n'
-                        '📸 스크린샷을 캡처해주세요\n'
-                        '⏱️ 10분 후 완료 버튼이 활성화됩니다',
+                        isWebApp
+                            ? '✅ 10분 동안 웹 앱을 테스트해주세요\n'
+                              '🌐 브라우저에서 앱을 사용해주세요\n'
+                              '📸 스크린샷을 캡처해주세요\n'
+                              '⏱️ 10분 후 완료 버튼이 활성화됩니다'
+                            : '✅ 10분 동안 앱을 테스트해주세요\n'
+                              '📱 버그나 개선사항을 찾아주세요\n'
+                              '📸 스크린샷을 캡처해주세요\n'
+                              '⏱️ 10분 후 완료 버튼이 활성화됩니다',
                         style: TextStyle(fontSize: 13.sp, height: 1.6),
                       ),
                     ],
@@ -1718,19 +1728,21 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ),
             OutlinedButton.icon(
               onPressed: () {
-                html.window.open(appUrl, '_blank');
+                html.window.open(testUrl, '_blank');
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('📱 앱을 설치한 후 "미션시작" 버튼을 눌러주세요'),
+                      content: Text(isWebApp
+                          ? '🌐 웹 앱이 새 탭에서 열렸습니다'
+                          : '📱 앱을 설치한 후 "미션시작" 버튼을 눌러주세요'),
                       backgroundColor: Colors.blue,
                       duration: Duration(seconds: 3),
                     ),
                   );
                 }
               },
-              icon: Icon(Icons.download, size: 16.sp),
-              label: Text('설치하기'),
+              icon: Icon(isWebApp ? Icons.open_in_browser : Icons.download, size: 16.sp),
+              label: Text(isWebApp ? '웹에서 열기' : '설치하기'),
               style: OutlinedButton.styleFrom(
                 padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               ),
@@ -1753,7 +1765,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '⚠️ 앱 설치를 완료하셨나요?',
+                          isWebApp
+                              ? '⚠️ 웹 앱을 여셨나요?'
+                              : '⚠️ 앱 설치를 완료하셨나요?',
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
@@ -1780,9 +1794,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                               ),
                               SizedBox(height: 8.h),
                               Text(
-                                '• 앱을 다운로드하고 설치했나요?\n'
-                                '• 앱을 실행해서 정상 작동하나요?\n'
-                                '• 10분간 테스트할 준비가 되었나요?',
+                                isWebApp
+                                    ? '• 웹 앱을 새 탭에서 열었나요?\n'
+                                      '• 앱이 정상적으로 작동하나요?\n'
+                                      '• 10분간 테스트할 준비가 되었나요?'
+                                    : '• 앱을 다운로드하고 설치했나요?\n'
+                                      '• 앱을 실행해서 정상 작동하나요?\n'
+                                      '• 10분간 테스트할 준비가 되었나요?',
                                 style: TextStyle(
                                   fontSize: 12.sp,
                                   height: 1.5,
@@ -1806,7 +1824,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
-                        child: Text('아직 설치 안함'),
+                        child: Text(isWebApp ? '아직 안 열음' : '아직 설치 안함'),
                       ),
                       ElevatedButton(
                         onPressed: () => Navigator.pop(context, true),
@@ -1814,15 +1832,12 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
                         ),
-                        child: Text('설치 완료, 시작!'),
+                        child: Text(isWebApp ? '준비 완료, 시작!' : '설치 완료, 시작!'),
                       ),
                     ],
                   ),
                 );
 
-                if (installConfirmed == true && mounted) {
-                  Navigator.pop(context, true);
-                }
               },
               icon: Icon(Icons.play_arrow, size: 16.sp),
               label: Text('미션시작'),

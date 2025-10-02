@@ -383,53 +383,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
     required bool canSubmit,
     required DateTime? startedAt,
   }) {
-    // 타이머 정보 계산
-    Duration? elapsed;
-    bool showTimer = false;
-    int remainingMinutes = 0;
-    int remainingSeconds = 0;
-
-    if (startedAt != null) {
-      elapsed = DateTime.now().difference(startedAt);
-      showTimer = elapsed.inMinutes < 10;
-      if (showTimer) {
-        remainingMinutes = 10 - elapsed.inMinutes - 1;
-        remainingSeconds = 60 - (elapsed.inSeconds % 60);
-      }
-    }
-
-    return Column(
-      children: [
-        // 타이머 바
-        if (showTimer)
-          Container(
-            width: double.infinity,
-            padding: EdgeInsets.all(8.w),
-            margin: EdgeInsets.only(bottom: 8.h),
-            decoration: BoxDecoration(
-              color: Colors.orange.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.timer, size: 16.sp, color: Colors.orange),
-                SizedBox(width: 6.w),
-                Text(
-                  '⏱️ 남은 시간: ${remainingMinutes}분 ${remainingSeconds}초',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: Colors.orange[700],
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-        // 4개 버튼 가로 배치
-        Row(
+    return Row(
           children: [
             // [삭제] 버튼 - 2단계 확인 시스템
             Expanded(
@@ -475,9 +429,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
               ),
             ),
           ],
-        ),
-      ],
-    );
+        );
   }
 
   /// 삭제 버튼 클릭 핸들러 (2단계 확인)

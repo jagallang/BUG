@@ -8,6 +8,7 @@ class ProviderAppModel extends ProviderAppEntity {
     required super.providerId,
     required super.appName,
     required super.appUrl,
+    super.appTestUrl,
     required super.description,
     required super.category,
     required super.status,
@@ -43,6 +44,7 @@ class ProviderAppModel extends ProviderAppEntity {
       providerId: data['providerId'] ?? '',
       appName: data['appName'] ?? '',
       appUrl: data['appUrl'] ?? data['appStoreUrl'] ?? '',
+      appTestUrl: data['appTestUrl'],
       description: data['description'] ?? '',
       category: data['category'] ?? '',
       status: data['status'] ?? 'draft',
@@ -63,6 +65,7 @@ class ProviderAppModel extends ProviderAppEntity {
       providerId: entity.providerId,
       appName: entity.appName,
       appUrl: entity.appUrl,
+      appTestUrl: entity.appTestUrl,
       description: entity.description,
       category: entity.category,
       status: entity.status,
@@ -78,7 +81,7 @@ class ProviderAppModel extends ProviderAppEntity {
   }
 
   Map<String, dynamic> toFirestore() {
-    return {
+    final map = {
       'providerId': providerId,
       'appName': appName,
       'appUrl': appUrl,
@@ -94,5 +97,11 @@ class ProviderAppModel extends ProviderAppEntity {
       'updatedAt': Timestamp.fromDate(updatedAt),
       'metadata': metadata,
     };
+
+    if (appTestUrl != null) {
+      map['appTestUrl'] = appTestUrl!;
+    }
+
+    return map;
   }
 }
