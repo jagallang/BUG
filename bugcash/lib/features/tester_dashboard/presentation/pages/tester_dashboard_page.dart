@@ -1929,6 +1929,83 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
   // 미션 완료 (스크린샷 + 피드백 입력 → 즉시 제출)
   Future<void> _completeMission(DailyMissionModel mission) async {
+    // [MVP] 10분 체크 - 남은 시간 표시
+    if (mission.startedAt != null) {
+      final elapsed = DateTime.now().difference(mission.startedAt!);
+      final remaining = const Duration(minutes: 10) - elapsed;
+
+      if (remaining.inSeconds > 0) {
+        // 10분이 안 된 경우 - 경고 다이얼로그
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.warning, color: Colors.orange),
+                SizedBox(width: 8.w),
+                Text('10분 미만 테스트'),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '아직 10분이 지나지 않았습니다.',
+                  style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+                ),
+                SizedBox(height: 12.h),
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.timer, color: Colors.orange, size: 20.sp),
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Text(
+                          '남은 시간: ${remaining.inMinutes}분 ${remaining.inSeconds % 60}초',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange[700],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  '그래도 완료하시겠습니까?',
+                  style: TextStyle(fontSize: 13.sp),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('취소'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text('완료하기'),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmed != true) return; // 취소 시 종료
+      }
+    }
+
     // DailyMissionSubmissionPage로 이동
     final result = await Navigator.push(
       context,

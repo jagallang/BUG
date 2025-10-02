@@ -234,26 +234,15 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
       );
     }
 
-    // 3. 미션 진행 중 (startedAt 있음 + completedAt 없음)
-    if (widget.mission.startedAt != null && widget.mission.completedAt == null) {
-      // 타이머가 실행 중 - 완료 버튼 비활성화 (타이머에서만 완료 가능)
-      return _build4ButtonRow(
-        canDelete: widget.onDelete != null,
-        canStart: false,
-        canComplete: false, // 타이머로만 완료 가능
-        canSubmit: false,
-        startedAt: widget.mission.startedAt,
-      );
-    }
-
-    // 4. 타이머 완료 후 제출 대기 (completedAt 있음 + status != completed/approved)
-    if (widget.mission.completedAt != null &&
+    // 3. 미션 진행 중 (startedAt 있음 + status != completed/approved)
+    // [MVP] 완료 버튼 항상 활성화 - 10분 미만 시 경고 다이얼로그 표시
+    if (widget.mission.startedAt != null &&
         widget.mission.status != DailyMissionStatus.completed &&
         widget.mission.status != DailyMissionStatus.approved) {
       return _build4ButtonRow(
         canDelete: widget.onDelete != null,
         canStart: false,
-        canComplete: widget.onComplete != null, // ✅ 완료 버튼 활성화
+        canComplete: widget.onComplete != null, // ✅ 항상 활성화
         canSubmit: false,
         startedAt: widget.mission.startedAt,
       );
