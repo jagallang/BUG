@@ -680,18 +680,27 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           .where('currentState', whereIn: ['application_submitted', 'approved', 'in_progress', 'testing_completed'])
           .get();
 
+      debugPrint('🔍 ACTIVE_MISSIONS: 총 ${missionWorkflows.docs.length}개 워크플로우 조회됨');
+
       // 2. 각 미션 워크플로우에 대해 미션 카드 생성
       for (final workflowDoc in missionWorkflows.docs) {
         final workflowData = workflowDoc.data();
         final appId = workflowData['appId'];
         final currentState = workflowData['currentState'] ?? 'pending';
 
+        debugPrint('🔍 WORKFLOW: id=${workflowDoc.id}, appId=$appId, currentState=$currentState');
+
         // Projects 에서 앱 정보 가져오기 (appId가 projects의 문서 ID이므로)
         try {
+          final lookupId = appId.replaceAll('provider_app_', '');
+          debugPrint('🔍 PROJECT_LOOKUP: appId=$appId, 찾는 문서=$lookupId');
+
           final projectDoc = await FirebaseFirestore.instance
               .collection('projects')
-              .doc(appId.replaceAll('provider_app_', ''))
+              .doc(lookupId)
               .get();
+
+          debugPrint('🔍 PROJECT_LOOKUP: exists=${projectDoc.exists}');
 
           if (projectDoc.exists) {
             final projectData = projectDoc.data()!;
@@ -728,6 +737,43 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
             );
 
             activeMissions.add(missionCard);
+          } else {
+            // Fallback: projects 문서가 없을 때도 workflow 데이터로 카드 생성
+            debugPrint('❌ PROJECT_NOT_FOUND: appId=$appId의 projects 문서 없음! Fallback으로 카드 생성');
+
+            final appName = workflowData['appName'] ?? 'Unknown App';
+
+            final missionCard = MissionCard(
+              id: 'mission_workflow_${workflowDoc.id}',
+              title: '$appName 테스트 미션',
+              description: _getStatusDescription(currentState),
+              type: MissionType.featureTesting,
+              rewardPoints: _getRewardPoints(currentState, workflowData),
+              estimatedMinutes: (workflowData['totalDays'] ?? 14) * 20,
+              status: _getMissionStatus(currentState),
+              deadline: _getDeadline(workflowData),
+              requiredSkills: ['앱테스트', '버그리포트'],
+              appName: appName,
+              currentParticipants: 1,
+              maxParticipants: 1,
+              progress: _getProgress(workflowData),
+              difficulty: MissionDifficulty.easy,
+              providerId: workflowData['providerId'] ?? '',
+              isProviderApp: true,
+              originalAppData: {
+                'workflowId': workflowDoc.id,
+                'currentState': currentState,
+                'appliedAt': workflowData['appliedAt'],
+                'appId': appId,
+                'isFromMissionWorkflow': true,
+                'currentDay': workflowData['currentDay'] ?? 0,
+                'totalDays': workflowData['totalDays'] ?? 14,
+                'dailyReward': workflowData['dailyReward'] ?? 5000,
+              },
+            );
+
+            activeMissions.add(missionCard);
+            debugPrint('✅ FALLBACK_CARD_CREATED: $appName 카드 추가됨');
           }
         } catch (e) {
           debugPrint('Failed to load project data for appId: $appId, error: $e');

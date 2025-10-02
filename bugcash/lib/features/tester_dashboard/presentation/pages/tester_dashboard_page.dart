@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -2052,130 +2053,13 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
   // 타이머 모달창 표시
   Future<void> _showTimerModal(BuildContext context, String workflowId) async {
-    final startTime = DateTime.now();
-    bool isTimerRunning = true;
-
     await showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          // 10분 체크 및 자동 종료
-          Future.delayed(Duration(seconds: 1), () async {
-            if (!isTimerRunning) return;
-
-            final elapsed = DateTime.now().difference(startTime);
-            if (elapsed.inMinutes >= 10) {
-              // 10분 경과 - 자동 완료
-              isTimerRunning = false;
-              await FirebaseFirestore.instance
-                  .collection('mission_workflows')
-                  .doc(workflowId)
-                  .update({
-                'completedAt': FieldValue.serverTimestamp(),
-                'currentState': 'testing_completed',
-              });
-
-              if (context.mounted) {
-                Navigator.pop(dialogContext);
-                ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
-              }
-            } else {
-              // 타이머 업데이트
-              if (context.mounted) {
-                setDialogState(() {});
-              }
-            }
-          });
-
-          final elapsed = DateTime.now().difference(startTime);
-          final minutes = elapsed.inMinutes;
-          final seconds = elapsed.inSeconds % 60;
-
-          return WillPopScope(
-            onWillPop: () async => false, // 뒤로가기 방지
-            child: AlertDialog(
-              title: Row(
-                children: [
-                  Icon(Icons.timer, color: Colors.green),
-                  SizedBox(width: 8.w),
-                  Text('앱 테스트 중입니다'),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 타이머 표시
-                  Container(
-                    padding: EdgeInsets.all(24.w),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Text(
-                      '$minutes:${seconds.toString().padLeft(2, '0')}',
-                      style: TextStyle(
-                        fontSize: 48.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  // 안내 문구
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.info_outline, size: 16.sp, color: Colors.grey[600]),
-                      SizedBox(width: 4.w),
-                      Text(
-                        '10분 후 자동 종료',
-                        style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              actions: [
-                // 중지 버튼
-                TextButton(
-                  onPressed: () async {
-                    final confirmed = await showDialog<bool>(
-                      context: dialogContext,
-                      builder: (ctx) => AlertDialog(
-                        title: Text('테스트 중지'),
-                        content: Text('테스트를 중지하시겠습니까?\n진행 시간이 기록됩니다.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(ctx, false),
-                            child: Text('취소'),
-                          ),
-                          ElevatedButton(
-                            onPressed: () => Navigator.pop(ctx, true),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: Text('중지'),
-                          ),
-                        ],
-                      ),
-                    );
-
-                    if (confirmed == true) {
-                      isTimerRunning = false;
-                      if (dialogContext.mounted) {
-                        Navigator.pop(dialogContext);
-                        ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
-                      }
-                    }
-                  },
-                  child: Text('중지', style: TextStyle(color: Colors.orange)),
-                ),
-              ],
-            ),
-          );
-        },
+      builder: (dialogContext) => TimerDialog(
+        workflowId: workflowId,
+        testerId: widget.testerId,
+        providerRef: ref,
       ),
     );
   }
@@ -2979,10 +2863,170 @@ class _CustomFabLocation extends FloatingActionButtonLocation {
     // 기본 endFloat 위치를 기준으로 Y 좌표만 조정
     final double x = scaffoldGeometry.scaffoldSize.width - 
                      scaffoldGeometry.floatingActionButtonSize.width - 16.0;
-    final double y = scaffoldGeometry.scaffoldSize.height - 
-                     scaffoldGeometry.floatingActionButtonSize.height - 
+    final double y = scaffoldGeometry.scaffoldSize.height -
+                     scaffoldGeometry.floatingActionButtonSize.height -
                      120.0; // 하단 탭바와 기본 위치의 중간 지점으로 고정
-    
+
     return Offset(x, y);
+  }
+}
+
+/// 타이머 다이얼로그 Widget
+class TimerDialog extends StatefulWidget {
+  final String workflowId;
+  final String testerId;
+  final WidgetRef providerRef;
+
+  const TimerDialog({
+    Key? key,
+    required this.workflowId,
+    required this.testerId,
+    required this.providerRef,
+  }) : super(key: key);
+
+  @override
+  State<TimerDialog> createState() => _TimerDialogState();
+}
+
+class _TimerDialogState extends State<TimerDialog> {
+  late Timer _timer;
+  late DateTime _startTime;
+  int _elapsedSeconds = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTime = DateTime.now();
+
+    // 1초마다 타이머 업데이트
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        _elapsedSeconds = DateTime.now().difference(_startTime).inSeconds;
+      });
+
+      // 10분 체크 (600초)
+      if (_elapsedSeconds >= 600) {
+        _autoComplete();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  // 자동 완료
+  Future<void> _autoComplete() async {
+    _timer.cancel();
+
+    await FirebaseFirestore.instance
+        .collection('mission_workflows')
+        .doc(widget.workflowId)
+        .update({
+      'completedAt': FieldValue.serverTimestamp(),
+      'currentState': 'testing_completed',
+    });
+
+    if (mounted) {
+      Navigator.pop(context);
+      widget.providerRef.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+    }
+  }
+
+  // 수동 중지
+  Future<void> _manualStop() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('테스트 중지'),
+        content: Text('테스트를 중지하시겠습니까?\n진행 시간이 기록됩니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('중지'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      _timer.cancel();
+      Navigator.pop(context);
+      widget.providerRef.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = _elapsedSeconds ~/ 60;
+    final seconds = _elapsedSeconds % 60;
+
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.timer, color: Colors.green),
+            SizedBox(width: 8.w),
+            Text('앱 테스트 중입니다'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 타이머 표시
+            Container(
+              padding: EdgeInsets.all(24.w),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
+              child: Text(
+                '$minutes:${seconds.toString().padLeft(2, '0')}',
+                style: TextStyle(
+                  fontSize: 48.sp,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green,
+                ),
+              ),
+            ),
+            SizedBox(height: 16.h),
+            // 안내 문구
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.info_outline, size: 16.sp, color: Colors.grey[600]),
+                SizedBox(width: 4.w),
+                Text(
+                  '10분 후 자동 종료',
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: _manualStop,
+            child: Text('중지', style: TextStyle(color: Colors.orange)),
+          ),
+        ],
+      ),
+    );
   }
 }
