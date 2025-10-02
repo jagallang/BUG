@@ -334,6 +334,8 @@ class MissionManagementService {
 
   /// 테스터 오늘 미션 조회 (테스터 기반) - mission_workflows 컬렉션 사용
   Stream<List<DailyMissionModel>> watchTesterTodayMissions(String testerId) {
+    AppLogger.info('📋 [watchTesterTodayMissions] 조회 시작 - testerId=$testerId', 'MissionManagement');
+
     return _firestore
         .collection(_dailyMissionsCollection)
         .where('testerId', isEqualTo: testerId)
@@ -347,7 +349,18 @@ class MissionManagementService {
           'daily_mission_completed'   // 일일 미션 완료 (레거시)
         ])
         .snapshots()
-        .map((snapshot) => snapshot.docs
+        .map((snapshot) {
+          AppLogger.info('📋 [watchTesterTodayMissions] ${snapshot.docs.length}개 미션 조회됨', 'MissionManagement');
+
+          for (final doc in snapshot.docs) {
+            final data = doc.data();
+            AppLogger.info(
+              '  - ${doc.id}: currentState=${data['currentState']}, startedAt=${data['startedAt']}, completedAt=${data['completedAt']}',
+              'MissionManagement'
+            );
+          }
+
+          return snapshot.docs
             .map((doc) {
               // MissionWorkflowModel을 DailyMissionModel로 변환
               final workflowData = MissionWorkflowModel.fromFirestore(doc);
@@ -368,9 +381,12 @@ class MissionManagementService {
                     : 5000,
                 workflowId: workflowData.id,
                 currentState: workflowData.currentState.code, // 실제 currentState 전달
+                startedAt: workflowData.startedAt,       // v2.8.8: startedAt 추가
+                completedAt: workflowData.completedAt,   // v2.8.8: completedAt 추가
               );
             })
-            .toList());
+            .toList();
+        });
   }
 
   /// MissionWorkflowState를 DailyMissionStatus로 변환하는 헬퍼 메서드
