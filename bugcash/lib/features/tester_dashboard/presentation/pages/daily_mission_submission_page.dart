@@ -145,8 +145,9 @@ class _DailyMissionSubmissionPageState
       return;
     }
 
-    if (_selectedImages.isEmpty) {
-      _showMessage('최소 1장 이상의 스크린샷을 업로드해주세요.');
+    // v2.17.0: 최소 3장 요구사항
+    if (_selectedImages.length < 3) {
+      _showMessage('최소 3장 이상의 스크린샷을 업로드해주세요.');
       return;
     }
 
@@ -494,7 +495,7 @@ class _DailyMissionSubmissionPageState
         });
       },
       maxImages: 5,
-      emptyStateText: '미션 수행 스크린샷을 업로드해주세요 (최대 5장)',
+      emptyStateText: '미션 수행 스크린샷을 업로드해주세요 (최소 3장, 최대 5장)',
     );
   }
 
