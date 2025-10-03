@@ -357,4 +357,57 @@ class MissionWorkflowModel {
       'updatedAt': FieldValue.serverTimestamp(),
     };
   }
+
+  // v2.12.0: 일일 미션 상태 관리 헬퍼 메서드
+
+  /// 특정 Day가 활성화되었는지 확인 (제출 가능 여부)
+  /// Day 1은 항상 활성화, 이후 Day는 이전 Day 승인 시 활성화
+  bool isDayUnlocked(int dayNumber) {
+    // Day 1은 항상 활성화
+    if (dayNumber == 1) return true;
+
+    // 이전 Day 승인 여부 확인
+    try {
+      final previousDay = dailyInteractions.firstWhere(
+        (i) => i.dayNumber == dayNumber - 1,
+      );
+      return previousDay.providerApproved;
+    } catch (e) {
+      // 이전 Day interaction이 없으면 잠김
+      return false;
+    }
+  }
+
+  /// 특정 Day의 현재 상태 조회
+  DayStatus getDayStatus(int dayNumber) {
+    try {
+      final interaction = dailyInteractions.firstWhere(
+        (i) => i.dayNumber == dayNumber,
+      );
+
+      // 승인됨
+      if (interaction.providerApproved) return DayStatus.approved;
+
+      // 제출됨 (검토 대기)
+      if (interaction.testerCompleted) return DayStatus.submitted;
+
+      // 활성화 여부 확인
+      if (isDayUnlocked(dayNumber)) return DayStatus.unlocked;
+
+      // 잠김
+      return DayStatus.locked;
+    } catch (e) {
+      // interaction이 없는 경우
+      if (isDayUnlocked(dayNumber)) return DayStatus.unlocked;
+      return DayStatus.locked;
+    }
+  }
+}
+
+/// v2.12.0: 일일 미션 상태
+enum DayStatus {
+  locked,     // 잠김 (이전 Day 미완료)
+  unlocked,   // 활성화 (제출 가능)
+  submitted,  // 제출됨 (검토 대기)
+  approved,   // 승인됨
 }

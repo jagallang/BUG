@@ -256,38 +256,47 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
     );
   }
 
-  /// 타임라인 개별 아이템
+  /// v2.12.0: 타임라인 개별 아이템 (날짜별 활성화 로직 적용)
   Widget _buildTimelineItem({
     required MissionWorkflowModel workflow,
     required int dayNumber,
     required DailyMissionInteraction interaction,
     required bool isLast,
   }) {
-    // 상태 결정
-    final isInProgress = interaction.testerStarted && !interaction.testerCompleted;
-    final isCompleted = interaction.testerCompleted && !interaction.providerApproved;
-    final isApproved = interaction.providerApproved;
+    // v2.12.0: 새로운 상태 판단 로직
+    final dayStatus = workflow.getDayStatus(dayNumber);
 
+    // 상태별 UI 설정
     Color statusColor;
     IconData statusIcon;
     String statusText;
+    bool canSubmit = false;
 
-    if (isApproved) {
-      statusColor = Colors.green;
-      statusIcon = Icons.check_circle;
-      statusText = '승인됨';
-    } else if (isCompleted) {
-      statusColor = Colors.orange;
-      statusIcon = Icons.pending;
-      statusText = '검토 대기';
-    } else if (isInProgress) {
-      statusColor = Colors.blue;
-      statusIcon = Icons.play_circle;
-      statusText = '진행 중';
-    } else {
-      statusColor = Colors.grey;
-      statusIcon = Icons.circle_outlined;
-      statusText = '대기 중';
+    switch (dayStatus) {
+      case DayStatus.approved:
+        statusColor = Colors.green;
+        statusIcon = Icons.check_circle;
+        statusText = '승인됨';
+        canSubmit = false;
+        break;
+      case DayStatus.submitted:
+        statusColor = Colors.orange;
+        statusIcon = Icons.pending;
+        statusText = '검토 대기';
+        canSubmit = false;
+        break;
+      case DayStatus.unlocked:
+        statusColor = Colors.blue;
+        statusIcon = Icons.play_circle_outlined;
+        statusText = '제출 가능';
+        canSubmit = true;
+        break;
+      case DayStatus.locked:
+        statusColor = Colors.grey;
+        statusIcon = Icons.lock_outline;
+        statusText = '잠김';
+        canSubmit = false;
+        break;
     }
 
     return IntrinsicHeight(
@@ -351,6 +360,28 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
                         ],
                       ),
 
+                      // v2.12.0: 잠김 상태 안내
+                      if (dayStatus == DayStatus.locked) ...[
+                        SizedBox(height: 12.h),
+                        Row(
+                          children: [
+                            Icon(Icons.info_outline,
+                                size: 16.w,
+                                color: Colors.grey[600]),
+                            SizedBox(width: 8.w),
+                            Expanded(
+                              child: Text(
+                                '이전 미션을 완료하고 승인받으세요',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
                       // 제출 정보 (완료된 경우만)
                       if (interaction.testerCompleted) ...[
                         SizedBox(height: 12.h),
@@ -390,8 +421,68 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
                         ],
                       ],
 
-                      // 액션 버튼
-                      if (isInProgress) ...[
+                      // v2.12.0: 승인 정보 (승인된 경우)
+                      if (interaction.providerApproved) ...[
+                        SizedBox(height: 12.h),
+                        Container(
+                          padding: EdgeInsets.all(12.w),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 20.w),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '승인됨',
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                    if (interaction.providerApprovedAt != null)
+                                      Text(
+                                        DateFormat('yyyy-MM-dd HH:mm')
+                                            .format(interaction.providerApprovedAt!),
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                              if (interaction.providerRating != null)
+                                Row(
+                                  children: [
+                                    Icon(Icons.star,
+                                        color: Colors.amber,
+                                        size: 16.w),
+                                    SizedBox(width: 4.w),
+                                    Text(
+                                      '${interaction.providerRating}/5',
+                                      style: TextStyle(
+                                        fontSize: 14.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      // v2.12.0: 액션 버튼 (canSubmit 기반)
+                      if (canSubmit) ...[
                         SizedBox(height: 12.h),
                         SizedBox(
                           width: double.infinity,
@@ -402,6 +493,7 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(vertical: 12.h),
                             ),
                           ),
                         ),
