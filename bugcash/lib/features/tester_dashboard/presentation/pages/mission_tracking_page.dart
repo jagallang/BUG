@@ -432,9 +432,14 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
       ),
     );
 
-    // 제출 완료 시 새로고침
+    // v2.11.1: 제출 완료 시 Stream 재초기화 (회색 화면 버그 수정)
     if (result == true && mounted) {
-      setState(() {});
+      setState(() {
+        _workflowStream = ref
+            .read(missionWorkflowServiceProvider)
+            .getMissionWorkflow(widget.workflowId)
+            .asStream();
+      });
     }
   }
 }

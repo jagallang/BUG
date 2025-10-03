@@ -141,7 +141,24 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.0.07 (Latest) - Firestore 보안 규칙 최적화 및 로그인 시스템 완전 수정
+### v2.11.1 (Latest) - Mission Submission Gray Screen Bug Fix
+*Released: 2025-10-03*
+
+**🐛 Critical Bug Fix:**
+- **Gray Screen Issue**: Fixed gray screen appearing after mission submission in MissionTrackingPage
+- **Root Cause**: Empty setState() not reloading data from Firestore after submission
+- **Solution**: Stream re-initialization to fetch updated mission workflow data
+
+**🔧 Technical Details:**
+- **File Modified**: `lib/features/tester_dashboard/presentation/pages/mission_tracking_page.dart` (Line 436-442)
+- **Change**: Replaced empty `setState(() {})` with stream re-initialization
+- **Impact**: Mission tracking page now correctly displays updated status after submission
+
+**📊 User Experience:**
+- **Before**: Gray screen after mission completion → user stuck
+- **After**: Smooth transition back to updated mission tracking page with refreshed data
+
+### v2.0.07 - Firestore 보안 규칙 최적화 및 로그인 시스템 완전 수정
 *Released: 2025-09-27*
 
 **🛡️ Firestore 보안 규칙 완전 최적화:**
