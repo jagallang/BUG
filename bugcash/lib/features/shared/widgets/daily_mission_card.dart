@@ -387,12 +387,13 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
     );
   }
 
-  /// 4개 버튼 가로 레이아웃 (삭제-시작-완료-제출)
+  /// v2.13.0: 3개 버튼 가로 레이아웃 (삭제-시작-완료)
+  /// 제출 버튼 제거 - 미션진행현황 페이지에서만 제출 가능
   Widget _build4ButtonRow({
     required bool canDelete,
     required bool canStart,
     required bool canComplete,
-    required bool canSubmit,
+    required bool canSubmit, // 호환성 유지용 (사용 안함)
     required DateTime? startedAt,
   }) {
     return Row(
@@ -427,17 +428,6 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                 color: Colors.orange,
                 enabled: canComplete,
                 onPressed: canComplete ? widget.onComplete : null,
-              ),
-            ),
-            SizedBox(width: 6.w),
-            // [제출] 버튼
-            Expanded(
-              child: _buildRowButton(
-                icon: Icons.upload,
-                label: '제출',
-                color: Colors.green,
-                enabled: canSubmit,
-                onPressed: canSubmit ? widget.onSubmit : null,
               ),
             ),
           ],

@@ -1932,17 +1932,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
   }
 
-  // v2.8.9: 미션 완료 (스크린샷 + 피드백 입력 → 즉시 제출)
-  // 10분 체크는 _canCompleteMission()에서 처리되므로 여기서는 제거
+  // v2.13.0: 미션 완료 (완료 시간만 기록, 제출은 미션진행현황 페이지에서)
   Future<void> _completeMission(DailyMissionModel mission) async {
-    // v2.8.9: 10분 체크 제거 - 완료 버튼이 활성화된 상태에서만 호출됨
-
-    // v2.10.1: appId 유효성 검증
-    if (mission.appId.isEmpty) {
+    // workflowId 유효성 검증
+    if (mission.workflowId == null || mission.workflowId!.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('❌ 미션 appId가 없습니다. 관리자에게 문의하세요.'),
+            content: Text('❌ 미션 워크플로우 ID가 없습니다. 관리자에게 문의하세요.'),
             backgroundColor: Colors.red,
           ),
         );
@@ -1950,71 +1947,44 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       return;
     }
 
-    // v2.10.1: 안전한 네비게이션 (try-catch)
-    try {
-      // v2.9.0: DailyMissionSubmissionPage로 이동 (appId 전달)
-      final result = await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DailyMissionSubmissionPage(
-            workflowId: mission.workflowId!,
-            dayNumber: mission.dayNumber!,
-            missionTitle: mission.missionTitle,
-            appId: mission.appId, // v2.9.0: 공급자 질문 로드용
+    // dayNumber 유효성 검증
+    if (mission.dayNumber == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ 미션 일자 정보가 없습니다. 관리자에게 문의하세요.'),
+            backgroundColor: Colors.red,
           ),
-        ),
+        );
+      }
+      return;
+    }
+
+    try {
+      // v2.13.0: 완료 시간만 기록 (제출 없음)
+      await ref.read(missionWorkflowServiceProvider).markDailyMissionCompleted(
+        workflowId: mission.workflowId!,
+        testerId: widget.testerId,
+        dayNumber: mission.dayNumber!,
       );
 
-      // 제출 완료 시 상태 업데이트
-      if (result == true && mounted) {
-        try {
-          // mission_workflows 업데이트
-          await FirebaseFirestore.instance
-              .collection('mission_workflows')
-              .doc(mission.workflowId)
-              .update({
-            'currentState': 'submission_completed',
-            'submittedAt': FieldValue.serverTimestamp(),
-          });
+      if (mounted) {
+        // UI 새로고침
+        ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
 
-          // mission_management 업데이트
-          await FirebaseFirestore.instance
-              .collection('mission_management')
-              .doc(mission.id)
-              .update({
-            'status': 'completed',
-            'currentState': 'submission_completed',
-          });
-
-          if (mounted) {
-            // UI 새로고침
-            ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('✅ 미션이 제출되었습니다! 공급자 검토를 기다려주세요.'),
-                backgroundColor: Colors.green,
-                duration: Duration(seconds: 4),
-              ),
-            );
-          }
-        } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('❌ 미션 제출 실패: $e'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ 테스트가 완료되었습니다!\n📝 "미션진행현황" 페이지에서 제출해주세요.'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
+          ),
+        );
       }
     } catch (e) {
-      // v2.10.1: 네비게이션 실패 에러 처리
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ 페이지 로드 실패: $e'),
+            content: Text('❌ 완료 처리 실패: $e'),
             backgroundColor: Colors.red,
           ),
         );

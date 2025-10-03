@@ -255,6 +255,51 @@ class MissionWorkflowService {
     }
   }
 
+  // v2.13.0: 테스터가 일일 미션 완료 시간만 기록 (제출 없이)
+  /// 완료 버튼 클릭 시 호출 - testerCompletedAt만 기록하고 상태를 testing_completed로 변경
+  Future<void> markDailyMissionCompleted({
+    required String workflowId,
+    required String testerId,
+    required int dayNumber,
+  }) async {
+    try {
+      AppLogger.info('Tester $testerId marking daily mission day $dayNumber as completed (without submission)', 'MissionWorkflow');
+
+      final workflow = await getMissionWorkflow(workflowId);
+      final interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
+
+      // 해당 날짜의 interaction 찾기 및 업데이트
+      bool found = false;
+      for (int i = 0; i < interactions.length; i++) {
+        if (interactions[i]['dayNumber'] == dayNumber) {
+          interactions[i]['testerCompleted'] = true;
+          interactions[i]['testerCompletedAt'] = Timestamp.fromDate(DateTime.now());
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        throw Exception('Daily interaction not found for day $dayNumber');
+      }
+
+      await _firestore
+          .collection('mission_workflows')
+          .doc(workflowId)
+          .update({
+        'dailyInteractions': interactions,
+        'currentState': MissionWorkflowState.testingCompleted.code,
+        'stateUpdatedAt': FieldValue.serverTimestamp(),
+        'stateUpdatedBy': testerId,
+      });
+
+      AppLogger.info('Daily mission marked as completed (testing_completed state)', 'MissionWorkflow');
+    } catch (e) {
+      AppLogger.error('Failed to mark daily mission as completed', e.toString());
+      rethrow;
+    }
+  }
+
   // v2.9.0: 테스터가 일일 미션 제출 (공급자 질문 답변 + 버그리포트)
   Future<void> submitDailyMission({
     required String workflowId,
@@ -282,7 +327,7 @@ class MissionWorkflowService {
     );
   }
 
-  // 5단계: 테스터가 일일 미션 완료
+  // 5단계: 테스터가 일일 미션 완료 (제출과 함께)
   Future<void> completeDailyMission({
     required String workflowId,
     required String testerId,
