@@ -9,6 +9,7 @@ import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 import '../pages/role_selection_page.dart';
 import '../../../../core/services/realtime_sync_service.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../mission/presentation/providers/mission_providers.dart';
 
 class AuthWrapper extends ConsumerStatefulWidget {
   const AuthWrapper({super.key});
@@ -92,9 +93,19 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
           RealtimeSyncService.forceSyncAll();
         });
       } else {
-        // 로그아웃 시: 실시간 동기화 중지
-        AppLogger.info('User logged out - Stopping RealtimeSyncService', 'AuthWrapper');
+        // v2.14.0: 로그아웃 시 - 모든 폴링 중지
+        AppLogger.info('🔴 User logged out - Stopping all services', 'AuthWrapper');
+
+        // RealtimeSyncService 중지
         RealtimeSyncService.stopRealtimeSync();
+
+        // v2.14.0: MissionStateNotifier 폴링 중지
+        try {
+          ref.read(missionStateNotifierProvider.notifier).stopPolling();
+          AppLogger.info('✅ MissionStateNotifier polling stopped', 'AuthWrapper');
+        } catch (e) {
+          AppLogger.warning('⚠️ Failed to stop MissionStateNotifier: $e', 'AuthWrapper');
+        }
       }
 
       _previousUser = currentUser;
