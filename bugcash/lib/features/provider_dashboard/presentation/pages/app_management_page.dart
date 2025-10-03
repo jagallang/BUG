@@ -9,6 +9,7 @@ import '../../../../core/config/feature_flags.dart';
 import 'app_detail_page.dart';
 import 'tester_management_page.dart';
 import 'mission_management_page.dart';
+import 'mission_management_page_v2.dart';
 
 // Provider for managing apps (using optimized projects collection)
 final providerAppsProvider = StreamProvider.family<List<ProviderAppModel>, String>((ref, providerId) {
@@ -1926,27 +1927,25 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       height: 36.h,
       child: ElevatedButton(
         onPressed: canUse ? () {
-          if (FeatureFlagUtils.shouldUseNewMissionManagement(
-            userId: app.providerId,
-            isAdmin: false,
-          )) {
-            // 새로운 미션관리 페이지로 이동
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MissionManagementPage(app: app),
-              ),
-            );
-            FeatureFlagUtils.logFeatureUsage('new_mission_management', app.providerId);
-          } else {
-            // 기존 시스템 사용
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => TesterManagementPage(app: app),
-              ),
-            );
-          }
+          // v2.14.1: 로그 추가 및 V2 페이지로 전환
+          AppLogger.info(
+            '🔵 미션 버튼 클릭\n'
+            '   ├─ 앱: ${app.appName}\n'
+            '   ├─ appId: ${app.id}\n'
+            '   ├─ providerId: ${app.providerId}\n'
+            '   └─ 페이지: MissionManagementPageV2',
+            'AppManagement'
+          );
+
+          // v2.14.0 Clean Architecture 기반 페이지로 이동
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MissionManagementPageV2(app: app),
+            ),
+          );
+
+          FeatureFlagUtils.logFeatureUsage('mission_management_v2', app.providerId);
         } : null,
         style: ElevatedButton.styleFrom(
           backgroundColor: canUse ? AppColors.primary : Colors.grey[400],
