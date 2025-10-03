@@ -1184,8 +1184,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 onComplete: _canCompleteMission(mission)
                     ? () => _completeMission(mission)
                     : null,
-                // 제출 버튼 (현재는 사용하지 않음 - 완료 버튼에서 직접 제출)
-                onSubmit: null,
+                // v2.11.3: 제출 버튼 (testing_completed 상태에서 활성화)
+                onSubmit: mission.currentState == 'testing_completed'
+                    ? () => _completeMission(mission)
+                    : null,
                 // 재제출 버튼
                 onResubmit: mission.status == DailyMissionStatus.rejected
                     ? () => _resubmitMission(mission)

@@ -141,7 +141,31 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.11.2 (Latest) - Real-time Stream Architecture (근본적 해결)
+### v2.11.3 (Latest) - testing_completed 상태 버튼 로직 수정
+*Released: 2025-10-03*
+
+**🐛 회색 화면 버그의 진짜 원인 해결:**
+- **문제**: `testing_completed` 상태에서 **완료 버튼**이 여전히 활성화되어 중복 제출 시도
+- **증상**: "Unexpected null value" 에러 및 회색 화면
+- **원인**: 이미 완료된 상태인데 완료 버튼을 다시 누를 수 있었음
+
+**🔧 수정 내용:**
+- **`daily_mission_card.dart` (Line 272-281)**: `testing_completed` 상태 분리 처리
+  - 완료 버튼 비활성화 (`canComplete: false`)
+  - 제출 버튼 활성화 (`canSubmit: true`)
+- **`tester_dashboard_page.dart` (Line 1187-1190)**: `onSubmit` 콜백 연결
+  - `testing_completed` 상태에서 제출 버튼 활성화
+
+**📊 사용자 흐름 개선:**
+- **Before**: 완료 → 완료 버튼 클릭 → Null 에러 → 회색 화면
+- **After**: 완료 → **제출 버튼** 클릭 → DailyMissionSubmissionPage → 정상 제출
+
+**✅ 효과:**
+- 중복 완료 방지
+- UI 상태와 로직 일치
+- 회색 화면 완전 해결
+
+### v2.11.2 - Real-time Stream Architecture (근본적 해결)
 *Released: 2025-10-03*
 
 **✅ 근본적 문제 해결:**
