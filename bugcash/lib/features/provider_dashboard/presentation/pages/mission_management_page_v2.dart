@@ -162,15 +162,29 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 .where((m) => m.status == MissionWorkflowStatus.applicationSubmitted)
                 .toList();
 
-            // 승인된 테스터 필터링
+            // v2.15.0: 승인된 테스터 전체 필터링 (진행중, 완료 포함)
             final approvedTesters = missions
-                .where((m) => m.status == MissionWorkflowStatus.approved)
+                .where((m) =>
+                    m.status == MissionWorkflowStatus.approved ||
+                    m.status == MissionWorkflowStatus.inProgress ||
+                    m.status == MissionWorkflowStatus.testingCompleted ||
+                    m.status == MissionWorkflowStatus.submissionCompleted)
                 .toList();
+
+            // 상태별 개수 집계
+            final approvedCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.approved).length;
+            final inProgressCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.inProgress).length;
+            final testingCompletedCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.testingCompleted).length;
+            final submissionCompletedCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.submissionCompleted).length;
 
             print('✅ [MissionManagementV2] 테스터탭 State: LOADED');
             print('   ├─ 전체 미션: ${missions.length}개');
             print('   ├─ 신청 대기: ${pendingApplications.length}개');
-            print('   └─ 승인됨: ${approvedTesters.length}개');
+            print('   └─ 승인된 테스터 전체: ${approvedTesters.length}개');
+            print('      ├─ 대기중: $approvedCount개');
+            print('      ├─ 진행중: $inProgressCount개');
+            print('      ├─ 테스트완료: $testingCompletedCount개');
+            print('      └─ 제출완료: $submissionCompletedCount개');
 
             return SingleChildScrollView(
               child: Column(
@@ -314,7 +328,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
               Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
               SizedBox(width: 8.w),
               Text(
-                '승인된 테스터 (${approvedTesters.length}명)',
+                '승인된 테스터 전체 (${approvedTesters.length}명)',
                 style: TextStyle(
                   fontSize: 16.sp,
                   fontWeight: FontWeight.bold,
@@ -480,40 +494,72 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                     ],
                   ),
                 ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Text(
-                    '승인됨',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.green,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                _buildStatusBadge(mission.status),
               ],
             ),
             SizedBox(height: 16.h),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _startMission(mission.id),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
-                ),
-                icon: const Icon(Icons.play_arrow, color: Colors.white),
-                label: const Text(
-                  '미션 시작',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            // v2.15.0: 대기중 상태일 때만 '미션 시작' 버튼 표시
+            if (mission.status == MissionWorkflowStatus.approved)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _startMission(mission.id),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                  ),
+                  icon: const Icon(Icons.play_arrow, color: Colors.white),
+                  label: const Text(
+                    '미션 시작',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
-            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// v2.15.0: 미션 상태 배지 생성 헬퍼
+  Widget _buildStatusBadge(MissionWorkflowStatus status) {
+    String label;
+    Color color;
+
+    switch (status) {
+      case MissionWorkflowStatus.approved:
+        label = '대기중';
+        color = Colors.orange;
+        break;
+      case MissionWorkflowStatus.inProgress:
+        label = '진행중';
+        color = Colors.blue;
+        break;
+      case MissionWorkflowStatus.testingCompleted:
+        label = '테스트완료';
+        color = Colors.purple;
+        break;
+      case MissionWorkflowStatus.submissionCompleted:
+        label = '제출완료';
+        color = Colors.green;
+        break;
+      default:
+        label = status.name;
+        color = Colors.grey;
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 12.sp,
+          color: color,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
