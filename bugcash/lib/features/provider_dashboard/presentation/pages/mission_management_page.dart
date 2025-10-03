@@ -114,65 +114,177 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
     );
   }
 
-  /// v2.10.0: 테스터 탭 - 승인된 테스터 목록 항상 표시
+  /// v2.13.1: 테스터 탭 - 대기중 + 승인된 테스터 2섹션 구조
   Widget _buildTesterRecruitmentTab() {
-    return StreamBuilder<List<TesterApplicationModel>>(
-      stream: _missionService.watchTesterApplications(widget.app.id),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 섹션 1: 테스터 신청 대기중
+          StreamBuilder<List<TesterApplicationModel>>(
+            stream: _missionService.watchTesterApplications(widget.app.id),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              }
 
-        if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
-                SizedBox(height: 16.h),
-                Text('오류가 발생했습니다: ${snapshot.error}'),
-                SizedBox(height: 16.h),
-                ElevatedButton(
-                  onPressed: () => setState(() {}),
-                  child: const Text('다시 시도'),
-                ),
-              ],
-            ),
-          );
-        }
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+                        SizedBox(height: 16.h),
+                        Text('오류가 발생했습니다: ${snapshot.error}'),
+                      ],
+                    ),
+                  ),
+                );
+              }
 
-        final applications = snapshot.data ?? [];
+              final applications = snapshot.data ?? [];
 
-        if (applications.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.people_outline, size: 48.sp, color: Colors.grey),
-                SizedBox(height: 16.h),
-                Text(
-                  '아직 신청한 테스터가 없습니다',
-                  style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  '앱이 \'모집중\' 상태가 되면 테스터들이 신청할 수 있습니다',
-                  style: TextStyle(fontSize: 14.sp, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          );
-        }
+              if (applications.isEmpty) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Container(
+                    padding: EdgeInsets.all(24.w),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(Icons.people_outline, size: 40.sp, color: Colors.grey),
+                          SizedBox(height: 12.h),
+                          Text(
+                            '신청 대기중인 테스터가 없습니다',
+                            style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
 
-        return ListView.builder(
-          padding: EdgeInsets.all(16.w),
-          itemCount: applications.length,
-          itemBuilder: (context, index) {
-            final application = applications[index];
-            return _buildTesterApplicationCard(application);
-          },
-        );
-      },
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+                    child: Row(
+                      children: [
+                        Icon(Icons.hourglass_empty, size: 20.sp, color: Colors.orange),
+                        SizedBox(width: 8.w),
+                        Text(
+                          '테스터 신청 대기중 (${applications.length}명)',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    itemCount: applications.length,
+                    itemBuilder: (context, index) {
+                      final application = applications[index];
+                      return _buildTesterApplicationCard(application);
+                    },
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+              );
+            },
+          ),
+
+          // 섹션 2: 승인된 테스터
+          StreamBuilder<List<TesterApplicationModel>>(
+            stream: _missionService.watchApprovedTesters(widget.app.id),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: const Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              final approvedTesters = snapshot.data ?? [];
+
+              if (approvedTesters.isEmpty) {
+                return Padding(
+                  padding: EdgeInsets.all(16.w),
+                  child: Container(
+                    padding: EdgeInsets.all(24.w),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Icon(Icons.check_circle_outline, size: 40.sp, color: Colors.green[300]),
+                          SizedBox(height: 12.h),
+                          Text(
+                            '승인된 테스터가 없습니다',
+                            style: TextStyle(fontSize: 14.sp, color: Colors.green[700]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
+                        SizedBox(width: 8.w),
+                        Text(
+                          '승인된 테스터 (${approvedTesters.length}명)',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    itemCount: approvedTesters.length,
+                    itemBuilder: (context, index) {
+                      final tester = approvedTesters[index];
+                      return _buildApprovedTesterCard(tester);
+                    },
+                  ),
+                  SizedBox(height: 16.h),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 

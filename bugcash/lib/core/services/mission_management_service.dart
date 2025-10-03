@@ -125,7 +125,11 @@ class MissionManagementService {
         .collection(_dailyMissionsCollection) // mission_workflows 컬렉션 사용
         .where('appId', isEqualTo: appId)
         .where('currentState', isEqualTo: 'application_submitted') // 신청 대기 상태만 조회
+        .limit(100) // v2.13.1: 과도한 데이터 방지
         .snapshots()
+        .handleError((error) {
+          AppLogger.error('Firestore stream error (watchTesterApplications)', 'MissionManagement', error);
+        })
         .map((snapshot) {
           AppLogger.info('📊 [대기목록] Firestore 조회 결과: ${snapshot.docs.length}개 문서', 'MissionManagement');
 
@@ -351,7 +355,11 @@ class MissionManagementService {
         .collection(_dailyMissionsCollection) // mission_workflows 컬렉션
         .where('appId', isEqualTo: appId)
         .where('currentState', isEqualTo: 'approved') // 승인됨, 미션 시작 대기중
+        .limit(100) // v2.13.1: 과도한 데이터 방지
         .snapshots()
+        .handleError((error) {
+          AppLogger.error('Firestore stream error (watchApprovedTesters)', 'MissionManagement', error);
+        })
         .map((snapshot) {
           AppLogger.info('📊 [승인된테스터] Firestore 조회 결과: ${snapshot.docs.length}개', 'MissionManagement');
 
