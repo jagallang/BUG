@@ -1927,15 +1927,12 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       height: 36.h,
       child: ElevatedButton(
         onPressed: canUse ? () {
-          // v2.14.1: 로그 추가 및 V2 페이지로 전환
-          AppLogger.info(
-            '🔵 미션 버튼 클릭\n'
-            '   ├─ 앱: ${app.appName}\n'
-            '   ├─ appId: ${app.id}\n'
-            '   ├─ providerId: ${app.providerId}\n'
-            '   └─ 페이지: MissionManagementPageV2',
-            'AppManagement'
-          );
+          // v2.14.6: 프로덕션에서도 로그 출력을 위해 print 사용
+          print('🔵 [AppManagement] 미션 버튼 클릭\n'
+                '   ├─ 앱: ${app.appName}\n'
+                '   ├─ appId: ${app.id}\n'
+                '   ├─ providerId: ${app.providerId}\n'
+                '   └─ 페이지: MissionManagementPageV2');
 
           // v2.14.0 Clean Architecture 기반 페이지로 이동
           Navigator.push(
