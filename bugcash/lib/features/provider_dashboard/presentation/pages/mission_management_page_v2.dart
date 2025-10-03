@@ -497,9 +497,9 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 _buildStatusBadge(mission.status),
               ],
             ),
-            SizedBox(height: 16.h),
             // v2.15.0: 대기중 상태일 때만 '미션 시작' 버튼 표시
-            if (mission.status == MissionWorkflowStatus.approved)
+            if (mission.status == MissionWorkflowStatus.approved) ...[
+              SizedBox(height: 16.h),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -515,6 +515,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                   ),
                 ),
               ),
+            ],
           ],
         ),
       ),
