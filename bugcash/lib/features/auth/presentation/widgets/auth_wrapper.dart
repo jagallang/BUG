@@ -23,15 +23,20 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   @override
   void initState() {
     super.initState();
-    // Riverpod 상태 관리는 build 메서드에서 처리
+
+    // v2.13.5: ref.listen으로 상태 변경 시에만 실행 (중복 호출 방지)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.listen<AuthState>(authProvider, (previous, current) {
+        if (previous?.user?.uid != current.user?.uid) {
+          _handleAuthStateChange(current.user);
+        }
+      });
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-
-    // 🔥 인증 상태 변경에 따른 실시간 동기화 제어
-    _handleAuthStateChange(authState.user);
 
     if (authState.isLoading) {
       return const Scaffold(
