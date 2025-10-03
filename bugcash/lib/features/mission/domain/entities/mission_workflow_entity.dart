@@ -21,6 +21,7 @@ class MissionWorkflowEntity extends Equatable {
   final int totalDays;
   final int dailyReward;
   final int completedDays;
+  final List<DailyMissionInteractionEntity> dailyInteractions; // v2.16.0
 
   const MissionWorkflowEntity({
     required this.id,
@@ -41,6 +42,7 @@ class MissionWorkflowEntity extends Equatable {
     this.totalDays = 14,
     this.dailyReward = 5000,
     this.completedDays = 0,
+    this.dailyInteractions = const [], // v2.16.0
   });
 
   /// 미션이 진행 가능한 상태인지 확인
@@ -57,6 +59,49 @@ class MissionWorkflowEntity extends Equatable {
 
   /// 예상 총 보상 계산
   int get estimatedTotalReward => dailyReward * totalDays;
+
+  /// v2.16.0: 특정 Day가 활성화되었는지 확인 (제출 가능 여부)
+  /// Day 1은 항상 활성화, 이후 Day는 이전 Day 승인 시 활성화
+  bool isDayUnlocked(int dayNumber) {
+    // Day 1은 항상 활성화
+    if (dayNumber == 1) return true;
+
+    // 이전 Day 승인 여부 확인
+    try {
+      final previousDay = dailyInteractions.firstWhere(
+        (i) => i.dayNumber == dayNumber - 1,
+      );
+      return previousDay.providerApproved;
+    } catch (e) {
+      // 이전 Day interaction이 없으면 잠김
+      return false;
+    }
+  }
+
+  /// v2.16.0: 특정 Day의 현재 상태 조회
+  DayStatus getDayStatus(int dayNumber) {
+    try {
+      final interaction = dailyInteractions.firstWhere(
+        (i) => i.dayNumber == dayNumber,
+      );
+
+      // 승인됨
+      if (interaction.providerApproved) return DayStatus.approved;
+
+      // 제출됨 (검토 대기)
+      if (interaction.testerCompleted) return DayStatus.submitted;
+
+      // 활성화 여부 확인
+      if (isDayUnlocked(dayNumber)) return DayStatus.unlocked;
+
+      // 잠김
+      return DayStatus.locked;
+    } catch (e) {
+      // interaction이 없는 경우
+      if (isDayUnlocked(dayNumber)) return DayStatus.unlocked;
+      return DayStatus.locked;
+    }
+  }
 
   MissionWorkflowEntity copyWith({
     String? id,
@@ -77,6 +122,7 @@ class MissionWorkflowEntity extends Equatable {
     int? totalDays,
     int? dailyReward,
     int? completedDays,
+    List<DailyMissionInteractionEntity>? dailyInteractions, // v2.16.0
   }) {
     return MissionWorkflowEntity(
       id: id ?? this.id,
@@ -97,6 +143,7 @@ class MissionWorkflowEntity extends Equatable {
       totalDays: totalDays ?? this.totalDays,
       dailyReward: dailyReward ?? this.dailyReward,
       completedDays: completedDays ?? this.completedDays,
+      dailyInteractions: dailyInteractions ?? this.dailyInteractions, // v2.16.0
     );
   }
 
@@ -198,4 +245,75 @@ enum MissionWorkflowStatus {
         return '취소됨';
     }
   }
+}
+
+/// v2.16.0: Daily Mission Interaction Entity (Domain Layer)
+/// 일일 미션 진행 상황을 나타내는 엔티티
+class DailyMissionInteractionEntity extends Equatable {
+  final int dayNumber;
+  final DateTime date;
+
+  // 테스터 액션
+  final bool testerStarted;
+  final DateTime? testerStartedAt;
+  final bool testerCompleted;
+  final DateTime? testerCompletedAt;
+  final String? testerFeedback;
+  final List<String> testerScreenshots;
+  final Map<String, dynamic> testerData;
+
+  // 공급자 액션
+  final bool providerApproved;
+  final DateTime? providerApprovedAt;
+  final String? providerFeedback;
+  final int? providerRating;
+
+  // 리워드
+  final int dailyReward;
+  final bool rewardPaid;
+  final DateTime? rewardPaidAt;
+
+  const DailyMissionInteractionEntity({
+    required this.dayNumber,
+    required this.date,
+    this.testerStarted = false,
+    this.testerStartedAt,
+    this.testerCompleted = false,
+    this.testerCompletedAt,
+    this.testerFeedback,
+    this.testerScreenshots = const [],
+    this.testerData = const {},
+    this.providerApproved = false,
+    this.providerApprovedAt,
+    this.providerFeedback,
+    this.providerRating,
+    this.dailyReward = 5000,
+    this.rewardPaid = false,
+    this.rewardPaidAt,
+  });
+
+  @override
+  List<Object?> get props => [
+        dayNumber,
+        date,
+        testerCompleted,
+        providerApproved,
+        rewardPaid,
+      ];
+}
+
+/// v2.16.0: Daily Mission 상태
+/// 일일 미션의 현재 진행 상태를 나타냄
+enum DayStatus {
+  /// 잠김 (이전 날짜 미완료)
+  locked,
+
+  /// 활성화 (제출 가능)
+  unlocked,
+
+  /// 제출됨 (검토 대기)
+  submitted,
+
+  /// 승인됨
+  approved,
 }
