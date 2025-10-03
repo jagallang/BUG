@@ -673,11 +673,11 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     try {
       final activeMissions = <MissionCard>[];
 
-      // 1. 테스터 신청 정보 가져오기 (mission_workflows 에서 pending, approved, testing_completed 상태)
+      // 1. 테스터 신청 정보 가져오기 (mission_workflows 에서 pending, approved, testing_completed, settled 상태)
       final missionWorkflows = await FirebaseFirestore.instance
           .collection('mission_workflows')
           .where('testerId', isEqualTo: testerId)
-          .where('currentState', whereIn: ['application_submitted', 'approved', 'in_progress', 'testing_completed'])
+          .where('currentState', whereIn: ['application_submitted', 'approved', 'in_progress', 'testing_completed', 'settled'])
           .get();
 
       debugPrint('🔍 ACTIVE_MISSIONS: 총 ${missionWorkflows.docs.length}개 워크플로우 조회됨');
