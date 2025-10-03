@@ -256,26 +256,17 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
       );
     }
 
-    // 3. 미션 진행 중 (in_progress, mission_in_progress)
+    // 3. 미션 진행 중 (in_progress, mission_in_progress, testing_completed)
     // 완료 버튼 활성화 (10분 미만 시 경고 다이얼로그 표시)
+    // v2.11.4: testing_completed도 완료 버튼 표시 (중복 방지는 _canCompleteMission에서 처리)
     if (widget.mission.currentState == 'in_progress' ||
-        widget.mission.currentState == 'mission_in_progress') {
+        widget.mission.currentState == 'mission_in_progress' ||
+        widget.mission.currentState == 'testing_completed') {
       return _build4ButtonRow(
         canDelete: widget.onDelete != null,
         canStart: false,
         canComplete: widget.onComplete != null,
         canSubmit: false,
-        startedAt: widget.mission.startedAt,
-      );
-    }
-
-    // v2.11.3: testing_completed 상태 (완료됨, 제출 대기)
-    if (widget.mission.currentState == 'testing_completed') {
-      return _build4ButtonRow(
-        canDelete: widget.onDelete != null,
-        canStart: false,
-        canComplete: false, // 이미 완료됨
-        canSubmit: widget.onSubmit != null, // 제출 가능
         startedAt: widget.mission.startedAt,
       );
     }
