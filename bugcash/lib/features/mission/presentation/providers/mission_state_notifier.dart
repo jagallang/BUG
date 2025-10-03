@@ -48,7 +48,7 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
     _currentUserId = providerId;
     _isProvider = true;
 
-    AppLogger.info('Starting polling for provider: $providerId', 'MissionNotifier');
+    print('🔵 [MissionNotifier] Polling started for provider: $providerId');
 
     // 초기 로드
     refreshMissions();
@@ -104,11 +104,15 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
   /// 수동 새로고침
   Future<void> refreshMissions() async {
     if (_currentUserId == null) {
-      AppLogger.warning('Cannot refresh: userId is null', 'MissionNotifier');
+      print('⚠️ [MissionNotifier] Cannot refresh: userId is null');
       return;
     }
 
     try {
+      print('🔄 [MissionNotifier] Refreshing missions...');
+      print('   ├─ userId: $_currentUserId');
+      print('   └─ isProvider: $_isProvider');
+
       // 백그라운드 새로고침 표시
       state.maybeWhen(
         loaded: (missions, _) => state = MissionState.loaded(
@@ -125,9 +129,9 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
 
       state = MissionState.loaded(missions: missions);
 
-      AppLogger.info('Missions refreshed: ${missions.length} items', 'MissionNotifier');
+      print('✅ [MissionNotifier] Missions refreshed: ${missions.length} items');
     } catch (e) {
-      AppLogger.error('Failed to refresh missions', 'MissionNotifier', e);
+      print('❌ [MissionNotifier] Failed to refresh missions: $e');
       state = MissionState.error(
         message: 'Failed to load missions: ${e.toString()}',
         exception: e,

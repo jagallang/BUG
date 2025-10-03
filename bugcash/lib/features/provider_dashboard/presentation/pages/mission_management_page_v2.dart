@@ -31,14 +31,11 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     super.initState();
     _tabController = TabController(length: 5, vsync: this);
 
-    AppLogger.info(
-      '📱 [미션관리 v2.14.0] Clean Architecture 페이지 초기화\n'
-      '   ├─ appId: ${widget.app.id}\n'
-      '   ├─ appName: ${widget.app.appName}\n'
-      '   ├─ providerId: ${widget.app.providerId}\n'
-      '   └─ Polling: 30초 주기',
-      'MissionManagementV2'
-    );
+    // v2.14.7: 프로덕션 디버깅을 위한 print 로그
+    print('📱 [MissionManagementV2] 페이지 초기화');
+    print('   ├─ appId: ${widget.app.id}');
+    print('   ├─ appName: ${widget.app.appName}');
+    print('   └─ providerId: ${widget.app.providerId}');
 
     FeatureFlagUtils.logFeatureUsage('mission_management_page_v2', widget.app.providerId);
 
@@ -47,11 +44,12 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
       // v2.14.4: dispose 후 ref 사용 방지
       if (mounted) {
         try {
+          print('🔄 [MissionManagementV2] 폴링 시작 시도...');
           ref.read(missionStateNotifierProvider.notifier)
             .startPollingForProvider(widget.app.providerId);
-          AppLogger.info('✅ Polling started for provider: ${widget.app.providerId}', 'MissionManagementV2');
+          print('✅ [MissionManagementV2] 폴링 시작 완료');
         } catch (e) {
-          AppLogger.warning('⚠️ Failed to start polling: $e', 'MissionManagementV2');
+          print('❌ [MissionManagementV2] 폴링 시작 실패: $e');
         }
       }
     });
@@ -150,8 +148,14 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         final missionsState = ref.watch(missionStateNotifierProvider);
 
         return missionsState.when(
-          initial: () => const Center(child: Text('초기화 중...')),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          initial: () {
+            print('⏳ [MissionManagementV2] 테스터탭 State: INITIAL');
+            return const Center(child: Text('초기화 중...'));
+          },
+          loading: () {
+            print('🔄 [MissionManagementV2] 테스터탭 State: LOADING');
+            return const Center(child: CircularProgressIndicator());
+          },
           loaded: (missions, isRefreshing) {
             // 대기중 신청 필터링
             final pendingApplications = missions
@@ -162,6 +166,11 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             final approvedTesters = missions
                 .where((m) => m.status == MissionWorkflowStatus.approved)
                 .toList();
+
+            print('✅ [MissionManagementV2] 테스터탭 State: LOADED');
+            print('   ├─ 전체 미션: ${missions.length}개');
+            print('   ├─ 신청 대기: ${pendingApplications.length}개');
+            print('   └─ 승인됨: ${approvedTesters.length}개');
 
             return SingleChildScrollView(
               child: Column(
@@ -181,6 +190,8 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             );
           },
           error: (message, exception) {
+            print('❌ [MissionManagementV2] 테스터탭 State: ERROR');
+            print('   └─ 메시지: $message');
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -515,13 +526,23 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         final missionsState = ref.watch(missionStateNotifierProvider);
 
         return missionsState.when(
-          initial: () => const Center(child: Text('초기화 중...')),
-          loading: () => const Center(child: CircularProgressIndicator()),
+          initial: () {
+            print('⏳ [MissionManagementV2] 오늘탭 State: INITIAL');
+            return const Center(child: Text('초기화 중...'));
+          },
+          loading: () {
+            print('🔄 [MissionManagementV2] 오늘탭 State: LOADING');
+            return const Center(child: CircularProgressIndicator());
+          },
           loaded: (missions, isRefreshing) {
             // 진행 중인 미션 필터링
             final inProgressMissions = missions
                 .where((m) => m.status == MissionWorkflowStatus.inProgress)
                 .toList();
+
+            print('✅ [MissionManagementV2] 오늘탭 State: LOADED');
+            print('   ├─ 전체 미션: ${missions.length}개');
+            print('   └─ 진행중: ${inProgressMissions.length}개');
 
             return SingleChildScrollView(
               child: Column(
@@ -563,18 +584,22 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
               ),
             );
           },
-          error: (message, exception) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
-                SizedBox(height: 16.h),
-                Text('오류가 발생했습니다'),
-                SizedBox(height: 8.h),
-                Text(message, style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
-              ],
-            ),
-          ),
+          error: (message, exception) {
+            print('❌ [MissionManagementV2] 오늘탭 State: ERROR');
+            print('   └─ 메시지: $message');
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+                  SizedBox(height: 16.h),
+                  Text('오류가 발생했습니다'),
+                  SizedBox(height: 8.h),
+                  Text(message, style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
+                ],
+              ),
+            );
+          },
         );
       },
     );
