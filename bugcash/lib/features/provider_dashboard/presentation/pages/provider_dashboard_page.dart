@@ -58,7 +58,9 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         } else {
           // 권한이 없는 경우 대시보드로 리디렉션
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            setState(() => _selectedIndex = 0);
+            if (mounted) {
+              setState(() => _selectedIndex = 0);
+            }
           });
           return _buildDashboardTab();
         }
