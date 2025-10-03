@@ -451,7 +451,7 @@ class MissionWorkflowService {
     }
   }
 
-  // 워크플로우 조회
+  // 워크플로우 조회 (단발성)
   Future<MissionWorkflowModel> getMissionWorkflow(String workflowId) async {
     try {
       final doc = await _firestore
@@ -468,6 +468,22 @@ class MissionWorkflowService {
       AppLogger.error('Failed to get mission workflow', e.toString());
       rethrow;
     }
+  }
+
+  // v2.11.2: 워크플로우 실시간 스트림 (단일 문서)
+  /// 단일 워크플로우의 실시간 변경사항을 감지하는 스트림
+  /// Firestore 문서가 변경될 때마다 자동으로 업데이트됨
+  Stream<MissionWorkflowModel> watchMissionWorkflow(String workflowId) {
+    return _firestore
+        .collection('mission_workflows')
+        .doc(workflowId)
+        .snapshots()
+        .map((doc) {
+          if (!doc.exists) {
+            throw Exception('Mission workflow not found: $workflowId');
+          }
+          return MissionWorkflowModel.fromFirestore(doc);
+        });
   }
 
   // 앱별 워크플로우 스트림

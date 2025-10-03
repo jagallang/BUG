@@ -28,11 +28,10 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
   @override
   void initState() {
     super.initState();
-    // Firestore 실시간 스트림
+    // v2.11.2: Firestore 실시간 스트림 (snapshots 사용)
     _workflowStream = ref
         .read(missionWorkflowServiceProvider)
-        .getMissionWorkflow(widget.workflowId)
-        .asStream();
+        .watchMissionWorkflow(widget.workflowId);
   }
 
   @override
@@ -420,7 +419,7 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
 
   /// 제출 페이지로 이동
   void _navigateToSubmission(int dayNumber, String missionTitle) async {
-    final result = await Navigator.push(
+    await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => DailyMissionSubmissionPage(
@@ -432,14 +431,7 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
       ),
     );
 
-    // v2.11.1: 제출 완료 시 Stream 재초기화 (회색 화면 버그 수정)
-    if (result == true && mounted) {
-      setState(() {
-        _workflowStream = ref
-            .read(missionWorkflowServiceProvider)
-            .getMissionWorkflow(widget.workflowId)
-            .asStream();
-      });
-    }
+    // v2.11.2: 실시간 스트림이 자동으로 Firestore 변경사항을 감지하므로
+    // 수동 새로고침 로직 불필요 (watchMissionWorkflow 사용)
   }
 }

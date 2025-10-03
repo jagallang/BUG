@@ -141,22 +141,41 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.11.1 (Latest) - Mission Submission Gray Screen Bug Fix
+### v2.11.2 (Latest) - Real-time Stream Architecture (근본적 해결)
+*Released: 2025-10-03*
+
+**✅ 근본적 문제 해결:**
+- **회색 화면 버그 완전 해결**: Firestore 실시간 스트림 아키텍처로 전환
+- **v2.11.1의 한계**: 임시방편적 수동 새로고침 → 근본적 실시간 동기화로 개선
+- **아키텍처 개선**: `Future.asStream()` (단발성) → `.snapshots()` (실시간)
+
+**🔧 기술적 개선사항:**
+- **신규 메서드 추가**: `mission_workflow_service.dart`에 `watchMissionWorkflow()` 추가
+- **실시간 감지**: Firestore 문서 변경 시 자동으로 UI 업데이트
+- **코드 간결화**: 수동 새로고침 로직 제거 (13줄 → 주석 2줄)
+
+**📊 변경 파일:**
+- `lib/core/services/mission_workflow_service.dart` (Line 473-487) - 실시간 스트림 메서드 추가
+- `lib/features/tester_dashboard/presentation/pages/mission_tracking_page.dart` (Line 31-34) - 실시간 스트림 사용
+
+**🎯 효과:**
+- **Before (v2.11.1)**: 제출 후 수동으로 Stream 재생성 → 여전히 단발성
+- **After (v2.11.2)**: Firestore 변경 자동 감지 → 진정한 실시간 동기화
+- **장점**: 다중 사용자 환경에서도 실시간 업데이트, Flutter 표준 패턴 준수
+
+### v2.11.1 - Mission Submission Gray Screen Bug Fix (임시방편)
 *Released: 2025-10-03*
 
 **🐛 Critical Bug Fix:**
 - **Gray Screen Issue**: Fixed gray screen appearing after mission submission in MissionTrackingPage
 - **Root Cause**: Empty setState() not reloading data from Firestore after submission
 - **Solution**: Stream re-initialization to fetch updated mission workflow data
+- **한계**: 여전히 단발성 스트림 사용 → v2.11.2에서 근본적 해결
 
 **🔧 Technical Details:**
 - **File Modified**: `lib/features/tester_dashboard/presentation/pages/mission_tracking_page.dart` (Line 436-442)
 - **Change**: Replaced empty `setState(() {})` with stream re-initialization
 - **Impact**: Mission tracking page now correctly displays updated status after submission
-
-**📊 User Experience:**
-- **Before**: Gray screen after mission completion → user stuck
-- **After**: Smooth transition back to updated mission tracking page with refreshed data
 
 ### v2.0.07 - Firestore 보안 규칙 최적화 및 로그인 시스템 완전 수정
 *Released: 2025-09-27*
