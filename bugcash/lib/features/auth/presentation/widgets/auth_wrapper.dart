@@ -83,15 +83,15 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
     // 사용자 상태가 변경된 경우에만 처리
     if (_previousUser?.uid != currentUser?.uid) {
       if (currentUser != null) {
-        // v2.13.4: 실시간 동기화 비활성화 (Firestore 400 에러 방지)
-        // RealtimeSyncService.startRealtimeSync();
-        AppLogger.info('User logged in: ${currentUser.email} - RealtimeSyncService disabled (v2.13.4)', 'AuthWrapper');
+        // v2.14.2: Clean Architecture 전환으로 RealtimeSyncService 완전 비활성화
+        AppLogger.info(
+          '✅ User logged in: ${currentUser.email}\n'
+          '   └─ RealtimeSyncService disabled (using Clean Architecture polling)',
+          'AuthWrapper'
+        );
 
-        // 로그인 후 기존 데이터 강제 동기화 (수동 동기화만 사용)
-        Future.delayed(const Duration(seconds: 3), () {
-          AppLogger.info('Force syncing all mission_workflows after login', 'AuthWrapper');
-          RealtimeSyncService.forceSyncAll();
-        });
+        // v2.14.0+: RealtimeSyncService 제거, Clean Architecture 폴링만 사용
+        // 강제 동기화도 제거 (dispose 후 ref 사용 에러 방지)
       } else {
         // v2.14.0: 로그아웃 시 - 모든 폴링 중지
         AppLogger.info('🔴 User logged out - Stopping all services', 'AuthWrapper');
