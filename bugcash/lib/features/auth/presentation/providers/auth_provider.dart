@@ -294,6 +294,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// v2.13.2: 로컬 AuthState만 업데이트 (Firestore 미포함)
+  /// RoleSelectionPage에서 역할 변경 후 즉시 반영용
+  void setUser(UserEntity user) {
+    state = state.copyWith(user: user, isLoading: false, errorMessage: null);
+  }
+
   Future<void> updateUserData(UserEntity user) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 

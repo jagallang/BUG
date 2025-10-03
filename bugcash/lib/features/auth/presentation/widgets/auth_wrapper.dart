@@ -52,8 +52,24 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
       return RoleSelectionPage(userData: userData);
     }
 
+    // v2.13.2: 단일 역할 사용자 안전성 검증
+    // primaryRole이 roles에 포함되지 않는 경우 roles.first 사용
+    final safeRole = userData.roles.contains(userData.primaryRole)
+        ? userData.primaryRole
+        : userData.roles.first;
+
+    if (safeRole != userData.primaryRole) {
+      AppLogger.warning(
+        '⚠️ [AuthWrapper] primaryRole mismatch detected!\n'
+        '   ├─ primaryRole: ${userData.primaryRole.name}\n'
+        '   ├─ roles: ${userData.roles.map((r) => r.name).toList()}\n'
+        '   └─ Using safeRole: ${safeRole.name}',
+        'AuthWrapper'
+      );
+    }
+
     // 단일 역할 사용자는 기본 역할로 대시보드 이동
-    return _navigateToDashboard(userData, userData.primaryRole);
+    return _navigateToDashboard(userData, safeRole);
   }
 
   /// 인증 상태 변경에 따른 실시간 동기화 제어

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/user_entity.dart';
+import '../providers/auth_provider.dart';
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
+import '../../../../core/utils/logger.dart';
 
 class RoleSelectionPage extends ConsumerStatefulWidget {
   final UserEntity userData;
@@ -248,24 +251,66 @@ class _RoleSelectionPageState extends ConsumerState<RoleSelectionPage> {
     }
   }
 
-  void _navigateToSelectedRole() {
+  Future<void> _navigateToSelectedRole() async {
     if (selectedRole == null) return;
 
-    Widget targetPage;
-    switch (selectedRole!) {
-      case UserType.tester:
-        targetPage = TesterDashboardPage(testerId: widget.userData.uid);
-        break;
-      case UserType.provider:
-        targetPage = ProviderDashboardPage(providerId: widget.userData.uid);
-        break;
-      case UserType.admin:
-        targetPage = const AdminDashboardPage();
-        break;
-    }
+    try {
+      AppLogger.info(
+        '🔄 [RoleSelection] Updating primaryRole\n'
+        '   ├─ User: ${widget.userData.email}\n'
+        '   ├─ From: ${widget.userData.primaryRole.name}\n'
+        '   └─ To: ${selectedRole!.name}',
+        'RoleSelection'
+      );
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => targetPage),
-    );
+      // 1. Firestore 업데이트
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userData.uid)
+          .update({
+        'primaryRole': selectedRole!.name,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // 2. AuthState 동기화 (메모리 업데이트)
+      final updatedUser = widget.userData.copyWith(
+        primaryRole: selectedRole!,
+        updatedAt: DateTime.now(),
+      );
+      ref.read(authProvider.notifier).setUser(updatedUser);
+
+      AppLogger.info('✅ [RoleSelection] AuthState synchronized successfully', 'RoleSelection');
+
+      // 3. 대시보드로 네비게이션
+      Widget targetPage;
+      switch (selectedRole!) {
+        case UserType.tester:
+          targetPage = TesterDashboardPage(testerId: widget.userData.uid);
+          break;
+        case UserType.provider:
+          targetPage = ProviderDashboardPage(providerId: widget.userData.uid);
+          break;
+        case UserType.admin:
+          targetPage = const AdminDashboardPage();
+          break;
+      }
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => targetPage),
+      );
+    } catch (e) {
+      AppLogger.error('Failed to update primaryRole', 'RoleSelection', e);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('역할 변경 실패: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 }

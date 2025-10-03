@@ -75,11 +75,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     final hasAdminRole = user?.roles.contains(UserType.admin) == true ||
                         user?.primaryRole == UserType.admin;
 
-    // 디버그 로그
-    debugPrint('ProviderDashboard - User roles: ${user?.roles}');
-    debugPrint('ProviderDashboard - Primary role: ${user?.primaryRole}');
-    debugPrint('ProviderDashboard - Has admin role: $hasAdminRole');
-
     // 관리자 권한에 따라 네비게이션 아이템 구성
     final List<BottomNavigationBarItem> navigationItems = [
       const BottomNavigationBarItem(

@@ -159,6 +159,15 @@ class UserEntity extends Equatable {
     if (data['primaryRole'] != null) {
       try {
         primaryRole = UserType.values.byName(data['primaryRole']);
+
+        // v2.13.2: primaryRole이 roles에 포함되는지 검증
+        if (!roles.contains(primaryRole)) {
+          debugPrint(
+            '⚠️ UserEntity: primaryRole ($primaryRole) not in roles ($roles)\n'
+            '   → Using roles.first (${roles.first}) as fallback'
+          );
+          primaryRole = roles.first;
+        }
       } catch (e) {
         debugPrint('⚠️ UserEntity: 알 수 없는 primaryRole: ${data['primaryRole']}, roles의 첫 번째 값 사용');
         primaryRole = roles.first;
