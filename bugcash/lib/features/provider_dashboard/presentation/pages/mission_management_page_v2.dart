@@ -44,15 +44,28 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
     // ✅ v2.14.0: 폴링 시작
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(missionStateNotifierProvider.notifier)
-        .startPollingForProvider(widget.app.providerId);
+      // v2.14.4: dispose 후 ref 사용 방지
+      if (mounted) {
+        try {
+          ref.read(missionStateNotifierProvider.notifier)
+            .startPollingForProvider(widget.app.providerId);
+          AppLogger.info('✅ Polling started for provider: ${widget.app.providerId}', 'MissionManagementV2');
+        } catch (e) {
+          AppLogger.warning('⚠️ Failed to start polling: $e', 'MissionManagementV2');
+        }
+      }
     });
   }
 
   @override
   void dispose() {
-    // ✅ 폴링 중지
-    ref.read(missionStateNotifierProvider.notifier).stopPolling();
+    // ✅ v2.14.4: 폴링 중지 (try-catch로 안전하게)
+    try {
+      ref.read(missionStateNotifierProvider.notifier).stopPolling();
+      AppLogger.info('✅ Polling stopped', 'MissionManagementV2');
+    } catch (e) {
+      AppLogger.warning('⚠️ Failed to stop polling in dispose: $e', 'MissionManagementV2');
+    }
     _tabController.dispose();
     super.dispose();
   }
