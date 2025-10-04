@@ -14,6 +14,7 @@ class MissionWorkflowService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // 1단계: 미션 신청 생성 (자동 providerId 조회 포함)
+  /// v2.18.0: totalDays 기본값 14일 → 10일 변경 (권장값)
   Future<String> createMissionApplication({
     required String appId,
     required String appName,
@@ -24,7 +25,7 @@ class MissionWorkflowService {
     String? providerName, // 옵셔널로 변경 - 자동 조회 기능 추가
     required String experience,
     required String motivation,
-    int totalDays = 14,
+    int totalDays = 10,  // v2.18.0: 14 → 10 (권장 기본값)
     int dailyReward = 5000,
   }) async {
     try {

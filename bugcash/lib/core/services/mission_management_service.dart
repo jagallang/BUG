@@ -553,7 +553,7 @@ class MissionManagementService {
       );
 
       // 보너스 계산 (완료율 기반)
-      const totalDays = 14;
+      const totalDays = 10;  // v2.18.0: 14 → 10 (정산 계산용 기본값)
       final completedCount = completedMissions.docs.length;
       final completionRate = completedCount / totalDays;
 

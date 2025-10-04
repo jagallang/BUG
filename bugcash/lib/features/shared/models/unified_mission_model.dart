@@ -45,7 +45,7 @@ class UnifiedMissionModel {
     this.dailyPoints = 5000,
     this.totalPoints = 0,
     this.currentDay = 0,
-    this.totalDays = 14,
+    this.totalDays = 10,  // v2.18.0: 14 → 10 (권장 기본값)
     this.progressPercentage = 0.0,
     this.todayCompleted = false,
     this.metadata = const {},

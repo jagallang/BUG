@@ -107,6 +107,7 @@ class MissionRepositoryImpl implements MissionRepository {
   // ========================================
 
   @override
+  /// v2.18.0: totalDays 기본값 14일 → 10일 변경
   Future<String> createMissionApplication({
     required String appId,
     required String appName,
@@ -117,7 +118,7 @@ class MissionRepositoryImpl implements MissionRepository {
     required String motivation,
     String? providerId,
     String? providerName,
-    int totalDays = 14,
+    int totalDays = 10,  // v2.18.0: 14 → 10
     int dailyReward = 5000,
   }) async {
     final missionId = await _remoteDatasource.createMissionApplication(

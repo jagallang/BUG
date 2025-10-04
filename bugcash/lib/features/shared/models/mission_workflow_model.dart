@@ -247,7 +247,7 @@ class MissionWorkflowModel {
     this.approvedBy,
     this.startedAt,
     this.currentDay = 0,
-    this.totalDays = 14,
+    this.totalDays = 10,  // v2.18.0: 14 → 10 (권장 기본값)
     this.dailyInteractions = const [],
     this.completedAt,
     this.finalizedAt,
@@ -312,7 +312,7 @@ class MissionWorkflowModel {
       approvedBy: data['approvedBy'],
       startedAt: (data['startedAt'] as Timestamp?)?.toDate(),
       currentDay: data['currentDay'] ?? 0,
-      totalDays: data['totalDays'] ?? 14,
+      totalDays: data['totalDays'] ?? 10,  // v2.18.0: 14 → 10
       dailyInteractions: interactions,
       completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
       finalizedAt: (data['finalizedAt'] as Timestamp?)?.toDate(),

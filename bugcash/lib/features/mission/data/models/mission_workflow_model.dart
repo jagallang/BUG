@@ -40,7 +40,7 @@ class MissionWorkflowModel {
     this.completedAt,
     required this.experience,
     required this.motivation,
-    this.totalDays = 14,
+    this.totalDays = 10,  // v2.18.0: 14 → 10 (권장 기본값)
     this.dailyReward = 5000,
     this.completedDays = 0,
     this.dailyInteractions = const [], // v2.16.0
@@ -75,7 +75,7 @@ class MissionWorkflowModel {
       completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
       experience: data['experience'] ?? '',
       motivation: data['motivation'] ?? '',
-      totalDays: data['totalDays'] ?? 14,
+      totalDays: data['totalDays'] ?? 10,  // v2.18.0: 14 → 10
       dailyReward: data['dailyReward'] ?? 5000,
       completedDays: data['completedDays'] ?? 0,
       dailyInteractions: interactions, // v2.16.0
@@ -100,7 +100,7 @@ class MissionWorkflowModel {
       completedAt: (data['completedAt'] as Timestamp?)?.toDate(),
       experience: data['experience'] ?? '',
       motivation: data['motivation'] ?? '',
-      totalDays: data['totalDays'] ?? 14,
+      totalDays: data['totalDays'] ?? 10,  // v2.18.0: 14 → 10
       dailyReward: data['dailyReward'] ?? 5000,
       completedDays: data['completedDays'] ?? 0,
     );

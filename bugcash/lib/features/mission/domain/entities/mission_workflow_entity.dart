@@ -39,7 +39,7 @@ class MissionWorkflowEntity extends Equatable {
     this.completedAt,
     required this.experience,
     required this.motivation,
-    this.totalDays = 14,
+    this.totalDays = 10,  // v2.18.0: 14 → 10 (권장 기본값)
     this.dailyReward = 5000,
     this.completedDays = 0,
     this.dailyInteractions = const [], // v2.16.0

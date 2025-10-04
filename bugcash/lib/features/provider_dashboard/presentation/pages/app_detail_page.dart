@@ -215,10 +215,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         throw Exception('참여자 수는 1명 이상이어야 합니다');
       }
 
-      // 테스트 기간 검증
+      // 테스트 기간 검증 (v2.18.0: 최대 20일 제한)
       final testPeriod = int.tryParse(_testPeriodController.text);
       if (testPeriod == null || testPeriod < 1) {
         throw Exception('테스트 기간은 1일 이상이어야 합니다');
+      }
+      if (testPeriod > 20) {
+        throw Exception('테스트 기간은 최대 20일까지 설정 가능합니다');
       }
 
       // 테스트 시간 검증
@@ -703,7 +706,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       labelText: '테스트 기간 *',
-                      hintText: '예: 14',
+                      hintText: '1~20일 (권장: 10~14일)',
+                      helperText: '최대 20일',
                       suffix: Text(
                         '일',
                         style: TextStyle(
