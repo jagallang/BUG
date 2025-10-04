@@ -539,12 +539,14 @@ class MissionWorkflowService {
   }
 
   // v2.25.04: 공급자가 다음 날 미션 수동 생성
+  // v2.25.17: targetDay 파라미터 추가 (재귀 호출 시 특정 날짜 지정 가능)
   Future<void> createNextDayMission({
     required String workflowId,
     required String providerId,
+    int? targetDay,  // v2.25.17: 특정 날짜 지정 (null이면 currentDay + 1)
   }) async {
     try {
-      AppLogger.info('Provider $providerId creating next day mission', 'MissionWorkflow');
+      AppLogger.info('Provider $providerId creating next day mission (targetDay: $targetDay)', 'MissionWorkflow');
 
       final workflow = await getMissionWorkflow(workflowId);
 
@@ -553,8 +555,8 @@ class MissionWorkflowService {
         throw Exception('다음 날 미션은 이전 미션 승인 후에만 생성 가능합니다 (현재 상태: ${workflow.currentState.displayName})');
       }
 
-      // 다음 날 번호 계산
-      final nextDayNumber = workflow.currentDay + 1;
+      // v2.25.17: targetDay가 지정되면 사용, 아니면 currentDay + 1
+      final nextDayNumber = targetDay ?? (workflow.currentDay + 1);
 
       // 마지막 날 초과 체크
       if (nextDayNumber > workflow.totalDays) {

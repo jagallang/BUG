@@ -1563,12 +1563,14 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   }
 
   /// v2.25.16: 미션 생성 시도 (이미 존재하면 다음 미션 제안)
+  /// v2.25.17: specificDay를 targetDay로 전달하여 재귀 호출 시 특정 날짜 생성
   Future<void> _attemptCreateMission(MissionWorkflowEntity mission, {int? specificDay}) async {
     try {
       final service = ref.read(missionWorkflowServiceProvider);
       await service.createNextDayMission(
         workflowId: mission.id,
         providerId: mission.providerId,
+        targetDay: specificDay,  // v2.25.17: 특정 날짜 지정
       );
 
       if (mounted) {
