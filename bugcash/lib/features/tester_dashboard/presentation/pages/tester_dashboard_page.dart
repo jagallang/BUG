@@ -1114,9 +1114,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           );
         }
 
-        // 삭제 요청된 미션 필터링 (deleted_by_tester 상태 제외)
+        // v2.24.1: in_progress 상태 미션만 표시 (approved 상태 제외)
+        // approved: 공급자가 승인했지만 아직 미션만들기를 하지 않은 상태
+        // in_progress: 공급자가 미션만들기를 해서 테스터가 수행 가능한 상태
         final dailyMissions = (snapshot.data ?? [])
-            .where((mission) => mission.currentState != 'deleted_by_tester')
+            .where((mission) =>
+              mission.currentState != 'deleted_by_tester' &&
+              mission.currentState == 'in_progress'  // approved 제외
+            )
             .toList();
 
         if (dailyMissions.isEmpty) {
@@ -1176,8 +1181,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 onDelete: mission.status != DailyMissionStatus.approved
                     ? () => _deleteMissionEnhanced(mission)
                     : null,
-                // v2.8.9: 시작 버튼 (application_approved 또는 approved 상태 + startedAt 없음)
-                onStart: (mission.currentState == 'application_approved' || mission.currentState == 'approved') &&
+                // v2.24.1: 시작 버튼 (in_progress 상태에서만 시작 가능)
+                // approved 상태에서는 공급자가 "미션만들기"를 해야 함
+                onStart: (mission.currentState == 'in_progress') &&
                          mission.startedAt == null
                     ? () => _startMission(mission)
                     : null,
