@@ -452,8 +452,13 @@ class MissionWorkflowService {
         if (interactions[i]['dayNumber'] == dayNumber) {
           interactions[i]['providerApproved'] = true;
           interactions[i]['providerApprovedAt'] = Timestamp.fromDate(DateTime.now());
-          interactions[i]['providerFeedback'] = providerFeedback;
-          interactions[i]['providerRating'] = rating;
+          // v2.25.04: null 값 처리 (Firestore Invalid Argument 방지)
+          if (providerFeedback != null && providerFeedback.isNotEmpty) {
+            interactions[i]['providerFeedback'] = providerFeedback;
+          }
+          if (rating != null) {
+            interactions[i]['providerRating'] = rating;
+          }
           interactions[i]['rewardPaid'] = true;
           interactions[i]['rewardPaidAt'] = Timestamp.fromDate(DateTime.now());
           break;
