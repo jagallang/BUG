@@ -143,6 +143,9 @@ class MissionCard {
   final String deadlineText;     // "바로 진행" 또는 "모집 마감"
   final String participantsText; // "3/5" 또는 "대기 중"
 
+  // v2.20.01: 신청 여부 표시
+  final bool isApplied;          // 테스터가 이미 신청했는지 여부
+
   MissionCard({
     required this.id,
     required this.title,
@@ -169,6 +172,8 @@ class MissionCard {
     this.testPeriodDays = 10,
     this.deadlineText = '바로 진행',
     this.participantsText = '대기 중',
+    // v2.20.01: 신청 여부 기본값
+    this.isApplied = false,
   });
 }
 
@@ -368,14 +373,74 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       final availableMissions = await _getAvailableMissionsFromFirestore();
       final activeMissions = await _getActiveMissionsFromFirestore(testerId);
       final completedMissions = await _getCompletedMissionsFromFirestore(testerId);
-      
+
+      // v2.20.01: 테스터가 신청한 미션 목록 조회
+      final appliedAppIds = await _getAppliedMissionAppIds(testerId);
+
+      // v2.20.01: availableMissions에 isApplied 플래그 추가
+      final missionsWithAppliedStatus = availableMissions.map((mission) {
+        final isApplied = appliedAppIds.contains(mission.id);
+        return MissionCard(
+          id: mission.id,
+          title: mission.title,
+          description: mission.description,
+          type: mission.type,
+          rewardPoints: mission.rewardPoints,
+          estimatedMinutes: mission.estimatedMinutes,
+          status: mission.status,
+          deadline: mission.deadline,
+          requiredSkills: mission.requiredSkills,
+          appName: mission.appName,
+          appIcon: mission.appIcon,
+          currentParticipants: mission.currentParticipants,
+          maxParticipants: mission.maxParticipants,
+          progress: mission.progress,
+          startedAt: mission.startedAt,
+          providerId: mission.providerId,
+          difficulty: mission.difficulty,
+          isProviderApp: mission.isProviderApp,
+          originalAppData: mission.originalAppData,
+          currentTesters: mission.currentTesters,
+          maxTesters: mission.maxTesters,
+          testPeriodDays: mission.testPeriodDays,
+          deadlineText: mission.deadlineText,
+          participantsText: mission.participantsText,
+          isApplied: isApplied,  // v2.20.01: 신청 여부 설정
+        );
+      }).toList();
+
       state = state.copyWith(
-        availableMissions: availableMissions,
+        availableMissions: missionsWithAppliedStatus,
         activeMissions: activeMissions,
         completedMissions: completedMissions,
       );
     } catch (e) {
       debugPrint('Failed to load missions: $e');
+    }
+  }
+
+  /// v2.20.01: 테스터가 신청한 미션의 appId 목록 조회
+  Future<Set<String>> _getAppliedMissionAppIds(String testerId) async {
+    try {
+      final appliedWorkflows = await FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .where('testerId', isEqualTo: testerId)
+          .get();
+
+      final appIds = appliedWorkflows.docs
+          .map((doc) {
+            final appId = doc.data()['appId'] as String?;
+            // provider_app_ 접두사 제거
+            return appId?.replaceAll('provider_app_', '') ?? '';
+          })
+          .where((id) => id.isNotEmpty)
+          .toSet();
+
+      AppLogger.info('✅ Tester applied missions: ${appIds.length} apps', 'TesterDashboard');
+      return appIds;
+    } catch (e) {
+      AppLogger.error('Failed to get applied mission app IDs', 'TesterDashboard', e);
+      return <String>{};
     }
   }
 
