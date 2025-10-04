@@ -1613,75 +1613,42 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
   }
 
-  // v2.21.0: 미션 시작 (단순 가이드 메시지)
+  // v2.21.01: 미션 시작 (단순 가이드 메시지만 표시)
   Future<void> _startMission(DailyMissionModel mission) async {
-    try {
-      // 가이드 대화상자 표시
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.info_outline, color: Colors.blue, size: 28.sp),
-              SizedBox(width: 8.w),
-              Text(
-                '미션 진행 안내',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue,
-                ),
+    // 가이드 대화상자 표시
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.blue, size: 28.sp),
+            SizedBox(width: 8.w),
+            Text(
+              '미션 진행 안내',
+              style: TextStyle(
+                fontSize: 18.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue,
               ),
-            ],
-          ),
-          content: Text(
-            '앱 테스트가 진행중입니다.\n앱을 누르고 날짜별로 미션을 제출하세요',
-            style: TextStyle(fontSize: 14.sp, height: 1.6),
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              child: Text('확인'),
             ),
           ],
         ),
-      );
-
-      // 미션 시작 처리
-      if (confirmed == true && mounted) {
-        if (mission.workflowId != null) {
-          debugPrint('🔵 [Dashboard] 미션 시작 - startedAt 업데이트');
-
-          // startedAt 업데이트
-          await FirebaseFirestore.instance
-              .collection('mission_workflows')
-              .doc(mission.workflowId)
-              .update({
-            'startedAt': FieldValue.serverTimestamp(),
-            'currentState': 'in_progress',
-          });
-
-          debugPrint('🔵 [Dashboard] Firestore 업데이트 완료');
-
-          // UI 새로고침
-          debugPrint('🔵 [Dashboard] Provider 리로드');
-          ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ 미션 시작 실패: $e'),
-            backgroundColor: Colors.red,
+        content: Text(
+          '앱 테스트가 진행중입니다.\n앱을 누르고 날짜별로 미션을 제출하세요',
+          style: TextStyle(fontSize: 14.sp, height: 1.6),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('확인'),
           ),
-        );
-      }
-    }
+        ],
+      ),
+    );
   }
 
   // v2.13.0: 미션 완료 (완료 시간만 기록, 제출은 미션진행현황 페이지에서)
