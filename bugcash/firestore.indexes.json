@@ -521,20 +521,6 @@
         {
           "fieldPath": "appliedAt",
           "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "mission_workflows",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "testerId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "appliedAt",
-          "order": "DESCENDING"
         },
         {
           "fieldPath": "__name__",

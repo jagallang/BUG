@@ -300,24 +300,25 @@ class DailyMissionInteractionModel {
   }
 
   /// Model → Firestore Map 변환 (v2.17.2)
+  /// v2.25.08: Timestamp → DateTime (배열 내부에서 Timestamp 사용 불가)
   Map<String, dynamic> toFirestore() {
     return {
       'dayNumber': dayNumber,
-      'date': Timestamp.fromDate(date),
+      'date': date,
       'testerStarted': testerStarted,
-      if (testerStartedAt != null) 'testerStartedAt': Timestamp.fromDate(testerStartedAt!),
+      if (testerStartedAt != null) 'testerStartedAt': testerStartedAt!,
       'testerCompleted': testerCompleted,
-      if (testerCompletedAt != null) 'testerCompletedAt': Timestamp.fromDate(testerCompletedAt!),
+      if (testerCompletedAt != null) 'testerCompletedAt': testerCompletedAt!,
       if (testerFeedback != null) 'testerFeedback': testerFeedback,
       'testerScreenshots': testerScreenshots,
       'testerData': testerData,
       'providerApproved': providerApproved,
-      if (providerApprovedAt != null) 'providerApprovedAt': Timestamp.fromDate(providerApprovedAt!),
+      if (providerApprovedAt != null) 'providerApprovedAt': providerApprovedAt!,
       if (providerFeedback != null) 'providerFeedback': providerFeedback,
       if (providerRating != null) 'providerRating': providerRating,
       'dailyReward': dailyReward,
       'rewardPaid': rewardPaid,
-      if (rewardPaidAt != null) 'rewardPaidAt': Timestamp.fromDate(rewardPaidAt!),
+      if (rewardPaidAt != null) 'rewardPaidAt': rewardPaidAt!,
     };
   }
 }
