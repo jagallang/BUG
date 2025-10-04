@@ -440,8 +440,19 @@ class MissionWorkflowService {
     try {
       AppLogger.info('Provider $providerId approving daily mission day $dayNumber', 'MissionWorkflow');
 
-      final workflow = await getMissionWorkflow(workflowId);
-      final interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
+      // v2.25.09: Firestore 문서를 직접 읽어서 Timestamp 변환 문제 해결
+      final docSnapshot = await _firestore.collection('mission_workflows').doc(workflowId).get();
+      if (!docSnapshot.exists) {
+        throw Exception('Workflow not found');
+      }
+
+      final data = docSnapshot.data()!;
+      final interactions = List<Map<String, dynamic>>.from(data['dailyInteractions'] ?? []);
+
+      // 모든 interaction의 Timestamp를 DateTime으로 변환
+      for (var interaction in interactions) {
+        _convertTimestampsToDateTime(interaction);
+      }
 
       // 해당 날짜의 interaction 찾기 및 업데이트
       final now = DateTime.now();
@@ -463,13 +474,15 @@ class MissionWorkflowService {
       }
 
       // 리워드 계산
-      final earnedReward = workflow.totalEarnedReward + workflow.dailyReward;
-      final paidReward = workflow.totalPaidReward + workflow.dailyReward;
+      final totalDays = data['totalDays'] ?? 10;
+      final dailyReward = data['dailyReward'] ?? 5000;
+      final earnedReward = (data['totalEarnedReward'] ?? 0) + dailyReward;
+      final paidReward = (data['totalPaidReward'] ?? 0) + dailyReward;
 
       // v2.25.04: 다음 날 미션 자동 생성 제거 (공급자가 수동으로 생성)
       final updateData = {
         'dailyInteractions': interactions,
-        'currentState': dayNumber >= workflow.totalDays
+        'currentState': dayNumber >= totalDays
             ? MissionWorkflowState.projectCompleted.code
             : MissionWorkflowState.dailyMissionApproved.code,
         'stateUpdatedAt': FieldValue.serverTimestamp(),
@@ -479,7 +492,7 @@ class MissionWorkflowService {
       };
 
       // 마지막 날인 경우에만 완료 처리
-      if (dayNumber >= workflow.totalDays) {
+      if (dayNumber >= totalDays) {
         updateData['completedAt'] = FieldValue.serverTimestamp();
       }
 
@@ -490,13 +503,13 @@ class MissionWorkflowService {
 
       // 테스터에게 알림
       await _sendNotificationToTester(
-        testerId: workflow.testerId,
+        testerId: data['testerId'] ?? '',
         title: '일일 미션 승인!',
-        message: '${dayNumber}일차 미션이 승인되었습니다. ${workflow.dailyReward}원이 지급되었습니다.',
+        message: '${dayNumber}일차 미션이 승인되었습니다. ${dailyReward}원이 지급되었습니다.',
         data: {
           'workflowId': workflowId,
           'dayNumber': dayNumber,
-          'reward': workflow.dailyReward,
+          'reward': dailyReward,
         },
       );
 
@@ -792,6 +805,23 @@ class MissionWorkflowService {
       });
     } catch (e) {
       AppLogger.warning('Failed to send notification to tester', 'MissionWorkflow');
+    }
+  }
+
+  // v2.25.09: Timestamp를 DateTime으로 변환하는 헬퍼 메서드
+  void _convertTimestampsToDateTime(Map<String, dynamic> interaction) {
+    final timestampFields = [
+      'date',
+      'testerStartedAt',
+      'testerCompletedAt',
+      'providerApprovedAt',
+      'rewardPaidAt',
+    ];
+
+    for (final field in timestampFields) {
+      if (interaction[field] is Timestamp) {
+        interaction[field] = (interaction[field] as Timestamp).toDate();
+      }
     }
   }
 }
