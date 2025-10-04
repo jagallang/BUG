@@ -141,7 +141,55 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.25.0 (Latest) - 공급자 일일 미션 검토 시스템 완전 수정
+### v2.25.03 (Latest) - Firebase Storage CORS 수정 및 2단계 승인 확인 다이얼로그
+*Released: 2025-10-04*
+
+**🔧 Firebase Storage CORS 설정 완전 수정:**
+- **스크린샷 로딩 실패 해결**: 공급자 상세보기 페이지에서 빨간 느낌표 아이콘 대신 실제 스크린샷 표시
+- **근본 원인**: Firebase Storage CORS 정책이 bugcash.web.app 도메인을 허용하지 않음
+- **해결 방법**: Google Cloud SDK (gcloud, gsutil) 사용하여 CORS 설정 적용
+- **CORS 정책 최소화**: GET, HEAD 메서드만 허용 (보안 강화)
+- **허용 도메인**: `https://bugcash.web.app`, `https://bugcash.firebaseapp.com`
+
+**✅ 2단계 승인 확인 다이얼로그 구현:**
+- **UX 개선**: 공급자가 일일 미션 승인 시 리워드 지급을 명확히 인지
+- **1단계 - 리워드 지급 안내**:
+  - 오렌지 정보 아이콘으로 주의 환기
+  - 일일 리워드 금액 시각적 강조 (녹색 박스, 24sp 굵은 글씨)
+  - "Day X 미션을 승인하면 5,000원의 일일 리워드가 테스터에게 지급됩니다" 안내
+  - [취소] / [계속] 버튼 제공
+- **2단계 - 최종 승인 확인**:
+  - 녹색 체크 아이콘으로 확정 단계 표시
+  - "승인 후에는 취소할 수 없습니다" 경고 메시지
+  - [취소] / [최종 승인] 버튼 제공 (굵은 글씨 강조)
+- **안전장치**: 두 번의 확인을 거쳐야만 승인 처리 (실수 방지)
+
+**📁 수정된 파일:**
+- `bugcash/cors.json`:
+  - CORS 설정 최소화 (GET, HEAD 메서드만 허용)
+  - 불필요한 POST, PUT, DELETE, responseHeader 제거
+- `bugcash/lib/features/provider_dashboard/presentation/pages/daily_mission_review_page.dart` (Line 88-195):
+  - `_approveMission()` 메서드 2단계 다이얼로그로 재구성
+  - 스크린샷 그리드뷰에 디버그 로그 추가 (Line 433-473)
+  - 이미지 로딩 상태 표시 (CircularProgressIndicator)
+  - 에러 상태 개선 (아이콘 + "Load Failed" 텍스트)
+
+**🎯 효과:**
+- **Before**: CORS 에러로 스크린샷이 빨간 느낌표로 표시, 단일 확인 후 즉시 승인
+- **After**:
+  - 스크린샷 정상 로딩 및 표시
+  - 리워드 금액을 명확히 보여주는 1단계 안내
+  - 취소 불가를 경고하는 2단계 최종 확인
+  - 공급자의 신중한 의사결정 유도
+
+**🛠️ 기술 스택:**
+- Google Cloud SDK: CORS 설정 관리
+- Flutter AlertDialog: 2단계 모달 UI
+- Image.network: 로딩/에러 상태 처리
+
+---
+
+### v2.25.0 - 공급자 일일 미션 검토 시스템 완전 수정
 *Released: 2025-10-04*
 
 **🎯 핵심 문제 해결:**
