@@ -502,7 +502,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 _buildStatusBadge(mission.status),
               ],
             ),
-            // v2.15.0: 대기중 상태일 때만 '미션 시작' 버튼 표시
+            // v2.23.0: 승인된 상태일 때 '미션만들기' 버튼 표시
             if (mission.status == MissionWorkflowStatus.approved) ...[
               SizedBox(height: 16.h),
               SizedBox(
@@ -513,9 +513,9 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                     backgroundColor: AppColors.primary,
                     padding: EdgeInsets.symmetric(vertical: 12.h),
                   ),
-                  icon: const Icon(Icons.play_arrow, color: Colors.white),
+                  icon: const Icon(Icons.add_task, color: Colors.white),
                   label: const Text(
-                    '미션 시작',
+                    '미션만들기',
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -1270,16 +1270,21 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   }
 
   /// ✅ 미션 시작 (낙관적 업데이트)
+  /// v2.23.0: 미션 생성 및 "오늘" 탭 자동 전환
   Future<void> _startMission(String missionId) async {
     try {
       await ref.read(missionStateNotifierProvider.notifier)
         .startMission(missionId);
 
       if (mounted) {
+        // ✨ v2.23.0: "오늘" 탭으로 자동 전환
+        _tabController.animateTo(1); // 1 = "오늘" 탭 인덱스
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('✅ 미션이 시작되었습니다'),
+            content: Text('✅ 미션이 생성되었습니다. "오늘" 탭에서 확인하세요'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
       }
@@ -1287,7 +1292,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('❌ 미션 시작 실패: $e'),
+            content: Text('❌ 미션 생성 실패: $e'),
             backgroundColor: Colors.red,
           ),
         );
