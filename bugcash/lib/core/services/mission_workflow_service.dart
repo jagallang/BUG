@@ -448,10 +448,11 @@ class MissionWorkflowService {
       final interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
 
       // 해당 날짜의 interaction 찾기 및 업데이트
+      final now = DateTime.now();
       for (int i = 0; i < interactions.length; i++) {
         if (interactions[i]['dayNumber'] == dayNumber) {
           interactions[i]['providerApproved'] = true;
-          interactions[i]['providerApprovedAt'] = Timestamp.fromDate(DateTime.now());
+          interactions[i]['providerApprovedAt'] = now;
           // v2.25.04: null 값 처리 (Firestore Invalid Argument 방지)
           if (providerFeedback != null && providerFeedback.isNotEmpty) {
             interactions[i]['providerFeedback'] = providerFeedback;
@@ -460,7 +461,7 @@ class MissionWorkflowService {
             interactions[i]['providerRating'] = rating;
           }
           interactions[i]['rewardPaid'] = true;
-          interactions[i]['rewardPaidAt'] = Timestamp.fromDate(DateTime.now());
+          interactions[i]['rewardPaidAt'] = now;
           break;
         }
       }
@@ -600,17 +601,19 @@ class MissionWorkflowService {
       final interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
 
       // 해당 날짜의 interaction 찾기 및 업데이트
+      final now = DateTime.now();
       for (int i = 0; i < interactions.length; i++) {
         if (interactions[i]['dayNumber'] == dayNumber) {
           interactions[i]['providerApproved'] = false;
-          interactions[i]['providerApprovedAt'] = Timestamp.fromDate(DateTime.now());
+          interactions[i]['providerApprovedAt'] = now;
           interactions[i]['providerFeedback'] = rejectionReason;
-          interactions[i]['providerRating'] = null;
+          // v2.25.06: null 값 제거 (배열 내부에서 null 지원 안 됨)
+          interactions[i].remove('providerRating');
           interactions[i]['rewardPaid'] = false;
-          interactions[i]['rewardPaidAt'] = null;
+          interactions[i].remove('rewardPaidAt');
           // v2.22.0: 재제출 가능하도록 testerCompleted를 false로 변경
           interactions[i]['testerCompleted'] = false;
-          interactions[i]['testerCompletedAt'] = null;
+          interactions[i].remove('testerCompletedAt');
           break;
         }
       }
