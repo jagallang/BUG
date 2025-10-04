@@ -27,6 +27,10 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     with TickerProviderStateMixin {
   late TabController _tabController;
 
+  // v2.24.0: 대량 미션 생성을 위한 선택 상태
+  final Set<String> _selectedMissionIds = {};
+  bool _isSelectionMode = false;
+
   @override
   void initState() {
     super.initState();
@@ -323,23 +327,63 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
       );
     }
 
+    // v2.24.0: approved 상태만 필터링 (미션만들기 가능한 테스터)
+    final approvedOnlyTesters = approvedTesters
+        .where((t) => t.status == MissionWorkflowStatus.approved)
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // v2.24.0: 헤더 (전체 선택 체크박스 + 대량 생성 버튼)
         Padding(
           padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
           child: Row(
             children: [
+              // v2.24.0: 전체 선택 체크박스 (approved 상태만 선택 가능)
+              if (approvedOnlyTesters.isNotEmpty)
+                Checkbox(
+                  value: _selectedMissionIds.isNotEmpty &&
+                      _selectedMissionIds.length == approvedOnlyTesters.length,
+                  tristate: _selectedMissionIds.isNotEmpty &&
+                      _selectedMissionIds.length < approvedOnlyTesters.length,
+                  onChanged: (value) => _toggleSelectAll(approvedOnlyTesters),
+                ),
               Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
               SizedBox(width: 8.w),
-              Text(
-                '승인된 테스터 전체 (${approvedTesters.length}명)',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+              Expanded(
+                child: Text(
+                  '승인된 테스터 전체 (${approvedTesters.length}명)',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
+              // v2.24.0: 대량 미션 생성 버튼 (선택된 항목이 있을 때만 표시)
+              if (_selectedMissionIds.isNotEmpty)
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Phase 3에서 구현 예정
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Phase 3에서 구현 예정 (선택: ${_selectedMissionIds.length}명)'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                  ),
+                  icon: Icon(Icons.play_arrow, size: 18.sp),
+                  label: Text(
+                    '선택한 ${_selectedMissionIds.length}명 미션만들기',
+                    style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
+                  ),
+                ),
             ],
           ),
         ),
@@ -456,7 +500,11 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   }
 
   /// 승인된 테스터 카드 (v2.14.0)
+  /// v2.24.0: 체크박스 추가
   Widget _buildApprovedTesterCard(MissionWorkflowEntity mission) {
+    final isApproved = mission.status == MissionWorkflowStatus.approved;
+    final isSelected = _selectedMissionIds.contains(mission.id);
+
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
       elevation: 2,
@@ -468,6 +516,12 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
           children: [
             Row(
               children: [
+                // v2.24.0: approved 상태만 체크박스 표시
+                if (isApproved)
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (value) => _toggleSelection(mission.id),
+                  ),
                 CircleAvatar(
                   radius: 20.r,
                   backgroundColor: Colors.green.withValues(alpha: 0.1),
@@ -1298,5 +1352,33 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         );
       }
     }
+  }
+
+  /// v2.24.0: 개별 테스터 선택/해제
+  void _toggleSelection(String missionId) {
+    setState(() {
+      if (_selectedMissionIds.contains(missionId)) {
+        _selectedMissionIds.remove(missionId);
+      } else {
+        _selectedMissionIds.add(missionId);
+      }
+    });
+  }
+
+  /// v2.24.0: 전체 선택/해제
+  void _toggleSelectAll(List<MissionWorkflowEntity> approvedTesters) {
+    setState(() {
+      final approvedIds = approvedTesters
+          .where((t) => t.status == MissionWorkflowStatus.approved)
+          .map((t) => t.id)
+          .toList();
+
+      if (_selectedMissionIds.length == approvedIds.length) {
+        _selectedMissionIds.clear(); // 전체 해제
+      } else {
+        _selectedMissionIds.clear();
+        _selectedMissionIds.addAll(approvedIds); // 전체 선택
+      }
+    });
   }
 }
