@@ -28,3 +28,23 @@
 [debug] 
 [error] 
 [error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-03T07:13:50.434Z] ----------------------------------------------------------------------
+[debug] [2025-10-03T07:13:50.440Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-03T07:13:50.440Z] CLI Version:   14.7.0
+[debug] [2025-10-03T07:13:50.440Z] Platform:      darwin
+[debug] [2025-10-03T07:13:50.440Z] Node Version:  v20.19.2
+[debug] [2025-10-03T07:13:50.440Z] Time:          Fri Oct 03 2025 16:13:50 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-03T07:13:50.441Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-03T09:33:51.589Z] ----------------------------------------------------------------------
+[debug] [2025-10-03T09:33:51.595Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-03T09:33:51.595Z] CLI Version:   14.7.0
+[debug] [2025-10-03T09:33:51.595Z] Platform:      darwin
+[debug] [2025-10-03T09:33:51.595Z] Node Version:  v20.19.2
+[debug] [2025-10-03T09:33:51.595Z] Time:          Fri Oct 03 2025 18:33:51 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-03T09:33:51.595Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)

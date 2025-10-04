@@ -28,17 +28,25 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
 
-  /// 갤러리에서 이미지 선택
+  /// v2.17.1: 갤러리에서 이미지 선택 (디버깅 로그 추가)
   Future<void> _pickImages() async {
     try {
+      print('🖱️ [ImageUploadWidget] _pickImages called!');
+      print('   ├─ Current images: ${widget.selectedImages.length}');
+      print('   ├─ Max images: ${widget.maxImages}');
+      print('   ├─ Is uploading: $_isUploading');
+
       final remainingSlots = widget.maxImages - widget.selectedImages.length;
+      print('   └─ Remaining slots: $remainingSlots');
 
       if (remainingSlots <= 0) {
+        print('❌ [ImageUploadWidget] Max limit reached');
         _showMessage('최대 ${widget.maxImages}장까지만 선택 가능합니다.');
         return;
       }
 
       setState(() => _isUploading = true);
+      print('📂 [ImageUploadWidget] Opening file picker...');
 
       // 여러 이미지 선택
       final List<XFile> images = await _picker.pickMultiImage(
@@ -47,7 +55,10 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
         imageQuality: 85,
       );
 
+      print('✅ [ImageUploadWidget] Files selected: ${images.length}');
+
       if (images.isEmpty) {
+        print('ℹ️ [ImageUploadWidget] No files selected (user cancelled)');
         setState(() => _isUploading = false);
         return;
       }
@@ -56,6 +67,7 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
       final imagesToAdd = images.take(remainingSlots).toList();
 
       if (images.length > remainingSlots) {
+        print('⚠️ [ImageUploadWidget] Limiting to $remainingSlots files');
         _showMessage('${remainingSlots}장만 추가됩니다.');
       }
 
@@ -63,13 +75,17 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
       final updatedList = [...widget.selectedImages, ...imagesToAdd];
       widget.onImagesChanged(updatedList);
 
+      print('✅ [ImageUploadWidget] Images added: ${imagesToAdd.length}, total: ${updatedList.length}');
       AppLogger.info('Images selected: ${imagesToAdd.length} added, total: ${updatedList.length}', 'ImageUploadWidget');
 
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('💥 [ImageUploadWidget] Error: $e');
+      print('Stack trace: $stackTrace');
       AppLogger.error('Failed to pick images: $e', 'ImageUploadWidget');
       _showMessage('이미지 선택 중 오류가 발생했습니다.');
     } finally {
       setState(() => _isUploading = false);
+      print('🏁 [ImageUploadWidget] _pickImages completed');
     }
   }
 
@@ -99,57 +115,89 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 헤더: 타이틀 + 선택 버튼
+        // v2.17.1: 헤더 - 버튼 항상 표시 (UI 겹침 방지)
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              '스크린샷 (${widget.selectedImages.length}/${widget.maxImages})',
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (widget.selectedImages.length < widget.maxImages)
-              ElevatedButton.icon(
-                onPressed: _isUploading ? null : _pickImages,
-                icon: _isUploading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.add_photo_alternate),
-                label: const Text('이미지 추가'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            Expanded(
+              child: Text(
+                '스크린샷 (${widget.selectedImages.length}/${widget.maxImages})',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
+            ),
+            const SizedBox(width: 12),
+            ElevatedButton.icon(
+              onPressed: (widget.selectedImages.length >= widget.maxImages || _isUploading)
+                  ? null
+                  : _pickImages,
+              icon: _isUploading
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.add_photo_alternate),
+              label: Text(
+                widget.selectedImages.length >= widget.maxImages
+                    ? '최대 ${widget.maxImages}장'
+                    : '이미지 추가',
+              ),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                minimumSize: const Size(100, 40),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 16),
 
-        // 이미지 썸네일 그리드
+        // v2.17.1: 이미지 썸네일 그리드 (빈 상태 클릭 가능)
         if (widget.selectedImages.isEmpty)
-          // 빈 상태
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey.shade300),
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.grey.shade50,
-            ),
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.image_outlined, size: 48, color: Colors.grey.shade400),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.emptyStateText,
-                    style: TextStyle(color: Colors.grey.shade600),
-                  ),
-                ],
+          // 빈 상태 - 클릭 가능한 영역
+          InkWell(
+            onTap: _isUploading ? null : _pickImages,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: 150,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color: Colors.blue.shade300,
+                  width: 2,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.blue.shade50,
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add_photo_alternate,
+                      size: 56,
+                      color: Colors.blue.shade400,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      '클릭하여 이미지 추가',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blue.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.emptyStateText,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           )
