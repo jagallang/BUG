@@ -94,9 +94,16 @@ class UnifiedMissionModel {
 
     // currentState가 있으면 참고하여 status 보정
     if (currentState != null) {
-      if (currentState.contains('completed') || currentState == 'mission_completed') {
+      // v2.25.13: 일일 미션 상태를 먼저 체크 (더 구체적인 상태)
+      if (currentState == 'daily_mission_approved') {
+        resolvedStatus = 'daily_mission_approved';
+      } else if (currentState == 'daily_mission_completed') {
+        resolvedStatus = 'daily_mission_completed';
+      } else if (currentState == 'daily_mission_rejected') {
+        resolvedStatus = 'daily_mission_rejected';
+      } else if (currentState.contains('completed') || currentState == 'mission_completed') {
         resolvedStatus = 'completed';
-      } else if (currentState.contains('progress') || currentState == 'mission_started') {
+      } else if (currentState.contains('progress') || currentState == 'mission_started' || currentState == 'in_progress') {
         resolvedStatus = 'in_progress';
       } else if (currentState == 'application_approved') {
         resolvedStatus = 'approved';

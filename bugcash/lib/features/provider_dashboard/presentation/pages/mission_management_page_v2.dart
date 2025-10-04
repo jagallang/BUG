@@ -174,12 +174,14 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
             // v2.15.0: 승인된 테스터 전체 필터링 (진행중, 완료 포함)
             // v2.24.4: dailyMissionCompleted 상태 추가 (검토 대기 중인 테스터 포함)
+            // v2.25.13: dailyMissionApproved 상태 추가 (일일 미션 승인 후 대기 중인 테스터 포함)
             final approvedTesters = missions
                 .where((m) =>
                     m.status == MissionWorkflowStatus.approved ||
                     m.status == MissionWorkflowStatus.inProgress ||
                     m.status == MissionWorkflowStatus.testingCompleted ||
                     m.status == MissionWorkflowStatus.dailyMissionCompleted ||
+                    m.status == MissionWorkflowStatus.dailyMissionApproved ||
                     m.status == MissionWorkflowStatus.submissionCompleted)
                 .toList();
 
