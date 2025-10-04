@@ -413,7 +413,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
             Expanded(
               child: _buildRowButton(
                 icon: canStart ? Icons.play_arrow : Icons.check,
-                label: canStart ? '시작' : '시작됨',
+                label: canStart ? '미션진행중' : '시작됨',
                 color: Colors.blue,
                 enabled: canStart,
                 onPressed: canStart ? widget.onStart : null,

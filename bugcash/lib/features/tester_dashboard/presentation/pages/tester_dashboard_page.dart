@@ -1613,44 +1613,19 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
   }
 
-  // 미션 시작 (가이드 대화상자 + 앱 열기)
+  // v2.21.0: 미션 시작 (단순 가이드 메시지)
   Future<void> _startMission(DailyMissionModel mission) async {
     try {
-      // 1. 앱 URL 먼저 가져오기
-      final projectDoc = await FirebaseFirestore.instance
-          .collection('projects')
-          .doc(mission.appId)
-          .get();
-
-      final appUrl = projectDoc.data()?['appUrl'] as String?;
-      final appTestUrl = projectDoc.data()?['appTestUrl'] as String?;
-
-      // appTestUrl 우선, 없으면 appUrl 사용
-      final testUrl = appTestUrl ?? appUrl;
-      final isWebApp = appTestUrl != null;
-
-      if (testUrl == null || testUrl.isEmpty) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('❌ 앱 URL이 설정되지 않았습니다'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-        return;
-      }
-
-      // 2. 가이드 대화상자 표시
+      // 가이드 대화상자 표시
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: Row(
             children: [
-              Icon(Icons.rocket_launch, color: Colors.blue, size: 28.sp),
+              Icon(Icons.info_outline, color: Colors.blue, size: 28.sp),
               SizedBox(width: 8.w),
               Text(
-                '🚀 미션 시작',
+                '미션 진행 안내',
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontWeight: FontWeight.bold,
@@ -1659,268 +1634,44 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               ),
             ],
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 앱 링크 섹션
-                Container(
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: Colors.grey[300]!),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.link, size: 16.sp, color: Colors.blue),
-                          SizedBox(width: 4.w),
-                          Text(
-                            '🔗 앱 링크',
-                            style: TextStyle(
-                              fontSize: 13.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 8.h),
-                      SelectableText(
-                        testUrl,
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.grey[700],
-                        ),
-                        maxLines: 2,
-                      ),
-                      SizedBox(height: 8.h),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () async {
-                                await Clipboard.setData(ClipboardData(text: testUrl));
-                                if (mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('📋 링크가 복사되었습니다'),
-                                      backgroundColor: Colors.green,
-                                      duration: Duration(seconds: 2),
-                                    ),
-                                  );
-                                }
-                              },
-                              icon: Icon(Icons.copy, size: 14.sp),
-                              label: Text('복사', style: TextStyle(fontSize: 12.sp)),
-                              style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 8.h),
-                              ),
-                            ),
-                          ),
-                          SizedBox(width: 8.w),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                html.window.open(testUrl, '_blank');
-                              },
-                              icon: Icon(Icons.open_in_new, size: 14.sp),
-                              label: Text('바로가기', style: TextStyle(fontSize: 12.sp)),
-                              style: ElevatedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 8.h),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 12.h),
-
-                // 미션 가이드 섹션
-                Container(
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '📋 미션 가이드',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.blue[700],
-                        ),
-                      ),
-                      SizedBox(height: 8.h),
-                      Text(
-                        isWebApp
-                            ? '✅ 10분 동안 웹 앱을 테스트해주세요\n'
-                              '🌐 브라우저에서 앱을 사용해주세요\n'
-                              '📸 스크린샷을 캡처해주세요\n'
-                              '⏱️ 10분 후 완료 버튼이 활성화됩니다'
-                            : '✅ 10분 동안 앱을 테스트해주세요\n'
-                              '📱 버그나 개선사항을 찾아주세요\n'
-                              '📸 스크린샷을 캡처해주세요\n'
-                              '⏱️ 10분 후 완료 버튼이 활성화됩니다',
-                        style: TextStyle(fontSize: 13.sp, height: 1.6),
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 12.h),
-
-                Text(
-                  '아래 버튼을 눌러 앱 테스트를 시작하세요!',
-                  style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500),
-                ),
-              ],
-            ),
+          content: Text(
+            '앱 테스트가 진행중입니다.\n앱을 누르고 날짜별로 미션을 제출하세요',
+            style: TextStyle(fontSize: 14.sp, height: 1.6),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: Text('취소'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () {
-                html.window.open(testUrl, '_blank');
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(isWebApp
-                          ? '🌐 웹 앱이 새 탭에서 열렸습니다'
-                          : '📱 앱을 설치한 후 "미션시작" 버튼을 눌러주세요'),
-                      backgroundColor: Colors.blue,
-                      duration: Duration(seconds: 3),
-                    ),
-                  );
-                }
-              },
-              icon: Icon(isWebApp ? Icons.open_in_browser : Icons.download, size: 16.sp),
-              label: Text(isWebApp ? '웹에서 열기' : '설치하기'),
-              style: OutlinedButton.styleFrom(
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-              ),
-            ),
-            ElevatedButton.icon(
-              onPressed: () async {
-                // 설치 확인 다이얼로그
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text('미션 시작 확인'),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          isWebApp
-                              ? '웹 앱이 실행 가능한가요?'
-                              : '앱이 설치되고 실행 가능한가요?',
-                          style: TextStyle(fontSize: 14.sp),
-                        ),
-                        SizedBox(height: 16.h),
-                        Container(
-                          padding: EdgeInsets.all(12.w),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(Icons.info_outline, size: 16.sp, color: Colors.blue),
-                              SizedBox(width: 8.w),
-                              Expanded(
-                                child: Text(
-                                  '확인을 누르면 10분 타이머가 시작됩니다. (10분 후 완료 버튼 활성화)',
-                                  style: TextStyle(fontSize: 12.sp, color: Colors.blue[700]),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: Text('취소'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: Text('확인'),
-                      ),
-                    ],
-                  ),
-                );
-
-                // 미션 시작 - 타이머 모달창 표시
-                if (confirmed == true && mounted) {
-                  if (mission.workflowId != null) {
-                    debugPrint('🔵 [Dashboard] 미션 시작 - startedAt 업데이트');
-
-                    // startedAt 업데이트
-                    await FirebaseFirestore.instance
-                        .collection('mission_workflows')
-                        .doc(mission.workflowId)
-                        .update({
-                      'startedAt': FieldValue.serverTimestamp(),
-                      'currentState': 'in_progress',
-                    });
-
-                    debugPrint('🔵 [Dashboard] Firestore 업데이트 완료, 테스트 앱 열기');
-
-                    // 테스트용 앱을 새 창에서 열기
-                    html.window.open(testUrl, '_blank');
-
-                    // UI 새로고침
-                    debugPrint('🔵 [Dashboard] Provider 리로드 (미션 시작 후)');
-                    ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
-
-                    // 타이머 모달창 표시
-                    if (mounted) {
-                      debugPrint('🔵 [Dashboard] 타이머 모달창 표시');
-                      final result = await _showTimerModal(context, mission.workflowId!);
-                      debugPrint('🔵 [Dashboard] 타이머 모달창 종료, result=$result');
-
-                      // 타이머 종료 후 UI 새로고침
-                      if (result != null && mounted) {
-                        debugPrint('🔵 [Dashboard] Provider 리로드 (타이머 종료 후, 300ms delay)');
-                        await Future.delayed(Duration(milliseconds: 300));
-                        if (mounted) {
-                          ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
-                          debugPrint('🔵 [Dashboard] Provider 리로드 완료');
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              icon: Icon(Icons.play_arrow, size: 16.sp),
-              label: Text('미션시작'),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
+                backgroundColor: Colors.blue,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
               ),
+              child: Text('확인'),
             ),
           ],
         ),
       );
+
+      // 미션 시작 처리
+      if (confirmed == true && mounted) {
+        if (mission.workflowId != null) {
+          debugPrint('🔵 [Dashboard] 미션 시작 - startedAt 업데이트');
+
+          // startedAt 업데이트
+          await FirebaseFirestore.instance
+              .collection('mission_workflows')
+              .doc(mission.workflowId)
+              .update({
+            'startedAt': FieldValue.serverTimestamp(),
+            'currentState': 'in_progress',
+          });
+
+          debugPrint('🔵 [Dashboard] Firestore 업데이트 완료');
+
+          // UI 새로고침
+          debugPrint('🔵 [Dashboard] Provider 리로드');
+          ref.read(testerDashboardProvider.notifier).loadTesterData(widget.testerId);
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
