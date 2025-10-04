@@ -1123,6 +1123,9 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
         return MissionStatus.draft;
       case 'approved':
       case 'in_progress':
+      case 'daily_mission_completed':      // v2.25.15: 일일 미션 제출 후 검토 대기
+      case 'daily_mission_approved':       // v2.25.15: 일일 미션 승인됨 (다음 날 대기)
+      case 'daily_mission_rejected':       // v2.25.15: 일일 미션 거절됨 (재제출 필요)
         return MissionStatus.active;
       case 'completed':
         return MissionStatus.completed;
