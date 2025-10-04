@@ -1133,7 +1133,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
         debugPrint('🎨 RENDERING_ACTIVE_TAB: total=${snapshot.data?.length ?? 0}, filtered=${dailyMissions.length}');
         if (dailyMissions.isNotEmpty) {
-          debugPrint('   └─ First mission: ${dailyMissions.first.appName} (${dailyMissions.first.currentState})');
+          debugPrint('   └─ First mission: ${dailyMissions.first.missionTitle} (${dailyMissions.first.currentState})');
         }
 
         if (dailyMissions.isEmpty) {

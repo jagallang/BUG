@@ -96,3 +96,13 @@
 └─────────────────────────┴─────────────────────┴────────────────┴──────────────────────┘
 [info] 
 [info] 14 project(s) total.
+[debug] [2025-10-04T12:53:23.827Z] ----------------------------------------------------------------------
+[debug] [2025-10-04T12:53:23.833Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-04T12:53:23.834Z] CLI Version:   14.7.0
+[debug] [2025-10-04T12:53:23.834Z] Platform:      darwin
+[debug] [2025-10-04T12:53:23.834Z] Node Version:  v20.19.2
+[debug] [2025-10-04T12:53:23.834Z] Time:          Sat Oct 04 2025 21:53:23 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-04T12:53:23.834Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)

@@ -1014,14 +1014,19 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             ),
             SizedBox(height: 12.h),
             Row(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.assignment, size: 16.sp, color: Colors.grey[600]),
-                SizedBox(width: 4.w),
-                Text(
-                  'Day $latestDayNumber 제출됨',
-                  style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
+                Row(
+                  children: [
+                    Icon(Icons.assignment, size: 16, color: Colors.grey[600]),
+                    SizedBox(width: 4),
+                    Text(
+                      'Day $latestDayNumber 제출됨',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                    ),
+                  ],
                 ),
-                const Spacer(),
                 ElevatedButton(
                   onPressed: () async {
                     // 리뷰 페이지로 이동
@@ -1043,14 +1048,15 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    minimumSize: Size(100, 40),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.r),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                   ),
                   child: Text(
                     '상세보기',
-                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
               ],

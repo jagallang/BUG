@@ -141,7 +141,49 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.11.3 (Latest) - testing_completed 상태 버튼 로직 수정
+### v2.25.0 (Latest) - 공급자 일일 미션 검토 시스템 완전 수정
+*Released: 2025-10-04*
+
+**🎯 핵심 문제 해결:**
+- **"상세보기" 버튼 렌더링 실패 완전 해결**: 공급자가 테스터의 일일 미션 제출을 검토할 수 없었던 치명적 버그 수정
+- **근본 원인**: ElevatedButton 테마의 `minimumSize: Size(double.infinity, 52.h)` 설정으로 Row 안에서 무한 너비 요구
+- **추가 원인**: flutter_screenutil의 반응형 값(`.sp`, `.w`, `.h`)이 웹 환경에서 제대로 계산되지 않음
+
+**🔧 기술적 해결책:**
+- **버튼 크기 명시화**: `minimumSize: Size(100, 40)` 고정값으로 크기 보장
+- **반응형 값 제거**: `.sp`, `.w`, `.h` → 고정 숫자값 사용
+- **Row 레이아웃 최적화**: `mainAxisAlignment: MainAxisAlignment.spaceBetween` 명확화
+- **테마 충돌 해결**: 인라인 스타일로 테마 `minimumSize` 오버라이드
+
+**📊 수정 파일:**
+- `lib/features/provider_dashboard/presentation/pages/mission_management_page_v2.dart` (Line 1016-1061)
+  - Builder 제거 및 Row 구조 개선
+  - ElevatedButton에 명시적 크기 설정
+  - Container 디버깅 요소 제거
+- `lib/features/tester_dashboard/presentation/pages/tester_dashboard_page.dart` (Line 1127-1137)
+  - 일일 미션 진행 상태 필터 수정 (v2.24.8에서 이미 완료)
+
+**🐛 디버깅 과정 (v2.24.2 → v2.25.0):**
+1. **v2.24.2-v2.24.5**: Debug 로그 추가 → 데이터는 정상, 버튼만 안 보임 확인
+2. **v2.24.3**: 무한 로딩 버그 수정 (print()를 build 메서드에서 제거)
+3. **v2.24.6**: Repository 캐시 무효화 시스템 추가
+4. **v2.24.7-v2.24.8**: 테스터 UI 필터 수정 (일일 미션 상태 추가)
+5. **v2.24.9**: Builder 문법 오류 수정 시도 (효과 없음)
+6. **v2.24.10**: Spacer 제거 시도 (효과 없음)
+7. **v2.24.11**: 디버깅 모드 - 빨간 버튼 + 파란 테두리로 버튼 존재 확인 ✅
+8. **v2.24.12 (v2.25.0)**: 원래 스타일 복구 및 최종 수정 완료
+
+**✅ 효과:**
+- **Before**: 공급자가 "오늘" 탭에서 "검토 대기중" 상태는 보이지만 버튼이 렌더링되지 않아 검토 불가
+- **After**: "상세보기" 버튼 정상 표시, 공급자가 DailyMissionReviewPage로 이동하여 승인/거부 가능
+- **사용자 흐름**: 테스터 제출 → 공급자 검토 → 승인/거부 → 다음 날짜 진행 (완전한 워크플로우 복구)
+
+**🎨 UI 개선:**
+- 버튼이 고정 크기로 안정적 렌더링
+- Row 레이아웃이 spaceBetween으로 양쪽 정렬
+- Material 3 테마와 호환되는 버튼 스타일
+
+### v2.11.3 - testing_completed 상태 버튼 로직 수정
 *Released: 2025-10-03*
 
 **🐛 회색 화면 버그의 진짜 원인 해결:**
