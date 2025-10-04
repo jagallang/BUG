@@ -3,6 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/shared/models/mission_workflow_model.dart';
 import '../utils/logger.dart';
 
+/// v2.25.16: 미션이 이미 존재할 때 발생하는 특수 Exception
+class MissionAlreadyExistsException implements Exception {
+  final int dayNumber;
+  final String message;
+
+  MissionAlreadyExistsException({
+    required this.dayNumber,
+    required this.message,
+  });
+
+  @override
+  String toString() => message;
+}
+
 /// MissionWorkflowService Provider
 final missionWorkflowServiceProvider = Provider<MissionWorkflowService>((ref) {
   return MissionWorkflowService();
@@ -547,14 +561,18 @@ class MissionWorkflowService {
         throw Exception('모든 미션이 완료되었습니다. (총 ${workflow.totalDays}일)');
       }
 
-      // 다음 날 미션이 이미 존재하는지 확인
+      // v2.25.16: 다음 날 미션이 이미 존재하는지 확인
       final existingInteraction = workflow.dailyInteractions.firstWhere(
         (interaction) => interaction.dayNumber == nextDayNumber,
         orElse: () => throw StateError('NotFound'),
       );
 
       if (existingInteraction.id != 'NotFound') {
-        throw Exception('Day $nextDayNumber 미션이 이미 존재합니다');
+        // v2.25.16: 이미 존재하면 특수 에러 타입으로 던져서 UI에서 다음 날 생성 제안
+        throw MissionAlreadyExistsException(
+          dayNumber: nextDayNumber,
+          message: 'Day $nextDayNumber 미션이 이미 존재합니다',
+        );
       }
 
       // 다음 날 미션 생성

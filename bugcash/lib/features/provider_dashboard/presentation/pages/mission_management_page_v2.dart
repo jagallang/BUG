@@ -1204,36 +1204,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                   );
 
                   if (confirmed == true && mounted) {
-                    try {
-                      final service = ref.read(missionWorkflowServiceProvider);
-                      await service.createNextDayMission(
-                        workflowId: mission.id,
-                        providerId: mission.providerId,
-                      );
-
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('✅ Day ${mission.completedDays + 1} 미션이 생성되었습니다'),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                        // 상태 새로고침
-                        ref.read(missionStateNotifierProvider.notifier).startPollingForApp(
-                          mission.appId,
-                          mission.providerId,
-                        );
-                      }
-                    } catch (e) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('미션 생성 실패: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
+                    await _attemptCreateMission(mission);
                   }
                 },
                 icon: Icon(Icons.add_circle_outline, size: 20.sp),
@@ -1589,5 +1560,79 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         _selectedMissionIds.addAll(approvedIds); // 전체 선택
       }
     });
+  }
+
+  /// v2.25.16: 미션 생성 시도 (이미 존재하면 다음 미션 제안)
+  Future<void> _attemptCreateMission(MissionWorkflowEntity mission, {int? specificDay}) async {
+    try {
+      final service = ref.read(missionWorkflowServiceProvider);
+      await service.createNextDayMission(
+        workflowId: mission.id,
+        providerId: mission.providerId,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ Day ${specificDay ?? mission.completedDays + 1} 미션이 생성되었습니다'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        // 상태 새로고침
+        ref.read(missionStateNotifierProvider.notifier).startPollingForApp(
+          mission.appId,
+          mission.providerId,
+        );
+      }
+    } on MissionAlreadyExistsException catch (e) {
+      // v2.25.16: 미션이 이미 존재하면 다음 날 미션 생성 제안
+      if (mounted) {
+        final nextDay = e.dayNumber + 1;
+
+        // 다음 날 미션 생성 제안 다이얼로그
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.orange, size: 28.sp),
+                SizedBox(width: 8.w),
+                Text('Day ${e.dayNumber} 이미 존재'),
+              ],
+            ),
+            content: Text(
+              'Day ${e.dayNumber} 미션이 이미 생성되어 있습니다.\n\n'
+              'Day $nextDay 미션을 생성하시겠습니까?',
+              style: TextStyle(fontSize: 15.sp),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('취소'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                child: Text('Day $nextDay 생성'),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmed == true && mounted) {
+          // 재귀적으로 다음 날 미션 생성 시도
+          await _attemptCreateMission(mission, specificDay: nextDay);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('미션 생성 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
