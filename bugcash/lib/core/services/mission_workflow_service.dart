@@ -479,6 +479,9 @@ class MissionWorkflowService {
       final earnedReward = (data['totalEarnedReward'] ?? 0) + dailyReward;
       final paidReward = (data['totalPaidReward'] ?? 0) + dailyReward;
 
+      // v2.25.14: completedDays 계산 (승인된 일일 미션 개수)
+      final completedDays = interactions.where((i) => i['providerApproved'] == true).length;
+
       // v2.25.04: 다음 날 미션 자동 생성 제거 (공급자가 수동으로 생성)
       final updateData = {
         'dailyInteractions': interactions,
@@ -489,6 +492,7 @@ class MissionWorkflowService {
         'stateUpdatedBy': providerId,
         'totalEarnedReward': earnedReward,
         'totalPaidReward': paidReward,
+        'completedDays': completedDays, // v2.25.14
       };
 
       // 마지막 날인 경우에만 완료 처리
