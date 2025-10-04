@@ -508,6 +508,66 @@ class MissionWorkflowService {
     }
   }
 
+  // v2.22.0: 공급자가 일일 미션 거절
+  Future<void> rejectDailyMission({
+    required String workflowId,
+    required String providerId,
+    required int dayNumber,
+    required String rejectionReason,
+  }) async {
+    try {
+      AppLogger.info('Provider $providerId rejecting daily mission day $dayNumber', 'MissionWorkflow');
+
+      final workflow = await getMissionWorkflow(workflowId);
+      final interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
+
+      // 해당 날짜의 interaction 찾기 및 업데이트
+      for (int i = 0; i < interactions.length; i++) {
+        if (interactions[i]['dayNumber'] == dayNumber) {
+          interactions[i]['providerApproved'] = false;
+          interactions[i]['providerApprovedAt'] = Timestamp.fromDate(DateTime.now());
+          interactions[i]['providerFeedback'] = rejectionReason;
+          interactions[i]['providerRating'] = null;
+          interactions[i]['rewardPaid'] = false;
+          interactions[i]['rewardPaidAt'] = null;
+          // v2.22.0: 재제출 가능하도록 testerCompleted를 false로 변경
+          interactions[i]['testerCompleted'] = false;
+          interactions[i]['testerCompletedAt'] = null;
+          break;
+        }
+      }
+
+      final updateData = {
+        'dailyInteractions': interactions,
+        'currentState': MissionWorkflowState.dailyMissionRejected.code,
+        'stateUpdatedAt': FieldValue.serverTimestamp(),
+        'stateUpdatedBy': providerId,
+      };
+
+      await _firestore
+          .collection('mission_workflows')
+          .doc(workflowId)
+          .update(updateData);
+
+      // 테스터에게 거절 알림
+      await _sendNotificationToTester(
+        testerId: workflow.testerId,
+        title: '일일 미션 거절됨',
+        message: '${dayNumber}일차 미션이 거절되었습니다. 사유: $rejectionReason',
+        data: {
+          'workflowId': workflowId,
+          'dayNumber': dayNumber,
+          'rejectionReason': rejectionReason,
+        },
+      );
+
+      AppLogger.info('✅ Daily mission rejected successfully', 'MissionWorkflow');
+    } catch (e) {
+      AppLogger.error('❌ Failed to reject daily mission: $e', 'MissionWorkflow');
+      rethrow;
+    }
+  }
+
   // 7단계: 프로젝트 최종 승인
   Future<void> finalizeProject({
     required String workflowId,

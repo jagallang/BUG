@@ -175,6 +175,9 @@ enum MissionWorkflowStatus {
   /// 테스트 완료 (제출 대기)
   testingCompleted,
 
+  /// v2.22.0: 일일 미션 완료 (공급자 검토 대기)
+  dailyMissionCompleted,
+
   /// 제출 완료
   submissionCompleted,
 
@@ -195,6 +198,8 @@ enum MissionWorkflowStatus {
         return 'in_progress';
       case MissionWorkflowStatus.testingCompleted:
         return 'testing_completed';
+      case MissionWorkflowStatus.dailyMissionCompleted: // v2.22.0
+        return 'daily_mission_completed';
       case MissionWorkflowStatus.submissionCompleted:
         return 'submission_completed';
       case MissionWorkflowStatus.rejected:
@@ -215,6 +220,8 @@ enum MissionWorkflowStatus {
         return MissionWorkflowStatus.inProgress;
       case 'testing_completed':
         return MissionWorkflowStatus.testingCompleted;
+      case 'daily_mission_completed': // v2.22.0
+        return MissionWorkflowStatus.dailyMissionCompleted;
       case 'submission_completed':
         return MissionWorkflowStatus.submissionCompleted;
       case 'rejected':
@@ -237,6 +244,8 @@ enum MissionWorkflowStatus {
         return '진행 중';
       case MissionWorkflowStatus.testingCompleted:
         return '테스트 완료';
+      case MissionWorkflowStatus.dailyMissionCompleted: // v2.22.0
+        return '검토 대기';
       case MissionWorkflowStatus.submissionCompleted:
         return '제출 완료';
       case MissionWorkflowStatus.rejected:

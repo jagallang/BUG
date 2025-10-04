@@ -14,6 +14,7 @@ enum MissionWorkflowState {
   dailyMissionStarted('daily_mission_started', '일일 미션 시작'),
   dailyMissionCompleted('daily_mission_completed', '일일 미션 완료'),
   dailyMissionApproved('daily_mission_approved', '일일 미션 승인'),
+  dailyMissionRejected('daily_mission_rejected', '일일 미션 거절'), // v2.22.0
 
   // 3단계: 프로젝트 완료
   projectCompleted('project_completed', '프로젝트 완료'),

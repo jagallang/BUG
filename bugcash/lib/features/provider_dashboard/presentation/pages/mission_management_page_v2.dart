@@ -7,6 +7,7 @@ import '../../../../core/utils/logger.dart';
 import '../../../../features/mission/domain/entities/mission_workflow_entity.dart';
 import '../../../../features/mission/presentation/providers/mission_providers.dart';
 import '../../../provider_dashboard/presentation/pages/app_management_page.dart';
+import '../../../provider_dashboard/presentation/pages/daily_mission_review_page.dart';
 
 /// v2.14.0: Clean Architecture로 전환된 미션관리 페이지
 /// 실시간 리스너 → 폴링 기반 상태 관리
@@ -586,14 +587,21 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             return const Center(child: CircularProgressIndicator());
           },
           loaded: (missions, isRefreshing) {
-            // 진행 중인 미션 필터링
+            // v2.22.0: 진행 중 + 일일 미션 완료 (검토 대기) 필터링
             final inProgressMissions = missions
                 .where((m) => m.status == MissionWorkflowStatus.inProgress)
                 .toList();
 
+            final reviewPendingMissions = missions
+                .where((m) => m.status == MissionWorkflowStatus.dailyMissionCompleted)
+                .toList();
+
             print('✅ [MissionManagementV2] 오늘탭 State: LOADED');
             print('   ├─ 전체 미션: ${missions.length}개');
-            print('   └─ 진행중: ${inProgressMissions.length}개');
+            print('   ├─ 진행중: ${inProgressMissions.length}개');
+            print('   └─ 검토 대기: ${reviewPendingMissions.length}개');
+
+            final totalTodayMissions = inProgressMissions.length + reviewPendingMissions.length;
 
             return SingleChildScrollView(
               child: Column(
@@ -602,7 +610,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                   if (isRefreshing)
                     const LinearProgressIndicator(minHeight: 2),
 
-                  if (inProgressMissions.isEmpty)
+                  if (totalTodayMissions == 0)
                     Padding(
                       padding: EdgeInsets.all(16.w),
                       child: Center(
@@ -613,7 +621,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                             Icon(Icons.assignment_outlined, size: 64.sp, color: Colors.grey),
                             SizedBox(height: 16.h),
                             Text(
-                              '진행 중인 미션이 없습니다',
+                              '오늘 처리할 미션이 없습니다',
                               style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
                             ),
                           ],
@@ -621,15 +629,71 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                       ),
                     )
                   else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.all(16.w),
-                      itemCount: inProgressMissions.length,
-                      itemBuilder: (context, index) {
-                        final mission = inProgressMissions[index];
-                        return _buildInProgressMissionCard(mission);
-                      },
+                    Column(
+                      children: [
+                        // v2.22.0: 검토 대기 섹션
+                        if (reviewPendingMissions.isNotEmpty) ...[
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 8.h),
+                            child: Row(
+                              children: [
+                                Icon(Icons.rate_review, size: 20.sp, color: Colors.orange),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  '검토 대기중 (${reviewPendingMissions.length}건)',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            itemCount: reviewPendingMissions.length,
+                            itemBuilder: (context, index) {
+                              final mission = reviewPendingMissions[index];
+                              return _buildReviewPendingMissionCard(mission);
+                            },
+                          ),
+                          SizedBox(height: 16.h),
+                        ],
+
+                        // 진행 중 섹션
+                        if (inProgressMissions.isNotEmpty) ...[
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
+                            child: Row(
+                              children: [
+                                Icon(Icons.play_circle_filled, size: 20.sp, color: Colors.blue),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  '진행 중 (${inProgressMissions.length}건)',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            itemCount: inProgressMissions.length,
+                            itemBuilder: (context, index) {
+                              final mission = inProgressMissions[index];
+                              return _buildInProgressMissionCard(mission);
+                            },
+                          ),
+                        ],
+                      ],
                     ),
                 ],
               ),
@@ -825,6 +889,111 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   }
 
   /// 진행 중 미션 카드
+  /// v2.22.0: 검토 대기중인 미션 카드
+  Widget _buildReviewPendingMissionCard(MissionWorkflowEntity mission) {
+    // 가장 최근 제출된 일일 미션 찾기
+    final submittedInteractions = mission.dailyInteractions
+        .where((i) => i.testerCompleted && !i.providerApproved)
+        .toList()
+      ..sort((a, b) => b.dayNumber.compareTo(a.dayNumber));
+
+    final latestDayNumber = submittedInteractions.isNotEmpty
+        ? submittedInteractions.first.dayNumber
+        : 0;
+
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.rate_review, size: 20.sp, color: Colors.orange),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    mission.testerName,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Text(
+                    '검토 대기중',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.orange,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              mission.testerEmail,
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+            ),
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Icon(Icons.assignment, size: 16.sp, color: Colors.grey[600]),
+                SizedBox(width: 4.w),
+                Text(
+                  'Day $latestDayNumber 제출됨',
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
+                ),
+                const Spacer(),
+                ElevatedButton(
+                  onPressed: () async {
+                    // 리뷰 페이지로 이동
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => DailyMissionReviewPage(
+                          mission: mission,
+                          dayNumber: latestDayNumber,
+                        ),
+                      ),
+                    );
+
+                    // 리뷰 완료 후 목록 새로고침
+                    if (result == true && mounted) {
+                      ref.read(missionStateNotifierProvider.notifier).refreshMissions();
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                  child: Text(
+                    '상세보기',
+                    style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildInProgressMissionCard(MissionWorkflowEntity mission) {
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
