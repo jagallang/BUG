@@ -39,14 +39,18 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
     FeatureFlagUtils.logFeatureUsage('mission_management_page_v2', widget.app.providerId);
 
-    // ✅ v2.14.0: 폴링 시작
+    // ✅ v2.20.0: 앱별 폴링 시작 (해당 앱의 테스터만 표시)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // v2.14.4: dispose 후 ref 사용 방지
       if (mounted) {
         try {
-          print('🔄 [MissionManagementV2] 폴링 시작 시도...');
+          print('🔄 [MissionManagementV2] 앱별 폴링 시작 시도...');
+          print('   ├─ appId: ${widget.app.id}');
+          print('   └─ providerId: ${widget.app.providerId}');
+
           ref.read(missionStateNotifierProvider.notifier)
-            .startPollingForProvider(widget.app.providerId);
+            .startPollingForApp(widget.app.id, widget.app.providerId);
+
           print('✅ [MissionManagementV2] 폴링 시작 완료');
         } catch (e) {
           print('❌ [MissionManagementV2] 폴링 시작 실패: $e');
@@ -79,7 +83,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '미션관리 v2.14.0',
+              '미션관리 v2.20.0',
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.bold,

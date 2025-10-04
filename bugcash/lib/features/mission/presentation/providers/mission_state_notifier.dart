@@ -17,6 +17,7 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
 
   Timer? _pollingTimer;
   String? _currentUserId;
+  String? _currentAppId;  // v2.20.0: 앱별 필터링용
   bool _isProvider;
 
   static const Duration _pollingInterval = Duration(seconds: 30);
@@ -77,12 +78,13 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
     });
   }
 
-  /// 폴링 시작 (앱별 미션용 - Provider 대시보드)
+  /// v2.20.0: 폴링 시작 (앱별 미션용 - Provider 대시보드)
   void startPollingForApp(String appId, String providerId) {
     _currentUserId = providerId;
+    _currentAppId = appId;  // v2.20.0: appId 저장하여 필터링에 사용
     _isProvider = true;
 
-    AppLogger.info('Starting polling for app: $appId (provider: $providerId)', 'MissionNotifier');
+    print('🔵 [MissionNotifier] Polling started for app: $appId (provider: $providerId)');
 
     // 초기 로드
     refreshMissions();
@@ -94,14 +96,15 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
     });
   }
 
-  /// 폴링 중지
+  /// v2.20.0: 폴링 중지 및 초기화
   void stopPolling() {
     _pollingTimer?.cancel();
     _pollingTimer = null;
+    _currentAppId = null;  // v2.20.0: appId 초기화
     AppLogger.info('Polling stopped', 'MissionNotifier');
   }
 
-  /// 수동 새로고침
+  /// v2.20.0: 수동 새로고침 (appId 필터링 추가)
   Future<void> refreshMissions() async {
     if (_currentUserId == null) {
       print('⚠️ [MissionNotifier] Cannot refresh: userId is null');
@@ -111,6 +114,7 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
     try {
       print('🔄 [MissionNotifier] Refreshing missions...');
       print('   ├─ userId: $_currentUserId');
+      print('   ├─ appId: $_currentAppId');
       print('   └─ isProvider: $_isProvider');
 
       // 백그라운드 새로고침 표시
@@ -127,9 +131,16 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
           ? await _getMissionsUseCase.getProviderMissions(_currentUserId!)
           : await _getMissionsUseCase.getTesterMissions(_currentUserId!);
 
-      state = MissionState.loaded(missions: missions);
+      // v2.20.0: appId로 필터링 (앱별 미션 관리 페이지용)
+      final filteredMissions = _currentAppId != null
+          ? missions.where((m) => m.appId == _currentAppId || m.appId == 'provider_app_$_currentAppId').toList()
+          : missions;
 
-      print('✅ [MissionNotifier] Missions refreshed: ${missions.length} items');
+      state = MissionState.loaded(missions: filteredMissions);
+
+      print('✅ [MissionNotifier] Missions refreshed');
+      print('   ├─ Total loaded: ${missions.length} items');
+      print('   └─ Filtered for appId: ${filteredMissions.length} items');
     } catch (e) {
       print('❌ [MissionNotifier] Failed to refresh missions: $e');
       state = MissionState.error(
