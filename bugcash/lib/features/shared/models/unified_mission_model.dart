@@ -92,14 +92,20 @@ class UnifiedMissionModel {
     String resolvedStatus = data['status'] ?? 'pending';
     final currentState = data['currentState'] as String?;
 
-    // currentState가 있으면 참고하여 status 보정
+    // v2.25.12: currentState가 있으면 참고하여 status 보정
     if (currentState != null) {
       if (currentState.contains('completed') || currentState == 'mission_completed') {
         resolvedStatus = 'completed';
-      } else if (currentState.contains('progress') || currentState == 'mission_started') {
+      } else if (currentState.contains('progress') || currentState == 'mission_started' || currentState == 'in_progress') {
         resolvedStatus = 'in_progress';
       } else if (currentState == 'application_approved') {
         resolvedStatus = 'approved';
+      } else if (currentState == 'daily_mission_approved') {
+        resolvedStatus = 'daily_mission_approved';
+      } else if (currentState == 'daily_mission_completed') {
+        resolvedStatus = 'daily_mission_completed';
+      } else if (currentState == 'daily_mission_rejected') {
+        resolvedStatus = 'daily_mission_rejected';
       }
     }
 
