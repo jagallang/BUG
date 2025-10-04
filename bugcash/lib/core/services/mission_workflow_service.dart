@@ -464,23 +464,20 @@ class MissionWorkflowService {
       final earnedReward = workflow.totalEarnedReward + workflow.dailyReward;
       final paidReward = workflow.totalPaidReward + workflow.dailyReward;
 
+      // v2.25.04: 다음 날 미션 자동 생성 제거 (공급자가 수동으로 생성)
       final updateData = {
         'dailyInteractions': interactions,
-        'currentState': MissionWorkflowState.dailyMissionApproved.code,
+        'currentState': dayNumber >= workflow.totalDays
+            ? MissionWorkflowState.projectCompleted.code
+            : MissionWorkflowState.dailyMissionApproved.code,
         'stateUpdatedAt': FieldValue.serverTimestamp(),
         'stateUpdatedBy': providerId,
         'totalEarnedReward': earnedReward,
         'totalPaidReward': paidReward,
       };
 
-      // 다음 날 미션 생성 (마지막 날이 아니면)
-      if (dayNumber < workflow.totalDays) {
-        await _createDailyMission(workflowId, dayNumber + 1);
-        updateData['currentDay'] = dayNumber + 1;
-        updateData['currentState'] = MissionWorkflowState.missionInProgress.code;
-      } else {
-        // 모든 미션 완료
-        updateData['currentState'] = MissionWorkflowState.projectCompleted.code;
+      // 마지막 날인 경우에만 완료 처리
+      if (dayNumber >= workflow.totalDays) {
         updateData['completedAt'] = FieldValue.serverTimestamp();
       }
 
@@ -505,6 +502,82 @@ class MissionWorkflowService {
     } catch (e) {
       AppLogger.error('Failed to approve daily mission', e.toString());
       rethrow;
+    }
+  }
+
+  // v2.25.04: 공급자가 다음 날 미션 수동 생성
+  Future<void> createNextDayMission({
+    required String workflowId,
+    required String providerId,
+  }) async {
+    try {
+      AppLogger.info('Provider $providerId creating next day mission', 'MissionWorkflow');
+
+      final workflow = await getMissionWorkflow(workflowId);
+
+      // 현재 상태 확인: dailyMissionApproved 상태여야 함
+      if (workflow.currentState != MissionWorkflowState.dailyMissionApproved) {
+        throw Exception('다음 날 미션은 이전 미션 승인 후에만 생성 가능합니다 (현재 상태: ${workflow.currentState.displayName})');
+      }
+
+      // 다음 날 번호 계산
+      final nextDayNumber = workflow.currentDay + 1;
+
+      // 마지막 날 초과 체크
+      if (nextDayNumber > workflow.totalDays) {
+        throw Exception('모든 미션이 완료되었습니다. (총 ${workflow.totalDays}일)');
+      }
+
+      // 다음 날 미션이 이미 존재하는지 확인
+      final existingInteraction = workflow.dailyInteractions.firstWhere(
+        (interaction) => interaction.dayNumber == nextDayNumber,
+        orElse: () => throw StateError('NotFound'),
+      );
+
+      if (existingInteraction.id != 'NotFound') {
+        throw Exception('Day $nextDayNumber 미션이 이미 존재합니다');
+      }
+
+      // 다음 날 미션 생성
+      await _createDailyMission(workflowId, nextDayNumber);
+
+      // currentDay 업데이트
+      await _firestore
+          .collection('mission_workflows')
+          .doc(workflowId)
+          .update({
+        'currentDay': nextDayNumber,
+        'currentState': MissionWorkflowState.missionInProgress.code,
+        'stateUpdatedAt': FieldValue.serverTimestamp(),
+        'stateUpdatedBy': providerId,
+      });
+
+      AppLogger.info('Next day mission (Day $nextDayNumber) created successfully', 'MissionWorkflow');
+    } catch (e) {
+      if (e is StateError) {
+        // existingInteraction을 찾지 못한 경우 (정상 - 미션 생성 진행)
+        AppLogger.info('No existing mission found, proceeding with creation', 'MissionWorkflow');
+
+        final workflow = await getMissionWorkflow(workflowId);
+        final nextDayNumber = workflow.currentDay + 1;
+
+        await _createDailyMission(workflowId, nextDayNumber);
+
+        await _firestore
+            .collection('mission_workflows')
+            .doc(workflowId)
+            .update({
+          'currentDay': nextDayNumber,
+          'currentState': MissionWorkflowState.missionInProgress.code,
+          'stateUpdatedAt': FieldValue.serverTimestamp(),
+          'stateUpdatedBy': providerId,
+        });
+
+        AppLogger.info('Next day mission (Day $nextDayNumber) created successfully', 'MissionWorkflow');
+      } else {
+        AppLogger.error('Failed to create next day mission', e.toString());
+        rethrow;
+      }
     }
   }
 

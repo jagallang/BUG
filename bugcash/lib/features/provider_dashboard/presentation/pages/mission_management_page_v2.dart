@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/config/feature_flags.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/services/mission_workflow_service.dart';
 import '../../../../features/mission/domain/entities/mission_workflow_entity.dart';
 import '../../../../features/mission/presentation/providers/mission_providers.dart';
 import '../../../provider_dashboard/presentation/pages/app_management_page.dart';
@@ -643,7 +644,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             return const Center(child: CircularProgressIndicator());
           },
           loaded: (missions, isRefreshing) {
-            // v2.22.0: 진행 중 + 일일 미션 완료 (검토 대기) 필터링
+            // v2.25.04: 진행 중 + 검토 대기 + 승인 완료 필터링
             final inProgressMissions = missions
                 .where((m) => m.status == MissionWorkflowStatus.inProgress)
                 .toList();
@@ -652,12 +653,17 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 .where((m) => m.status == MissionWorkflowStatus.dailyMissionCompleted)
                 .toList();
 
+            final approvedMissions = missions
+                .where((m) => m.status == MissionWorkflowStatus.dailyMissionApproved)
+                .toList();
+
             print('✅ [MissionManagementV2] 오늘탭 State: LOADED');
             print('   ├─ 전체 미션: ${missions.length}개');
             print('   ├─ 진행중: ${inProgressMissions.length}개');
-            print('   └─ 검토 대기: ${reviewPendingMissions.length}개');
+            print('   ├─ 검토 대기: ${reviewPendingMissions.length}개');
+            print('   └─ 승인 완료: ${approvedMissions.length}개');
 
-            final totalTodayMissions = inProgressMissions.length + reviewPendingMissions.length;
+            final totalTodayMissions = inProgressMissions.length + reviewPendingMissions.length + approvedMissions.length;
 
             return SingleChildScrollView(
               child: Column(
@@ -715,6 +721,38 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                               print('📝 [오늘탭-검토대기] Building card ${index + 1}/${reviewPendingMissions.length}');
                               final mission = reviewPendingMissions[index];
                               return _buildReviewPendingMissionCard(mission);
+                            },
+                          ),
+                          SizedBox(height: 16.h),
+                        ],
+
+                        // v2.25.04: 승인 완료 섹션 (다음 날 미션 만들기 대기)
+                        if (approvedMissions.isNotEmpty) ...[
+                          Padding(
+                            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
+                            child: Row(
+                              children: [
+                                Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
+                                SizedBox(width: 8.w),
+                                Text(
+                                  '승인 완료 (${approvedMissions.length}건)',
+                                  style: TextStyle(
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding: EdgeInsets.symmetric(horizontal: 16.w),
+                            itemCount: approvedMissions.length,
+                            itemBuilder: (context, index) {
+                              final mission = approvedMissions[index];
+                              return _buildApprovedMissionCard(mission);
                             },
                           ),
                           SizedBox(height: 16.h),
@@ -1060,6 +1098,156 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                   ),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// v2.25.04: 승인 완료 미션 카드 (다음 날 미션 만들기 버튼 포함)
+  Widget _buildApprovedMissionCard(MissionWorkflowEntity mission) {
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: Text(
+                    mission.testerName,
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Text(
+                    '승인 완료',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.green,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8.h),
+            Text(
+              mission.testerEmail,
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+            ),
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Icon(Icons.calendar_today, size: 16.sp, color: Colors.grey[600]),
+                SizedBox(width: 4.w),
+                Text(
+                  'Day ${mission.completedDays} 승인 완료',
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey[700], fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                Icon(Icons.arrow_forward, size: 16.sp, color: Colors.orange),
+                SizedBox(width: 4.w),
+                Text(
+                  'Day ${mission.completedDays + 1} 미션 생성 필요',
+                  style: TextStyle(fontSize: 14.sp, color: Colors.orange[700], fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  // 다음 날 미션 생성
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text('다음 날 미션 생성'),
+                      content: Text(
+                        'Day ${mission.completedDays + 1} 미션을 생성하시겠습니까?\n\n'
+                        '테스터가 다음 날 미션을 시작할 수 있게 됩니다.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('취소'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                          child: const Text('생성'),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (confirmed == true && mounted) {
+                    try {
+                      final service = ref.read(missionWorkflowServiceProvider);
+                      await service.createNextDayMission(
+                        workflowId: mission.id,
+                        providerId: mission.providerId,
+                      );
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('✅ Day ${mission.completedDays + 1} 미션이 생성되었습니다'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        // 상태 새로고침
+                        ref.read(missionStateNotifierProvider.notifier).startPollingForApp(
+                          mission.appId,
+                          mission.providerId,
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('미션 생성 실패: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
+                icon: Icon(Icons.add_circle_outline, size: 20.sp),
+                label: Text(
+                  'Day ${mission.completedDays + 1} 미션 만들기',
+                  style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 14.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
