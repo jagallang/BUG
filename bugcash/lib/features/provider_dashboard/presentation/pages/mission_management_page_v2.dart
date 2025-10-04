@@ -172,31 +172,15 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 .where((m) => m.status == MissionWorkflowStatus.applicationSubmitted)
                 .toList();
 
-            // v2.15.0: 승인된 테스터 전체 필터링 (진행중, 완료 포함)
-            // v2.24.4: dailyMissionCompleted 상태 추가 (검토 대기 중인 테스터 포함)
+            // v2.25.10: approved 상태만 필터링 (미션만들기 대기 중인 테스터만)
             final approvedTesters = missions
-                .where((m) =>
-                    m.status == MissionWorkflowStatus.approved ||
-                    m.status == MissionWorkflowStatus.inProgress ||
-                    m.status == MissionWorkflowStatus.testingCompleted ||
-                    m.status == MissionWorkflowStatus.dailyMissionCompleted ||
-                    m.status == MissionWorkflowStatus.submissionCompleted)
+                .where((m) => m.status == MissionWorkflowStatus.approved)
                 .toList();
-
-            // 상태별 개수 집계
-            final approvedCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.approved).length;
-            final inProgressCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.inProgress).length;
-            final testingCompletedCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.testingCompleted).length;
-            final submissionCompletedCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.submissionCompleted).length;
 
             print('✅ [MissionManagementV2] 테스터탭 State: LOADED');
             print('   ├─ 전체 미션: ${missions.length}개');
             print('   ├─ 신청 대기: ${pendingApplications.length}개');
-            print('   └─ 승인된 테스터 전체: ${approvedTesters.length}개');
-            print('      ├─ 대기중: $approvedCount개');
-            print('      ├─ 진행중: $inProgressCount개');
-            print('      ├─ 테스트완료: $testingCompletedCount개');
-            print('      └─ 제출완료: $submissionCompletedCount개');
+            print('   └─ 승인된 테스터 (미션만들기 대기): ${approvedTesters.length}개');
 
             return SingleChildScrollView(
               child: Column(
@@ -560,12 +544,19 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
               ],
             ),
             // v2.23.0: 승인된 상태일 때 '미션만들기' 버튼 표시
+            // v2.25.10: 미션만들기 후 오늘 탭으로 자동 전환
             if (mission.status == MissionWorkflowStatus.approved) ...[
               SizedBox(height: 16.h),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: () => _startMission(mission.id),
+                  onPressed: () async {
+                    await _startMission(mission.id);
+                    // 미션 시작 성공 시 오늘 탭으로 전환
+                    if (mounted) {
+                      _tabController.animateTo(1); // 1 = 오늘 탭
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     padding: EdgeInsets.symmetric(vertical: 12.h),
@@ -644,7 +635,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             return const Center(child: CircularProgressIndicator());
           },
           loaded: (missions, isRefreshing) {
-            // v2.25.04: 진행 중 + 검토 대기 + 승인 완료 필터링
+            // v2.25.10: 진행 중 + 검토 대기만 필터링 (오늘 처리할 미션)
             final inProgressMissions = missions
                 .where((m) => m.status == MissionWorkflowStatus.inProgress)
                 .toList();
@@ -653,17 +644,12 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 .where((m) => m.status == MissionWorkflowStatus.dailyMissionCompleted)
                 .toList();
 
-            final approvedMissions = missions
-                .where((m) => m.status == MissionWorkflowStatus.dailyMissionApproved)
-                .toList();
-
             print('✅ [MissionManagementV2] 오늘탭 State: LOADED');
             print('   ├─ 전체 미션: ${missions.length}개');
             print('   ├─ 진행중: ${inProgressMissions.length}개');
-            print('   ├─ 검토 대기: ${reviewPendingMissions.length}개');
-            print('   └─ 승인 완료: ${approvedMissions.length}개');
+            print('   └─ 검토 대기: ${reviewPendingMissions.length}개');
 
-            final totalTodayMissions = inProgressMissions.length + reviewPendingMissions.length + approvedMissions.length;
+            final totalTodayMissions = inProgressMissions.length + reviewPendingMissions.length;
 
             return SingleChildScrollView(
               child: Column(
@@ -721,38 +707,6 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                               print('📝 [오늘탭-검토대기] Building card ${index + 1}/${reviewPendingMissions.length}');
                               final mission = reviewPendingMissions[index];
                               return _buildReviewPendingMissionCard(mission);
-                            },
-                          ),
-                          SizedBox(height: 16.h),
-                        ],
-
-                        // v2.25.04: 승인 완료 섹션 (다음 날 미션 만들기 대기)
-                        if (approvedMissions.isNotEmpty) ...[
-                          Padding(
-                            padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
-                            child: Row(
-                              children: [
-                                Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
-                                SizedBox(width: 8.w),
-                                Text(
-                                  '승인 완료 (${approvedMissions.length}건)',
-                                  style: TextStyle(
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            padding: EdgeInsets.symmetric(horizontal: 16.w),
-                            itemCount: approvedMissions.length,
-                            itemBuilder: (context, index) {
-                              final mission = approvedMissions[index];
-                              return _buildApprovedMissionCard(mission);
                             },
                           ),
                           SizedBox(height: 16.h),
