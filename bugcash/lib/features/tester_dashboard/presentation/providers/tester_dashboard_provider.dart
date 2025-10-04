@@ -114,6 +114,7 @@ enum TesterLevel {
 }
 
 // Mission Card Model
+// v2.19.0: 동적 필드 추가 (deadlineText, participantsText, testPeriodDays, currentTesters, maxTesters)
 class MissionCard {
   final String id;
   final String title;
@@ -135,6 +136,13 @@ class MissionCard {
   final bool isProviderApp; // Provider 앱 여부
   final Map<String, dynamic>? originalAppData; // 원본 앱 데이터
 
+  // v2.19.0: 동적 텍스트 필드 추가
+  final int currentTesters;      // 현재 테스터 수
+  final int maxTesters;          // 최대 테스터 수
+  final int testPeriodDays;      // 테스트 기간 (일)
+  final String deadlineText;     // "바로 진행" 또는 "모집 마감"
+  final String participantsText; // "3/5" 또는 "대기 중"
+
   MissionCard({
     required this.id,
     required this.title,
@@ -155,6 +163,12 @@ class MissionCard {
     required this.difficulty,
     this.isProviderApp = false,
     this.originalAppData,
+    // v2.19.0: 새 필드 기본값
+    this.currentTesters = 0,
+    this.maxTesters = 5,
+    this.testPeriodDays = 10,
+    this.deadlineText = '바로 진행',
+    this.participantsText = '대기 중',
   });
 }
 
@@ -609,20 +623,34 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           final platform = data['platform'] ?? 'android';
           final category = data['category'] ?? 'general';
 
-          // 리워드 계산 (PRD 기준) - metadata 우선, rewards 폴백
+          // v2.19.0: 리워드 계산 (PRD 기준) - metadata 우선, rewards 폴백
           final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
           final rewards = data['rewards'] as Map<String, dynamic>? ?? {};
 
-          final baseReward = _getIntValue(metadata['baseReward']) ??
-                           _getIntValue(rewards['baseReward']) ??
-                           _getIntValue(metadata['price']) ?? 5000;
-          final bonusReward = _getIntValue(metadata['bonusReward']) ??
-                            _getIntValue(rewards['bonusReward']) ?? 0;
-          final totalReward = baseReward + bonusReward;
+          // 일일 리워드 계산
+          final dailyMissionPoints = _getIntValue(metadata['dailyMissionPoints']) ??
+                                    _getIntValue(rewards['dailyMissionPoints']) ?? 100;
+          final finalCompletionPoints = _getIntValue(metadata['finalCompletionPoints']) ??
+                                        _getIntValue(rewards['finalCompletionPoints']) ?? 1000;
+          final bonusPoints = _getIntValue(metadata['bonusPoints']) ??
+                             _getIntValue(rewards['bonusPoints']) ?? 0;
 
-          // 테스터 제한 (PRD 기준)
-          final maxTesters = _getIntValue(data['maxTesters']) ?? 10;
-          final currentTesters = _getIntValue(data['currentTesters']) ?? 0;
+          // 테스트 기간
+          final testPeriod = _getIntValue(metadata['testPeriod']) ??
+                            _getIntValue(data['testPeriodDays']) ?? 10;
+
+          // 총 리워드 = (일일 × 기간) + 완료 보너스 + 추가 보너스
+          final totalReward = (dailyMissionPoints * testPeriod) + finalCompletionPoints + bonusPoints;
+
+          // v2.19.0: 테스터 수 계산
+          final maxTestersValue = _getIntValue(metadata['maxTesters']) ??
+                                  _getIntValue(metadata['participantCount']) ??
+                                  _getIntValue(data['maxTesters']) ?? 5;
+          final currentTestersValue = _getIntValue(data['currentTesters']) ?? 0;
+
+          // v2.19.0: 마감 및 참여자 텍스트 생성
+          final deadlineText = currentTestersValue >= maxTestersValue ? '모집 마감' : '바로 진행';
+          final participantsText = '$currentTestersValue/$maxTestersValue';
 
           final missionCard = MissionCard(
             id: doc.id,
@@ -631,15 +659,21 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
             appName: appName,
             type: type == 'mission' ? MissionType.featureTesting : MissionType.functional,
             rewardPoints: totalReward,
-            estimatedMinutes: (_getIntValue(data['testPeriodDays']) ?? 14) * 20, // 14일 * 20분
+            estimatedMinutes: testPeriod * 20, // 테스트 기간 * 20분
             status: MissionStatus.active,
-            deadline: DateTime.now().add(Duration(days: _getIntValue(data['testPeriodDays']) ?? 14)),
+            deadline: DateTime.now().add(Duration(days: testPeriod)),
             requiredSkills: _getRequiredSkills(data),
-            currentParticipants: currentTesters,
-            maxParticipants: maxTesters,
+            currentParticipants: currentTestersValue,
+            maxParticipants: maxTestersValue,
             progress: 0,
             difficulty: _parseDifficulty(difficulty),
             isProviderApp: true,
+            // v2.19.0: 새 필드 추가
+            currentTesters: currentTestersValue,
+            maxTesters: maxTestersValue,
+            testPeriodDays: testPeriod,
+            deadlineText: deadlineText,
+            participantsText: participantsText,
             originalAppData: {
               'projectId': doc.id,
               'providerId': data['providerId'],

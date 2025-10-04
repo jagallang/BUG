@@ -1062,9 +1062,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             mission: mission,
             title: mission.title.isNotEmpty ? mission.title : '미션 ${mission.id}',
             description: mission.description.isNotEmpty ? mission.description : '새로운 테스트 미션에 참여해보세요!',
-            reward: '${mission.rewardPoints}P',
-            deadline: '바로 진행',
-            participants: '대기 중',
+            reward: '${mission.rewardPoints}P',  // v2.19.0: 동적 총 리워드
+            deadline: mission.deadlineText,      // v2.19.0: '바로 진행' 또는 '모집 마감'
+            participants: mission.participantsText,  // v2.19.0: '3/5' 형식
           ),
         );
       },
