@@ -231,10 +231,11 @@ class MissionWorkflowService {
       final interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
 
       // 해당 날짜의 interaction 찾기 및 업데이트
+      final now = DateTime.now();
       for (int i = 0; i < interactions.length; i++) {
         if (interactions[i]['dayNumber'] == dayNumber) {
           interactions[i]['testerStarted'] = true;
-          interactions[i]['testerStartedAt'] = Timestamp.fromDate(DateTime.now());
+          interactions[i]['testerStartedAt'] = now;
           break;
         }
       }
@@ -271,10 +272,11 @@ class MissionWorkflowService {
 
       // 해당 날짜의 interaction 찾기 및 업데이트
       bool found = false;
+      final now = DateTime.now();
       for (int i = 0; i < interactions.length; i++) {
         if (interactions[i]['dayNumber'] == dayNumber) {
           interactions[i]['testerCompleted'] = true;
-          interactions[i]['testerCompletedAt'] = Timestamp.fromDate(DateTime.now());
+          interactions[i]['testerCompletedAt'] = now;
           found = true;
           break;
         }
@@ -354,21 +356,14 @@ class MissionWorkflowService {
         interactions = List.generate(workflow.totalDays, (index) {
           return {
             'dayNumber': index + 1,
-            'date': Timestamp.fromDate(startDate.add(Duration(days: index))),
+            'date': startDate.add(Duration(days: index)),
             'testerStarted': false,
-            'testerStartedAt': null,
             'testerCompleted': false,
-            'testerCompletedAt': null,
-            'testerFeedback': null,
             'testerScreenshots': [],
             'testerData': {},
             'providerApproved': false,
-            'providerApprovedAt': null,
-            'providerFeedback': null,
-            'providerRating': null,
             'dailyReward': workflow.dailyReward,
             'rewardPaid': false,
-            'rewardPaidAt': null,
           };
         });
 
@@ -380,10 +375,11 @@ class MissionWorkflowService {
 
       // 해당 날짜의 interaction 찾기 및 업데이트
       bool found = false;
+      final now = DateTime.now();
       for (int i = 0; i < interactions.length; i++) {
         if (interactions[i]['dayNumber'] == dayNumber) {
           interactions[i]['testerCompleted'] = true;
-          interactions[i]['testerCompletedAt'] = Timestamp.fromDate(DateTime.now());
+          interactions[i]['testerCompletedAt'] = now;
           interactions[i]['testerFeedback'] = feedback;
           interactions[i]['testerScreenshots'] = screenshots ?? [];
           interactions[i]['testerData'] = additionalData ?? {};
