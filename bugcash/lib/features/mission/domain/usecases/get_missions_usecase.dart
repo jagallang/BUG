@@ -55,4 +55,18 @@ class GetMissionsUseCase {
     }
     return await _repository.getTesterActiveMission(testerId);
   }
+
+  // ========================================
+  // Cache Management (v2.24.6)
+  // ========================================
+
+  /// v2.24.6: 공급자 캐시 무효화 (refreshMissions 전에 호출)
+  void invalidateProviderCache(String providerId) {
+    _repository.invalidateProviderCache(providerId);
+  }
+
+  /// v2.24.6: 테스터 캐시 무효화
+  void invalidateTesterCache(String testerId) {
+    _repository.invalidateTesterCache(testerId);
+  }
 }

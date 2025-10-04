@@ -172,11 +172,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 .toList();
 
             // v2.15.0: 승인된 테스터 전체 필터링 (진행중, 완료 포함)
+            // v2.24.4: dailyMissionCompleted 상태 추가 (검토 대기 중인 테스터 포함)
             final approvedTesters = missions
                 .where((m) =>
                     m.status == MissionWorkflowStatus.approved ||
                     m.status == MissionWorkflowStatus.inProgress ||
                     m.status == MissionWorkflowStatus.testingCompleted ||
+                    m.status == MissionWorkflowStatus.dailyMissionCompleted ||
                     m.status == MissionWorkflowStatus.submissionCompleted)
                 .toList();
 
@@ -710,6 +712,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                             padding: EdgeInsets.symmetric(horizontal: 16.w),
                             itemCount: reviewPendingMissions.length,
                             itemBuilder: (context, index) {
+                              print('📝 [오늘탭-검토대기] Building card ${index + 1}/${reviewPendingMissions.length}');
                               final mission = reviewPendingMissions[index];
                               return _buildReviewPendingMissionCard(mission);
                             },
@@ -945,15 +948,25 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   /// 진행 중 미션 카드
   /// v2.22.0: 검토 대기중인 미션 카드
   Widget _buildReviewPendingMissionCard(MissionWorkflowEntity mission) {
+    // v2.24.5: Debug - 카드 렌더링 확인
+    print('🔍 [ReviewPendingCard] Rendering for mission: ${mission.id}');
+    print('   ├─ testerName: ${mission.testerName}');
+    print('   ├─ dailyInteractions.length: ${mission.dailyInteractions.length}');
+
     // 가장 최근 제출된 일일 미션 찾기
     final submittedInteractions = mission.dailyInteractions
         .where((i) => i.testerCompleted && !i.providerApproved)
         .toList()
       ..sort((a, b) => b.dayNumber.compareTo(a.dayNumber));
 
+    print('   ├─ submittedInteractions.length: ${submittedInteractions.length}');
+
+    // v2.24.4: dailyMissionCompleted 상태면 최소한 Day 1은 제출되었다고 가정
     final latestDayNumber = submittedInteractions.isNotEmpty
         ? submittedInteractions.first.dayNumber
-        : 0;
+        : 1; // 0 대신 1 사용
+
+    print('   └─ latestDayNumber: $latestDayNumber');
 
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),

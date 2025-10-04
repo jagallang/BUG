@@ -79,6 +79,16 @@ abstract class MissionRepository {
   Future<void> deleteMission(String missionId);
 
   // ========================================
+  // Cache Management (v2.24.6)
+  // ========================================
+
+  /// v2.24.6: 공급자 캐시 무효화 (refreshMissions에서 사용)
+  void invalidateProviderCache(String providerId);
+
+  /// v2.24.6: 테스터 캐시 무효화
+  void invalidateTesterCache(String testerId);
+
+  // ========================================
   // Real-time Stream (선택적 - 진행 중 미션만)
   // ========================================
 

@@ -238,6 +238,17 @@ class MissionRepositoryImpl implements MissionRepository {
     }
   }
 
+  /// v2.24.6: Public 캐시 무효화 메서드 (refreshMissions에서 사용)
+  void invalidateProviderCache(String providerId) {
+    _cache.remove('provider_$providerId');
+    AppLogger.info('Provider cache invalidated: $providerId', 'MissionRepository');
+  }
+
+  void invalidateTesterCache(String testerId) {
+    _cache.remove('tester_$testerId');
+    AppLogger.info('Tester cache invalidated: $testerId', 'MissionRepository');
+  }
+
   /// 전체 캐시 무효화
   void _invalidateAllCache() {
     _cache.clear();

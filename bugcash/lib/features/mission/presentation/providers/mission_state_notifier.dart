@@ -105,6 +105,7 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
   }
 
   /// v2.20.0: 수동 새로고침 (appId 필터링 추가)
+  /// v2.24.6: 캐시 무효화 추가 (항상 최신 데이터 로드)
   Future<void> refreshMissions() async {
     if (_currentUserId == null) {
       print('⚠️ [MissionNotifier] Cannot refresh: userId is null');
@@ -116,6 +117,15 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
       print('   ├─ userId: $_currentUserId');
       print('   ├─ appId: $_currentAppId');
       print('   └─ isProvider: $_isProvider');
+
+      // v2.24.6: 캐시 무효화 (항상 최신 데이터 로드)
+      if (_isProvider) {
+        _getMissionsUseCase.invalidateProviderCache(_currentUserId!);
+        print('   └─ 🗑️ Provider cache invalidated');
+      } else {
+        _getMissionsUseCase.invalidateTesterCache(_currentUserId!);
+        print('   └─ 🗑️ Tester cache invalidated');
+      }
 
       // 백그라운드 새로고침 표시
       state.maybeWhen(

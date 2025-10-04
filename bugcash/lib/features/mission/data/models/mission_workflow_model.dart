@@ -50,6 +50,8 @@ class MissionWorkflowModel {
   factory MissionWorkflowModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
 
+    final firestoreState = data['currentState'] ?? 'application_submitted';
+
     // v2.16.0: Daily interactions 파싱
     final interactionsList = (data['dailyInteractions'] as List<dynamic>?) ?? [];
     final interactions = interactionsList.map((item) {
@@ -68,7 +70,7 @@ class MissionWorkflowModel {
       testerEmail: data['testerEmail'] ?? '',
       providerId: data['providerId'] ?? '',
       providerName: data['providerName'] ?? '',
-      currentState: data['currentState'] ?? 'application_submitted',
+      currentState: firestoreState,
       appliedAt: (data['appliedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       approvedAt: (data['approvedAt'] as Timestamp?)?.toDate(),
       startedAt: (data['startedAt'] as Timestamp?)?.toDate(),
@@ -133,6 +135,8 @@ class MissionWorkflowModel {
 
   /// Model → Entity 변환 (Data Layer → Domain Layer)
   MissionWorkflowEntity toEntity() {
+    final entityStatus = MissionWorkflowStatus.fromFirestoreString(currentState);
+
     return MissionWorkflowEntity(
       id: id,
       appId: appId,
@@ -142,7 +146,7 @@ class MissionWorkflowModel {
       testerEmail: testerEmail,
       providerId: providerId,
       providerName: providerName,
-      status: MissionWorkflowStatus.fromFirestoreString(currentState),
+      status: entityStatus,
       appliedAt: appliedAt,
       approvedAt: approvedAt,
       startedAt: startedAt,
