@@ -1115,14 +1115,26 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         }
 
         // v2.24.1: in_progress 상태 미션만 표시 (approved 상태 제외)
-        // approved: 공급자가 승인했지만 아직 미션만들기를 하지 않은 상태
-        // in_progress: 공급자가 미션만들기를 해서 테스터가 수행 가능한 상태
+        // v2.24.8: 일일 미션 진행 상태 추가 (제출 후에도 계속 보여야 함)
+        // approved: 공급자가 승인했지만 아직 미션만들기를 하지 않은 상태 (제외)
+        // in_progress: 미션 수행 중
+        // daily_mission_completed: 일일 미션 제출 후 검토 대기
+        // daily_mission_approved: 일일 미션 승인됨 (다음 날 제출 가능)
+        // daily_mission_rejected: 일일 미션 거절됨 (재제출 필요)
         final dailyMissions = (snapshot.data ?? [])
             .where((mission) =>
               mission.currentState != 'deleted_by_tester' &&
-              mission.currentState == 'in_progress'  // approved 제외
+              (mission.currentState == 'in_progress' ||
+               mission.currentState == 'daily_mission_completed' ||
+               mission.currentState == 'daily_mission_approved' ||
+               mission.currentState == 'daily_mission_rejected')
             )
             .toList();
+
+        debugPrint('🎨 RENDERING_ACTIVE_TAB: total=${snapshot.data?.length ?? 0}, filtered=${dailyMissions.length}');
+        if (dailyMissions.isNotEmpty) {
+          debugPrint('   └─ First mission: ${dailyMissions.first.appName} (${dailyMissions.first.currentState})');
+        }
 
         if (dailyMissions.isEmpty) {
           return Center(

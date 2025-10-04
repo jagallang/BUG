@@ -414,6 +414,11 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
         activeMissions: activeMissions,
         completedMissions: completedMissions,
       );
+
+      debugPrint('📊 STATE_UPDATED: activeMissions.length=${activeMissions.length}');
+      if (activeMissions.isNotEmpty) {
+        debugPrint('   └─ First mission: ${activeMissions.first.title}');
+      }
     } catch (e) {
       debugPrint('Failed to load missions: $e');
     }
@@ -846,6 +851,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
             );
 
             activeMissions.add(missionCard);
+            debugPrint('✅ MISSION_CARD_ADDED: ${missionCard.id}, title=${missionCard.title}, status=${missionCard.status}');
           } else {
             // Fallback: projects 문서가 없을 때도 workflow 데이터로 카드 생성
             debugPrint('❌ PROJECT_NOT_FOUND: appId=$appId의 projects 문서 없음! Fallback으로 카드 생성');
@@ -942,6 +948,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
         debugPrint('Failed to load assigned missions: $e');
       }
 
+      debugPrint('📤 RETURNING ${activeMissions.length} active missions');
       return activeMissions;
     } catch (e) {
       debugPrint('Failed to load active missions from Firestore: $e');
