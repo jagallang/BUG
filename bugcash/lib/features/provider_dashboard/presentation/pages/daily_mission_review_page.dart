@@ -88,26 +88,109 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
 
   /// 승인 처리
   Future<void> _approveMission() async {
-    final confirmed = await showDialog<bool>(
+    // 1단계: 일일 리워드 지급 안내
+    final firstConfirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('미션 승인'),
-        content: const Text('이 미션을 승인하시겠습니까?\n리워드가 지급됩니다.'),
+        title: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.orange, size: 28.sp),
+            SizedBox(width: 8.w),
+            Text('리워드 지급 안내', style: TextStyle(fontSize: 18.sp)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Day ${widget.dayNumber} 미션을 승인하면',
+              style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.green, width: 2),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.attach_money, color: Colors.green, size: 24.sp),
+                  SizedBox(width: 4.w),
+                  Text(
+                    '${widget.mission.dailyReward.toStringAsFixed(0)}원',
+                    style: TextStyle(
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 12.h),
+            Text(
+              '의 일일 리워드가 테스터에게 지급됩니다.',
+              style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('취소'),
+            child: Text('취소', style: TextStyle(fontSize: 15.sp)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: const Text('승인'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+            ),
+            child: Text('계속', style: TextStyle(fontSize: 15.sp)),
           ),
         ],
       ),
     );
 
-    if (confirmed != true) return;
+    if (firstConfirmed != true) return;
+
+    // 2단계: 최종 승인 확인
+    final finalConfirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.check_circle_outline, color: Colors.green, size: 28.sp),
+            SizedBox(width: 8.w),
+            Text('최종 승인 확인', style: TextStyle(fontSize: 18.sp)),
+          ],
+        ),
+        content: Text(
+          'Day ${widget.dayNumber} 미션을 최종 승인하시겠습니까?\n\n'
+          '승인 후에는 취소할 수 없습니다.',
+          style: TextStyle(fontSize: 15.sp, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('취소', style: TextStyle(fontSize: 15.sp)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+            ),
+            child: Text('최종 승인', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (finalConfirmed != true) return;
 
     setState(() => _isSubmitting = true);
 
@@ -433,15 +516,39 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
                 ),
                 itemCount: _screenshots.length,
                 itemBuilder: (context, index) {
+                  final imageUrl = _screenshots[index];
+                  debugPrint('🖼️ Loading screenshot $index: $imageUrl');
+
                   return ClipRRect(
                     borderRadius: BorderRadius.circular(8.r),
                     child: Image.network(
-                      _screenshots[index],
+                      imageUrl,
                       fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
                       errorBuilder: (context, error, stackTrace) {
+                        debugPrint('❌ Image load error for $imageUrl: $error');
                         return Container(
                           color: Colors.grey[300],
-                          child: Icon(Icons.error, color: Colors.red),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.error, color: Colors.red, size: 24.sp),
+                              SizedBox(height: 4.h),
+                              Text(
+                                'Load Failed',
+                                style: TextStyle(fontSize: 10.sp, color: Colors.red),
+                              ),
+                            ],
+                          ),
                         );
                       },
                     ),
