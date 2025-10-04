@@ -126,6 +126,7 @@ class MissionWorkflowModel {
       'totalDays': totalDays,
       'dailyReward': dailyReward,
       'completedDays': completedDays,
+      'dailyInteractions': dailyInteractions.map((i) => i.toFirestore()).toList(), // v2.17.2
       'stateUpdatedAt': FieldValue.serverTimestamp(),
     };
   }
@@ -292,5 +293,27 @@ class DailyMissionInteractionModel {
       rewardPaid: entity.rewardPaid,
       rewardPaidAt: entity.rewardPaidAt,
     );
+  }
+
+  /// Model → Firestore Map 변환 (v2.17.2)
+  Map<String, dynamic> toFirestore() {
+    return {
+      'dayNumber': dayNumber,
+      'date': Timestamp.fromDate(date),
+      'testerStarted': testerStarted,
+      if (testerStartedAt != null) 'testerStartedAt': Timestamp.fromDate(testerStartedAt!),
+      'testerCompleted': testerCompleted,
+      if (testerCompletedAt != null) 'testerCompletedAt': Timestamp.fromDate(testerCompletedAt!),
+      if (testerFeedback != null) 'testerFeedback': testerFeedback,
+      'testerScreenshots': testerScreenshots,
+      'testerData': testerData,
+      'providerApproved': providerApproved,
+      if (providerApprovedAt != null) 'providerApprovedAt': Timestamp.fromDate(providerApprovedAt!),
+      if (providerFeedback != null) 'providerFeedback': providerFeedback,
+      if (providerRating != null) 'providerRating': providerRating,
+      'dailyReward': dailyReward,
+      'rewardPaid': rewardPaid,
+      if (rewardPaidAt != null) 'rewardPaidAt': Timestamp.fromDate(rewardPaidAt!),
+    };
   }
 }

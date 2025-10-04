@@ -340,9 +340,45 @@ class MissionWorkflowService {
       AppLogger.info('Tester $testerId completing daily mission day $dayNumber', 'MissionWorkflow');
 
       final workflow = await getMissionWorkflow(workflowId);
-      final interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
+      var interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
+
+      // v2.17.2: dailyInteractions가 비어있으면 초기화
+      if (interactions.isEmpty) {
+        AppLogger.warning(
+          '⚠️ dailyInteractions is empty, auto-initializing for totalDays=${workflow.totalDays}',
+          'MissionWorkflow'
+        );
+
+        final startDate = workflow.startedAt ?? DateTime.now();
+        interactions = List.generate(workflow.totalDays, (index) {
+          return {
+            'dayNumber': index + 1,
+            'date': Timestamp.fromDate(startDate.add(Duration(days: index))),
+            'testerStarted': false,
+            'testerStartedAt': null,
+            'testerCompleted': false,
+            'testerCompletedAt': null,
+            'testerFeedback': null,
+            'testerScreenshots': [],
+            'testerData': {},
+            'providerApproved': false,
+            'providerApprovedAt': null,
+            'providerFeedback': null,
+            'providerRating': null,
+            'dailyReward': workflow.dailyReward,
+            'rewardPaid': false,
+            'rewardPaidAt': null,
+          };
+        });
+
+        AppLogger.info(
+          '✅ Created ${interactions.length} daily interaction slots',
+          'MissionWorkflow'
+        );
+      }
 
       // 해당 날짜의 interaction 찾기 및 업데이트
+      bool found = false;
       for (int i = 0; i < interactions.length; i++) {
         if (interactions[i]['dayNumber'] == dayNumber) {
           interactions[i]['testerCompleted'] = true;
@@ -350,8 +386,22 @@ class MissionWorkflowService {
           interactions[i]['testerFeedback'] = feedback;
           interactions[i]['testerScreenshots'] = screenshots ?? [];
           interactions[i]['testerData'] = additionalData ?? {};
+          found = true;
+
+          AppLogger.info(
+            '✅ Updated day $dayNumber with ${screenshots?.length ?? 0} screenshots',
+            'MissionWorkflow'
+          );
           break;
         }
+      }
+
+      if (!found) {
+        AppLogger.error(
+          '❌ Day $dayNumber not found in dailyInteractions',
+          'MissionWorkflow'
+        );
+        throw Exception('Day $dayNumber not found in dailyInteractions');
       }
 
       await _firestore
@@ -375,9 +425,9 @@ class MissionWorkflowService {
         },
       );
 
-      AppLogger.info('Daily mission completed successfully', 'MissionWorkflow');
+      AppLogger.info('✅ Daily mission completed successfully', 'MissionWorkflow');
     } catch (e) {
-      AppLogger.error('Failed to complete daily mission', e.toString());
+      AppLogger.error('❌ Failed to complete daily mission: $e', 'MissionWorkflow');
       rethrow;
     }
   }

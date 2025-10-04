@@ -201,15 +201,20 @@ class _DailyMissionSubmissionPageState
 
       if (mounted) {
         AppLogger.info(
-          'Daily mission submitted: workflow=${widget.workflowId}, day=${widget.dayNumber}',
+          '✅ Daily mission submitted: workflow=${widget.workflowId}, day=${widget.dayNumber}',
           'DailyMissionSubmission',
         );
 
-        // 성공 메시지 및 뒤로 가기
+        // 성공 메시지
         _showMessage('✅ 미션이 제출되었습니다!');
+
+        // 1초 대기 후 페이지 닫기
         await Future.delayed(const Duration(seconds: 1));
-        if (mounted) {
+
+        if (mounted && Navigator.canPop(context)) {
           Navigator.of(context).pop(true); // true를 반환하여 새로고침 트리거
+        } else {
+          AppLogger.warning('⚠️ Navigator cannot pop', 'DailyMissionSubmission');
         }
       }
     } catch (e) {
