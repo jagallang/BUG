@@ -30,6 +30,9 @@ import '../../../shared/widgets/daily_mission_card.dart';
 import '../../../shared/models/mission_management_model.dart';
 import '../../../../core/services/screenshot_service.dart';
 import '../widgets/mission_timer_floating_button.dart';
+import '../../../mission/presentation/providers/mission_providers.dart';
+import '../../../mission/domain/entities/mission_workflow_entity.dart';
+import '../../../../core/utils/logger.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -1072,68 +1075,87 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   Widget _buildActiveMissionsTab() {
-    // 기존 MissionManagementService를 사용해서 실제 데이터 로드
-    final missionService = MissionManagementService();
+    // v2.27.0: Clean Architecture 상태관리로 전환 (MissionStateNotifier)
+    // Legacy StreamBuilder 제거 → testerMissionsProvider 사용
+    final missionState = ref.watch(testerMissionsProvider(widget.testerId));
 
-    return StreamBuilder<List<DailyMissionModel>>(
-      stream: missionService.watchTesterTodayMissions(widget.testerId),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const BugCashLoadingWidget(
-            message: '미션 목록을 불러오는 중...',
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48.w, color: Colors.red[300]),
-                SizedBox(height: 16.h),
-                Text(
-                  '데이터를 불러올 수 없습니다',
-                  style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  snapshot.error.toString(),
-                  style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 16.h),
-                ElevatedButton(
-                  onPressed: () {
-                    // 새로고침을 위해 setState 호출
-                    setState(() {});
-                  },
-                  child: const Text('다시 시도'),
-                ),
-              ],
+    return missionState.when(
+      initial: () => const BugCashLoadingWidget(
+        message: '초기화 중...',
+      ),
+      loading: () => const BugCashLoadingWidget(
+        message: '미션 목록을 불러오는 중...',
+      ),
+      error: (message, exception) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 48.w, color: Colors.red[300]),
+            SizedBox(height: 16.h),
+            Text(
+              '데이터를 불러올 수 없습니다',
+              style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
             ),
-          );
-        }
-
+            SizedBox(height: 8.h),
+            Text(
+              message,
+              style: TextStyle(fontSize: 12.sp, color: Colors.grey[500]),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 16.h),
+            ElevatedButton(
+              onPressed: () {
+                // v2.27.0: 수동 새로고침 (30초 폴링 대신 즉시 갱신)
+                ref.read(testerMissionsProvider(widget.testerId).notifier).refreshMissions();
+              },
+              child: const Text('다시 시도'),
+            ),
+          ],
+        ),
+      ),
+      loaded: (missions, isRefreshing) {
+        // v2.27.0: MissionWorkflowEntity → DailyMissionModel 변환 및 필터링
         // v2.24.1: in_progress 상태 미션만 표시 (approved 상태 제외)
         // v2.24.8: 일일 미션 진행 상태 추가 (제출 후에도 계속 보여야 함)
         // approved: 공급자가 승인했지만 아직 미션만들기를 하지 않은 상태 (제외)
-        // in_progress: 미션 수행 중
-        // daily_mission_completed: 일일 미션 제출 후 검토 대기
-        // daily_mission_approved: 일일 미션 승인됨 (다음 날 제출 가능)
-        // daily_mission_rejected: 일일 미션 거절됨 (재제출 필요)
-        final dailyMissions = (snapshot.data ?? [])
-            .where((mission) =>
-              mission.currentState != 'deleted_by_tester' &&
-              (mission.currentState == 'in_progress' ||
-               mission.currentState == 'daily_mission_completed' ||
-               mission.currentState == 'daily_mission_approved' ||
-               mission.currentState == 'daily_mission_rejected')
-            )
-            .toList();
+        // inProgress: 미션 수행 중
+        // dailyMissionCompleted: 일일 미션 제출 후 검토 대기
+        // dailyMissionApproved: 일일 미션 승인됨 (다음 날 제출 가능)
+        final activeMissionEntities = missions.where((mission) {
+          return mission.status == MissionWorkflowStatus.inProgress ||
+              mission.status == MissionWorkflowStatus.dailyMissionCompleted ||
+              mission.status == MissionWorkflowStatus.dailyMissionApproved;
+        }).toList();
 
-        debugPrint('🎨 RENDERING_ACTIVE_TAB: total=${snapshot.data?.length ?? 0}, filtered=${dailyMissions.length}');
+        // Convert to DailyMissionModel
+        final dailyMissions = activeMissionEntities.map((entity) {
+          return DailyMissionModel(
+            id: entity.id,
+            appId: entity.appId,
+            testerId: entity.testerId,
+            missionDate: entity.appliedAt,  // Use appliedAt as missionDate
+            missionTitle: entity.appName,
+            missionDescription: '${entity.totalDays}일 일일 미션 테스트',
+            baseReward: entity.dailyReward,
+            status: _mapWorkflowStatusToDailyMissionStatus(entity.status),
+            currentState: entity.status.name.toString(),
+            startedAt: entity.startedAt,
+            completedAt: entity.completedAt,
+            approvedAt: entity.approvedAt,
+            workflowId: entity.id,
+            dayNumber: entity.completedDays + 1,
+          );
+        }).toList();
+
+        AppLogger.info(
+          '🎨 [v2.27.0] ACTIVE_TAB: total=${missions.length}, filtered=${dailyMissions.length}',
+          'TesterDashboard'
+        );
         if (dailyMissions.isNotEmpty) {
-          debugPrint('   └─ First mission: ${dailyMissions.first.missionTitle} (${dailyMissions.first.currentState})');
+          AppLogger.info(
+            '   └─ First mission: ${dailyMissions.first.missionTitle} (${dailyMissions.first.currentState})',
+            'TesterDashboard'
+          );
         }
 
         if (dailyMissions.isEmpty) {
@@ -1158,6 +1180,15 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     fontSize: 14.sp,
                     color: Colors.grey[500],
                   ),
+                ),
+                SizedBox(height: 16.h),
+                // v2.27.0: 수동 새로고침 버튼 추가
+                ElevatedButton.icon(
+                  onPressed: () {
+                    ref.read(testerMissionsProvider(widget.testerId).notifier).refreshMissions();
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('새로고침'),
                 ),
               ],
             ),
@@ -1215,6 +1246,26 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         );
       },
     );
+  }
+
+  /// v2.27.0: MissionWorkflowStatus → DailyMissionStatus 변환
+  DailyMissionStatus _mapWorkflowStatusToDailyMissionStatus(MissionWorkflowStatus status) {
+    switch (status) {
+      case MissionWorkflowStatus.applicationSubmitted:
+        return DailyMissionStatus.pending;
+      case MissionWorkflowStatus.approved:
+        return DailyMissionStatus.approved;
+      case MissionWorkflowStatus.inProgress:
+      case MissionWorkflowStatus.dailyMissionCompleted:
+      case MissionWorkflowStatus.dailyMissionApproved:
+        return DailyMissionStatus.inProgress; // 진행중으로 표시
+      case MissionWorkflowStatus.submissionCompleted:
+      case MissionWorkflowStatus.testingCompleted:
+        return DailyMissionStatus.completed;
+      case MissionWorkflowStatus.rejected:
+      case MissionWorkflowStatus.cancelled:
+        return DailyMissionStatus.rejected;
+    }
   }
 
   // 일일 미션 상호작용 함수들
