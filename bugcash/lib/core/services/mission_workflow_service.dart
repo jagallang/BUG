@@ -3,20 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/shared/models/mission_workflow_model.dart';
 import '../utils/logger.dart';
 
-/// v2.25.16: 미션이 이미 존재할 때 발생하는 특수 Exception
-class MissionAlreadyExistsException implements Exception {
-  final int dayNumber;
-  final String message;
-
-  MissionAlreadyExistsException({
-    required this.dayNumber,
-    required this.message,
-  });
-
-  @override
-  String toString() => message;
-}
-
 /// MissionWorkflowService Provider
 final missionWorkflowServiceProvider = Provider<MissionWorkflowService>((ref) {
   return MissionWorkflowService();
@@ -153,8 +139,9 @@ class MissionWorkflowService {
     try {
       AppLogger.info('Processing mission application $workflowId: ${approved ? "approved" : "rejected"}', 'MissionWorkflow');
 
+      // v2.25.19: Day 1이 생성되었으므로 바로 in_progress 상태로 전환
       final newState = approved
-          ? MissionWorkflowState.applicationApproved
+          ? MissionWorkflowState.missionInProgress  // application_approved → in_progress
           : MissionWorkflowState.applicationRejected;
 
       final updateData = {
@@ -169,8 +156,25 @@ class MissionWorkflowService {
         updateData['startedAt'] = FieldValue.serverTimestamp();
         updateData['currentDay'] = 1;
 
-        // 첫 날 일일 미션 생성
-        await _createDailyMission(workflowId, 1);
+        // v2.25.18: totalDays 만큼 모든 일일 미션 미리 생성
+        final workflow = await getMissionWorkflow(workflowId);
+        final startDate = DateTime.now();
+        final allDayMissions = List.generate(workflow.totalDays, (index) {
+          return {
+            'dayNumber': index + 1,
+            'date': startDate.add(Duration(days: index)),
+            'testerStarted': false,
+            'testerCompleted': false,
+            'testerScreenshots': [],
+            'testerData': {},
+            'providerApproved': false,
+            'dailyReward': workflow.dailyReward,
+            'rewardPaid': false,
+          };
+        });
+        updateData['dailyInteractions'] = allDayMissions;
+
+        AppLogger.info('✅ Created ${allDayMissions.length} daily missions for totalDays=${workflow.totalDays}', 'MissionWorkflow');
       }
 
       if (feedback != null) {
@@ -200,37 +204,8 @@ class MissionWorkflowService {
     }
   }
 
-  // 3단계: 일일 미션 생성
-  Future<void> _createDailyMission(String workflowId, int dayNumber) async {
-    try {
-      final workflow = await getMissionWorkflow(workflowId);
-
-      final interaction = DailyMissionInteraction(
-        id: '${workflowId}_day_$dayNumber',
-        missionId: workflowId,
-        testerId: workflow.testerId,
-        providerId: workflow.providerId,
-        dayNumber: dayNumber,
-        date: DateTime.now(),
-        dailyReward: workflow.dailyReward,
-      );
-
-      // dailyInteractions 배열에 추가
-      await _firestore
-          .collection('mission_workflows')
-          .doc(workflowId)
-          .update({
-        'dailyInteractions': FieldValue.arrayUnion([interaction.toFirestore()]),
-        'currentState': MissionWorkflowState.missionInProgress.code,
-        'stateUpdatedAt': FieldValue.serverTimestamp(),
-      });
-
-      AppLogger.info('Daily mission created for day $dayNumber', 'MissionWorkflow');
-    } catch (e) {
-      AppLogger.error('Failed to create daily mission', e.toString());
-      rethrow;
-    }
-  }
+  // v2.25.18: _createDailyMission 함수 삭제
+  // 모든 Day 미션은 최초 승인 시 한 번에 생성되므로 개별 생성 함수는 더 이상 필요 없음
 
   // 4단계: 테스터가 일일 미션 시작
   Future<void> startDailyMission({
@@ -359,32 +334,13 @@ class MissionWorkflowService {
       final workflow = await getMissionWorkflow(workflowId);
       var interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
 
-      // v2.17.2: dailyInteractions가 비어있으면 초기화
+      // v2.25.18: dailyInteractions는 이제 최초 승인 시 생성되므로 여기서는 검증만 수행
       if (interactions.isEmpty) {
-        AppLogger.warning(
-          '⚠️ dailyInteractions is empty, auto-initializing for totalDays=${workflow.totalDays}',
+        AppLogger.error(
+          '❌ dailyInteractions is empty - this should not happen after v2.25.18',
           'MissionWorkflow'
         );
-
-        final startDate = workflow.startedAt ?? DateTime.now();
-        interactions = List.generate(workflow.totalDays, (index) {
-          return {
-            'dayNumber': index + 1,
-            'date': startDate.add(Duration(days: index)),
-            'testerStarted': false,
-            'testerCompleted': false,
-            'testerScreenshots': [],
-            'testerData': {},
-            'providerApproved': false,
-            'dailyReward': workflow.dailyReward,
-            'rewardPaid': false,
-          };
-        });
-
-        AppLogger.info(
-          '✅ Created ${interactions.length} daily interaction slots',
-          'MissionWorkflow'
-        );
+        throw Exception('dailyInteractions가 비어있습니다. 미션 신청 승인이 올바르게 처리되지 않았습니다.');
       }
 
       // 해당 날짜의 interaction 찾기 및 업데이트
@@ -538,49 +494,32 @@ class MissionWorkflowService {
     }
   }
 
-  // v2.25.04: 공급자가 다음 날 미션 수동 생성
-  // v2.25.17: targetDay 파라미터 추가 (재귀 호출 시 특정 날짜 지정 가능)
-  Future<void> createNextDayMission({
+  // v2.25.18: createNextDayMission 함수 삭제
+  // 모든 Day 미션은 최초 승인 시 생성되므로 이 함수는 더 이상 필요 없음
+
+  // v2.25.19: 이미 생성된 다음 날 미션 활성화 (currentDay만 업데이트)
+  Future<void> activateNextDayMission({
     required String workflowId,
     required String providerId,
-    int? targetDay,  // v2.25.17: 특정 날짜 지정 (null이면 currentDay + 1)
   }) async {
     try {
-      AppLogger.info('Provider $providerId creating next day mission (targetDay: $targetDay)', 'MissionWorkflow');
+      AppLogger.info('Provider $providerId activating next day mission', 'MissionWorkflow');
 
       final workflow = await getMissionWorkflow(workflowId);
 
       // 현재 상태 확인: dailyMissionApproved 상태여야 함
       if (workflow.currentState != MissionWorkflowState.dailyMissionApproved) {
-        throw Exception('다음 날 미션은 이전 미션 승인 후에만 생성 가능합니다 (현재 상태: ${workflow.currentState.displayName})');
+        throw Exception('다음 날 미션은 이전 미션 승인 후에만 시작 가능합니다 (현재 상태: ${workflow.currentState.displayName})');
       }
 
-      // v2.25.17: targetDay가 지정되면 사용, 아니면 currentDay + 1
-      final nextDayNumber = targetDay ?? (workflow.currentDay + 1);
+      final nextDayNumber = workflow.currentDay + 1;
 
       // 마지막 날 초과 체크
       if (nextDayNumber > workflow.totalDays) {
         throw Exception('모든 미션이 완료되었습니다. (총 ${workflow.totalDays}일)');
       }
 
-      // v2.25.16: 다음 날 미션이 이미 존재하는지 확인
-      final existingInteraction = workflow.dailyInteractions.firstWhere(
-        (interaction) => interaction.dayNumber == nextDayNumber,
-        orElse: () => throw StateError('NotFound'),
-      );
-
-      if (existingInteraction.id != 'NotFound') {
-        // v2.25.16: 이미 존재하면 특수 에러 타입으로 던져서 UI에서 다음 날 생성 제안
-        throw MissionAlreadyExistsException(
-          dayNumber: nextDayNumber,
-          message: 'Day $nextDayNumber 미션이 이미 존재합니다',
-        );
-      }
-
-      // 다음 날 미션 생성
-      await _createDailyMission(workflowId, nextDayNumber);
-
-      // currentDay 업데이트
+      // Day는 이미 dailyInteractions에 생성되어 있으므로 currentDay만 업데이트
       await _firestore
           .collection('mission_workflows')
           .doc(workflowId)
@@ -591,32 +530,10 @@ class MissionWorkflowService {
         'stateUpdatedBy': providerId,
       });
 
-      AppLogger.info('Next day mission (Day $nextDayNumber) created successfully', 'MissionWorkflow');
+      AppLogger.info('✅ Day $nextDayNumber activated successfully', 'MissionWorkflow');
     } catch (e) {
-      if (e is StateError) {
-        // existingInteraction을 찾지 못한 경우 (정상 - 미션 생성 진행)
-        AppLogger.info('No existing mission found, proceeding with creation', 'MissionWorkflow');
-
-        final workflow = await getMissionWorkflow(workflowId);
-        final nextDayNumber = workflow.currentDay + 1;
-
-        await _createDailyMission(workflowId, nextDayNumber);
-
-        await _firestore
-            .collection('mission_workflows')
-            .doc(workflowId)
-            .update({
-          'currentDay': nextDayNumber,
-          'currentState': MissionWorkflowState.missionInProgress.code,
-          'stateUpdatedAt': FieldValue.serverTimestamp(),
-          'stateUpdatedBy': providerId,
-        });
-
-        AppLogger.info('Next day mission (Day $nextDayNumber) created successfully', 'MissionWorkflow');
-      } else {
-        AppLogger.error('Failed to create next day mission', e.toString());
-        rethrow;
-      }
+      AppLogger.error('Failed to activate next day mission', e.toString());
+      rethrow;
     }
   }
 

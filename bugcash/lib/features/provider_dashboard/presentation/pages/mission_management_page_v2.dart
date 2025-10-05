@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/config/feature_flags.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../../core/services/mission_workflow_service.dart';
+import '../../../../core/services/mission_workflow_service.dart';  // v2.25.19: 복원
 import '../../../../features/mission/domain/entities/mission_workflow_entity.dart';
 import '../../../../features/mission/presentation/providers/mission_providers.dart';
 import '../../../provider_dashboard/presentation/pages/app_management_page.dart';
@@ -1164,13 +1164,14 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 ),
               ],
             ),
+            // v2.25.19: "Day X 미션 시작" 버튼 복원 (생성 대신 활성화)
             SizedBox(height: 12.h),
             Row(
               children: [
-                Icon(Icons.arrow_forward, size: 16.sp, color: Colors.orange),
+                Icon(Icons.play_arrow, size: 16.sp, color: Colors.orange),
                 SizedBox(width: 4.w),
                 Text(
-                  'Day ${mission.completedDays + 1} 미션 생성 필요',
+                  'Day ${mission.completedDays + 1} 미션 활성화 필요',
                   style: TextStyle(fontSize: 14.sp, color: Colors.orange[700], fontWeight: FontWeight.w600),
                 ),
               ],
@@ -1180,14 +1181,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  // 다음 날 미션 생성
                   final confirmed = await showDialog<bool>(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: Text('다음 날 미션 생성'),
+                      title: Text('Day ${mission.completedDays + 1} 미션 시작'),
                       content: Text(
-                        'Day ${mission.completedDays + 1} 미션을 생성하시겠습니까?\n\n'
-                        '테스터가 다음 날 미션을 시작할 수 있게 됩니다.',
+                        'Day ${mission.completedDays + 1} 미션을 시작하시겠습니까?\n\n'
+                        '테스터가 오늘중 탭에서 Day ${mission.completedDays + 1} 미션을 볼 수 있게 됩니다.',
                       ),
                       actions: [
                         TextButton(
@@ -1197,19 +1197,48 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                         ElevatedButton(
                           onPressed: () => Navigator.pop(context, true),
                           style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                          child: const Text('생성'),
+                          child: const Text('시작'),
                         ),
                       ],
                     ),
                   );
 
                   if (confirmed == true && mounted) {
-                    await _attemptCreateMission(mission);
+                    try {
+                      final service = ref.read(missionWorkflowServiceProvider);
+                      await service.activateNextDayMission(
+                        workflowId: mission.id,
+                        providerId: mission.providerId,
+                      );
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('✅ Day ${mission.completedDays + 1} 미션이 시작되었습니다'),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        // 상태 새로고침
+                        ref.read(missionStateNotifierProvider.notifier).startPollingForApp(
+                          mission.appId,
+                          mission.providerId,
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('미션 시작 실패: $e'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
                   }
                 },
-                icon: Icon(Icons.add_circle_outline, size: 20.sp),
+                icon: Icon(Icons.play_arrow, size: 20.sp),
                 label: Text(
-                  'Day ${mission.completedDays + 1} 미션 만들기',
+                  'Day ${mission.completedDays + 1} 시작',
                   style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -1562,79 +1591,6 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     });
   }
 
-  /// v2.25.16: 미션 생성 시도 (이미 존재하면 다음 미션 제안)
-  /// v2.25.17: specificDay를 targetDay로 전달하여 재귀 호출 시 특정 날짜 생성
-  Future<void> _attemptCreateMission(MissionWorkflowEntity mission, {int? specificDay}) async {
-    try {
-      final service = ref.read(missionWorkflowServiceProvider);
-      await service.createNextDayMission(
-        workflowId: mission.id,
-        providerId: mission.providerId,
-        targetDay: specificDay,  // v2.25.17: 특정 날짜 지정
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('✅ Day ${specificDay ?? mission.completedDays + 1} 미션이 생성되었습니다'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        // 상태 새로고침
-        ref.read(missionStateNotifierProvider.notifier).startPollingForApp(
-          mission.appId,
-          mission.providerId,
-        );
-      }
-    } on MissionAlreadyExistsException catch (e) {
-      // v2.25.16: 미션이 이미 존재하면 다음 날 미션 생성 제안
-      if (mounted) {
-        final nextDay = e.dayNumber + 1;
-
-        // 다음 날 미션 생성 제안 다이얼로그
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.orange, size: 28.sp),
-                SizedBox(width: 8.w),
-                Text('Day ${e.dayNumber} 이미 존재'),
-              ],
-            ),
-            content: Text(
-              'Day ${e.dayNumber} 미션이 이미 생성되어 있습니다.\n\n'
-              'Day $nextDay 미션을 생성하시겠습니까?',
-              style: TextStyle(fontSize: 15.sp),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('취소'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                child: Text('Day $nextDay 생성'),
-              ),
-            ],
-          ),
-        );
-
-        if (confirmed == true && mounted) {
-          // 재귀적으로 다음 날 미션 생성 시도
-          await _attemptCreateMission(mission, specificDay: nextDay);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('미션 생성 실패: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
+  // v2.25.18: _attemptCreateMission 함수 삭제
+  // 모든 Day 미션은 최초 승인 시 자동 생성되므로 이 함수는 더 이상 필요 없음
 }
