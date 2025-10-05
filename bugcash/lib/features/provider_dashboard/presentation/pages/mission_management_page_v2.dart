@@ -33,7 +33,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 3, vsync: this); // v2.36.0: 5개 → 3개 탭으로 축소
 
     // v2.14.7: 프로덕션 디버깅을 위한 print 로그
     print('📱 [MissionManagementV2] 페이지 초기화');
@@ -123,22 +123,18 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             fontWeight: FontWeight.normal,
           ),
           tabs: const [
-            Tab(text: '테스터'),
-            Tab(text: '오늘'),
-            Tab(text: '완료'),
-            Tab(text: '종료'),
-            Tab(text: '삭제요청'),
+            Tab(text: '테스터'), // v2.36.0: 신청 대기 + 진행 중인 테스터
+            Tab(text: '오늘'),   // v2.36.0: 일일 미션 검토
+            Tab(text: '종료'),   // v2.36.0: 최종 완료된 미션
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildTesterRecruitmentTab(),
-          _buildTodayMissionsTab(),
-          _buildCompletedMissionsTab(),
-          _buildSettlementTab(),
-          _buildDeletionRequestsTab(),
+          _buildTesterRecruitmentTab(), // v2.36.0: 테스터 모집 + 진행 중인 테스터
+          _buildTodayMissionsTab(),     // v2.36.0: 오늘의 일일 미션
+          _buildSettlementTab(),        // v2.36.0: 종료된 미션
         ],
       ),
     );
@@ -706,61 +702,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     );
   }
 
-  /// 완료 미션 탭 - 테스팅 완료된 미션
-  Widget _buildCompletedMissionsTab() {
-    return Consumer(
-      builder: (context, ref, child) {
-        final missionsState = ref.watch(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)));
-
-        return missionsState.when(
-          initial: () => const Center(child: Text('초기화 중...')),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          loaded: (missions, isRefreshing) {
-            final completedMissions = missions
-                .where((m) => m.status == MissionWorkflowStatus.testingCompleted)
-                .toList();
-
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  if (isRefreshing)
-                    const LinearProgressIndicator(minHeight: 2),
-
-                  if (completedMissions.isEmpty)
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(height: 100.h),
-                          Icon(Icons.check_circle_outline, size: 64.sp, color: Colors.grey),
-                          SizedBox(height: 16.h),
-                          Text(
-                            '완료된 미션이 없습니다',
-                            style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.all(16.w),
-                      itemCount: completedMissions.length,
-                      itemBuilder: (context, index) {
-                        final mission = completedMissions[index];
-                        return _buildCompletedMissionCard(mission);
-                      },
-                    ),
-                ],
-              ),
-            );
-          },
-          error: (message, exception) => Center(child: Text('오류: $message')),
-        );
-      },
-    );
-  }
+  // v2.36.0: _buildCompletedMissionsTab() 제거 - testingCompleted 상태 미사용
 
   /// 종료 탭 - 제출 완료된 미션
   Widget _buildSettlementTab() {
@@ -818,61 +760,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     );
   }
 
-  /// 삭제요청 탭 - 취소된 미션
-  Widget _buildDeletionRequestsTab() {
-    return Consumer(
-      builder: (context, ref, child) {
-        final missionsState = ref.watch(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)));
-
-        return missionsState.when(
-          initial: () => const Center(child: Text('초기화 중...')),
-          loading: () => const Center(child: CircularProgressIndicator()),
-          loaded: (missions, isRefreshing) {
-            final cancelledMissions = missions
-                .where((m) => m.status == MissionWorkflowStatus.cancelled)
-                .toList();
-
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  if (isRefreshing)
-                    const LinearProgressIndicator(minHeight: 2),
-
-                  if (cancelledMissions.isEmpty)
-                    Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(height: 100.h),
-                          Icon(Icons.delete_sweep, size: 64.sp, color: Colors.grey),
-                          SizedBox(height: 16.h),
-                          Text(
-                            '삭제 요청이 없습니다',
-                            style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.all(16.w),
-                      itemCount: cancelledMissions.length,
-                      itemBuilder: (context, index) {
-                        final mission = cancelledMissions[index];
-                        return _buildCancelledMissionCard(mission);
-                      },
-                    ),
-                ],
-              ),
-            );
-          },
-          error: (message, exception) => Center(child: Text('오류: $message')),
-        );
-      },
-    );
-  }
+  // v2.36.0: _buildDeletionRequestsTab() 제거 - cancelled 상태 미사용
 
   /// 진행 중 미션 카드
   /// v2.22.0: 검토 대기중인 미션 카드
@@ -1224,49 +1112,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   }
 
   /// 완료된 미션 카드
-  Widget _buildCompletedMissionCard(MissionWorkflowEntity mission) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 12.h),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
-                SizedBox(width: 8.w),
-                Expanded(
-                  child: Text(
-                    mission.testerName,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${mission.estimatedTotalReward}원',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.green,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '완료일: ${mission.completedAt?.toString().substring(0, 10) ?? 'N/A'}',
-              style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // v2.36.0: _buildCompletedMissionCard() 제거 - testingCompleted 상태 미사용
 
   /// 종료된 미션 카드
   Widget _buildSettledMissionCard(MissionWorkflowEntity mission) {
@@ -1314,56 +1160,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   }
 
   /// 취소된 미션 카드
-  Widget _buildCancelledMissionCard(MissionWorkflowEntity mission) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 12.h),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.cancel, size: 20.sp, color: Colors.red),
-                SizedBox(width: 8.w),
-                Expanded(
-                  child: Text(
-                    mission.testerName,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Text(
-                    '취소됨',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.red,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              mission.testerEmail,
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // v2.36.0: _buildCancelledMissionCard() 제거 - cancelled 상태 미사용
 
   // ========================================
   // Command Methods (v2.14.0 - Clean Architecture)
