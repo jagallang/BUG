@@ -331,8 +331,19 @@ class MissionWorkflowService {
     try {
       AppLogger.info('Tester $testerId completing daily mission day $dayNumber', 'MissionWorkflow');
 
-      final workflow = await getMissionWorkflow(workflowId);
-      var interactions = List<Map<String, dynamic>>.from(workflow.dailyInteractions.map((i) => i.toFirestore()));
+      // v2.26.1: Firestore에서 직접 읽어서 Timestamp 변환 문제 해결 (approveDailyMission과 동일)
+      final docSnapshot = await _firestore.collection('mission_workflows').doc(workflowId).get();
+      if (!docSnapshot.exists) {
+        throw Exception('Workflow not found');
+      }
+
+      final data = docSnapshot.data()!;
+      final interactions = List<Map<String, dynamic>>.from(data['dailyInteractions'] ?? []);
+
+      // v2.26.1: 모든 interaction의 Timestamp를 DateTime으로 변환
+      for (var interaction in interactions) {
+        _convertTimestampsToDateTime(interaction);
+      }
 
       // v2.25.18: dailyInteractions는 이제 최초 승인 시 생성되므로 여기서는 검증만 수행
       if (interactions.isEmpty) {
@@ -356,7 +367,10 @@ class MissionWorkflowService {
           found = true;
 
           AppLogger.info(
-            '✅ Updated day $dayNumber with ${screenshots?.length ?? 0} screenshots',
+            '✅ [v2.26.1] Day $dayNumber 업데이트 완료\n'
+            '   ├─ Screenshots: ${screenshots?.length ?? 0}개\n'
+            '   ├─ Feedback: ${feedback.substring(0, feedback.length > 30 ? 30 : feedback.length)}...\n'
+            '   └─ AdditionalData: ${additionalData?.keys.join(", ") ?? "없음"}',
             'MissionWorkflow'
           );
           break;
@@ -365,11 +379,20 @@ class MissionWorkflowService {
 
       if (!found) {
         AppLogger.error(
-          '❌ Day $dayNumber not found in dailyInteractions',
+          '❌ Day $dayNumber not found in dailyInteractions\n'
+          '   └─ Available days: ${interactions.map((i) => i['dayNumber']).toList()}',
           'MissionWorkflow'
         );
         throw Exception('Day $dayNumber not found in dailyInteractions');
       }
+
+      AppLogger.info(
+        '🔄 [v2.26.1] Firestore 업데이트 시작\n'
+        '   ├─ workflowId: $workflowId\n'
+        '   ├─ dayNumber: $dayNumber\n'
+        '   └─ state: dailyMissionCompleted',
+        'MissionWorkflow'
+      );
 
       await _firestore
           .collection('mission_workflows')
@@ -381,18 +404,22 @@ class MissionWorkflowService {
         'stateUpdatedBy': testerId,
       });
 
+      // v2.26.1: workflow 정보는 docSnapshot에서 가져오기
+      final providerId = data['providerId'] as String;
+      final testerName = data['testerName'] as String? ?? '테스터';
+
       // 공급자에게 알림
       await _sendNotificationToProvider(
-        providerId: workflow.providerId,
+        providerId: providerId,
         title: '일일 미션 완료',
-        message: '${workflow.testerName}님이 ${dayNumber}일차 미션을 완료했습니다.',
+        message: '$testerName님이 ${dayNumber}일차 미션을 완료했습니다.',
         data: {
           'workflowId': workflowId,
           'dayNumber': dayNumber,
         },
       );
 
-      AppLogger.info('✅ Daily mission completed successfully', 'MissionWorkflow');
+      AppLogger.info('✅ [v2.26.1] Daily mission completed successfully', 'MissionWorkflow');
     } catch (e) {
       AppLogger.error('❌ Failed to complete daily mission: $e', 'MissionWorkflow');
       rethrow;

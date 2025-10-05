@@ -141,7 +141,281 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.25.03 (Latest) - Firebase Storage CORS 수정 및 2단계 승인 확인 다이얼로그
+### v2.26.0 (Latest) - Day 미션 활성화 시스템 구축
+*Released: 2025-10-05*
+
+**🎯 핵심 개선:**
+- **최초 승인 시 전체 Day 미션 자동 생성 (v2.25.18)**: Day 1-10을 한 번에 생성하여 워크플로우 단순화
+- **Day 미션 활성화 버튼 추가 (v2.25.19)**: 공급자가 "Day X 시작" 버튼으로 기존 미션 활성화
+- **코드 대폭 간소화**: 불필요한 로직 100줄 이상 제거 (createNextDayMission, MissionAlreadyExistsException, _attemptCreateMission 등)
+
+**🔧 v2.25.18 기술적 개선:**
+1. **processMissionApplication 수정** (`lib/core/services/mission_workflow_service.dart` Line 158-176):
+   - 최초 승인 시 `totalDays` 만큼 모든 Day 미션을 `dailyInteractions` 배열에 생성
+   - 개별 Day 생성 함수(`_createDailyMission`) 제거
+   - 상태를 `application_approved` → `in_progress`로 변경 (Line 142-145)
+
+2. **completeDailyMission 검증 로직 강화** (Line 336-343):
+   - `dailyInteractions`가 비어있으면 에러 발생
+   - 최초 승인 시 모두 생성되므로 빈 배열은 비정상 상태
+
+3. **불필요한 함수/클래스 삭제**:
+   - `_createDailyMission()` 함수 삭제 (개별 생성 불필요)
+   - `createNextDayMission()` 함수 삭제
+   - `MissionAlreadyExistsException` 클래스 삭제
+   - `_attemptCreateMission()` 재귀 함수 삭제
+
+**🔧 v2.25.19 기술적 개선:**
+1. **activateNextDayMission 함수 추가** (`lib/core/services/mission_workflow_service.dart` Line 499-537):
+   - Day는 이미 생성되어 있으므로 `currentDay`만 업데이트
+   - `currentState`를 `in_progress`로 변경하여 테스터가 볼 수 있게 함
+   - 간단하고 명확한 로직 (40줄)
+
+2. **공급자 UI 버튼 복원** (`lib/features/provider_dashboard/presentation/pages/mission_management_page_v2.dart` Line 1167-1253):
+   - 아이콘: `play_arrow` (주황색)
+   - 텍스트: "Day X 미션 활성화 필요"
+   - 버튼: "Day X 시작"
+   - 다이얼로그: "테스터가 오늘중 탭에서 Day X 미션을 볼 수 있게 됩니다"
+
+**✅ 효과:**
+- **Before**:
+  - 최초 승인 시 Day 1만 생성
+  - Day 1 승인 후 자동으로 Day 2-10 생성 (타이밍 불일치)
+  - "Day 2 만들기" 버튼 클릭 → "이미 존재" 에러
+  - 재귀 대화상자 무한 루프 (Day 2 → Day 3 → Day 4...)
+  - 복잡한 예외 처리 로직 (100줄 이상)
+
+- **After**:
+  - 최초 승인 시 Day 1-10 모두 생성
+  - Day 1 승인 후 "Day 2 시작" 버튼 표시
+  - 버튼 클릭 → `currentDay=2`, `currentState=in_progress` 업데이트
+  - 테스터 "오늘중" 탭에 Day 2 미션 카드 즉시 표시
+  - 간단하고 직관적인 로직 (40줄)
+
+**📊 사용자 워크플로:**
+```
+1. 공급자: 테스터 신청 승인
+   → Day 1-10 모두 Firestore에 생성됨
+   → currentDay=1, currentState=in_progress
+
+2. 테스터: "오늘중" 탭에서 Day 1 미션 시작 → 완료 → 제출
+
+3. 공급자: Day 1 승인
+   → completedDays=1
+   → currentState=daily_mission_approved
+   → "Day 2 시작" 버튼 표시
+
+4. 공급자: "Day 2 시작" 버튼 클릭
+   → currentDay=2, currentState=in_progress
+
+5. 테스터: "오늘중" 탭에서 Day 2 미션 시작 가능
+```
+
+**📁 수정된 파일:**
+- `lib/core/services/mission_workflow_service.dart`:
+  - Line 142-145: 최초 승인 시 `in_progress` 상태로 변경
+  - Line 158-176: 전체 Day 미션 자동 생성
+  - Line 336-343: dailyInteractions 검증 로직
+  - Line 499-537: activateNextDayMission 함수 추가
+  - 삭제: _createDailyMission, createNextDayMission, MissionAlreadyExistsException
+
+- `lib/features/provider_dashboard/presentation/pages/mission_management_page_v2.dart`:
+  - Line 7: mission_workflow_service import 복원
+  - Line 1167-1253: "Day X 시작" 버튼 복원
+  - 삭제: _attemptCreateMission 재귀 함수
+
+**🎯 기술적 우수성:**
+- **코드 간소화**: 208줄 삭제, 81줄 추가 (순감소 127줄)
+- **복잡도 감소**: 재귀 로직, 예외 처리 제거
+- **유지보수성 향상**: 명확한 생성 → 활성화 플로우
+- **테스트 용이성**: 단순한 로직으로 버그 발생률 감소
+
+---
+
+### v2.25.17 - Day 2 생성 버튼 무한 루프 수정
+*Released: 2025-10-05*
+
+**🐛 치명적 버그 수정:**
+- **Day 2 생성 버튼 클릭 시 무한 루프 해결**: 재귀 호출 시 `targetDay` 파라미터가 전달되지 않아 계속 Day 1 생성을 시도하던 문제 수정
+
+**🔧 기술적 해결책:**
+1. **Service 함수에 `targetDay` 파라미터 추가** (`lib/core/services/mission_workflow_service.dart` Line 546, 559):
+   - `createNextDayMission`에 옵셔널 `targetDay` 파라미터 추가
+   - `targetDay`가 지정되면 해당 날짜 사용, null이면 `currentDay + 1` 계산
+
+2. **UI에서 `targetDay` 전달** (`lib/features/provider_dashboard/presentation/pages/mission_management_page_v2.dart` Line 1573):
+   - `_attemptCreateMission`에서 `specificDay`를 `targetDay`로 전달
+   - 재귀 호출 시 올바른 날짜로 미션 생성
+
+**📊 근본 원인:**
+- v2.25.16에서 재귀 호출 시 `specificDay` 파라미터를 전달했지만, `createNextDayMission` 함수가 이를 무시
+- 항상 `currentDay + 1`을 계산하여 Day 1 생성 시도
+- Day 1이 이미 존재 → Exception → 다시 Day 2 제안 → 무한 루프
+
+**✅ 효과:**
+- **Before**:
+  - "Day 2 생성" 버튼 클릭
+  - 다시 Day 1 생성 시도 → Exception
+  - "Day 2 생성" 다이얼로그 반복 표시
+  - 무한 루프
+- **After**:
+  - "Day 2 생성" 버튼 클릭
+  - Day 2 미션 정상 생성
+  - 성공 메시지 표시
+
+**📁 수정된 파일:**
+- `lib/core/services/mission_workflow_service.dart` (Line 546, 549, 559)
+- `lib/features/provider_dashboard/presentation/pages/mission_management_page_v2.dart` (Line 1566, 1573)
+
+---
+
+### v2.25.16 - "미션이 이미 존재" 에러 처리 개선
+*Released: 2025-10-05*
+
+**🎯 UX 개선:**
+- **스마트 미션 생성 로직**: "Day X 미션이 이미 존재" 에러 발생 시 자동으로 다음 날 미션 생성 제안
+
+**🔧 기술적 해결책:**
+1. **커스텀 Exception 추가** (`lib/core/services/mission_workflow_service.dart` Line 6-18):
+   - `MissionAlreadyExistsException` 클래스 생성
+   - `dayNumber` 필드로 어느 날짜 미션이 존재하는지 전달
+
+2. **Service 로직 수정** (Line 558-561):
+   - 기존: `throw Exception('Day X 미션이 이미 존재합니다')`
+   - 수정 후: `throw MissionAlreadyExistsException(...)`
+
+3. **UI 로직 개선** (`lib/features/provider_dashboard/presentation/pages/mission_management_page_v2.dart` Line 1565-1637):
+   - `_attemptCreateMission` 메서드 추가
+   - `MissionAlreadyExistsException` catch → 다음 날 생성 제안 다이얼로그
+   - 재귀적 호출로 다음 날 미션 생성 시도
+
+**📊 사용자 시나리오:**
+```
+1. 공급자: "Day 1 미션 만들기" 버튼 클릭
+2. 시스템: "Day 1이 이미 존재합니다" 감지
+3. 다이얼로그: "Day 1 미션이 이미 생성되어 있습니다. Day 2 미션을 생성하시겠습니까?"
+4. 공급자: "Day 2 생성" 클릭
+5. 시스템: Day 2 미션 생성 완료
+```
+
+**✅ 효과:**
+- **Before**:
+  - "미션 생성 실패: Exception: Day 1 미션이 이미 존재합니다" 빨간 에러 메시지
+  - 공급자가 수동으로 completedDays 확인 필요
+  - 혼란스러운 UX
+- **After**:
+  - "Day 1 이미 존재" 정보 다이얼로그
+  - "Day 2 미션을 생성하시겠습니까?" 명확한 제안
+  - 원클릭으로 다음 미션 생성
+  - 부드러운 UX
+
+**📁 수정된 파일:**
+- `lib/core/services/mission_workflow_service.dart` (Line 6-18, 558-561)
+- `lib/features/provider_dashboard/presentation/pages/mission_management_page_v2.dart` (Line 1207, 1565-1637)
+
+---
+
+### v2.25.15 - 테스터 대시보드 상태 매핑 수정
+*Released: 2025-10-05*
+
+**🐛 치명적 버그 수정:**
+- **테스터 진행중 탭 미션카드 사라짐 완전 해결**: 일일 미션 상태를 MissionStatus.active로 매핑하지 않아 필터링에서 제외되던 문제 수정
+
+**🔧 기술적 해결책:**
+- `_getMissionStatus` 함수에 일일 미션 상태 케이스 추가 (`lib/features/tester_dashboard/presentation/providers/tester_dashboard_provider.dart` Line 1126-1128)
+- `daily_mission_completed`, `daily_mission_approved`, `daily_mission_rejected` → `MissionStatus.active` 매핑
+
+**📊 근본 원인:**
+- v2.25.13에서 `UnifiedMissionModel`의 상태 변환 로직을 수정했지만, 테스터 대시보드는 별도의 `_getMissionStatus` 함수 사용
+- `_getMissionStatus` 함수의 switch 문에 일일 미션 상태 케이스가 없어 `default: MissionStatus.draft`로 처리됨
+- `MissionStatus.draft`는 진행중 탭 필터에서 제외되어 미션카드가 표시되지 않음
+
+**✅ 효과:**
+- **Before**:
+  - `currentState='daily_mission_approved'` → `status=MissionStatus.draft`
+  - 진행중 탭 필터링: `activeMissions.length=1` but `filtered=0`
+  - 미션카드 사라짐
+- **After**:
+  - `currentState='daily_mission_approved'` → `status=MissionStatus.active`
+  - 진행중 탭 필터링: `activeMissions.length=1`, `filtered=1`
+  - 미션카드 정상 표시
+
+**📁 수정된 파일:**
+- `lib/features/tester_dashboard/presentation/providers/tester_dashboard_provider.dart` (Line 1126-1128)
+
+---
+
+### v2.25.14 - completedDays 필드 업데이트 수정
+*Released: 2025-10-05*
+
+**🐛 버그 수정:**
+- **공급자 "Day X 미션 만들기" 버튼 중복 표시 해결**: 일일 미션 승인 후 completedDays 필드가 업데이트되지 않아 잘못된 버튼이 표시되던 문제 수정
+
+**🔧 기술적 해결책:**
+- `approveDailyMission` 함수에서 `completedDays` 필드 업데이트 추가 (`lib/core/services/mission_workflow_service.dart` Line 482-483, 495)
+- `completedDays`는 `dailyInteractions`에서 `providerApproved=true`인 항목 개수로 계산
+- 일일 미션 승인 시마다 Firestore에 `completedDays` 값 저장
+
+**📊 근본 원인:**
+- `approveDailyMission` 함수가 `completedDays` 필드를 업데이트하지 않음
+- UI는 `mission.completedDays` 값을 사용하여 "Day X 승인 완료" 메시지 표시
+- `completedDays`가 계속 0이므로 "Day 0 승인 완료, Day 1 미션 생성 필요"로 잘못 표시됨
+
+**✅ 효과:**
+- **Before**:
+  - Day 1 승인 후에도 `completedDays=0`
+  - UI에 "Day 0 승인 완료, Day 1 미션 만들기" 표시 (잘못된 정보)
+  - Day 1 미션을 이미 생성했는데도 계속 버튼이 보임
+- **After**:
+  - Day 1 승인 후 `completedDays=1`로 정확히 업데이트
+  - UI에 "Day 1 승인 완료, Day 2 미션 만들기" 표시 (정확한 정보)
+  - Day 2 미션 생성 시 `currentState`가 `in_progress`로 바뀌어 승인 완료 섹션에서 사라짐
+
+**📁 수정된 파일:**
+- `lib/core/services/mission_workflow_service.dart` (Line 482-483, 495)
+
+---
+
+### v2.25.13 - UI 필터링 및 상태 변환 수정
+*Released: 2025-10-05*
+
+**🐛 치명적 버그 수정:**
+- **테스터 진행중 탭 미션카드 사라짐 해결**: 일일 미션 승인 후 테스터 대시보드에서 미션이 표시되지 않던 문제 수정
+- **공급자 테스터탭 리스트 사라짐 해결**: 일일 미션 승인 후 공급자 대시보드 테스터탭에서 승인된 테스터가 표시되지 않던 문제 수정
+
+**🔧 기술적 해결책:**
+1. **UnifiedMissionModel 상태 변환 수정** (`lib/features/shared/models/unified_mission_model.dart` Line 97-110):
+   - `daily_mission_approved`, `daily_mission_completed`, `daily_mission_rejected` 상태를 명시적으로 변환
+   - 기존에는 이 상태들이 `draft`로 잘못 변환되어 필터링에서 제외됨
+   - 일일 미션 상태를 일반 상태(`completed`, `in_progress`)보다 먼저 체크하여 우선순위 부여
+
+2. **공급자 테스터탭 필터 수정** (`lib/features/provider_dashboard/presentation/pages/mission_management_page_v2.dart` Line 184):
+   - `dailyMissionApproved` 상태를 테스터 리스트 필터에 추가
+   - 기존: `approved`, `inProgress`, `testingCompleted`, `dailyMissionCompleted`, `submissionCompleted`만 표시
+   - 수정 후: `dailyMissionApproved` 추가로 일일 미션 승인 후에도 테스터 목록에 표시
+
+**📊 근본 원인:**
+- Firestore의 `currentState: 'daily_mission_approved'`가 `UnifiedMissionModel`에서 `status: 'draft'`로 잘못 변환
+- 테스터 대시보드 필터는 `daily_mission_approved` 포함했지만, 상태 변환 실패로 `draft`만 전달받아 필터링 실패
+- 공급자 대시보드 테스터탭 필터는 아예 `dailyMissionApproved` 상태를 제외하고 있었음
+
+**✅ 효과:**
+- **Before**:
+  - 일일 미션 승인 후 테스터 진행중 탭에서 미션카드 사라짐 (`activeMissions.length=1` but `filtered=0`)
+  - 공급자 테스터탭에서 승인된 테스터 0명 표시 (실제로는 1명 존재)
+  - 공급자 오늘탭에서만 정상 표시
+- **After**:
+  - 일일 미션 승인 후에도 테스터 진행중 탭에 미션카드 정상 표시
+  - 공급자 테스터탭에 승인된 테스터 정상 표시
+  - 모든 탭에서 일관된 미션 상태 표시
+
+**📁 수정된 파일:**
+- `lib/features/shared/models/unified_mission_model.dart` (Line 97-110)
+- `lib/features/provider_dashboard/presentation/pages/mission_management_page_v2.dart` (Line 184)
+
+---
+
+### v2.25.03 - Firebase Storage CORS 수정 및 2단계 승인 확인 다이얼로그
 *Released: 2025-10-04*
 
 **🔧 Firebase Storage CORS 설정 완전 수정:**

@@ -158,6 +158,11 @@ class _DailyMissionSubmissionPageState
 
     try {
       // 1. 이미지 업로드
+      AppLogger.info(
+        '📤 [v2.26.1] 스크린샷 업로드 시작 (${_selectedImages.length}장)',
+        'DailyMissionSubmission',
+      );
+
       final storageService = StorageService();
       final uploadedUrls = <String>[];
 
@@ -181,6 +186,11 @@ class _DailyMissionSubmissionPageState
 
       setState(() => _isUploading = false);
 
+      AppLogger.info(
+        '✅ [v2.26.1] 스크린샷 업로드 완료 (${uploadedUrls.length}장)',
+        'DailyMissionSubmission',
+      );
+
       // 2. v2.9.0: 공급자 질문 답변 맵 생성
       final questionAnswers = <String, String>{};
       for (int i = 0; i < _dailyQuestions.length; i++) {
@@ -189,6 +199,16 @@ class _DailyMissionSubmissionPageState
       }
 
       // 3. Firestore에 제출 데이터 저장
+      AppLogger.info(
+        '💾 [v2.26.1] Firestore 제출 시작\n'
+        '   ├─ workflowId: ${widget.workflowId}\n'
+        '   ├─ dayNumber: ${widget.dayNumber}\n'
+        '   ├─ screenshots: ${uploadedUrls.length}개\n'
+        '   ├─ bugReport: ${_bugReportController.text.trim().isNotEmpty ? "있음" : "없음"}\n'
+        '   └─ questionAnswers: ${questionAnswers.length}개',
+        'DailyMissionSubmission',
+      );
+
       final missionService = ref.read(missionWorkflowServiceProvider);
       await missionService.submitDailyMission(
         workflowId: widget.workflowId,
@@ -201,7 +221,9 @@ class _DailyMissionSubmissionPageState
 
       if (mounted) {
         AppLogger.info(
-          '✅ Daily mission submitted: workflow=${widget.workflowId}, day=${widget.dayNumber}',
+          '✅ [v2.26.1] Daily mission submitted successfully\n'
+          '   ├─ workflow: ${widget.workflowId}\n'
+          '   └─ day: ${widget.dayNumber}',
           'DailyMissionSubmission',
         );
 
@@ -217,10 +239,23 @@ class _DailyMissionSubmissionPageState
           AppLogger.warning('⚠️ Navigator cannot pop', 'DailyMissionSubmission');
         }
       }
-    } catch (e) {
-      AppLogger.error('Failed to submit mission: $e', 'DailyMissionSubmission');
+    } catch (e, stackTrace) {
+      // v2.26.1: 상세 에러 로깅 추가
+      AppLogger.error(
+        '❌ [v2.26.1] 미션 제출 실패\n'
+        '   ├─ Error: $e\n'
+        '   ├─ StackTrace: ${stackTrace.toString().split('\n').take(5).join('\n   │  ')}\n'
+        '   ├─ 업로드 진행률: ${(_uploadProgress * 100).toInt()}%\n'
+        '   └─ 업로드 완료 여부: ${!_isUploading}',
+        'DailyMissionSubmission',
+        e
+      );
       if (mounted) {
-        _showMessage('제출 실패: $e');
+        // v2.26.1: 에러 메시지 개선
+        final errorMessage = _isUploading
+            ? '이미지 업로드 실패: $e'
+            : 'Firebase 저장 실패: $e';
+        _showMessage(errorMessage);
       }
     } finally {
       if (mounted) {

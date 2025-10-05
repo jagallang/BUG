@@ -22,21 +22,14 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
   UserEntity? _previousUser;
 
   @override
-  void initState() {
-    super.initState();
-
-    // v2.13.5: ref.listen으로 상태 변경 시에만 실행 (중복 호출 방지)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.listen<AuthState>(authProvider, (previous, current) {
-        if (previous?.user?.uid != current.user?.uid) {
-          _handleAuthStateChange(current.user);
-        }
-      });
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
+    // v2.26.1: ref.listen을 build 메서드로 이동 (Riverpod 2.6.1 호환)
+    ref.listen<AuthState>(authProvider, (previous, current) {
+      if (previous?.user?.uid != current.user?.uid) {
+        _handleAuthStateChange(current.user);
+      }
+    });
+
     final authState = ref.watch(authProvider);
 
     if (authState.isLoading) {
