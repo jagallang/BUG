@@ -256,7 +256,7 @@ enum MissionWorkflowStatus {
       case MissionWorkflowStatus.dailyMissionCompleted: // v2.22.0
         return '검토 대기';
       case MissionWorkflowStatus.dailyMissionApproved: // v2.25.04
-        return '승인 완료';
+        return '검토 완료'; // v2.37.0: "승인 완료" → "검토 완료" (명확성 향상 + 중복 회피)
       case MissionWorkflowStatus.submissionCompleted:
         return '제출 완료';
       case MissionWorkflowStatus.rejected:

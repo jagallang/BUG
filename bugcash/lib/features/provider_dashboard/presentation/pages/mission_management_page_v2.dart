@@ -548,7 +548,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             print('   ├─ 전체 미션: ${missions.length}개');
             print('   ├─ 진행중: ${inProgressMissions.length}개');
             print('   ├─ 검토 대기: ${reviewPendingMissions.length}개');
-            print('   └─ 승인 완료: ${approvedMissions.length}개');
+            print('   └─ 검토 완료: ${approvedMissions.length}개'); // v2.37.0
 
             final totalTodayMissions = inProgressMissions.length + reviewPendingMissions.length + approvedMissions.length;
 
@@ -613,7 +613,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                           SizedBox(height: 16.h),
                         ],
 
-                        // v2.25.04: 승인 완료 섹션 (다음 날 미션 만들기 대기)
+                        // v2.37.0: 검토 완료 섹션 (다음 날 미션 만들기 대기)
                         if (approvedMissions.isNotEmpty) ...[
                           Padding(
                             padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
@@ -622,7 +622,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                                 Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
                                 SizedBox(width: 8.w),
                                 Text(
-                                  '승인 완료 (${approvedMissions.length}건)',
+                                  '검토 완료 (${approvedMissions.length}건)', // v2.37.0
                                   style: TextStyle(
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.bold,
@@ -884,7 +884,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     );
   }
 
-  /// v2.25.04: 승인 완료 미션 카드 (다음 날 미션 만들기 버튼 포함)
+  /// v2.37.0: 검토 완료 미션 카드 (다음 날 미션 만들기 버튼 포함)
   Widget _buildApprovedMissionCard(MissionWorkflowEntity mission) {
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
@@ -915,7 +915,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
-                    '승인 완료',
+                    '검토 완료', // v2.37.0
                     style: TextStyle(
                       fontSize: 12.sp,
                       color: Colors.green,
@@ -936,7 +936,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 Icon(Icons.calendar_today, size: 16.sp, color: Colors.grey[600]),
                 SizedBox(width: 4.w),
                 Text(
-                  'Day ${mission.completedDays} 승인 완료',
+                  'Day ${mission.completedDays} 검토 완료', // v2.37.0
                   style: TextStyle(fontSize: 14.sp, color: Colors.grey[700], fontWeight: FontWeight.w600),
                 ),
               ],

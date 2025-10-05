@@ -80,7 +80,7 @@ class MissionStatusBadge extends StatelessWidget {
         return _BadgeData(
           color: AppColors.statusSuccess, // 녹색
           icon: Icons.check_circle,
-          text: '승인완료',
+          text: '검토완료', // v2.37.0: "승인완료" → "검토완료" (명확성 향상)
         );
       case DailyMissionStatus.rejected:
         return _BadgeData(
