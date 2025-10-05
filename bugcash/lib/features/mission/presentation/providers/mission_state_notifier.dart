@@ -106,7 +106,14 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
 
   /// v2.20.0: 수동 새로고침 (appId 필터링 추가)
   /// v2.24.6: 캐시 무효화 추가 (항상 최신 데이터 로드)
+  /// v2.27.1: mounted 체크 추가 (disposed 상태에서 state 변경 방지)
   Future<void> refreshMissions() async {
+    // v2.27.1: disposed 체크
+    if (!mounted) {
+      print('⚠️ [MissionNotifier] Cannot refresh: already disposed');
+      return;
+    }
+
     if (_currentUserId == null) {
       print('⚠️ [MissionNotifier] Cannot refresh: userId is null');
       return;
@@ -127,6 +134,9 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
         print('   └─ 🗑️ Tester cache invalidated');
       }
 
+      // v2.27.1: mounted 재확인 (Timer에서 호출되므로)
+      if (!mounted) return;
+
       // 백그라운드 새로고침 표시
       state.maybeWhen(
         loaded: (missions, _) => state = MissionState.loaded(
@@ -141,6 +151,9 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
           ? await _getMissionsUseCase.getProviderMissions(_currentUserId!)
           : await _getMissionsUseCase.getTesterMissions(_currentUserId!);
 
+      // v2.28.0: 비동기 작업 후 mounted 재확인
+      if (!mounted) return;
+
       // v2.20.0: appId로 필터링 (앱별 미션 관리 페이지용)
       final filteredMissions = _currentAppId != null
           ? missions.where((m) => m.appId == _currentAppId || m.appId == 'provider_app_$_currentAppId').toList()
@@ -153,6 +166,10 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
       print('   └─ Filtered for appId: ${filteredMissions.length} items');
     } catch (e) {
       print('❌ [MissionNotifier] Failed to refresh missions: $e');
+
+      // v2.28.0: 에러 처리 시에도 mounted 체크
+      if (!mounted) return;
+
       state = MissionState.error(
         message: 'Failed to load missions: ${e.toString()}',
         exception: e,
@@ -164,12 +181,16 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
   // Command Methods (낙관적 업데이트)
   // ========================================
 
-  /// 미션 승인 (낙관적 업데이트)
+  /// v2.28.0: 미션 승인 (낙관적 업데이트 + mounted 체크)
   Future<void> approveMission(String missionId) async {
+    if (!mounted) return;  // v2.28.0: disposed 체크
+
     try {
       AppLogger.info('Approving mission: $missionId', 'MissionNotifier');
 
       // 1. 즉시 UI 업데이트 (낙관적)
+      if (!mounted) return;  // v2.28.0: state 변경 전 재확인
+
       state.maybeWhen(
         loaded: (missions, isRefreshing) {
           final updatedMissions = missions.map((m) {
@@ -182,15 +203,17 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
             return m;
           }).toList();
 
-          state = MissionState.loaded(missions: updatedMissions);
+          if (mounted) state = MissionState.loaded(missions: updatedMissions);
         },
         orElse: () {},
       );
 
       // 2. 백그라운드 동기화
+      if (!mounted) return;  // v2.28.0: UseCase 호출 전
       await _approveMissionUseCase.execute(missionId);
 
       // 3. 서버 데이터로 재검증
+      if (!mounted) return;  // v2.28.0: refreshMissions 전
       await refreshMissions();
 
       AppLogger.info('Mission approved successfully: $missionId', 'MissionNotifier');
@@ -198,33 +221,39 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
       AppLogger.error('Failed to approve mission', 'MissionNotifier', e);
 
       // 롤백 - 서버 데이터로 복원
-      await refreshMissions();
+      if (mounted) await refreshMissions();
 
       rethrow;
     }
   }
 
-  /// 미션 거부 (낙관적 업데이트)
+  /// v2.28.0: 미션 거부 (낙관적 업데이트 + mounted 체크)
   Future<void> rejectMission(String missionId, String reason) async {
+    if (!mounted) return;  // v2.28.0: disposed 체크
+
     try {
       AppLogger.info('Rejecting mission: $missionId', 'MissionNotifier');
 
       // 1. 즉시 UI 업데이트 (낙관적)
+      if (!mounted) return;  // v2.28.0: state 변경 전 재확인
+
       state.maybeWhen(
         loaded: (missions, isRefreshing) {
           final updatedMissions = missions
               .where((m) => m.id != missionId) // 목록에서 제거
               .toList();
 
-          state = MissionState.loaded(missions: updatedMissions);
+          if (mounted) state = MissionState.loaded(missions: updatedMissions);
         },
         orElse: () {},
       );
 
       // 2. 백그라운드 동기화
+      if (!mounted) return;  // v2.28.0: UseCase 호출 전
       await _rejectMissionUseCase.execute(missionId, reason);
 
       // 3. 서버 데이터로 재검증
+      if (!mounted) return;  // v2.28.0: refreshMissions 전
       await refreshMissions();
 
       AppLogger.info('Mission rejected successfully: $missionId', 'MissionNotifier');
@@ -232,18 +261,22 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
       AppLogger.error('Failed to reject mission', 'MissionNotifier', e);
 
       // 롤백
-      await refreshMissions();
+      if (mounted) await refreshMissions();
 
       rethrow;
     }
   }
 
-  /// 미션 시작 (낙관적 업데이트)
+  /// v2.28.0: 미션 시작 (낙관적 업데이트 + mounted 체크)
   Future<void> startMission(String missionId) async {
+    if (!mounted) return;  // v2.28.0: disposed 체크
+
     try {
       AppLogger.info('Starting mission: $missionId', 'MissionNotifier');
 
       // 1. 즉시 UI 업데이트 (낙관적)
+      if (!mounted) return;  // v2.28.0: state 변경 전 재확인
+
       state.maybeWhen(
         loaded: (missions, isRefreshing) {
           final updatedMissions = missions.map((m) {
@@ -256,15 +289,17 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
             return m;
           }).toList();
 
-          state = MissionState.loaded(missions: updatedMissions);
+          if (mounted) state = MissionState.loaded(missions: updatedMissions);
         },
         orElse: () {},
       );
 
       // 2. 백그라운드 동기화
+      if (!mounted) return;  // v2.28.0: UseCase 호출 전
       await _startMissionUseCase.execute(missionId);
 
       // 3. 서버 데이터로 재검증
+      if (!mounted) return;  // v2.28.0: refreshMissions 전
       await refreshMissions();
 
       AppLogger.info('Mission started successfully: $missionId', 'MissionNotifier');
@@ -272,7 +307,7 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
       AppLogger.error('Failed to start mission', 'MissionNotifier', e);
 
       // 롤백
-      await refreshMissions();
+      if (mounted) await refreshMissions();
 
       rethrow;
     }

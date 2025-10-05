@@ -93,7 +93,8 @@ final appTestersStreamProvider = StreamProvider.family<List<UnifiedMissionModel>
 });
 
 // 4. 테스터별 미션 Provider
-final testerMissionsProvider = StreamProvider.family<List<UnifiedMissionModel>, String>((ref, testerId) {
+// v2.28.0: cleanArchTesterMissionProvider와 충돌 방지를 위해 이름 변경
+final unifiedTesterMissionsProvider = StreamProvider.family<List<UnifiedMissionModel>, String>((ref, testerId) {
   debugPrint('👤 UNIFIED_PROVIDER: 테스터($testerId) 미션 조회 - mission_workflows 컬렉션 사용');
 
   return FirebaseFirestore.instance
@@ -402,7 +403,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
 
 // 테스터 대시보드용 활성 미션 Provider
 final activeMissionsForTesterProvider = Provider.family<AsyncValue<List<UnifiedMissionModel>>, String>((ref, testerId) {
-  final testerMissions = ref.watch(testerMissionsProvider(testerId));
+  final testerMissions = ref.watch(unifiedTesterMissionsProvider(testerId));
 
   return testerMissions.when(
     data: (missions) {

@@ -28,7 +28,9 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     with TickerProviderStateMixin {
   late TabController _tabController;
 
-  // v2.34.0: 대량 미션 생성 기능 제거 (승인된 테스터 섹션 제거)
+  // v2.24.0: 대량 미션 생성을 위한 선택 상태
+  final Set<String> _selectedMissionIds = {};
+  bool _isSelectionMode = false;
 
   @override
   void initState() {
@@ -52,7 +54,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
           print('   ├─ appId: ${widget.app.id}');
           print('   └─ providerId: ${widget.app.providerId}');
 
-          ref.read(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)).notifier)
+          ref.read(missionStateNotifierProvider.notifier)
             .startPollingForApp(widget.app.id, widget.app.providerId);
 
           print('✅ [MissionManagementV2] 폴링 시작 완료');
@@ -104,7 +106,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              ref.read(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)).notifier).refreshMissions();
+              ref.read(missionStateNotifierProvider.notifier).refreshMissions();
             },
             tooltip: '수동 새로고침',
           ),
@@ -148,7 +150,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   Widget _buildTesterRecruitmentTab() {
     return Consumer(
       builder: (context, ref, child) {
-        final missionsState = ref.watch(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)));
+        final missionsState = ref.watch(missionStateNotifierProvider);
 
         return missionsState.when(
           initial: () {
@@ -165,22 +167,33 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 .where((m) => m.status == MissionWorkflowStatus.applicationSubmitted)
                 .toList();
 
-            // v2.35.1: 진행 중인 테스터 - 승인 이후 모든 상태 표시 (정보 전용)
-            // daily_mission_started는 inProgress로 매핑됨
-            final activeTesters = missions
+            // v2.15.0: 승인된 테스터 전체 필터링 (진행중, 완료 포함)
+            // v2.24.4: dailyMissionCompleted 상태 추가 (검토 대기 중인 테스터 포함)
+            // v2.25.13: dailyMissionApproved 상태 추가 (일일 미션 승인 후 대기 중인 테스터 포함)
+            final approvedTesters = missions
                 .where((m) =>
                     m.status == MissionWorkflowStatus.approved ||
-                    m.status == MissionWorkflowStatus.inProgress ||  // daily_mission_started 포함
+                    m.status == MissionWorkflowStatus.inProgress ||
                     m.status == MissionWorkflowStatus.testingCompleted ||
                     m.status == MissionWorkflowStatus.dailyMissionCompleted ||
                     m.status == MissionWorkflowStatus.dailyMissionApproved ||
                     m.status == MissionWorkflowStatus.submissionCompleted)
                 .toList();
 
+            // 상태별 개수 집계
+            final approvedCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.approved).length;
+            final inProgressCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.inProgress).length;
+            final testingCompletedCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.testingCompleted).length;
+            final submissionCompletedCount = approvedTesters.where((m) => m.status == MissionWorkflowStatus.submissionCompleted).length;
+
             print('✅ [MissionManagementV2] 테스터탭 State: LOADED');
             print('   ├─ 전체 미션: ${missions.length}개');
             print('   ├─ 신청 대기: ${pendingApplications.length}개');
-            print('   └─ 진행 중인 테스터: ${activeTesters.length}개');
+            print('   └─ 승인된 테스터 전체: ${approvedTesters.length}개');
+            print('      ├─ 대기중: $approvedCount개');
+            print('      ├─ 진행중: $inProgressCount개');
+            print('      ├─ 테스트완료: $testingCompletedCount개');
+            print('      └─ 제출완료: $submissionCompletedCount개');
 
             return SingleChildScrollView(
               child: Column(
@@ -193,8 +206,8 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                   // 섹션 1: 테스터 신청 대기중
                   _buildPendingSection(pendingApplications),
 
-                  // 섹션 2: 진행 중인 테스터 (v2.35.0)
-                  _buildActiveTesterSection(activeTesters),
+                  // 섹션 2: 승인된 테스터
+                  _buildApprovedSection(approvedTesters),
                 ],
               ),
             );
@@ -214,7 +227,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                   SizedBox(height: 16.h),
                   ElevatedButton(
                     onPressed: () {
-                      ref.read(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)).notifier).refreshMissions();
+                      ref.read(missionStateNotifierProvider.notifier).refreshMissions();
                     },
                     child: const Text('다시 시도'),
                   ),
@@ -288,29 +301,89 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     );
   }
 
-  /// v2.35.0: 진행 중인 테스터 섹션 (정보 전용, 버튼 없음)
-  Widget _buildActiveTesterSection(List<MissionWorkflowEntity> activeTesters) {
-    if (activeTesters.isEmpty) {
-      return const SizedBox.shrink();
+  Widget _buildApprovedSection(List<MissionWorkflowEntity> approvedTesters) {
+    if (approvedTesters.isEmpty) {
+      return Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Container(
+          padding: EdgeInsets.all(24.w),
+          decoration: BoxDecoration(
+            color: Colors.green[50],
+            borderRadius: BorderRadius.circular(12.r),
+          ),
+          child: Center(
+            child: Column(
+              children: [
+                Icon(Icons.check_circle_outline, size: 40.sp, color: Colors.green[300]),
+                SizedBox(height: 12.h),
+                Text(
+                  '승인된 테스터가 없습니다',
+                  style: TextStyle(fontSize: 14.sp, color: Colors.green[700]),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
+
+    // v2.24.0: approved 상태만 필터링 (미션만들기 가능한 테스터)
+    final approvedOnlyTesters = approvedTesters
+        .where((t) => t.status == MissionWorkflowStatus.approved)
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // v2.24.0: 헤더 (전체 선택 체크박스 + 대량 생성 버튼)
         Padding(
           padding: EdgeInsets.fromLTRB(16.w, 8.h, 16.w, 8.h),
           child: Row(
             children: [
-              Icon(Icons.people, size: 20.sp, color: Colors.blue),
+              // v2.24.0: 전체 선택 체크박스 (approved 상태만 선택 가능)
+              if (approvedOnlyTesters.isNotEmpty)
+                Checkbox(
+                  value: _selectedMissionIds.isNotEmpty &&
+                      _selectedMissionIds.length == approvedOnlyTesters.length,
+                  tristate: _selectedMissionIds.isNotEmpty &&
+                      _selectedMissionIds.length < approvedOnlyTesters.length,
+                  onChanged: (value) => _toggleSelectAll(approvedOnlyTesters),
+                ),
+              Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
               SizedBox(width: 8.w),
-              Text(
-                '진행 중인 테스터 (${activeTesters.length}명)',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+              Expanded(
+                child: Text(
+                  '승인된 테스터 전체 (${approvedTesters.length}명)',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
               ),
+              // v2.24.0: 대량 미션 생성 버튼 (선택된 항목이 있을 때만 표시)
+              if (_selectedMissionIds.isNotEmpty)
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Phase 3에서 구현 예정
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Phase 3에서 구현 예정 (선택: ${_selectedMissionIds.length}명)'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                  ),
+                  icon: Icon(Icons.play_arrow, size: 18.sp),
+                  label: Text(
+                    '선택한 ${_selectedMissionIds.length}명 미션만들기',
+                    style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w600),
+                  ),
+                ),
             ],
           ),
         ),
@@ -318,61 +391,14 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           padding: EdgeInsets.symmetric(horizontal: 16.w),
-          itemCount: activeTesters.length,
+          itemCount: approvedTesters.length,
           itemBuilder: (context, index) {
-            return _buildActiveTesterInfoCard(activeTesters[index]);
+            final tester = approvedTesters[index];
+            return _buildApprovedTesterCard(tester);
           },
         ),
         SizedBox(height: 16.h),
       ],
-    );
-  }
-
-  /// v2.35.0: 진행 중인 테스터 정보 카드 (버튼 없음, 읽기 전용)
-  Widget _buildActiveTesterInfoCard(MissionWorkflowEntity mission) {
-    return Card(
-      margin: EdgeInsets.only(bottom: 12.h),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 20.r,
-              backgroundColor: Colors.blue.withValues(alpha: 0.1),
-              child: Icon(
-                Icons.person,
-                color: Colors.blue,
-                size: 24.sp,
-              ),
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    mission.testerName,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    mission.testerEmail,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            _buildStatusBadge(mission.status),
-          ],
-        ),
-      ),
     );
   }
 
@@ -473,7 +499,87 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     );
   }
 
-  // v2.34.0: _buildApprovedTesterCard 제거 - 테스터탭에서 승인된 테스터 카드 제거
+  /// 승인된 테스터 카드 (v2.14.0)
+  /// v2.24.0: 체크박스 추가
+  Widget _buildApprovedTesterCard(MissionWorkflowEntity mission) {
+    final isApproved = mission.status == MissionWorkflowStatus.approved;
+    final isSelected = _selectedMissionIds.contains(mission.id);
+
+    return Card(
+      margin: EdgeInsets.only(bottom: 12.h),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      child: Padding(
+        padding: EdgeInsets.all(16.w),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                // v2.24.0: approved 상태만 체크박스 표시
+                if (isApproved)
+                  Checkbox(
+                    value: isSelected,
+                    onChanged: (value) => _toggleSelection(mission.id),
+                  ),
+                CircleAvatar(
+                  radius: 20.r,
+                  backgroundColor: Colors.green.withValues(alpha: 0.1),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 24.sp,
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        mission.testerName,
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        mission.testerEmail,
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                _buildStatusBadge(mission.status),
+              ],
+            ),
+            // v2.23.0: 승인된 상태일 때 '미션만들기' 버튼 표시
+            if (mission.status == MissionWorkflowStatus.approved) ...[
+              SizedBox(height: 16.h),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _startMission(mission.id),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: EdgeInsets.symmetric(vertical: 12.h),
+                  ),
+                  icon: const Icon(Icons.add_task, color: Colors.white),
+                  label: const Text(
+                    '미션만들기',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
 
   /// v2.15.0: 미션 상태 배지 생성 헬퍼
   Widget _buildStatusBadge(MissionWorkflowStatus status) {
@@ -523,7 +629,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   Widget _buildTodayMissionsTab() {
     return Consumer(
       builder: (context, ref, child) {
-        final missionsState = ref.watch(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)));
+        final missionsState = ref.watch(missionStateNotifierProvider);
 
         return missionsState.when(
           initial: () {
@@ -710,7 +816,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   Widget _buildCompletedMissionsTab() {
     return Consumer(
       builder: (context, ref, child) {
-        final missionsState = ref.watch(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)));
+        final missionsState = ref.watch(missionStateNotifierProvider);
 
         return missionsState.when(
           initial: () => const Center(child: Text('초기화 중...')),
@@ -766,7 +872,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   Widget _buildSettlementTab() {
     return Consumer(
       builder: (context, ref, child) {
-        final missionsState = ref.watch(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)));
+        final missionsState = ref.watch(missionStateNotifierProvider);
 
         return missionsState.when(
           initial: () => const Center(child: Text('초기화 중...')),
@@ -822,7 +928,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   Widget _buildDeletionRequestsTab() {
     return Consumer(
       builder: (context, ref, child) {
-        final missionsState = ref.watch(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)));
+        final missionsState = ref.watch(missionStateNotifierProvider);
 
         return missionsState.when(
           initial: () => const Center(child: Text('초기화 중...')),
@@ -971,7 +1077,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
                     // 리뷰 완료 후 목록 새로고침
                     if (result == true && mounted) {
-                      ref.read(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)).notifier).refreshMissions();
+                      ref.read(missionStateNotifierProvider.notifier).refreshMissions();
                     }
                   },
                   style: ElevatedButton.styleFrom(
@@ -1108,7 +1214,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                           ),
                         );
                         // 상태 새로고침
-                        ref.read(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)).notifier).startPollingForApp(
+                        ref.read(missionStateNotifierProvider.notifier).startPollingForApp(
                           mission.appId,
                           mission.providerId,
                         );
@@ -1372,7 +1478,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   /// ✅ 미션 승인 (낙관적 업데이트)
   Future<void> _approveMission(String missionId) async {
     try {
-      await ref.read(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)).notifier)
+      await ref.read(missionStateNotifierProvider.notifier)
         .approveMission(missionId);
 
       if (mounted) {
@@ -1398,7 +1504,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   /// ✅ 미션 거부 (낙관적 업데이트)
   Future<void> _rejectMission(String missionId) async {
     try {
-      await ref.read(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)).notifier)
+      await ref.read(missionStateNotifierProvider.notifier)
         .rejectMission(missionId, '공급자가 거부함');
 
       if (mounted) {
@@ -1425,7 +1531,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   /// v2.23.0: 미션 생성 및 "오늘" 탭 자동 전환
   Future<void> _startMission(String missionId) async {
     try {
-      await ref.read(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)).notifier)
+      await ref.read(missionStateNotifierProvider.notifier)
         .startMission(missionId);
 
       if (mounted) {
@@ -1452,8 +1558,33 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     }
   }
 
-  // v2.34.0: 체크박스 관련 함수 제거 (_toggleSelection, _toggleSelectAll)
-  // 승인된 테스터 섹션이 제거되어 더 이상 필요 없음
+  /// v2.24.0: 개별 테스터 선택/해제
+  void _toggleSelection(String missionId) {
+    setState(() {
+      if (_selectedMissionIds.contains(missionId)) {
+        _selectedMissionIds.remove(missionId);
+      } else {
+        _selectedMissionIds.add(missionId);
+      }
+    });
+  }
+
+  /// v2.24.0: 전체 선택/해제
+  void _toggleSelectAll(List<MissionWorkflowEntity> approvedTesters) {
+    setState(() {
+      final approvedIds = approvedTesters
+          .where((t) => t.status == MissionWorkflowStatus.approved)
+          .map((t) => t.id)
+          .toList();
+
+      if (_selectedMissionIds.length == approvedIds.length) {
+        _selectedMissionIds.clear(); // 전체 해제
+      } else {
+        _selectedMissionIds.clear();
+        _selectedMissionIds.addAll(approvedIds); // 전체 선택
+      }
+    });
+  }
 
   // v2.25.18: _attemptCreateMission 함수 삭제
   // 모든 Day 미션은 최초 승인 시 자동 생성되므로 이 함수는 더 이상 필요 없음

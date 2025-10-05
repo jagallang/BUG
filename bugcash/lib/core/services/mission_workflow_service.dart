@@ -546,18 +546,20 @@ class MissionWorkflowService {
         throw Exception('모든 미션이 완료되었습니다. (총 ${workflow.totalDays}일)');
       }
 
+      // v2.29.0: currentDay 업데이트 + 자동 승인 처리
       // Day는 이미 dailyInteractions에 생성되어 있으므로 currentDay만 업데이트
+      // 공급자가 미션 만들기를 했으므로 바로 dailyMissionStarted 상태로 변경 (자동 승인)
       await _firestore
           .collection('mission_workflows')
           .doc(workflowId)
           .update({
         'currentDay': nextDayNumber,
-        'currentState': MissionWorkflowState.missionInProgress.code,
+        'currentState': MissionWorkflowState.dailyMissionStarted.code,  // v2.29.0: missionInProgress → dailyMissionStarted
         'stateUpdatedAt': FieldValue.serverTimestamp(),
         'stateUpdatedBy': providerId,
       });
 
-      AppLogger.info('✅ Day $nextDayNumber activated successfully', 'MissionWorkflow');
+      AppLogger.info('✅ Day $nextDayNumber activated successfully (auto-approved)', 'MissionWorkflow');
     } catch (e) {
       AppLogger.error('Failed to activate next day mission', e.toString());
       rethrow;

@@ -1075,9 +1075,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   Widget _buildActiveMissionsTab() {
-    // v2.27.0: Clean Architecture 상태관리로 전환 (MissionStateNotifier)
-    // Legacy StreamBuilder 제거 → testerMissionsProvider 사용
-    final missionState = ref.watch(testerMissionsProvider(widget.testerId));
+    // v2.28.0: Clean Architecture 상태관리 (독립 인스턴스 Provider)
+    // Legacy StreamBuilder 제거 → cleanArchTesterMissionProvider 사용
+    final missionState = ref.watch(cleanArchTesterMissionProvider(widget.testerId));
 
     return missionState.when(
       initial: () => const BugCashLoadingWidget(
@@ -1105,8 +1105,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             SizedBox(height: 16.h),
             ElevatedButton(
               onPressed: () {
-                // v2.27.0: 수동 새로고침 (30초 폴링 대신 즉시 갱신)
-                ref.read(testerMissionsProvider(widget.testerId).notifier).refreshMissions();
+                // v2.28.0: 수동 새로고침 (30초 폴링 대신 즉시 갱신)
+                ref.read(cleanArchTesterMissionProvider(widget.testerId).notifier).refreshMissions();
               },
               child: const Text('다시 시도'),
             ),
@@ -1182,10 +1182,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   ),
                 ),
                 SizedBox(height: 16.h),
-                // v2.27.0: 수동 새로고침 버튼 추가
+                // v2.28.0: 수동 새로고침 버튼
                 ElevatedButton.icon(
                   onPressed: () {
-                    ref.read(testerMissionsProvider(widget.testerId).notifier).refreshMissions();
+                    ref.read(cleanArchTesterMissionProvider(widget.testerId).notifier).refreshMissions();
                   },
                   icon: const Icon(Icons.refresh),
                   label: const Text('새로고침'),

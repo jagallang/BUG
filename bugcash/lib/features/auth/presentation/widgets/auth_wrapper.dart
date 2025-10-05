@@ -92,13 +92,8 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
         // RealtimeSyncService 중지
         RealtimeSyncService.stopRealtimeSync();
 
-        // v2.14.0: MissionStateNotifier 폴링 중지
-        try {
-          ref.read(missionStateNotifierProvider.notifier).stopPolling();
-          AppLogger.info('✅ MissionStateNotifier polling stopped', 'AuthWrapper');
-        } catch (e) {
-          AppLogger.warning('⚠️ Failed to stop MissionStateNotifier: $e', 'AuthWrapper');
-        }
+        // v2.28.0: 싱글톤 Provider 제거로 폴링 중지 불필요
+        // AutoDispose Provider가 자동으로 정리
       }
 
       _previousUser = currentUser;

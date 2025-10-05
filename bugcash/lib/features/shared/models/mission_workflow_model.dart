@@ -381,25 +381,54 @@ class MissionWorkflowModel {
 
   /// 특정 Day의 현재 상태 조회
   DayStatus getDayStatus(int dayNumber) {
+    // v2.28.6: currentDay 기반 unlock 확인으로 변경
+    print('🔍 [getDayStatus] dayNumber: $dayNumber');
+    print('   ├─ currentDay: $currentDay');
+    print('   ├─ Total dailyInteractions: ${dailyInteractions.length}');
+
     try {
       final interaction = dailyInteractions.firstWhere(
         (i) => i.dayNumber == dayNumber,
       );
 
+      print('   ├─ ✅ Found interaction for Day $dayNumber');
+      print('   │  ├─ testerCompleted: ${interaction.testerCompleted}');
+      print('   │  ├─ providerApproved: ${interaction.providerApproved}');
+
       // 승인됨
-      if (interaction.providerApproved) return DayStatus.approved;
+      if (interaction.providerApproved) {
+        print('   └─ 📗 APPROVED');
+        return DayStatus.approved;
+      }
 
       // 제출됨 (검토 대기)
-      if (interaction.testerCompleted) return DayStatus.submitted;
+      if (interaction.testerCompleted) {
+        print('   └─ 📤 SUBMITTED');
+        return DayStatus.submitted;
+      }
 
-      // 활성화 여부 확인
-      if (isDayUnlocked(dayNumber)) return DayStatus.unlocked;
+      // v2.28.6: 공급자가 currentDay를 증가시켜야만 unlock
+      // 공급자가 "다음 날 미션 만들기" 버튼 클릭 → currentDay 증가 → unlock
+      if (dayNumber > currentDay) {
+        print('   └─ 🔒 LOCKED (v2.28.6 - dayNumber > currentDay)');
+        return DayStatus.locked;
+      }
+
+      // 이전 Day 승인 확인
+      if (isDayUnlocked(dayNumber)) {
+        print('   └─ 🔓 UNLOCKED (dayNumber <= currentDay && prev approved)');
+        return DayStatus.unlocked;
+      }
 
       // 잠김
+      print('   └─ 🔒 LOCKED (prev day not approved)');
       return DayStatus.locked;
     } catch (e) {
-      // interaction이 없는 경우
-      if (isDayUnlocked(dayNumber)) return DayStatus.unlocked;
+      // v2.28.3: interaction이 없으면 항상 잠김
+      // 공급자가 미션을 생성해야만 dailyInteractions에 추가됨
+      // 이전 Day가 승인되었어도, 다음 Day 미션이 생성되기 전까지는 잠김 상태
+      print('   ├─ ❌ No interaction found (catch block)');
+      print('   └─ 🔒 LOCKED (v2.28.3 - no interaction)');
       return DayStatus.locked;
     }
   }

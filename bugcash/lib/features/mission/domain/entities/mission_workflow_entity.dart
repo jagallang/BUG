@@ -223,6 +223,8 @@ enum MissionWorkflowStatus {
         return MissionWorkflowStatus.approved;
       case 'in_progress':
         return MissionWorkflowStatus.inProgress;
+      case 'daily_mission_started': // v2.35.1: Day 진행 중 상태 매핑
+        return MissionWorkflowStatus.inProgress;
       case 'testing_completed':
         return MissionWorkflowStatus.testingCompleted;
       case 'daily_mission_completed': // v2.22.0
