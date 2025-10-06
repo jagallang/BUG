@@ -118,7 +118,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _isActive = metadata['isActive'] ?? true;
     _announcementController = TextEditingController(text: metadata['announcement'] ?? '');
     _requirementsController = TextEditingController(text: metadata['requirements'] ?? '');
-    _participantCountController = TextEditingController(text: (metadata['participantCount'] ?? widget.app.totalTesters ?? 1).toString());
+    _participantCountController = TextEditingController(text: (metadata['participantCount'] ?? 1).toString()); // v2.43.0: totalTesters fallback 제거
     _testPeriodController = TextEditingController(text: (metadata['testPeriod'] ?? 14).toString());
     _testTimeController = TextEditingController(text: (metadata['testTime'] ?? 30).toString());
 

@@ -55,10 +55,7 @@ class ProviderAppModel {
   final String category;
   final String status;
   final int totalTesters;
-  final int activeTesters;
-  final int totalBugs;
-  final int resolvedBugs;
-  final double progressPercentage;
+  // v2.43.0: activeTesters, totalBugs, resolvedBugs, progressPercentage 제거 (UI 미사용)
   final DateTime createdAt;
   final DateTime updatedAt;
   final Map<String, dynamic> metadata;
@@ -72,10 +69,7 @@ class ProviderAppModel {
     required this.category,
     required this.status,
     required this.totalTesters,
-    required this.activeTesters,
-    required this.totalBugs,
-    required this.resolvedBugs,
-    required this.progressPercentage,
+    // v2.43.0: activeTesters, totalBugs, resolvedBugs, progressPercentage 파라미터 제거
     required this.createdAt,
     required this.updatedAt,
     required this.metadata,
@@ -92,10 +86,7 @@ class ProviderAppModel {
       category: data['category'] ?? '',
       status: data['status'] ?? 'draft',
       totalTesters: data['totalTesters'] ?? data['maxTesters'] ?? 0,
-      activeTesters: data['activeTesters'] ?? 0,
-      totalBugs: data['totalBugs'] ?? 0,
-      resolvedBugs: data['resolvedBugs'] ?? 0,
-      progressPercentage: (data['progressPercentage'] ?? 0).toDouble(),
+      // v2.43.0: activeTesters, totalBugs, resolvedBugs, progressPercentage 제거
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       metadata: data['metadata'] ?? {},
@@ -111,10 +102,7 @@ class ProviderAppModel {
       'category': category,
       'status': status,
       'totalTesters': totalTesters,
-      'activeTesters': activeTesters,
-      'totalBugs': totalBugs,
-      'resolvedBugs': resolvedBugs,
-      'progressPercentage': progressPercentage,
+      // v2.43.0: activeTesters, totalBugs, resolvedBugs, progressPercentage 제거
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
       'metadata': metadata,
@@ -274,10 +262,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         'testPeriodDays': _testPeriodDays,
         'rewardPoints': _finalCompletionPoints, // For backward compatibility
         'totalTesters': 0,
-        'activeTesters': 0,
-        'totalBugs': 0,
-        'resolvedBugs': 0,
-        'progressPercentage': 0.0,
+        // v2.43.0: activeTesters, totalBugs, resolvedBugs, progressPercentage 초기값 제거
 
         // Testing guidelines and requirements
         'testingGuidelines': _testingGuidelinesController.text,
@@ -569,51 +554,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
           SizedBox(height: 16.h),
 
-          // Progress Bar
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '테스팅 진행률',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  Text(
-                    '${app.progressPercentage.toInt()}%',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 8.h),
-              LinearProgressIndicator(
-                value: app.progressPercentage / 100,
-                backgroundColor: Colors.grey[200],
-                valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
-                minHeight: 6.h,
-              ),
-            ],
-          ),
-          SizedBox(height: 16.h),
-
-          // Statistics
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem('테스터', '${app.activeTesters}/${app.totalTesters}'),
-              _buildStatItem('버그', '${app.resolvedBugs}/${app.totalBugs}'),
-              _buildStatItem('상태', app.status == 'active' ? '진행중' : '대기'),
-            ],
-          ),
-          SizedBox(height: 16.h),
+          // v2.43.0: 진행률 및 통계 섹션 제거 (UI 간소화)
 
           // All Action Buttons in Single Row
           Row(
@@ -715,28 +656,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     );
   }
 
-  Widget _buildStatItem(String label, String value) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.sp,
-            color: Colors.grey[600],
-          ),
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-      ],
-    );
-  }
+  // v2.43.0: _buildStatItem() 제거 - 통계 섹션 제거로 미사용
 
   Widget _buildUploadDialog() {
     return Container(
