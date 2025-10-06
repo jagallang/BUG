@@ -46,7 +46,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   late String _selectedApprovalCondition;
 
   bool _hasAnnouncement = false;
-  bool _isActive = true;
   bool _isLoading = false;
 
   final List<String> _categories = [
@@ -66,7 +65,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   final List<String> _types = ['app', 'website', 'service'];
   final List<String> _difficulties = ['easy', 'medium', 'hard', 'expert'];
   final List<String> _installTypes = ['play_store', 'apk_upload'];
-  final List<String> _dailyTestTimes = ['10분', '20분', '30분', '45분', '60분', '90분', '120분'];
+  // v2.43.2: 5분 단위로 20분까지 제한
+  final List<String> _dailyTestTimes = ['5분', '10분', '15분', '20분'];
   final List<String> _approvalConditions = ['스크린샷 필수', '녹화영상 필수', '스크린샷+녹화영상'];
 
   // 레거시 카테고리를 새 카테고리로 매핑하는 함수
@@ -109,31 +109,47 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   void _initializeControllers() {
     _appNameController = TextEditingController(text: widget.app.appName);
     _appUrlController = TextEditingController(text: widget.app.appUrl);
-    _descriptionController = TextEditingController(text: widget.app.description);
+    _descriptionController =
+        TextEditingController(text: widget.app.description);
     _selectedCategory = _mapLegacyCategory(widget.app.category);
 
     // 기존 메타데이터에서 정보 가져오기
     final metadata = widget.app.metadata;
     _hasAnnouncement = metadata['hasAnnouncement'] ?? false;
-    _isActive = metadata['isActive'] ?? true;
-    _announcementController = TextEditingController(text: metadata['announcement'] ?? '');
-    _requirementsController = TextEditingController(text: metadata['requirements'] ?? '');
-    _participantCountController = TextEditingController(text: (metadata['participantCount'] ?? 1).toString()); // v2.43.0: totalTesters fallback 제거
-    _testPeriodController = TextEditingController(text: (metadata['testPeriod'] ?? 14).toString());
-    _testTimeController = TextEditingController(text: (metadata['testTime'] ?? 30).toString());
+    // v2.43.2: isActive는 앱관리 탭에서 관리하므로 여기서는 제거
+    _announcementController =
+        TextEditingController(text: metadata['announcement'] ?? '');
+    _requirementsController =
+        TextEditingController(text: metadata['requirements'] ?? '');
+    _participantCountController = TextEditingController(
+        text: (metadata['participantCount'] ?? 1)
+            .toString()); // v2.43.0: totalTesters fallback 제거
+    _testPeriodController =
+        TextEditingController(text: (metadata['testPeriod'] ?? 14).toString());
+    _testTimeController =
+        TextEditingController(text: (metadata['testTime'] ?? 30).toString());
 
     // 새 필드들 초기화 (안전한 드롭다운 값 설정)
     _selectedType = _getSafeDropdownValue(metadata['type'], _types);
-    _selectedDifficulty = _getSafeDropdownValue(metadata['difficulty'], _difficulties);
-    _selectedInstallType = _getSafeDropdownValue(metadata['installType'], _installTypes);
-    _selectedDailyTestTime = _getSafeDropdownValue(metadata['dailyTestTime'], _dailyTestTimes);
-    _selectedApprovalCondition = _getSafeDropdownValue(metadata['approvalCondition'], _approvalConditions);
+    _selectedDifficulty =
+        _getSafeDropdownValue(metadata['difficulty'], _difficulties);
+    _selectedInstallType =
+        _getSafeDropdownValue(metadata['installType'], _installTypes);
+    _selectedDailyTestTime =
+        _getSafeDropdownValue(metadata['dailyTestTime'], _dailyTestTimes);
+    _selectedApprovalCondition = _getSafeDropdownValue(
+        metadata['approvalCondition'], _approvalConditions);
 
-    _minExperienceController = TextEditingController(text: metadata['minExperience'] ?? '');
-    _specialRequirementsController = TextEditingController(text: metadata['specialRequirements'] ?? '');
-    _testingGuidelinesController = TextEditingController(text: metadata['testingGuidelines'] ?? '');
-    _minOSVersionController = TextEditingController(text: metadata['minOSVersion'] ?? '');
-    _appStoreUrlController = TextEditingController(text: metadata['appStoreUrl'] ?? '');
+    _minExperienceController =
+        TextEditingController(text: metadata['minExperience'] ?? '');
+    _specialRequirementsController =
+        TextEditingController(text: metadata['specialRequirements'] ?? '');
+    _testingGuidelinesController =
+        TextEditingController(text: metadata['testingGuidelines'] ?? '');
+    _minOSVersionController =
+        TextEditingController(text: metadata['minOSVersion'] ?? '');
+    _appStoreUrlController =
+        TextEditingController(text: metadata['appStoreUrl'] ?? '');
 
     // 보상 시스템 필드들 - rewards 객체 우선, metadata 폴백
     // 새로 등록된 앱은 rewards 객체에, 기존 앱은 metadata에 저장됨
@@ -147,14 +163,14 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     debugPrint('💰 legacyPrice: $legacyPrice');
 
     final dailyMissionPoints = rewards?['dailyMissionPoints'] as int? ??
-                               metadata['dailyMissionPoints'] as int? ??
-                               (legacyPrice != null ? (legacyPrice * 0.1).round() : 100);
+        metadata['dailyMissionPoints'] as int? ??
+        (legacyPrice != null ? (legacyPrice * 0.1).round() : 100);
     final finalCompletionPoints = rewards?['finalCompletionPoints'] as int? ??
-                                  metadata['finalCompletionPoints'] as int? ??
-                                  (legacyPrice != null ? (legacyPrice * 0.6).round() : 1000);
+        metadata['finalCompletionPoints'] as int? ??
+        (legacyPrice != null ? (legacyPrice * 0.6).round() : 1000);
     final bonusPoints = rewards?['bonusPoints'] as int? ??
-                        metadata['bonusPoints'] as int? ??
-                        (legacyPrice != null ? (legacyPrice * 0.3).round() : 500);
+        metadata['bonusPoints'] as int? ??
+        (legacyPrice != null ? (legacyPrice * 0.3).round() : 500);
 
     // 최종 계산된 값들 로그
     debugPrint('📊 최종 보상 값 계산됨:');
@@ -162,9 +178,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     debugPrint('   finalCompletionPoints: $finalCompletionPoints');
     debugPrint('   bonusPoints: $bonusPoints');
 
-    _dailyMissionPointsController = TextEditingController(text: dailyMissionPoints.toString());
-    _finalCompletionPointsController = TextEditingController(text: finalCompletionPoints.toString());
-    _bonusPointsController = TextEditingController(text: bonusPoints.toString());
+    _dailyMissionPointsController =
+        TextEditingController(text: dailyMissionPoints.toString());
+    _finalCompletionPointsController =
+        TextEditingController(text: finalCompletionPoints.toString());
+    _bonusPointsController =
+        TextEditingController(text: bonusPoints.toString());
   }
 
   @override
@@ -208,7 +227,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     });
 
     try {
-
       // 참여자 수 검증
       final participantCount = int.tryParse(_participantCountController.text);
       if (participantCount == null || participantCount < 1) {
@@ -231,8 +249,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       }
 
       // 포인트 시스템 검증
-      final dailyMissionPoints = int.tryParse(_dailyMissionPointsController.text);
-      final finalCompletionPoints = int.tryParse(_finalCompletionPointsController.text);
+      final dailyMissionPoints =
+          int.tryParse(_dailyMissionPointsController.text);
+      final finalCompletionPoints =
+          int.tryParse(_finalCompletionPointsController.text);
       final bonusPoints = int.tryParse(_bonusPointsController.text);
 
       if (dailyMissionPoints == null || dailyMissionPoints < 0) {
@@ -250,7 +270,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         'appUrl': _appUrlController.text,
         'description': _descriptionController.text,
         'category': _selectedCategory,
-        'totalTesters': participantCount,  // maxTesters와 동기화
+        'totalTesters': participantCount, // maxTesters와 동기화
         'updatedAt': FieldValue.serverTimestamp(),
         'metadata': {
           ...widget.app.metadata,
@@ -261,7 +281,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           'participantCount': participantCount,
           'testPeriod': testPeriod,
           'testTime': testTime,
-          'isActive': _isActive,
+          // v2.43.2: isActive는 앱관리 탭에서 관리
 
           // 앱 등록 폼과 동기화된 새 필드들
           'type': _selectedType,
@@ -295,9 +315,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       };
 
       // 문서 존재 여부 확인 후 업데이트
-      final docRef = FirebaseFirestore.instance
-          .collection('projects')
-          .doc(widget.app.id);
+      final docRef =
+          FirebaseFirestore.instance.collection('projects').doc(widget.app.id);
 
       final docSnapshot = await docRef.get();
       if (!docSnapshot.exists) {
@@ -335,7 +354,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         backgroundColor: Colors.indigo[900],
         foregroundColor: Colors.white,
         title: Text(
-          '앱 상세 관리',
+          '앱 게시 관리',
           style: TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 18.sp,
@@ -364,8 +383,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 children: [
                   _buildAppInfoSection(),
                   SizedBox(height: 24.h),
-                  _buildStatusSection(),
-                  SizedBox(height: 24.h),
+                  // v2.43.2: _buildStatusSection() 제거 (앱 게시 상태는 앱관리 탭에서 관리)
                   _buildTestTypeSection(),
                   SizedBox(height: 24.h),
                   _buildAnnouncementSection(),
@@ -384,51 +402,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     );
   }
 
-  Widget _buildStatusSection() {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  '🎯 앱 게시 상태',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[900],
-                  ),
-                ),
-                const Spacer(),
-                Switch(
-                  value: _isActive,
-                  onChanged: (value) {
-                    setState(() {
-                      _isActive = value;
-                    });
-                  },
-                  activeColor: Colors.green[700],
-                ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              _isActive
-                  ? '현재 앱이 활성화되어 테스터들에게 표시됩니다'
-                  : '현재 앱이 비활성화되어 테스터들에게 표시되지 않습니다',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: _isActive ? Colors.green[600] : Colors.red[600],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // v2.43.2: _buildStatusSection() 제거 (앱 게시 상태는 앱관리 탭에서 관리)
 
   Widget _buildAppInfoSection() {
     return Card(
@@ -608,8 +582,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     decoration: InputDecoration(
                       labelText: '일일 미션 포인트',
                       hintText: '100',
-                      suffix: Text('P', style: TextStyle(color: Colors.orange[700])),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      suffix: Text('P',
+                          style: TextStyle(color: Colors.orange[700])),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                       prefixIcon: const Icon(Icons.today),
                     ),
                   ),
@@ -620,10 +596,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     controller: _finalCompletionPointsController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: '최종 완료 포인트',
+                      labelText: '프로젝트 종료 포인트',
                       hintText: '1000',
-                      suffix: Text('P', style: TextStyle(color: Colors.green[700])),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      suffix:
+                          Text('P', style: TextStyle(color: Colors.green[700])),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                       prefixIcon: const Icon(Icons.check_circle),
                     ),
                   ),
@@ -634,10 +612,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     controller: _bonusPointsController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: '보너스 포인트',
-                      hintText: '500',
-                      suffix: Text('P', style: TextStyle(color: Colors.purple[700])),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      labelText: '버그 포인트',
+                      hintText: '100',
+                      suffix: Text('P',
+                          style: TextStyle(color: Colors.purple[700])),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                       prefixIcon: const Icon(Icons.star),
                     ),
                   ),
@@ -675,15 +655,17 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               ),
             ),
             SizedBox(height: 16.h),
+            // v2.43.2: 참여자 수 (최대 20명, 버튼으로 조정)
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _participantCountController,
                     keyboardType: TextInputType.number,
+                    readOnly: true,
                     decoration: InputDecoration(
                       labelText: '참여자 수 *',
-                      hintText: '예: 5',
+                      hintText: '최대 20명',
                       suffix: Text(
                         '명',
                         style: TextStyle(
@@ -699,15 +681,57 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     ),
                   ),
                 ),
-                SizedBox(width: 16.w),
+                SizedBox(width: 8.w),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
+                        onPressed: () {
+                          int current = int.tryParse(_participantCountController.text) ?? 1;
+                          if (current < 20) {
+                            setState(() {
+                              _participantCountController.text = (current + 1).toString();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
+                        onPressed: () {
+                          int current = int.tryParse(_participantCountController.text) ?? 1;
+                          if (current > 1) {
+                            setState(() {
+                              _participantCountController.text = (current - 1).toString();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            // v2.43.2: 테스트 기간 (최대 30일, 버튼으로 조정)
+            Row(
+              children: [
                 Expanded(
                   child: TextField(
                     controller: _testPeriodController,
                     keyboardType: TextInputType.number,
+                    readOnly: true,
                     decoration: InputDecoration(
                       labelText: '테스트 기간 *',
-                      hintText: '1~20일 (권장: 10~14일)',
-                      helperText: '최대 20일',
+                      hintText: '최대 30일',
                       suffix: Text(
                         '일',
                         style: TextStyle(
@@ -723,23 +747,62 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     ),
                   ),
                 ),
+                SizedBox(width: 8.w),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
+                        onPressed: () {
+                          int current = int.tryParse(_testPeriodController.text) ?? 1;
+                          if (current < 30) {
+                            setState(() {
+                              _testPeriodController.text = (current + 1).toString();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
+                        onPressed: () {
+                          int current = int.tryParse(_testPeriodController.text) ?? 1;
+                          if (current > 1) {
+                            setState(() {
+                              _testPeriodController.text = (current - 1).toString();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
             SizedBox(height: 16.h),
-            TextField(
-              controller: _testTimeController,
-              keyboardType: TextInputType.number,
+            // v2.43.2: 일일 테스트 시간 드롭다운 (5분 단위, 20분까지)
+            DropdownButtonFormField<String>(
+              value: _getSafeDropdownValue(_selectedDailyTestTime, _dailyTestTimes),
+              items: _dailyTestTimes.map((time) {
+                return DropdownMenuItem(
+                  value: time,
+                  child: Text(time),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedDailyTestTime = value!;
+                });
+              },
               decoration: InputDecoration(
                 labelText: '일일 테스트 시간 *',
-                hintText: '예: 30',
-                suffix: Text(
-                  '분',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[700],
-                  ),
-                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
                 ),
@@ -828,7 +891,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     value: _selectedType,
                     decoration: InputDecoration(
                       labelText: '테스트 유형',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                       prefixIcon: const Icon(Icons.category),
                     ),
                     items: _types.map((type) {
@@ -850,7 +914,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     value: _selectedDifficulty,
                     decoration: InputDecoration(
                       labelText: '난이도',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                       prefixIcon: const Icon(Icons.trending_up),
                     ),
                     items: _difficulties.map((difficulty) {
@@ -873,7 +938,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               value: _selectedInstallType,
               decoration: InputDecoration(
                 labelText: '설치 유형',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r)),
                 prefixIcon: const Icon(Icons.download),
               ),
               items: _installTypes.map((type) {
@@ -926,7 +992,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     value: _selectedDailyTestTime,
                     decoration: InputDecoration(
                       labelText: '일일 테스트 시간',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                       prefixIcon: const Icon(Icons.access_time),
                     ),
                     items: _dailyTestTimes.map((time) {
@@ -948,7 +1015,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     value: _selectedApprovalCondition,
                     decoration: InputDecoration(
                       labelText: '승인 조건',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                       prefixIcon: const Icon(Icons.check),
                     ),
                     items: _approvalConditions.map((condition) {
@@ -972,7 +1040,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               decoration: InputDecoration(
                 labelText: '최소 경험 레벨',
                 hintText: 'beginner, intermediate, advanced, expert',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r)),
                 prefixIcon: const Icon(Icons.school),
               ),
             ),
@@ -985,7 +1054,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     decoration: InputDecoration(
                       labelText: '최소 OS 버전',
                       hintText: 'Android 8.0+, iOS 13.0+',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                       prefixIcon: const Icon(Icons.phone_android),
                     ),
                   ),
@@ -997,7 +1067,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     decoration: InputDecoration(
                       labelText: '앱스토어 URL (선택)',
                       hintText: '이미 출시된 앱의 스토어 링크',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8.r)),
                       prefixIcon: const Icon(Icons.store),
                     ),
                   ),
@@ -1011,7 +1082,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               decoration: InputDecoration(
                 labelText: '특별 요구사항',
                 hintText: '추가적인 요구사항이나 주의사항을 입력하세요',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r)),
                 prefixIcon: const Icon(Icons.warning),
                 alignLabelWithHint: true,
               ),
@@ -1023,7 +1095,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               decoration: InputDecoration(
                 labelText: '테스팅 가이드라인',
                 hintText: '테스터가 따라야 할 구체적인 테스팅 지침을 작성하세요',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8.r)),
                 prefixIcon: const Icon(Icons.checklist),
                 alignLabelWithHint: true,
               ),
@@ -1036,28 +1109,40 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
 
   String _getTypeDisplayName(String type) {
     switch (type) {
-      case 'app': return '앱';
-      case 'website': return '웹사이트';
-      case 'service': return '서비스';
-      default: return type;
+      case 'app':
+        return '앱';
+      case 'website':
+        return '웹사이트';
+      case 'service':
+        return '서비스';
+      default:
+        return type;
     }
   }
 
   String _getDifficultyDisplayName(String difficulty) {
     switch (difficulty) {
-      case 'easy': return '쉬움';
-      case 'medium': return '보통';
-      case 'hard': return '어려움';
-      case 'expert': return '전문가';
-      default: return difficulty;
+      case 'easy':
+        return '쉬움';
+      case 'medium':
+        return '보통';
+      case 'hard':
+        return '어려움';
+      case 'expert':
+        return '전문가';
+      default:
+        return difficulty;
     }
   }
 
   String _getInstallTypeDisplayName(String type) {
     switch (type) {
-      case 'play_store': return '구글 플레이 스토어';
-      case 'apk_upload': return 'APK 파일 업로드';
-      default: return type;
+      case 'play_store':
+        return '구글 플레이 스토어';
+      case 'apk_upload':
+        return 'APK 파일 업로드';
+      default:
+        return type;
     }
   }
 }
