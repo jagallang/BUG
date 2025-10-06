@@ -385,8 +385,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   SizedBox(height: 24.h),
                   // v2.43.2: _buildStatusSection() 제거 (앱 게시 상태는 앱관리 탭에서 관리)
                   // v2.43.3: _buildTestTypeSection() 제거
-                  _buildAnnouncementSection(),
-                  SizedBox(height: 24.h),
+                  // v2.43.4: _buildAnnouncementSection() 제거 (앱 공지사항 제거)
                   _buildAdvancedRewardSection(),
                   SizedBox(height: 24.h),
                   _buildTestConfigSection(),
@@ -482,70 +481,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     );
   }
 
-  Widget _buildAnnouncementSection() {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  '📢 앱 공지사항',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo[900],
-                  ),
-                ),
-                const Spacer(),
-                Switch(
-                  value: _hasAnnouncement,
-                  onChanged: (value) {
-                    setState(() {
-                      _hasAnnouncement = value;
-                      if (!value) {
-                        _announcementController.clear();
-                      }
-                    });
-                  },
-                  activeColor: Colors.indigo[700],
-                ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              _hasAnnouncement
-                  ? '테스터들에게 보여질 공지사항을 작성하세요'
-                  : '공지사항 기능을 활성화하려면 스위치를 켜세요',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[600],
-              ),
-            ),
-            if (_hasAnnouncement) ...[
-              SizedBox(height: 16.h),
-              TextField(
-                controller: _announcementController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  labelText: '공지사항 내용',
-                  hintText: '테스터들에게 전달할 중요한 정보를 입력하세요...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  prefixIcon: const Icon(Icons.announcement),
-                  alignLabelWithHint: true,
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
+  // v2.43.4: _buildAnnouncementSection() 제거 (앱 공지사항 제거)
 
   Widget _buildAdvancedRewardSection() {
     return Card(
@@ -556,7 +492,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '💰 고급 보상 시스템',
+              '💰 리워드 지급',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -565,196 +501,182 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             ),
             SizedBox(height: 8.h),
             Text(
-              '다양한 보상 체계를 설정하세요',
+              '테스터에게 지급할 리워드를 설정하세요',
               style: TextStyle(
                 fontSize: 14.sp,
                 color: Colors.grey[600],
               ),
             ),
             SizedBox(height: 16.h),
-            // v2.43.3: 일일 미션 포인트 (증감 버튼 추가)
+            // v2.43.4: 3개 필드를 가로로 한 줄 배치
             Row(
               children: [
+                // 일일 미션 포인트
                 Expanded(
-                  child: TextField(
-                    controller: _dailyMissionPointsController,
-                    keyboardType: TextInputType.number,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: '일일 미션 포인트',
-                      hintText: '100',
-                      suffix: Text('P',
-                          style: TextStyle(color: Colors.orange[700])),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.today),
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _dailyMissionPointsController,
+                          keyboardType: TextInputType.number,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: '미션P',
+                            suffix: Text('P', style: TextStyle(color: Colors.orange[700])),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                            prefixIcon: const Icon(Icons.today),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_up, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_dailyMissionPointsController.text) ?? 0;
+                                setState(() {
+                                  _dailyMissionPointsController.text = (current + 10).toString();
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_down, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_dailyMissionPointsController.text) ?? 0;
+                                if (current > 0) {
+                                  setState(() {
+                                    _dailyMissionPointsController.text = (current - 10).toString();
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(width: 8.w),
-                Column(
-                  children: [
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
-                        onPressed: () {
-                          int current = int.tryParse(
-                                  _dailyMissionPointsController.text) ??
-                              0;
-                          setState(() {
-                            _dailyMissionPointsController.text =
-                                (current + 10).toString();
-                          });
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
-                        onPressed: () {
-                          int current = int.tryParse(
-                                  _dailyMissionPointsController.text) ??
-                              0;
-                          if (current > 0) {
-                            setState(() {
-                              _dailyMissionPointsController.text =
-                                  (current - 10).toString();
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            // v2.43.3: 프로젝트 종료 포인트 (증감 버튼 추가)
-            Row(
-              children: [
+                // 프로젝트 종료 포인트
                 Expanded(
-                  child: TextField(
-                    controller: _finalCompletionPointsController,
-                    keyboardType: TextInputType.number,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: '프로젝트 종료 포인트',
-                      hintText: '1000',
-                      suffix:
-                          Text('P', style: TextStyle(color: Colors.green[700])),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.check_circle),
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _finalCompletionPointsController,
+                          keyboardType: TextInputType.number,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: '종료P',
+                            suffix: Text('P', style: TextStyle(color: Colors.green[700])),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                            prefixIcon: const Icon(Icons.check_circle),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_up, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_finalCompletionPointsController.text) ?? 0;
+                                setState(() {
+                                  _finalCompletionPointsController.text = (current + 100).toString();
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_down, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_finalCompletionPointsController.text) ?? 0;
+                                if (current > 0) {
+                                  setState(() {
+                                    _finalCompletionPointsController.text = (current - 100).toString();
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(width: 8.w),
-                Column(
-                  children: [
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
-                        onPressed: () {
-                          int current = int.tryParse(
-                                  _finalCompletionPointsController.text) ??
-                              0;
-                          setState(() {
-                            _finalCompletionPointsController.text =
-                                (current + 100).toString();
-                          });
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
-                        onPressed: () {
-                          int current = int.tryParse(
-                                  _finalCompletionPointsController.text) ??
-                              0;
-                          if (current > 0) {
-                            setState(() {
-                              _finalCompletionPointsController.text =
-                                  (current - 100).toString();
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            // v2.43.3: 버그 포인트 (증감 버튼 추가)
-            Row(
-              children: [
+                // 버그 포인트
                 Expanded(
-                  child: TextField(
-                    controller: _bonusPointsController,
-                    keyboardType: TextInputType.number,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: '버그 포인트',
-                      hintText: '100',
-                      suffix: Text('P',
-                          style: TextStyle(color: Colors.purple[700])),
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.star),
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _bonusPointsController,
+                          keyboardType: TextInputType.number,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: '버그P',
+                            suffix: Text('P', style: TextStyle(color: Colors.purple[700])),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                            prefixIcon: const Icon(Icons.star),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 4.w),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_up, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_bonusPointsController.text) ?? 0;
+                                setState(() {
+                                  _bonusPointsController.text = (current + 10).toString();
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_down, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_bonusPointsController.text) ?? 0;
+                                if (current > 0) {
+                                  setState(() {
+                                    _bonusPointsController.text = (current - 10).toString();
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ),
-                SizedBox(width: 8.w),
-                Column(
-                  children: [
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
-                        onPressed: () {
-                          int current =
-                              int.tryParse(_bonusPointsController.text) ?? 0;
-                          setState(() {
-                            _bonusPointsController.text =
-                                (current + 10).toString();
-                          });
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
-                        onPressed: () {
-                          int current =
-                              int.tryParse(_bonusPointsController.text) ?? 0;
-                          if (current > 0) {
-                            setState(() {
-                              _bonusPointsController.text =
-                                  (current - 10).toString();
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -969,7 +891,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '📋 기타 요구사항',
+              '⚠️ 주의사항',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -978,7 +900,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             ),
             SizedBox(height: 8.h),
             Text(
-              '테스터가 알아야 할 추가 요구사항이나 특별 지시사항을 입력하세요',
+              '테스터가 알아야 할 주의사항이나 특별 지시사항을 입력하세요',
               style: TextStyle(
                 fontSize: 14.sp,
                 color: Colors.grey[600],
@@ -989,12 +911,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               controller: _requirementsController,
               maxLines: 4,
               decoration: InputDecoration(
-                labelText: '요구사항',
+                labelText: '주의사항',
                 hintText: '예: 특정 기기에서 테스트, 특정 기능 집중 테스트 등...',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                prefixIcon: const Icon(Icons.checklist),
+                prefixIcon: const Icon(Icons.warning_amber),
                 alignLabelWithHint: true,
               ),
             ),
@@ -1015,7 +937,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '🆕 신규 기능 설정',
+              '📋 앱테스트 가이드라인',
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -1024,126 +946,45 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             ),
             SizedBox(height: 8.h),
             Text(
-              '일일 테스트 시간과 승인 조건을 설정하세요',
+              '테스터가 따라야 할 가이드라인과 승인 조건을 설정하세요',
               style: TextStyle(
                 fontSize: 14.sp,
                 color: Colors.grey[600],
               ),
             ),
             SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedDailyTestTime,
-                    decoration: InputDecoration(
-                      labelText: '일일 테스트 시간',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.access_time),
-                    ),
-                    items: _dailyTestTimes.map((time) {
-                      return DropdownMenuItem(
-                        value: time,
-                        child: Text(time),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedDailyTestTime = value!;
-                      });
-                    },
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedApprovalCondition,
-                    decoration: InputDecoration(
-                      labelText: '승인 조건',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.check),
-                    ),
-                    items: _approvalConditions.map((condition) {
-                      return DropdownMenuItem(
-                        value: condition,
-                        child: Text(condition),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedApprovalCondition = value!;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: _minExperienceController,
+            // v2.43.4: 승인 조건만 남김
+            DropdownButtonFormField<String>(
+              value: _selectedApprovalCondition,
               decoration: InputDecoration(
-                labelText: '최소 경험 레벨',
-                hintText: 'beginner, intermediate, advanced, expert',
+                labelText: '승인 조건',
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.r)),
-                prefixIcon: const Icon(Icons.school),
+                prefixIcon: const Icon(Icons.check_circle),
               ),
+              items: _approvalConditions.map((condition) {
+                return DropdownMenuItem(
+                  value: condition,
+                  child: Text(condition),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedApprovalCondition = value!;
+                });
+              },
             ),
             SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _minOSVersionController,
-                    decoration: InputDecoration(
-                      labelText: '최소 OS 버전',
-                      hintText: 'Android 8.0+, iOS 13.0+',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.phone_android),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: TextField(
-                    controller: _appStoreUrlController,
-                    decoration: InputDecoration(
-                      labelText: '앱스토어 URL (선택)',
-                      hintText: '이미 출시된 앱의 스토어 링크',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.store),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            TextField(
-              controller: _specialRequirementsController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: '특별 요구사항',
-                hintText: '추가적인 요구사항이나 주의사항을 입력하세요',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r)),
-                prefixIcon: const Icon(Icons.warning),
-                alignLabelWithHint: true,
-              ),
-            ),
-            SizedBox(height: 16.h),
+            // v2.43.4: 테스팅 가이드라인만 남김
             TextField(
               controller: _testingGuidelinesController,
-              maxLines: 3,
+              maxLines: 5,
               decoration: InputDecoration(
                 labelText: '테스팅 가이드라인',
                 hintText: '테스터가 따라야 할 구체적인 테스팅 지침을 작성하세요',
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.r)),
-                prefixIcon: const Icon(Icons.checklist),
+                prefixIcon: const Icon(Icons.assignment),
                 alignLabelWithHint: true,
               ),
             ),
