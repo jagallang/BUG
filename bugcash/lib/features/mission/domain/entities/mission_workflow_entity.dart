@@ -233,6 +233,8 @@ enum MissionWorkflowStatus {
         return MissionWorkflowStatus.dailyMissionApproved;
       case 'submission_completed':
         return MissionWorkflowStatus.submissionCompleted;
+      case 'project_completed': // v2.40.0: 최종 완료 상태 (Day 10까지 모두 승인 완료)
+        return MissionWorkflowStatus.submissionCompleted;
       case 'rejected':
         return MissionWorkflowStatus.rejected;
       case 'cancelled':

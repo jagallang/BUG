@@ -163,14 +163,14 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
             // v2.35.1: 진행 중인 테스터 - 승인 이후 모든 상태 표시 (정보 전용)
             // daily_mission_started는 inProgress로 매핑됨
+            // v2.40.0: submissionCompleted 제외 (종료 탭으로 이동)
             final activeTesters = missions
                 .where((m) =>
                     m.status == MissionWorkflowStatus.approved ||
                     m.status == MissionWorkflowStatus.inProgress ||  // daily_mission_started 포함
                     m.status == MissionWorkflowStatus.testingCompleted ||
                     m.status == MissionWorkflowStatus.dailyMissionCompleted ||
-                    m.status == MissionWorkflowStatus.dailyMissionApproved ||
-                    m.status == MissionWorkflowStatus.submissionCompleted)
+                    m.status == MissionWorkflowStatus.dailyMissionApproved)
                 .toList();
 
             print('✅ [MissionManagementV2] 테스터탭 State: LOADED');
@@ -1114,8 +1114,14 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   /// 완료된 미션 카드
   // v2.36.0: _buildCompletedMissionCard() 제거 - testingCompleted 상태 미사용
 
-  /// 종료된 미션 카드
+  /// v2.40.0: 종료된 미션 카드 (Day 전체 승인 기록 표시)
   Widget _buildSettledMissionCard(MissionWorkflowEntity mission) {
+    // v2.40.0: 승인된 일일 미션 목록 가져오기 (날짜순 정렬)
+    final approvedInteractions = mission.dailyInteractions
+        .where((i) => i.providerApproved)
+        .toList()
+      ..sort((a, b) => a.dayNumber.compareTo(b.dayNumber));
+
     return Card(
       margin: EdgeInsets.only(bottom: 12.h),
       elevation: 1,
@@ -1153,6 +1159,67 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
               '종료일: ${mission.completedAt?.toString().substring(0, 10) ?? 'N/A'}',
               style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
             ),
+
+            // v2.40.0: Day 전체 승인 기록 표시
+            if (approvedInteractions.isNotEmpty) ...[
+              SizedBox(height: 12.h),
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '일일 승인 기록',
+                      style: TextStyle(
+                        fontSize: 13.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                    ...approvedInteractions.map((interaction) {
+                      final approvedDate = interaction.providerApprovedAt;
+                      final dateStr = approvedDate != null
+                          ? '${approvedDate.year}-${approvedDate.month.toString().padLeft(2, '0')}-${approvedDate.day.toString().padLeft(2, '0')} ${approvedDate.hour.toString().padLeft(2, '0')}:${approvedDate.minute.toString().padLeft(2, '0')}'
+                          : 'N/A';
+
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: 4.h),
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle, size: 14.sp, color: Colors.green),
+                            SizedBox(width: 6.w),
+                            Text(
+                              'Day ${interaction.dayNumber}:',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            SizedBox(width: 6.w),
+                            Expanded(
+                              child: Text(
+                                dateStr,
+                                style: TextStyle(
+                                  fontSize: 11.sp,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),
