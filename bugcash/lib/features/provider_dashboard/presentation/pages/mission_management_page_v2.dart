@@ -743,16 +743,23 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                       ),
                     )
                   else
-                    // v2.41.0: 테스터 리스트 직접 표시
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.all(16.w),
-                      itemCount: settledMissions.length,
-                      itemBuilder: (context, index) {
-                        final mission = settledMissions[index];
-                        return _buildSettledMissionCard(mission);
-                      },
+                    Column(
+                      children: [
+                        // v2.42.0: 앱 정보 헤더
+                        _buildAppInfoHeader(settledMissions.length),
+
+                        // v2.41.0: 테스터 리스트
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.symmetric(horizontal: 16.w),
+                          itemCount: settledMissions.length,
+                          itemBuilder: (context, index) {
+                            final mission = settledMissions[index];
+                            return _buildSettledMissionCard(mission);
+                          },
+                        ),
+                      ],
                     ),
                 ],
               ),
@@ -1236,6 +1243,94 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
   /// 취소된 미션 카드
   // v2.36.0: _buildCancelledMissionCard() 제거 - cancelled 상태 미사용
+
+  /// v2.42.0: 종료 탭 앱 정보 헤더
+  Widget _buildAppInfoHeader(int testerCount) {
+    return Container(
+      margin: EdgeInsets.fromLTRB(16.w, 16.h, 16.w, 12.h),
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.shade50, Colors.blue.shade100],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12.r),
+        border: Border.all(color: Colors.blue.shade200),
+      ),
+      child: Row(
+        children: [
+          // 앱 아이콘
+          CircleAvatar(
+            radius: 28.r,
+            backgroundColor: Colors.blue,
+            child: Text(
+              widget.app.appName.isNotEmpty
+                  ? widget.app.appName[0].toUpperCase()
+                  : 'A',
+              style: TextStyle(
+                fontSize: 24.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+          SizedBox(width: 16.w),
+          // 앱 정보
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  widget.app.appName,
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.blue.shade900,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                Text(
+                  '카테고리: ${widget.app.category}',
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    color: Colors.blue.shade700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // 종료된 테스터 수
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  '$testerCount',
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  '완료',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   // ========================================
   // Command Methods (v2.14.0 - Clean Architecture)
