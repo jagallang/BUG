@@ -67,7 +67,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   final List<String> _installTypes = ['play_store', 'apk_upload'];
   // v2.43.2: 5분 단위로 20분까지 제한
   final List<String> _dailyTestTimes = ['5분', '10분', '15분', '20분'];
-  final List<String> _approvalConditions = ['스크린샷 필수', '녹화영상 필수', '스크린샷+녹화영상'];
+  // v2.43.6: 스크린샷 필수만 남기고 나머지 주석처리
+  final List<String> _approvalConditions = [
+    '스크린샷 필수',
+    // '녹화영상 필수',
+    // '스크린샷+녹화영상'
+  ];
 
   // 레거시 카테고리를 새 카테고리로 매핑하는 함수
   String _mapLegacyCategory(String? category) {
@@ -93,9 +98,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   }
 
   // 드롭다운 값이 유효한지 확인하고 안전한 값 반환
-  String _getSafeDropdownValue(String? value, List<String> options) {
+  String _getSafeDropdownValue(String? value, List<String> options, {String? defaultValue}) {
     if (value == null || !options.contains(value)) {
-      return options.first;
+      return defaultValue ?? options.first;
     }
     return value;
   }
@@ -122,8 +127,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _requirementsController =
         TextEditingController(text: metadata['requirements'] ?? '');
     _participantCountController = TextEditingController(
-        text: (metadata['participantCount'] ?? 1)
-            .toString()); // v2.43.0: totalTesters fallback 제거
+        text: (metadata['participantCount'] ?? 14)
+            .toString()); // v2.43.6: 디폴트 14명으로 변경
     _testPeriodController =
         TextEditingController(text: (metadata['testPeriod'] ?? 14).toString());
     _testTimeController =
@@ -135,8 +140,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         _getSafeDropdownValue(metadata['difficulty'], _difficulties);
     _selectedInstallType =
         _getSafeDropdownValue(metadata['installType'], _installTypes);
+    // v2.43.6: 디폴트 10분으로 설정
     _selectedDailyTestTime =
-        _getSafeDropdownValue(metadata['dailyTestTime'], _dailyTestTimes);
+        _getSafeDropdownValue(metadata['dailyTestTime'], _dailyTestTimes, defaultValue: '10분');
     _selectedApprovalCondition = _getSafeDropdownValue(
         metadata['approvalCondition'], _approvalConditions);
 
