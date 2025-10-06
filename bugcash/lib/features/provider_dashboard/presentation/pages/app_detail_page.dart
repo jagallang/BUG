@@ -508,7 +508,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               ),
             ),
             SizedBox(height: 16.h),
-            // v2.43.4: 3개 필드를 가로로 한 줄 배치
+            // v2.43.5: 2개 필드만 유지 (버그 포인트 제거)
             Row(
               children: [
                 // 일일 미션 포인트
@@ -521,7 +521,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                           keyboardType: TextInputType.number,
                           readOnly: true,
                           decoration: InputDecoration(
-                            labelText: '미션P',
+                            labelText: '일일미션지급',
                             suffix: Text('P', style: TextStyle(color: Colors.orange[700])),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
                             prefixIcon: const Icon(Icons.today),
@@ -566,7 +566,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     ],
                   ),
                 ),
-                SizedBox(width: 8.w),
+                SizedBox(width: 12.w),
                 // 프로젝트 종료 포인트
                 Expanded(
                   child: Row(
@@ -577,7 +577,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                           keyboardType: TextInputType.number,
                           readOnly: true,
                           decoration: InputDecoration(
-                            labelText: '종료P',
+                            labelText: '종료시 추가지급',
                             suffix: Text('P', style: TextStyle(color: Colors.green[700])),
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
                             prefixIcon: const Icon(Icons.check_circle),
@@ -622,62 +622,6 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                     ],
                   ),
                 ),
-                SizedBox(width: 8.w),
-                // 버그 포인트
-                Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _bonusPointsController,
-                          keyboardType: TextInputType.number,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            labelText: '버그P',
-                            suffix: Text('P', style: TextStyle(color: Colors.purple[700])),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                            prefixIcon: const Icon(Icons.star),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 4.w),
-                      Column(
-                        children: [
-                          SizedBox(
-                            width: 32.w,
-                            height: 24.h,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.arrow_drop_up, size: 24.sp),
-                              onPressed: () {
-                                int current = int.tryParse(_bonusPointsController.text) ?? 0;
-                                setState(() {
-                                  _bonusPointsController.text = (current + 10).toString();
-                                });
-                              },
-                            ),
-                          ),
-                          SizedBox(
-                            width: 32.w,
-                            height: 24.h,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.arrow_drop_down, size: 24.sp),
-                              onPressed: () {
-                                int current = int.tryParse(_bonusPointsController.text) ?? 0;
-                                if (current > 0) {
-                                  setState(() {
-                                    _bonusPointsController.text = (current - 10).toString();
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ],
@@ -711,170 +655,148 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               ),
             ),
             SizedBox(height: 16.h),
-            // v2.43.2: 참여자 수 (최대 20명, 버튼으로 조정)
+            // v2.43.5: 3개 필드를 가로로 한 줄 배치
             Row(
               children: [
+                // 참여자 수
                 Expanded(
-                  child: TextField(
-                    controller: _participantCountController,
-                    keyboardType: TextInputType.number,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: '참여자 수 *',
-                      hintText: '최대 20명',
-                      suffix: Text(
-                        '명',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.indigo[700],
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _participantCountController,
+                          keyboardType: TextInputType.number,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: '참여자 수',
+                            suffix: Text('명', style: TextStyle(color: Colors.indigo[700])),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                            prefixIcon: const Icon(Icons.people),
+                          ),
                         ),
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
+                      SizedBox(width: 4.w),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_up, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_participantCountController.text) ?? 1;
+                                if (current < 20) {
+                                  setState(() {
+                                    _participantCountController.text = (current + 1).toString();
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_down, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_participantCountController.text) ?? 1;
+                                if (current > 1) {
+                                  setState(() {
+                                    _participantCountController.text = (current - 1).toString();
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                      prefixIcon: const Icon(Icons.people),
-                    ),
+                    ],
                   ),
                 ),
                 SizedBox(width: 8.w),
-                Column(
-                  children: [
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
-                        onPressed: () {
-                          int current =
-                              int.tryParse(_participantCountController.text) ??
-                                  12;
-                          if (current < 20) {
-                            setState(() {
-                              _participantCountController.text =
-                                  (current + 1).toString();
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
-                        onPressed: () {
-                          int current =
-                              int.tryParse(_participantCountController.text) ??
-                                  1;
-                          if (current > 1) {
-                            setState(() {
-                              _participantCountController.text =
-                                  (current - 1).toString();
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            // v2.43.2: 테스트 기간 (최대 30일, 버튼으로 조정)
-            Row(
-              children: [
+                // 테스트 기간
                 Expanded(
-                  child: TextField(
-                    controller: _testPeriodController,
-                    keyboardType: TextInputType.number,
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: '테스트 기간 *',
-                      hintText: '최대 30일',
-                      suffix: Text(
-                        '일',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.indigo[700],
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _testPeriodController,
+                          keyboardType: TextInputType.number,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: '테스트 기간',
+                            suffix: Text('일', style: TextStyle(color: Colors.indigo[700])),
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                            prefixIcon: const Icon(Icons.calendar_today),
+                          ),
                         ),
                       ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
+                      SizedBox(width: 4.w),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_up, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_testPeriodController.text) ?? 1;
+                                if (current < 30) {
+                                  setState(() {
+                                    _testPeriodController.text = (current + 1).toString();
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32.w,
+                            height: 24.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.arrow_drop_down, size: 24.sp),
+                              onPressed: () {
+                                int current = int.tryParse(_testPeriodController.text) ?? 1;
+                                if (current > 1) {
+                                  setState(() {
+                                    _testPeriodController.text = (current - 1).toString();
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ],
                       ),
-                      prefixIcon: const Icon(Icons.calendar_today),
-                    ),
+                    ],
                   ),
                 ),
                 SizedBox(width: 8.w),
-                Column(
-                  children: [
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
-                        onPressed: () {
-                          int current =
-                              int.tryParse(_testPeriodController.text) ?? 1;
-                          if (current < 30) {
-                            setState(() {
-                              _testPeriodController.text =
-                                  (current + 1).toString();
-                            });
-                          }
-                        },
-                      ),
+                // 일일 테스트 시간
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _getSafeDropdownValue(_selectedDailyTestTime, _dailyTestTimes),
+                    items: _dailyTestTimes.map((time) {
+                      return DropdownMenuItem(
+                        value: time,
+                        child: Text(time),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedDailyTestTime = value!;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: '일일 테스트 시간',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
+                      prefixIcon: const Icon(Icons.access_time),
                     ),
-                    SizedBox(
-                      width: 40.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
-                        onPressed: () {
-                          int current =
-                              int.tryParse(_testPeriodController.text) ?? 1;
-                          if (current > 1) {
-                            setState(() {
-                              _testPeriodController.text =
-                                  (current - 1).toString();
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
-            ),
-            SizedBox(height: 16.h),
-            // v2.43.2: 일일 테스트 시간 드롭다운 (5분 단위, 20분까지)
-            DropdownButtonFormField<String>(
-              value: _getSafeDropdownValue(
-                  _selectedDailyTestTime, _dailyTestTimes),
-              items: _dailyTestTimes.map((time) {
-                return DropdownMenuItem(
-                  value: time,
-                  child: Text(time),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedDailyTestTime = value!;
-                });
-              },
-              decoration: InputDecoration(
-                labelText: '일일 테스트 시간 *',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                prefixIcon: const Icon(Icons.access_time),
-              ),
             ),
           ],
         ),
