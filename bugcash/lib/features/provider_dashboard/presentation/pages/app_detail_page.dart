@@ -384,8 +384,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   _buildAppInfoSection(),
                   SizedBox(height: 24.h),
                   // v2.43.2: _buildStatusSection() 제거 (앱 게시 상태는 앱관리 탭에서 관리)
-                  _buildTestTypeSection(),
-                  SizedBox(height: 24.h),
+                  // v2.43.3: _buildTestTypeSection() 제거
                   _buildAnnouncementSection(),
                   SizedBox(height: 24.h),
                   _buildAdvancedRewardSection(),
@@ -573,12 +572,14 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               ),
             ),
             SizedBox(height: 16.h),
+            // v2.43.3: 일일 미션 포인트 (증감 버튼 추가)
             Row(
               children: [
                 Expanded(
                   child: TextField(
                     controller: _dailyMissionPointsController,
                     keyboardType: TextInputType.number,
+                    readOnly: true,
                     decoration: InputDecoration(
                       labelText: '일일 미션 포인트',
                       hintText: '100',
@@ -591,10 +592,57 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   ),
                 ),
                 SizedBox(width: 8.w),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
+                        onPressed: () {
+                          int current = int.tryParse(
+                                  _dailyMissionPointsController.text) ??
+                              0;
+                          setState(() {
+                            _dailyMissionPointsController.text =
+                                (current + 10).toString();
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
+                        onPressed: () {
+                          int current = int.tryParse(
+                                  _dailyMissionPointsController.text) ??
+                              0;
+                          if (current > 0) {
+                            setState(() {
+                              _dailyMissionPointsController.text =
+                                  (current - 10).toString();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            // v2.43.3: 프로젝트 종료 포인트 (증감 버튼 추가)
+            Row(
+              children: [
                 Expanded(
                   child: TextField(
                     controller: _finalCompletionPointsController,
                     keyboardType: TextInputType.number,
+                    readOnly: true,
                     decoration: InputDecoration(
                       labelText: '프로젝트 종료 포인트',
                       hintText: '1000',
@@ -607,10 +655,57 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                   ),
                 ),
                 SizedBox(width: 8.w),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
+                        onPressed: () {
+                          int current = int.tryParse(
+                                  _finalCompletionPointsController.text) ??
+                              0;
+                          setState(() {
+                            _finalCompletionPointsController.text =
+                                (current + 100).toString();
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
+                        onPressed: () {
+                          int current = int.tryParse(
+                                  _finalCompletionPointsController.text) ??
+                              0;
+                          if (current > 0) {
+                            setState(() {
+                              _finalCompletionPointsController.text =
+                                  (current - 100).toString();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+            // v2.43.3: 버그 포인트 (증감 버튼 추가)
+            Row(
+              children: [
                 Expanded(
                   child: TextField(
                     controller: _bonusPointsController,
                     keyboardType: TextInputType.number,
+                    readOnly: true,
                     decoration: InputDecoration(
                       labelText: '버그 포인트',
                       hintText: '100',
@@ -621,6 +716,45 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                       prefixIcon: const Icon(Icons.star),
                     ),
                   ),
+                ),
+                SizedBox(width: 8.w),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_up, size: 28.sp),
+                        onPressed: () {
+                          int current =
+                              int.tryParse(_bonusPointsController.text) ?? 0;
+                          setState(() {
+                            _bonusPointsController.text =
+                                (current + 10).toString();
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 40.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.arrow_drop_down, size: 28.sp),
+                        onPressed: () {
+                          int current =
+                              int.tryParse(_bonusPointsController.text) ?? 0;
+                          if (current > 0) {
+                            setState(() {
+                              _bonusPointsController.text =
+                                  (current - 10).toString();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -691,10 +825,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         padding: EdgeInsets.zero,
                         icon: Icon(Icons.arrow_drop_up, size: 28.sp),
                         onPressed: () {
-                          int current = int.tryParse(_participantCountController.text) ?? 1;
+                          int current =
+                              int.tryParse(_participantCountController.text) ??
+                                  12;
                           if (current < 20) {
                             setState(() {
-                              _participantCountController.text = (current + 1).toString();
+                              _participantCountController.text =
+                                  (current + 1).toString();
                             });
                           }
                         },
@@ -707,10 +844,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         padding: EdgeInsets.zero,
                         icon: Icon(Icons.arrow_drop_down, size: 28.sp),
                         onPressed: () {
-                          int current = int.tryParse(_participantCountController.text) ?? 1;
+                          int current =
+                              int.tryParse(_participantCountController.text) ??
+                                  1;
                           if (current > 1) {
                             setState(() {
-                              _participantCountController.text = (current - 1).toString();
+                              _participantCountController.text =
+                                  (current - 1).toString();
                             });
                           }
                         },
@@ -757,10 +897,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         padding: EdgeInsets.zero,
                         icon: Icon(Icons.arrow_drop_up, size: 28.sp),
                         onPressed: () {
-                          int current = int.tryParse(_testPeriodController.text) ?? 1;
+                          int current =
+                              int.tryParse(_testPeriodController.text) ?? 1;
                           if (current < 30) {
                             setState(() {
-                              _testPeriodController.text = (current + 1).toString();
+                              _testPeriodController.text =
+                                  (current + 1).toString();
                             });
                           }
                         },
@@ -773,10 +915,12 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                         padding: EdgeInsets.zero,
                         icon: Icon(Icons.arrow_drop_down, size: 28.sp),
                         onPressed: () {
-                          int current = int.tryParse(_testPeriodController.text) ?? 1;
+                          int current =
+                              int.tryParse(_testPeriodController.text) ?? 1;
                           if (current > 1) {
                             setState(() {
-                              _testPeriodController.text = (current - 1).toString();
+                              _testPeriodController.text =
+                                  (current - 1).toString();
                             });
                           }
                         },
@@ -789,7 +933,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             SizedBox(height: 16.h),
             // v2.43.2: 일일 테스트 시간 드롭다운 (5분 단위, 20분까지)
             DropdownButtonFormField<String>(
-              value: _getSafeDropdownValue(_selectedDailyTestTime, _dailyTestTimes),
+              value: _getSafeDropdownValue(
+                  _selectedDailyTestTime, _dailyTestTimes),
               items: _dailyTestTimes.map((time) {
                 return DropdownMenuItem(
                   value: time,
@@ -859,106 +1004,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     );
   }
 
-  Widget _buildTestTypeSection() {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '🔧 테스트 유형 설정',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.bold,
-                color: Colors.indigo[900],
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '테스트 대상의 유형과 난이도를 설정하세요',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[600],
-              ),
-            ),
-            SizedBox(height: 16.h),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedType,
-                    decoration: InputDecoration(
-                      labelText: '테스트 유형',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.category),
-                    ),
-                    items: _types.map((type) {
-                      return DropdownMenuItem(
-                        value: type,
-                        child: Text(_getTypeDisplayName(type)),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedType = value!;
-                      });
-                    },
-                  ),
-                ),
-                SizedBox(width: 16.w),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedDifficulty,
-                    decoration: InputDecoration(
-                      labelText: '난이도',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8.r)),
-                      prefixIcon: const Icon(Icons.trending_up),
-                    ),
-                    items: _difficulties.map((difficulty) {
-                      return DropdownMenuItem(
-                        value: difficulty,
-                        child: Text(_getDifficultyDisplayName(difficulty)),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedDifficulty = value!;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16.h),
-            DropdownButtonFormField<String>(
-              value: _selectedInstallType,
-              decoration: InputDecoration(
-                labelText: '설치 유형',
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8.r)),
-                prefixIcon: const Icon(Icons.download),
-              ),
-              items: _installTypes.map((type) {
-                return DropdownMenuItem(
-                  value: type,
-                  child: Text(_getInstallTypeDisplayName(type)),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedInstallType = value!;
-                });
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // v2.43.3: _buildTestTypeSection() 제거 (테스트 유형 설정 항목 제거)
 
   Widget _buildNewFeaturesSection() {
     return Card(
