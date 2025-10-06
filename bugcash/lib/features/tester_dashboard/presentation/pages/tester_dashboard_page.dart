@@ -19,6 +19,7 @@ import '../providers/tester_dashboard_provider.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 // 채팅 기능 제거됨
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../mission/presentation/providers/mission_providers.dart';
 import '../../../auth/presentation/widgets/auth_wrapper.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import 'mission_detail_page.dart';
@@ -338,6 +339,11 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   void _performLogout(BuildContext context) async {
     debugPrint('🔴 _performLogout 시작');
     try {
+      // v2.38.0: 로그아웃 전 모든 Provider 정리
+      debugPrint('🔴 Riverpod Provider 정리');
+      // AutoDispose provider들이 자동으로 정리됨
+      ref.invalidate(authProvider);
+
       // 로그아웃 중 로딩 표시
       debugPrint('🔴 로그아웃 스낵바 표시');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -365,10 +371,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       debugPrint('🔴 Firebase Auth 직접 signOut 호출');
       await FirebaseAuth.instance.signOut();
       debugPrint('🔴 Firebase Auth 직접 signOut 완료');
-
-      // AuthProvider 상태 초기화
-      debugPrint('🔴 AuthProvider 상태 초기화');
-      ref.invalidate(authProvider);
 
       // 즉시 로그인 페이지로 이동 - Navigator 스택 모두 제거
       if (mounted && context.mounted) {
