@@ -637,9 +637,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ],
           ),
 
-          // Floating Action Button for chat
-          floatingActionButton: _buildChatFAB(),
-          floatingActionButtonLocation: _CustomFabLocation(), // 모든 탭에서 동일한 중간 위치로 고정
+          // v2.39.0: 채팅 FAB 제거
         ),
 
         // [MVP] 타이머 UI 제거 - 백그라운드에서만 작동
@@ -887,55 +885,8 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     // Navigate to profile settings page
   }
 
-  // Chat FAB with unread message badge
-  Widget _buildChatFAB() {
-    final dashboardState = ref.watch(testerDashboardProvider);
-    final int unreadCount = dashboardState.unreadNotifications;
-    
-    return Stack(
-      children: [
-        FloatingActionButton(
-          heroTag: "tester_dashboard_chat_fab",
-          onPressed: () {
-            Navigator.push(
-              context,
-              // 채팅 기능 제거됨
-              MaterialPageRoute(builder: (context) => Container()),
-            );
-          },
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          foregroundColor: Colors.white,
-          child: const Icon(Icons.chat),
-        ),
-        if (unreadCount > 0)
-          Positioned(
-            right: 0,
-            top: 0,
-            child: Container(
-              padding: EdgeInsets.all(4.w),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
-              ),
-              constraints: BoxConstraints(
-                minWidth: 20.w,
-                minHeight: 20.w,
-              ),
-              child: Text(
-                unreadCount > 99 ? '99+' : '$unreadCount',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
+  // v2.39.0: 채팅 FAB 제거됨
+  // Widget _buildChatFAB() { ... }
 
 
   Widget _buildMissionTab() {
@@ -2655,20 +2606,8 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   }
 }
 
-// Custom FAB Location to avoid overlap with bottom tabs
-class _CustomFabLocation extends FloatingActionButtonLocation {
-  @override
-  Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    // 기본 endFloat 위치를 기준으로 Y 좌표만 조정
-    final double x = scaffoldGeometry.scaffoldSize.width - 
-                     scaffoldGeometry.floatingActionButtonSize.width - 16.0;
-    final double y = scaffoldGeometry.scaffoldSize.height -
-                     scaffoldGeometry.floatingActionButtonSize.height -
-                     120.0; // 하단 탭바와 기본 위치의 중간 지점으로 고정
-
-    return Offset(x, y);
-  }
-}
+// v2.39.0: 채팅 FAB 제거로 _CustomFabLocation 제거됨
+// class _CustomFabLocation extends FloatingActionButtonLocation { ... }
 
 /// 타이머 다이얼로그 Widget
 class TimerDialog extends StatefulWidget {
