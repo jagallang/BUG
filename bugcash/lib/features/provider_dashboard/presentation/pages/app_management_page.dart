@@ -556,26 +556,34 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
           // v2.43.0: 진행률 및 통계 섹션 제거 (UI 간소화)
 
-          // All Action Buttons in Single Row
+          // All Action Buttons in Single Row (v2.43.1: 버튼 비율 조정)
           Row(
             children: [
-              // Visibility Dropdown
+              // Visibility Dropdown + Input Button (1/4 공간)
               Expanded(
-                child: _buildUnifiedVisibilityDropdown(app),
+                flex: 1,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildUnifiedVisibilityDropdown(app),
+                    ),
+                    SizedBox(width: 4.w),
+                    Expanded(
+                      child: _buildUnifiedInputButton(app),
+                    ),
+                  ],
+                ),
               ),
               SizedBox(width: 8.w),
-              // App Detail Input Button
+              // Mission Management Button (2/4 공간)
               Expanded(
-                child: _buildUnifiedInputButton(app),
-              ),
-              SizedBox(width: 8.w),
-              // Mission Management Button
-              Expanded(
+                flex: 2,
                 child: _buildUnifiedMissionButton(app),
               ),
               SizedBox(width: 8.w),
-              // Delete Button (moved to rightmost position)
+              // Delete Button (1/4 공간)
               Expanded(
+                flex: 1,
                 child: _buildUnifiedDeleteButton(app),
               ),
             ],
@@ -1828,7 +1836,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           padding: EdgeInsets.symmetric(horizontal: 8.w),
         ),
         child: Text(
-          '입력',
+          '수정',
           style: TextStyle(
             color: AppColors.primary,
             fontSize: 12.sp,
