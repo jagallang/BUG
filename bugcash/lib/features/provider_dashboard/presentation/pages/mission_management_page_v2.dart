@@ -704,7 +704,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
   // v2.36.0: _buildCompletedMissionsTab() 제거 - testingCompleted 상태 미사용
 
-  /// 종료 탭 - 제출 완료된 미션
+  /// v2.41.0: 종료 탭 - 제출 완료된 미션 (앱별 그룹화)
   Widget _buildSettlementTab() {
     return Consumer(
       builder: (context, ref, child) {
@@ -717,6 +717,9 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             final settledMissions = missions
                 .where((m) => m.status == MissionWorkflowStatus.submissionCompleted)
                 .toList();
+
+            // v2.41.0: 현재 앱에 대한 종료된 미션만 표시 (이미 필터링됨)
+            // appId는 이미 widget.app.id로 필터링되어 있으므로 별도 그룹화 불필요
 
             return SingleChildScrollView(
               child: Column(
@@ -740,6 +743,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                       ),
                     )
                   else
+                    // v2.41.0: 테스터 리스트 직접 표시
                     ListView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -1114,7 +1118,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   /// 완료된 미션 카드
   // v2.36.0: _buildCompletedMissionCard() 제거 - testingCompleted 상태 미사용
 
-  /// v2.40.0: 종료된 미션 카드 (Day 전체 승인 기록 표시)
+  /// v2.41.0: 종료된 미션 카드 (ExpansionTile - 테스터 이메일 포함, 클릭 시 Day 기록 확장)
   Widget _buildSettledMissionCard(MissionWorkflowEntity mission) {
     // v2.40.0: 승인된 일일 미션 목록 가져오기 (날짜순 정렬)
     final approvedInteractions = mission.dailyInteractions
@@ -1126,43 +1130,48 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
       margin: EdgeInsets.only(bottom: 12.h),
       elevation: 1,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
+          childrenPadding: EdgeInsets.fromLTRB(16.w, 0, 16.w, 16.h),
+          leading: Icon(Icons.done_all, size: 20.sp, color: Colors.blue),
+          title: Text(
+            mission.testerName,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 4.h),
+              Text(
+                mission.testerEmail,
+                style: TextStyle(
+                  fontSize: 13.sp,
+                  color: Colors.grey[600],
+                ),
+              ),
+              SizedBox(height: 4.h),
+              Text(
+                '종료일: ${mission.completedAt?.toString().substring(0, 10) ?? 'N/A'}',
+                style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+              ),
+            ],
+          ),
+          trailing: Text(
+            '${mission.estimatedTotalReward}원',
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.blue,
+            ),
+          ),
           children: [
-            Row(
-              children: [
-                Icon(Icons.done_all, size: 20.sp, color: Colors.blue),
-                SizedBox(width: 8.w),
-                Expanded(
-                  child: Text(
-                    mission.testerName,
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Text(
-                  '${mission.estimatedTotalReward}원',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '종료일: ${mission.completedAt?.toString().substring(0, 10) ?? 'N/A'}',
-              style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
-            ),
-
-            // v2.40.0: Day 전체 승인 기록 표시
-            if (approvedInteractions.isNotEmpty) ...[
-              SizedBox(height: 12.h),
+            // v2.41.0: Day 전체 승인 기록 표시 (확장 시에만)
+            if (approvedInteractions.isNotEmpty)
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
@@ -1219,7 +1228,6 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                   ],
                 ),
               ),
-            ],
           ],
         ),
       ),
