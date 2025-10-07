@@ -607,11 +607,31 @@ class MissionManagementService {
     return _firestore
         .collection(_settlementsCollection)
         .where('testerId', isEqualTo: testerId)
-        .orderBy('calculatedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => MissionSettlementModel.fromFirestore(doc))
-            .toList());
+        .handleError((error) {
+          AppLogger.error('watchTesterSettlements 에러', 'MissionService', error);
+          return null;
+        })
+        .map((snapshot) {
+          if (snapshot == null) return <MissionSettlementModel>[];
+
+          final settlements = snapshot.docs
+              .map((doc) {
+                try {
+                  return MissionSettlementModel.fromFirestore(doc);
+                } catch (e) {
+                  AppLogger.error('Settlement 파싱 에러', 'MissionService', e);
+                  return null;
+                }
+              })
+              .whereType<MissionSettlementModel>()
+              .toList();
+
+          // 메모리에서 정렬 (calculatedAt 기준 내림차순)
+          settlements.sort((a, b) => b.calculatedAt.compareTo(a.calculatedAt));
+
+          return settlements;
+        });
   }
 
   /// 정산 지급 완료 처리
