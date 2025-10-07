@@ -6,7 +6,7 @@ import '../entities/transaction_entity.dart';
 class WalletService {
   final WalletRepository _repository;
 
-  WalletService(this _repository);
+  WalletService(this._repository);
 
   /// 포인트 충전 (공급자)
   /// TODO: 결제 모듈과 연동하여 실제 결제 완료 후 호출
