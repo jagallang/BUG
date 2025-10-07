@@ -32,6 +32,9 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   // v2.50.2: 가이드 확장 상태 관리
   final Set<int> _expandedSteps = {};
 
+  // v2.50.4: 약관 동의 로컬 상태 (체크박스 상태만 관리)
+  bool _termsCheckboxChecked = false;
+
   @override
   void initState() {
     super.initState();
@@ -318,36 +321,101 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                   ),
                 ),
                 SizedBox(height: 16.h),
-                // v2.50.2: 동의 체크박스
+                // v2.50.4: 동의 체크박스 (로컬 상태)
                 Consumer(
                   builder: (context, ref, child) {
                     final user = ref.watch(authProvider).user;
                     final termsAccepted = user?.providerProfile?.termsAccepted ?? false;
 
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(
-                          color: termsAccepted ? AppColors.primary : Colors.grey[400]!,
-                          width: 2,
+                    // 이미 동의한 경우 체크박스 비활성화
+                    if (termsAccepted) {
+                      return Container(
+                        padding: EdgeInsets.all(16.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(color: AppColors.primary, width: 2),
                         ),
-                      ),
-                      child: CheckboxListTile(
-                        value: termsAccepted,
-                        onChanged: (value) => _handleTermsAcceptance(value ?? false),
-                        title: Text(
-                          '이용약관 및 개인정보처리방침에 동의합니다',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black87,
+                        child: Row(
+                          children: [
+                            Icon(Icons.check_circle, color: AppColors.primary, size: 24.sp),
+                            SizedBox(width: 12.w),
+                            Expanded(
+                              child: Text(
+                                '이용약관에 동의하셨습니다',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    // 미동의 상태: 체크박스 + 동의 버튼
+                    return Column(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(
+                              color: _termsCheckboxChecked ? AppColors.primary : Colors.grey[400]!,
+                              width: 2,
+                            ),
+                          ),
+                          child: CheckboxListTile(
+                            value: _termsCheckboxChecked,
+                            onChanged: (value) {
+                              setState(() {
+                                _termsCheckboxChecked = value ?? false;
+                              });
+                            },
+                            title: Text(
+                              '이용약관 및 개인정보처리방침에 동의합니다',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            controlAffinity: ListTileControlAffinity.leading,
+                            activeColor: AppColors.primary,
+                            dense: true,
                           ),
                         ),
-                        controlAffinity: ListTileControlAffinity.leading,
-                        activeColor: AppColors.primary,
-                        dense: true,
-                      ),
+                        SizedBox(height: 12.h),
+                        // v2.50.4: 동의 버튼
+                        SizedBox(
+                          width: double.infinity,
+                          height: 48.h,
+                          child: ElevatedButton(
+                            onPressed: _termsCheckboxChecked
+                                ? () => _handleTermsAcceptance(true)
+                                : null,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: _termsCheckboxChecked
+                                  ? AppColors.primary
+                                  : Colors.grey[400],
+                              disabledBackgroundColor: Colors.grey[400],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                            ),
+                            child: Text(
+                              _termsCheckboxChecked ? '동의하기' : '체크박스를 선택해주세요',
+                              style: TextStyle(
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     );
                   },
                 ),
