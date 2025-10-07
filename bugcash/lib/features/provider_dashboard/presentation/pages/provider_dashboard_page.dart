@@ -213,7 +213,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               '• 일일 미션 포인트 설정 (테스터 보상)',
               '• 앱 아이콘 및 스크린샷 업로드',
             ],
-            icon: Icons.app_registration,
+            icon: Icons.app_settings_alt, // v2.50.3: 설정이 들어간 앱 아이콘
             color: Colors.blue,
           ),
           SizedBox(height: 12.h),
@@ -242,7 +242,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               '• 실시간으로 진행 상황 모니터링',
               '• 오늘 탭에서 일일 미션 확인',
             ],
-            icon: Icons.task_alt,
+            icon: Icons.assignment_turned_in, // v2.50.3: 체크 표시가 있는 과제 아이콘
             color: Colors.orange,
           ),
           SizedBox(height: 12.h),
@@ -1436,6 +1436,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   // v2.50.1: 이용약관 동의 처리
+  // v2.50.3: Firestore 업데이트 완료 후 상태 반영 개선
   Future<void> _handleTermsAcceptance(bool accepted) async {
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
@@ -1460,7 +1461,12 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         },
       }, SetOptions(merge: true));
 
-      // v2.50.1: authProvider 재초기화 (Firestore 변경사항 반영)
+      AppLogger.info('Firestore update completed, waiting for stream update...', 'ProviderDashboard');
+
+      // v2.50.3: Firestore → AuthProvider 스트림 반영 시간 대기
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // authProvider 재초기화 (Firestore 변경사항 반영)
       ref.invalidate(authProvider);
 
       if (mounted) {
