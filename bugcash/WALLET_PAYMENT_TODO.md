@@ -1,156 +1,33 @@
-# 💰 Wallet & Payment 모듈 TODO (v2.51.0)
+# 💰 Wallet & Payment 모듈 완료 및 보류 현황
 
-## 📋 완료된 작업 (2025-01-26)
+## ✅ 완료된 작업 (v2.51.0 ~ v2.53.0)
 
-### ✅ Domain Layer
+### v2.51.0: 지갑 모듈 기본 구조
 - [x] `wallet_entity.dart` - 지갑 엔티티
 - [x] `transaction_entity.dart` - 거래 내역 엔티티
 - [x] `wallet_repository.dart` - 지갑 Repository 인터페이스
-- [x] `wallet_service.dart` - 지갑 비즈니스 로직
-
-### ✅ Data Layer
+- [x] `wallet_service.dart` - 지갑 비즈니스 로직 (TODO 주석 포함)
 - [x] `wallet_repository_impl.dart` - Firestore 연동 Repository 구현체
-
-### ✅ Presentation Layer
 - [x] `wallet_provider.dart` - Riverpod Provider (Repository 패턴 적용)
 
----
+### v2.52.0: 실시간 지갑 UI 위젯 및 대시보드 통합
+- [x] `provider_wallet_card.dart` - 공급자 지갑 카드 위젯
+- [x] `tester_wallet_card.dart` - 테스터 지갑 카드 위젯
+- [x] `transaction_list_item.dart` - 거래 내역 리스트 아이템 위젯
+- [x] Provider Dashboard 통합 (결제 탭)
+- [x] Tester Dashboard 통합 (정산 탭)
 
-## 🚧 남은 작업 (우선순위 순)
-
-### 1. Wallet UI 위젯 생성 (필수)
-
-#### A. 공급자 지갑 카드
-**파일**: `lib/features/wallet/presentation/widgets/provider_wallet_card.dart`
-
-**TODO:**
-```dart
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/wallet_provider.dart';
-
-class ProviderWalletCard extends ConsumerWidget {
-  final String providerId;
-
-  // TODO: 지갑 잔액 표시
-  // TODO: 이번 달 충전 금액 표시
-  // TODO: 이번 달 사용 금액 표시
-  // TODO: 충전 버튼 (Payment 모듈로 라우팅)
-  // TODO: 거래 내역 버튼
-  // TODO: 로딩/에러 상태 처리
-}
-```
-
-#### B. 테스터 지갑 카드
-**파일**: `lib/features/wallet/presentation/widgets/tester_wallet_card.dart`
-
-**TODO:**
-```dart
-class TesterWalletCard extends ConsumerWidget {
-  final String testerId;
-
-  // TODO: 지갑 잔액 표시
-  // TODO: 이번 달 적립 금액 표시
-  // TODO: 총 적립 금액 표시
-  // TODO: 출금 버튼 (출금 다이얼로그)
-  // TODO: 거래 내역 버튼
-  // TODO: 로딩/에러 상태 처리
-}
-```
-
-#### C. 거래 내역 리스트 아이템
-**파일**: `lib/features/wallet/presentation/widgets/transaction_list_item.dart`
-
-**TODO:**
-```dart
-class TransactionListItem extends StatelessWidget {
-  final TransactionEntity transaction;
-
-  // TODO: 거래 타입별 아이콘 (💳충전, 📤사용, 💰적립, 🏦출금)
-  // TODO: 거래 금액 (+/-) 표시
-  // TODO: 거래 설명
-  // TODO: 거래 시간
-  // TODO: 상태 (pending/completed/failed)
-}
-```
+### v2.53.0: 회원가입 시 지갑 자동 생성
+- [x] `auth_service.dart` - createUserProfile() 수정
+- [x] 신규 사용자 회원가입 시 wallets/{userId} 자동 생성
 
 ---
 
-### 2. Dashboard 통합 (필수)
+## ⏸️ 보류된 작업 (나중에 개발)
 
-#### A. 공급자 대시보드
-**파일**: `lib/features/provider_dashboard/presentation/pages/provider_dashboard_page.dart`
+### 이유: Payment 모듈은 독립적으로 동작하며, 실제 결제가 필요한 시점에 추가 가능
 
-**TODO:**
-```dart
-// Line ~610: _buildPaymentTab() 수정
-
-import '../../../wallet/presentation/widgets/provider_wallet_card.dart';
-
-Widget _buildPaymentTab() {
-  return SingleChildScrollView(
-    child: Column(
-      children: [
-        // TODO: ProviderWalletCard 위젯 사용
-        ProviderWalletCard(providerId: widget.providerId),
-
-        // TODO: 충전 버튼 → Payment 페이지로 라우팅
-        // TODO: 거래 내역 리스트 (TransactionListItem 사용)
-      ],
-    ),
-  );
-}
-```
-
-#### B. 테스터 대시보드
-**파일**: `lib/features/tester_dashboard/presentation/pages/tester_dashboard_page.dart`
-
-**TODO:**
-```dart
-import '../../../wallet/presentation/widgets/tester_wallet_card.dart';
-
-// TODO: 상단 헤더 또는 별도 탭에 TesterWalletCard 추가
-Widget _buildWalletSection() {
-  return TesterWalletCard(testerId: widget.testerId);
-}
-```
-
----
-
-### 3. 회원가입 시 지갑 자동 생성 (필수)
-
-**파일**: `lib/core/services/auth_service.dart`
-
-**TODO:**
-```dart
-// Line ~95: createUserProfile() 수정
-
-static Future<void> createUserProfile(String userId, Map<String, dynamic> userData) async {
-  // 기존 유저 프로필 생성
-  await FirebaseFirestore.instance
-      .collection('users')
-      .doc(userId)
-      .set({...userData});
-
-  // TODO: 지갑 자동 생성 추가
-  await FirebaseFirestore.instance
-      .collection('wallets')
-      .doc(userId)
-      .set({
-    'balance': 0,
-    'totalCharged': 0,
-    'totalSpent': 0,
-    'totalEarned': 0,
-    'totalWithdrawn': 0,
-    'createdAt': FieldValue.serverTimestamp(),
-    'updatedAt': FieldValue.serverTimestamp(),
-  });
-}
-```
-
----
-
-### 4. Payment 모듈 생성 (나중에)
+### 1. Payment 모듈 (보류 - MVP 완료 후 개발)
 
 #### A. Payment Entity
 **파일**: `lib/features/payment/domain/entities/payment_entity.dart`
@@ -210,7 +87,7 @@ class PaymentPage extends StatelessWidget {
 
 ---
 
-### 5. 거래 내역 페이지 (선택사항)
+### 2. 거래 내역 페이지 (보류 - 선택사항)
 
 **파일**: `lib/features/wallet/presentation/pages/transaction_history_page.dart`
 
@@ -229,7 +106,19 @@ class TransactionHistoryPage extends ConsumerWidget {
 
 ---
 
-### 6. Firebase Functions (나중에 - 결제 연동 시)
+### 3. 출금 시스템 (보류 - 나중에)
+**위치**: `tester_wallet_card.dart` 출금 다이얼로그 구현 필요
+
+**TODO:**
+- 최소 출금 금액 검증
+- 은행 계좌 정보 입력/관리
+- 출금 신청 처리
+- 출금 상태 관리 (pending → completed)
+- 출금 수수료 계산
+
+---
+
+### 4. Firebase Functions (보류 - 결제 연동 시)
 
 **파일**: `functions/src/index.ts`
 
@@ -243,7 +132,7 @@ class TransactionHistoryPage extends ConsumerWidget {
 
 ---
 
-### 7. 환경설정 (나중에)
+### 5. 환경설정 (보류 - 결제 연동 시)
 
 #### A. pubspec.yaml
 **TODO:**
@@ -272,13 +161,26 @@ TOSS_CLIENT_KEY=test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq
 
 ---
 
-## 🎯 다음 단계 우선순위
+## 🎯 현재 상태 요약
 
-1. **ProviderWalletCard, TesterWalletCard 위젯 생성** ← 가장 먼저
-2. **Dashboard 통합** (provider_dashboard_page.dart, tester_dashboard_page.dart)
-3. **Auth Service 수정** (회원가입 시 지갑 생성)
-4. **테스트 & 샘플 데이터 추가**
-5. **Payment 모듈 구현** (토스페이먼츠 연동)
+### ✅ 완료 (v2.51.0 ~ v2.53.0)
+- 지갑 시스템 완전 구현 (Domain/Data/Presentation)
+- 실시간 지갑 UI (ProviderWalletCard, TesterWalletCard)
+- Dashboard 통합 완료
+- 회원가입 시 지갑 자동 생성
+
+### ⏸️ 보류 (MVP 완료 후 개발)
+- Payment 모듈 (토스페이먼츠 연동)
+- 출금 시스템
+- 거래 내역 페이지 (선택사항)
+- Firebase Functions
+
+### 🚀 다음 개발 방향
+지갑 시스템은 완성되었으므로, 다른 핵심 기능에 집중:
+- 미션 시스템 고도화
+- 정산 시스템 개선
+- 관리자 기능 추가
+- 기타 비즈니스 로직 개발
 
 ---
 
@@ -336,5 +238,11 @@ lib/features/
 
 ---
 
-**마지막 업데이트**: 2025-01-26
-**다음 작업**: ProviderWalletCard, TesterWalletCard 위젯 생성
+## 📝 업데이트 이력
+- **2025-01-26 (v2.51.0)**: 지갑 모듈 기본 구조 완성
+- **2025-01-26 (v2.52.0)**: 실시간 지갑 UI 위젯 및 대시보드 통합 완료
+- **2025-01-26 (v2.53.0)**: 회원가입 시 지갑 자동 생성 구현
+- **2025-01-26**: Payment 모듈 보류 결정 (MVP 완료 후 개발)
+
+**현재 상태**: 지갑 시스템 완료 ✅
+**다음 작업**: 다른 핵심 기능 개발 (미션/정산/관리자)
