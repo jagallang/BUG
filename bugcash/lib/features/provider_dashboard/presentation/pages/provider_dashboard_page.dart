@@ -359,114 +359,73 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             ),
             SizedBox(height: 20.h),
 
-            // 충전 금액 선택 버튼 (2x2 그리드)
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 12.w,
-                mainAxisSpacing: 12.h,
-                childAspectRatio: 2.5,
-              ),
-              itemCount: chargeOptions.length,
-              itemBuilder: (context, index) {
-                final amount = chargeOptions[index];
-                final isSelected = _selectedChargeAmount == amount;
-
-                return OutlinedButton(
-                  onPressed: () {
-                    setState(() {
-                      _selectedChargeAmount = amount;
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: isSelected ? Colors.indigo[50] : Colors.white,
-                    side: BorderSide(
-                      color: isSelected ? Colors.indigo[700]! : Colors.grey[300]!,
-                      width: isSelected ? 2 : 1,
+            // 충전 금액 선택 (드롭다운 + 결제 버튼)
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _selectedChargeAmount,
+                        isExpanded: true,
+                        items: chargeOptions.map((amount) {
+                          return DropdownMenuItem<int>(
+                            value: amount,
+                            child: Text(
+                              '${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원 (${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} P)',
+                              style: TextStyle(fontSize: 16.sp),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          if (value != null) {
+                            setState(() {
+                              _selectedChargeAmount = value;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                ElevatedButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${_selectedChargeAmount}원 결제 기능은 곧 추가됩니다!'),
+                        backgroundColor: Colors.indigo[700],
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.indigo[700],
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                   ),
-                  child: Text(
-                    '${(amount / 1000).toInt()}천원',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: isSelected ? Colors.indigo[700] : Colors.black87,
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            SizedBox(height: 16.h),
-
-            // 선택된 금액 표시
-            Container(
-              padding: EdgeInsets.all(16.w),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '선택 금액',
-                    style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
-                  ),
-                  Text(
-                    '${_selectedChargeAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원 → ${_selectedChargeAmount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} P',
-                    style: TextStyle(
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.indigo[700],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 20.h),
-
-            // 결제하기 버튼
-            SizedBox(
-              width: double.infinity,
-              height: 56.h,
-              child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('${_selectedChargeAmount}원 결제 기능은 곧 추가됩니다!'),
-                      backgroundColor: Colors.indigo[700],
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.indigo[700],
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12.r),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.payment, color: Colors.white, size: 24.sp),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '결제하기 (Toss Payments)',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                  child: Row(
+                    children: [
+                      Icon(Icons.payment, color: Colors.white, size: 20.sp),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '결제하기',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ],
         ),
