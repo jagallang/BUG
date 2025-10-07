@@ -28,7 +28,10 @@ class ProviderDashboardPage extends ConsumerStatefulWidget {
 
 class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   int _selectedIndex = 0;
-  
+
+  // v2.50.2: 가이드 확장 상태 관리
+  final Set<int> _expandedSteps = {};
+
   @override
   void initState() {
     super.initState();
@@ -199,9 +202,9 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
           SizedBox(height: 32.h),
 
-          // Step 1: 앱 등록
-          _buildGuideStep(
-            stepNumber: '1',
+          // v2.50.2: Step 1-5 확장형 아코디언
+          _buildAccordionStep(
+            stepNumber: 1,
             title: '앱 등록하기',
             description: '테스트할 앱의 정보를 등록합니다.',
             details: [
@@ -213,11 +216,10 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             icon: Icons.app_registration,
             color: Colors.blue,
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 12.h),
 
-          // Step 2: 테스터 모집
-          _buildGuideStep(
-            stepNumber: '2',
+          _buildAccordionStep(
+            stepNumber: 2,
             title: '테스터 자동 모집',
             description: '등록된 앱에 테스터들이 자동으로 지원합니다.',
             details: [
@@ -228,11 +230,10 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             icon: Icons.people,
             color: Colors.green,
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 12.h),
 
-          // Step 3: 일일 미션 진행
-          _buildGuideStep(
-            stepNumber: '3',
+          _buildAccordionStep(
+            stepNumber: 3,
             title: '일일 미션 자동 진행',
             description: '테스터들이 매일 앱을 테스트합니다.',
             details: [
@@ -244,11 +245,10 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             icon: Icons.task_alt,
             color: Colors.orange,
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 12.h),
 
-          // Step 4: 피드백 검토
-          _buildGuideStep(
-            stepNumber: '4',
+          _buildAccordionStep(
+            stepNumber: 4,
             title: '피드백 검토 및 승인',
             description: '테스터의 피드백을 검토하고 승인합니다.',
             details: [
@@ -260,11 +260,10 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             icon: Icons.rate_review,
             color: Colors.purple,
           ),
-          SizedBox(height: 24.h),
+          SizedBox(height: 12.h),
 
-          // Step 5: 테스트 완료
-          _buildGuideStep(
-            stepNumber: '5',
+          _buildAccordionStep(
+            stepNumber: 5,
             title: '테스트 완료 및 결과 확인',
             description: '14일 테스트 완료 후 종합 리포트를 확인합니다.',
             details: [
@@ -277,7 +276,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
           SizedBox(height: 40.h),
 
-          // v2.50.1: 이용 약관 동의
+          // v2.50.2: 이용 약관 동의 (모달)
           Container(
             padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
@@ -288,28 +287,38 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '✅ 이용 약관',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '✅ 이용 약관',
+                      style: TextStyle(
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _showTermsDialog(context),
+                      icon: Icon(Icons.article, size: 18.sp),
+                      label: Text('자세히 보기'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 12.h),
                 Text(
-                  '• 등록된 앱 정보는 테스터에게 공개됩니다\n'
-                  '• 테스터 피드백은 성실히 검토해 주세요\n'
-                  '• 포인트는 테스트 완료 후 자동 정산됩니다\n'
-                  '• 부적절한 앱 등록 시 서비스 이용이 제한될 수 있습니다',
+                  'BugCash 앱 테스트 서비스 이용약관 및 개인정보처리방침에 대한 동의가 필요합니다.',
                   style: TextStyle(
                     fontSize: 14.sp,
                     color: Colors.grey[700],
-                    height: 1.6,
+                    height: 1.5,
                   ),
                 ),
                 SizedBox(height: 16.h),
-                // v2.50.1: 동의 체크박스
+                // v2.50.2: 동의 체크박스
                 Consumer(
                   builder: (context, ref, child) {
                     final user = ref.watch(authProvider).user;
@@ -328,7 +337,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                         value: termsAccepted,
                         onChanged: (value) => _handleTermsAcceptance(value ?? false),
                         title: Text(
-                          '위 이용약관을 확인하였으며 동의합니다',
+                          '이용약관 및 개인정보처리방침에 동의합니다',
                           style: TextStyle(
                             fontSize: 14.sp,
                             fontWeight: FontWeight.w600,
@@ -417,91 +426,119 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     );
   }
 
-  Widget _buildGuideStep({
-    required String stepNumber,
+  // v2.50.2: 확장 가능한 아코디언 스텝
+  Widget _buildAccordionStep({
+    required int stepNumber,
     required String title,
     required String description,
     required List<String> details,
     required IconData icon,
     required Color color,
   }) {
+    final isExpanded = _expandedSteps.contains(stepNumber);
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.r),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(20.w),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Step Number Circle
-            Container(
-              width: 60.w,
-              height: 60.w,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 8.h),
+          childrenPadding: EdgeInsets.only(left: 20.w, right: 20.w, bottom: 20.h),
+          initiallyExpanded: false,
+          onExpansionChanged: (expanded) {
+            setState(() {
+              if (expanded) {
+                _expandedSteps.add(stepNumber);
+              } else {
+                _expandedSteps.remove(stepNumber);
+              }
+            });
+          },
+          leading: Container(
+            width: 50.w,
+            height: 50.w,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Icon(icon, color: color, size: 28.sp),
+            ),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 3.h),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Text(
+                  'STEP $stepNumber',
+                  style: TextStyle(
+                    fontSize: 11.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
               ),
-              child: Center(
-                child: Icon(icon, color: color, size: 32.sp),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          subtitle: Padding(
+            padding: EdgeInsets.only(top: 6.h),
+            child: Text(
+              description,
+              style: TextStyle(
+                fontSize: 13.sp,
+                color: Colors.grey[600],
               ),
             ),
-            SizedBox(width: 16.w),
-            // Content
-            Expanded(
+          ),
+          children: [
+            Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12.r),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(12.r),
-                        ),
-                        child: Text(
-                          'STEP $stepNumber',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                children: details
+                    .map((detail) => Padding(
+                          padding: EdgeInsets.only(bottom: 8.h),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.check_circle, color: color, size: 16.sp),
+                              SizedBox(width: 8.w),
+                              Expanded(
+                                child: Text(
+                                  detail.replaceFirst('• ', ''),
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    color: Colors.grey[800],
+                                    height: 1.4,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  ...details.map((detail) => Padding(
-                        padding: EdgeInsets.only(bottom: 6.h),
-                        child: Text(
-                          detail,
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            color: Colors.grey[700],
-                            height: 1.4,
-                          ),
-                        ),
-                      )),
-                ],
+                        ))
+                    .toList(),
               ),
             ),
           ],
@@ -1233,6 +1270,168 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           builder: (context) => const AdminDashboardPage(),
         );
       },
+    );
+  }
+
+  // v2.50.2: 이용약관 전체 내용 모달 다이얼로그
+  void _showTermsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.r)),
+        child: Container(
+          width: 700.w,
+          height: 600.h,
+          padding: EdgeInsets.all(24.w),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 헤더
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'BugCash 서비스 이용약관',
+                    style: TextStyle(
+                      fontSize: 22.sp,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              Divider(height: 24.h, thickness: 2),
+
+              // 스크롤 가능한 본문
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildTermsSection(
+                        '제1조 (목적)',
+                        '본 약관은 BugCash(이하 "회사")가 제공하는 앱 테스트 중개 서비스(이하 "서비스")의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.',
+                      ),
+                      _buildTermsSection(
+                        '제2조 (정의)',
+                        '1. "앱 공급자"란 자신의 애플리케이션을 테스터에게 테스트받고자 서비스에 등록한 자를 말합니다.\n'
+                        '2. "테스터"란 등록된 앱을 테스트하고 피드백을 제공하며 보상을 받는 자를 말합니다.\n'
+                        '3. "포인트"란 테스터가 미션 완료 시 지급받는 가상의 보상으로, 추후 현금으로 환전할 수 있는 수단입니다.\n'
+                        '4. "미션"이란 앱 공급자가 설정한 일일 테스트 과제를 의미합니다.',
+                      ),
+                      _buildTermsSection(
+                        '제3조 (앱 공급자의 의무)',
+                        '1. 앱 공급자는 등록하는 앱 정보가 정확하고 사실임을 보장해야 합니다.\n'
+                        '2. 앱 공급자는 테스터가 제출한 피드백을 성실히 검토하고 승인/반려 처리해야 합니다.\n'
+                        '3. 부적절하거나 불법적인 앱을 등록할 경우 서비스 이용이 제한될 수 있습니다.\n'
+                        '4. 앱 공급자는 테스트 기간(기본 14일) 동안 앱의 정상 작동을 보장해야 합니다.',
+                      ),
+                      _buildTermsSection(
+                        '제4조 (테스터의 의무)',
+                        '1. 테스터는 성실하게 앱을 테스트하고 정확한 피드백을 제공해야 합니다.\n'
+                        '2. 테스터는 일일 미션을 수행하며, 허위 또는 부실한 피드백 제출 시 포인트가 지급되지 않을 수 있습니다.\n'
+                        '3. 테스터는 테스트 중 알게 된 정보를 외부에 유출하거나 부정한 목적으로 사용할 수 없습니다.',
+                      ),
+                      _buildTermsSection(
+                        '제5조 (서비스 이용 및 포인트)',
+                        '1. 앱 공급자가 설정한 포인트는 테스터의 미션 완료 및 피드백 승인 시 자동 지급됩니다.\n'
+                        '2. 포인트는 테스트 완료 후 회사의 정산 정책에 따라 처리됩니다.\n'
+                        '3. 부정한 방법으로 포인트를 획득하려는 시도 시 계정이 정지될 수 있습니다.',
+                      ),
+                      _buildTermsSection(
+                        '제6조 (개인정보처리방침)',
+                        '1. 회사는 이용자의 개인정보를 관련 법령에 따라 보호합니다.\n'
+                        '2. 수집되는 개인정보: 이메일, 이름, 프로필 사진, 테스트 활동 기록\n'
+                        '3. 개인정보는 서비스 제공, 포인트 지급, 사용자 인증 목적으로만 사용됩니다.\n'
+                        '4. 이용자는 언제든지 개인정보 열람, 수정, 삭제를 요청할 수 있습니다.',
+                      ),
+                      _buildTermsSection(
+                        '제7조 (서비스 제한)',
+                        '1. 회사는 다음의 경우 서비스 이용을 제한할 수 있습니다:\n'
+                        '   - 허위 정보 등록 또는 부정한 방법으로 서비스 이용 시\n'
+                        '   - 다른 이용자의 권리를 침해하거나 명예를 훼손한 경우\n'
+                        '   - 관련 법령 또는 본 약관을 위반한 경우\n'
+                        '2. 서비스 제한 시 사전 통지를 원칙으로 하나, 긴급한 경우 사후 통지할 수 있습니다.',
+                      ),
+                      _buildTermsSection(
+                        '제8조 (면책조항)',
+                        '1. 회사는 천재지변, 시스템 장애 등 불가항력으로 인한 서비스 중단에 대해 책임을 지지 않습니다.\n'
+                        '2. 회사는 이용자 간의 분쟁에 대해 중재 의무를 부담하지 않습니다.\n'
+                        '3. 앱 테스트 결과에 대한 최종 책임은 앱 공급자에게 있습니다.',
+                      ),
+                      _buildTermsSection(
+                        '제9조 (약관의 변경)',
+                        '본 약관은 관련 법령 및 회사 정책에 따라 변경될 수 있으며, 변경 시 서비스 내 공지사항을 통해 고지합니다.',
+                      ),
+                      SizedBox(height: 16.h),
+                      Container(
+                        padding: EdgeInsets.all(16.w),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Text(
+                          '시행일: 2025년 1월 1일\n문의: episode0611@gmail.com',
+                          style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 16.h),
+              // 닫기 버튼
+              SizedBox(
+                width: double.infinity,
+                height: 48.h,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                  ),
+                  child: Text(
+                    '확인',
+                    style: TextStyle(fontSize: 16.sp, color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTermsSection(String title, String content) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 20.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            content,
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey[800],
+              height: 1.6,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
