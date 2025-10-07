@@ -146,7 +146,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         ],
       ),
       body: _buildCurrentTab(),
-      floatingActionButton: _buildChatFAB(),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.indigo[900],
@@ -931,60 +930,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     );
   }
 
-  Widget _buildChatFAB() {
-    // currentUserProvider 대신 직접 Firebase Auth 사용
-    final currentUser = FirebaseAuth.instance.currentUser;
-    final unreadCount = currentUser != null
-        ? 0 // 채팅 기능 제거됨
-        : 0;
-
-    return Stack(
-      children: [
-        FloatingActionButton(
-          heroTag: "provider_dashboard_chat_fab",
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                // 채팅 기능 제거됨
-                builder: (context) => Container(),
-              ),
-            );
-          },
-          backgroundColor: Colors.indigo[700],
-          child: const Icon(
-            Icons.chat,
-            color: Colors.white,
-          ),
-        ),
-        if (unreadCount > 0)
-          Positioned(
-            right: 0,
-            top: 0,
-            child: Container(
-              padding: EdgeInsets.all(2.w),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              constraints: BoxConstraints(
-                minWidth: 16.w,
-                minHeight: 16.w,
-              ),
-              child: Text(
-                unreadCount > 99 ? '99+' : unreadCount.toString(),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-      ],
-    );
-  }
 
   // 관리자 탭 - 프로젝트 검수 기능
   Widget _buildAdminTab() {
