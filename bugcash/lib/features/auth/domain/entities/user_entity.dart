@@ -386,6 +386,8 @@ class ProviderProfile extends Equatable {
   final int publishedApps;
   final Map<String, dynamic> businessInfo;
   final VerificationStatus verificationStatus;
+  final bool termsAccepted; // v2.50.1: 이용약관 동의 여부
+  final DateTime? termsAcceptedAt; // v2.50.1: 이용약관 동의 시각
 
   const ProviderProfile({
     this.companyName,
@@ -397,6 +399,8 @@ class ProviderProfile extends Equatable {
     this.publishedApps = 0,
     this.businessInfo = const {},
     this.verificationStatus = VerificationStatus.pending,
+    this.termsAccepted = false, // v2.50.1
+    this.termsAcceptedAt, // v2.50.1
   });
 
   ProviderProfile copyWith({
@@ -409,6 +413,8 @@ class ProviderProfile extends Equatable {
     int? publishedApps,
     Map<String, dynamic>? businessInfo,
     VerificationStatus? verificationStatus,
+    bool? termsAccepted, // v2.50.1
+    DateTime? termsAcceptedAt, // v2.50.1
   }) {
     return ProviderProfile(
       companyName: companyName ?? this.companyName,
@@ -420,6 +426,8 @@ class ProviderProfile extends Equatable {
       publishedApps: publishedApps ?? this.publishedApps,
       businessInfo: businessInfo ?? this.businessInfo,
       verificationStatus: verificationStatus ?? this.verificationStatus,
+      termsAccepted: termsAccepted ?? this.termsAccepted, // v2.50.1
+      termsAcceptedAt: termsAcceptedAt ?? this.termsAcceptedAt, // v2.50.1
     );
   }
 
@@ -434,6 +442,8 @@ class ProviderProfile extends Equatable {
       'publishedApps': publishedApps,
       'businessInfo': businessInfo,
       'verificationStatus': verificationStatus.name,
+      'termsAccepted': termsAccepted, // v2.50.1
+      'termsAcceptedAt': termsAcceptedAt, // v2.50.1
     };
   }
 
@@ -450,6 +460,10 @@ class ProviderProfile extends Equatable {
       verificationStatus: VerificationStatus.values.byName(
         map['verificationStatus'] ?? 'pending'
       ),
+      termsAccepted: map['termsAccepted'] ?? false, // v2.50.1
+      termsAcceptedAt: map['termsAcceptedAt'] != null
+          ? (map['termsAcceptedAt'] as Timestamp?)?.toDate()
+          : null, // v2.50.1
     );
   }
 
@@ -464,5 +478,7 @@ class ProviderProfile extends Equatable {
     publishedApps,
     businessInfo,
     verificationStatus,
+    termsAccepted, // v2.50.1
+    termsAcceptedAt, // v2.50.1
   ];
 }

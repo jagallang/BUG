@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // v2.50.1: 이용약관 동의 저장
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -276,7 +277,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
           SizedBox(height: 40.h),
 
-          // 이용 약관 동의
+          // v2.50.1: 이용 약관 동의
           Container(
             padding: EdgeInsets.all(20.w),
             decoration: BoxDecoration(
@@ -307,44 +308,108 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                     height: 1.6,
                   ),
                 ),
+                SizedBox(height: 16.h),
+                // v2.50.1: 동의 체크박스
+                Consumer(
+                  builder: (context, ref, child) {
+                    final user = ref.watch(authProvider).user;
+                    final termsAccepted = user?.providerProfile?.termsAccepted ?? false;
+
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8.r),
+                        border: Border.all(
+                          color: termsAccepted ? AppColors.primary : Colors.grey[400]!,
+                          width: 2,
+                        ),
+                      ),
+                      child: CheckboxListTile(
+                        value: termsAccepted,
+                        onChanged: (value) => _handleTermsAcceptance(value ?? false),
+                        title: Text(
+                          '위 이용약관을 확인하였으며 동의합니다',
+                          style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        activeColor: AppColors.primary,
+                        dense: true,
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
           SizedBox(height: 32.h),
 
-          // 시작하기 버튼
-          SizedBox(
-            width: double.infinity,
-            height: 56.h,
-            child: ElevatedButton(
-              onPressed: () {
-                // 앱 등록 탭으로 이동
-                setState(() {
-                  _selectedIndex = 1; // 앱 탭
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.indigo[700],
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          // v2.50.1: 약관 동의 필수 - 시작하기 버튼
+          Consumer(
+            builder: (context, ref, child) {
+              final user = ref.watch(authProvider).user;
+              final termsAccepted = user?.providerProfile?.termsAccepted ?? false;
+
+              return Column(
                 children: [
-                  Icon(Icons.rocket_launch, color: Colors.white, size: 24.sp),
-                  SizedBox(width: 12.w),
-                  Text(
-                    '앱 등록하러 가기',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56.h,
+                    child: ElevatedButton(
+                      onPressed: termsAccepted
+                          ? () {
+                              // 앱 등록 탭으로 이동
+                              setState(() {
+                                _selectedIndex = 1; // 앱 탭
+                              });
+                            }
+                          : null, // 약관 미동의 시 비활성화
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: termsAccepted ? Colors.indigo[700] : Colors.grey[400],
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        disabledBackgroundColor: Colors.grey[400],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            termsAccepted ? Icons.rocket_launch : Icons.lock,
+                            color: Colors.white,
+                            size: 24.sp,
+                          ),
+                          SizedBox(width: 12.w),
+                          Text(
+                            termsAccepted ? '앱 등록하러 가기' : '이용약관 동의 필요',
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+                  if (!termsAccepted) ...[
+                    SizedBox(height: 12.h),
+                    Text(
+                      '⚠️ 서비스 이용을 위해 위의 이용약관에 동의해주세요',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.orange[700],
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ],
-              ),
-            ),
+              );
+            },
           ),
           SizedBox(height: 20.h),
         ],
@@ -1169,5 +1234,61 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         );
       },
     );
+  }
+
+  // v2.50.1: 이용약관 동의 처리
+  Future<void> _handleTermsAcceptance(bool accepted) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        AppLogger.error('사용자가 로그인되지 않았습니다', 'ProviderDashboard', null);
+        return;
+      }
+
+      AppLogger.info(
+        'Terms acceptance: $accepted for user: ${currentUser.uid}',
+        'ProviderDashboard',
+      );
+
+      // Firestore에 약관 동의 상태 업데이트
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid)
+          .set({
+        'providerProfile': {
+          'termsAccepted': accepted,
+          'termsAcceptedAt': accepted ? FieldValue.serverTimestamp() : null,
+        },
+      }, SetOptions(merge: true));
+
+      // v2.50.1: authProvider 재초기화 (Firestore 변경사항 반영)
+      ref.invalidate(authProvider);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              accepted ? '✅ 이용약관에 동의하셨습니다' : '❌ 이용약관 동의가 취소되었습니다',
+            ),
+            duration: const Duration(seconds: 2),
+            backgroundColor: accepted ? AppColors.statusSuccess : AppColors.neutral600,
+          ),
+        );
+      }
+
+      AppLogger.info('Terms acceptance updated successfully', 'ProviderDashboard');
+    } catch (e) {
+      AppLogger.error('약관 동의 처리 실패', 'ProviderDashboard', e);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('약관 동의 처리 중 오류가 발생했습니다: ${e.toString()}'),
+            duration: const Duration(seconds: 3),
+            backgroundColor: AppColors.statusError,
+          ),
+        );
+      }
+    }
   }
 }
