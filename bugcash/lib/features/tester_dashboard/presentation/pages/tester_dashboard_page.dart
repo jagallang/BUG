@@ -34,6 +34,8 @@ import '../widgets/mission_timer_floating_button.dart';
 import '../../../mission/presentation/providers/mission_providers.dart';
 import '../../../mission/domain/entities/mission_workflow_entity.dart';
 import '../../../../core/utils/logger.dart';
+// v2.52.0: 지갑 기능 추가
+import '../../../wallet/presentation/widgets/tester_wallet_card.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -2363,6 +2365,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
   }
 
+  // v2.52.0: 실시간 지갑 UI 적용
   Widget _buildSettlementTab() {
     final missionService = MissionManagementService();
 
@@ -2409,43 +2412,53 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
         final settlements = snapshot.data ?? [];
 
-        if (settlements.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.monetization_on,
-                  size: 64.w,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 16.h),
-                Text(
-                  '정산 가능한 미션이 없습니다',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey[600],
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  '14일 미션을 완료하면 정산이 가능합니다!',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
+        // v2.52.0: 지갑 카드를 ListView의 첫 항목으로 추가
         return ListView.builder(
           padding: ResponsiveWrapper.getResponsivePadding(context),
-          itemCount: settlements.length,
+          itemCount: 1 + settlements.length, // 지갑 카드 + 정산 항목들
           itemBuilder: (context, index) {
-            final settlement = settlements[index];
+            // 첫 번째 항목: 지갑 카드
+            if (index == 0) {
+              return Column(
+                children: [
+                  TesterWalletCard(testerId: widget.testerId),
+                  SizedBox(height: 16.h),
+                  if (settlements.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.symmetric(vertical: 32.h),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.monetization_on,
+                            size: 64.w,
+                            color: Colors.grey[400],
+                          ),
+                          SizedBox(height: 16.h),
+                          Text(
+                            '정산 가능한 미션이 없습니다',
+                            style: TextStyle(
+                              fontSize: 18.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          SizedBox(height: 8.h),
+                          Text(
+                            '14일 미션을 완료하면 정산이 가능합니다!',
+                            style: TextStyle(
+                              fontSize: 14.sp,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            }
+
+            // 나머지 항목: 정산 목록
+            final settlement = settlements[index - 1];
             return Card(
               margin: EdgeInsets.only(bottom: 12.h),
               child: Padding(

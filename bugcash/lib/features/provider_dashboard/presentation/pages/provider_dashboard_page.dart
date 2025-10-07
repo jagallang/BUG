@@ -15,6 +15,7 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../../wallet/presentation/providers/wallet_provider.dart';
 import '../../../wallet/domain/entities/wallet_entity.dart';
 import '../../../wallet/domain/entities/transaction_entity.dart';
+import '../../../wallet/presentation/widgets/provider_wallet_card.dart';
 // 채팅 기능 제거됨
 // import '../widgets/payment_management_tab.dart';
 
@@ -600,21 +601,22 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
 
 
+  // v2.52.0: 실시간 지갑 UI 적용
   Widget _buildPaymentTab() {
     return SingleChildScrollView(
       padding: EdgeInsets.all(20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 💳 내 지갑 카드
-          _buildWalletCard(),
+          // 💳 내 지갑 카드 (v2.52.0: 실시간 데이터 연동)
+          ProviderWalletCard(providerId: widget.providerId),
           SizedBox(height: 24.h),
 
-          // 💸 포인트 충전 섹션
+          // 💸 포인트 충전 섹션 (TODO: Payment 모듈 개발 후 활성화)
           _buildChargeSection(),
           SizedBox(height: 24.h),
 
-          // 📊 거래 내역
+          // 📊 거래 내역 (TODO: TransactionListItem 사용하여 구현)
           _buildTransactionHistory(),
         ],
       ),
