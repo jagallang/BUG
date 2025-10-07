@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/wallet_entity.dart';
 import '../providers/wallet_provider.dart';
+import '../pages/transaction_history_page.dart';
 
 /// 공급자 지갑 카드 위젯
 /// - 현재 잔액 표시
@@ -53,13 +54,17 @@ class ProviderWalletCard extends ConsumerWidget {
                     ),
                   ],
                 ),
-                // TODO: 거래 내역 버튼
+                // 거래 내역 버튼
                 IconButton(
                   icon: const Icon(Icons.history),
                   onPressed: () {
-                    // TODO: 거래 내역 페이지로 이동
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('거래 내역 기능은 개발 예정입니다')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TransactionHistoryPage(
+                          userId: providerId,
+                          userType: 'provider',
+                        ),
+                      ),
                     );
                   },
                   tooltip: '거래 내역',

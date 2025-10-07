@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/wallet_entity.dart';
 import '../providers/wallet_provider.dart';
+import '../pages/transaction_history_page.dart';
+import 'withdrawal_dialog.dart';
 
 /// 테스터 지갑 카드 위젯
 /// - 현재 잔액 표시
@@ -52,13 +54,17 @@ class TesterWalletCard extends ConsumerWidget {
                     ),
                   ],
                 ),
-                // TODO: 거래 내역 버튼
+                // 거래 내역 버튼
                 IconButton(
                   icon: const Icon(Icons.history),
                   onPressed: () {
-                    // TODO: 거래 내역 페이지로 이동
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('거래 내역 기능은 개발 예정입니다')),
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => TransactionHistoryPage(
+                          userId: testerId,
+                          userType: 'tester',
+                        ),
+                      ),
                     );
                   },
                   tooltip: '거래 내역',
@@ -142,8 +148,13 @@ class TesterWalletCard extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // TODO: 출금 다이얼로그 표시
-                  _showWithdrawDialog(context, walletAsync.value);
+                  final wallet = walletAsync.value;
+                  if (wallet != null) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => WithdrawalDialog(wallet: wallet),
+                    );
+                  }
                 },
                 icon: const Icon(Icons.arrow_circle_up),
                 label: const Text(
@@ -304,68 +315,6 @@ class TesterWalletCard extends ConsumerWidget {
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// 출금 다이얼로그
-  /// TODO: 출금 신청 프로세스 구현
-  /// TODO: 최소 출금 금액 검증 (예: 10,000P 이상)
-  /// TODO: 출금 수수료 계산 표시
-  /// TODO: 은행 계좌 정보 입력/관리
-  /// TODO: 출금 신청 후 상태 관리 (pending → completed)
-  void _showWithdrawDialog(BuildContext context, WalletEntity? wallet) {
-    if (wallet == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('지갑 정보를 불러올 수 없습니다')),
-      );
-      return;
-    }
-
-    // TODO: 최소 출금 금액 체크
-    const minWithdrawAmount = 10000;
-    if (wallet.balance < minWithdrawAmount) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('최소 출금 금액은 ${_formatAmount(minWithdrawAmount)}입니다'),
-          backgroundColor: Colors.orange,
-        ),
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('출금 신청'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('출금 가능 금액: ${_formatAmount(wallet.balance)}'),
-            const SizedBox(height: 16),
-            const Text(
-              '출금 기능은 개발 예정입니다.',
-              style: TextStyle(color: Colors.orange),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'TODO:\n'
-              '- 출금 금액 입력\n'
-              '- 은행 계좌 정보 입력/선택\n'
-              '- 출금 수수료 계산 표시\n'
-              '- 출금 신청 처리\n'
-              '- 출금 내역 관리',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('닫기'),
           ),
         ],
       ),
