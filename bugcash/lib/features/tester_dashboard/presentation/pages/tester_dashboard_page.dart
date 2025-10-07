@@ -82,18 +82,27 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   /// 브라우저 재시작 시 타이머 상태 복원
   Future<void> _restoreTimerState() async {
     try {
-      // 진행 중인 미션 찾기
+      // 진행 중인 미션 찾기 (단순 쿼리로 변경 - 인덱스 불필요)
       final snapshot = await FirebaseFirestore.instance
           .collection('mission_workflows')
           .where('testerId', isEqualTo: widget.testerId)
-          .where('currentState', whereIn: ['in_progress', 'testing_completed'])
-          .where('startedAt', isNull: false)
           .get();
 
       if (snapshot.docs.isEmpty) return;
 
+      // 클라이언트 측 필터링: in_progress 또는 testing_completed & startedAt이 있는 것만
+      final filteredDocs = snapshot.docs.where((doc) {
+        final data = doc.data();
+        final currentState = data['currentState'] as String?;
+        final startedAt = data['startedAt'] as Timestamp?;
+        return startedAt != null &&
+               (currentState == 'in_progress' || currentState == 'testing_completed');
+      }).toList();
+
+      if (filteredDocs.isEmpty) return;
+
       // 가장 최근 시작된 미션 찾기
-      final docs = snapshot.docs.toList()
+      final docs = filteredDocs
         ..sort((a, b) {
           final aStarted = (a.data()['startedAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
           final bStarted = (b.data()['startedAt'] as Timestamp?)?.toDate() ?? DateTime(1970);
