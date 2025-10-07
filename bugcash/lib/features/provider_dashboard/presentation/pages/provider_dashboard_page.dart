@@ -174,44 +174,273 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   Widget _buildDashboardTab() {
-    // Provider 정보 대신 간단한 환영 메시지 사용 - Firebase 에러 방지
     return SingleChildScrollView(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(20.w),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 간단한 환영 메시지 - Firebase provider 컬렉션 에러 방지
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '안녕하세요, Provider님!',
-                style: TextStyle(
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                '오늘도 품질 높은 앱을 만들어 보세요.',
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
+          // 📱 앱 테스트 사용 가이드
+          Text(
+            '📱 BugCash 앱 테스트 사용 가이드',
+            style: TextStyle(
+              fontSize: 28.sp,
+              fontWeight: FontWeight.bold,
+              color: Colors.indigo[900],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            '공급자님의 앱을 테스터들에게 검증받는 5단계 프로세스',
+            style: TextStyle(
+              fontSize: 16.sp,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 32.h),
+
+          // Step 1: 앱 등록
+          _buildGuideStep(
+            stepNumber: '1',
+            title: '앱 등록하기',
+            description: '테스트할 앱의 정보를 등록합니다.',
+            details: [
+              '• 앱 이름, 설명, 카테고리 입력',
+              '• 테스트 기간 설정 (기본 14일)',
+              '• 일일 미션 포인트 설정 (테스터 보상)',
+              '• 앱 아이콘 및 스크린샷 업로드',
             ],
+            icon: Icons.app_registration,
+            color: Colors.blue,
           ),
           SizedBox(height: 24.h),
 
-          // 간단한 통계 카드들
-          _buildSimpleStatsCards(),
-
+          // Step 2: 테스터 모집
+          _buildGuideStep(
+            stepNumber: '2',
+            title: '테스터 자동 모집',
+            description: '등록된 앱에 테스터들이 자동으로 지원합니다.',
+            details: [
+              '• 시스템이 자동으로 테스터 매칭',
+              '• 테스터 프로필 및 경력 확인 가능',
+              '• 테스터 탭에서 지원 현황 확인',
+            ],
+            icon: Icons.people,
+            color: Colors.green,
+          ),
           SizedBox(height: 24.h),
 
-          // Recent Activities Section - 에러 방지를 위해 간단한 메시지로 대체
-          _buildSimpleRecentActivities(),
+          // Step 3: 일일 미션 진행
+          _buildGuideStep(
+            stepNumber: '3',
+            title: '일일 미션 자동 진행',
+            description: '테스터들이 매일 앱을 테스트합니다.',
+            details: [
+              '• 14일 동안 매일 자동 미션 생성',
+              '• 테스터가 앱 사용 및 피드백 제출',
+              '• 실시간으로 진행 상황 모니터링',
+              '• 오늘 탭에서 일일 미션 확인',
+            ],
+            icon: Icons.task_alt,
+            color: Colors.orange,
+          ),
+          SizedBox(height: 24.h),
+
+          // Step 4: 피드백 검토
+          _buildGuideStep(
+            stepNumber: '4',
+            title: '피드백 검토 및 승인',
+            description: '테스터의 피드백을 검토하고 승인합니다.',
+            details: [
+              '• 오늘 탭에서 제출된 피드백 확인',
+              '• 피드백 내용 검토 (텍스트, 스크린샷)',
+              '• 승인 또는 반려 처리',
+              '• 승인 시 테스터에게 포인트 지급',
+            ],
+            icon: Icons.rate_review,
+            color: Colors.purple,
+          ),
+          SizedBox(height: 24.h),
+
+          // Step 5: 테스트 완료
+          _buildGuideStep(
+            stepNumber: '5',
+            title: '테스트 완료 및 결과 확인',
+            description: '14일 테스트 완료 후 종합 리포트를 확인합니다.',
+            details: [
+              '• 종료 탭에서 완료된 앱 확인',
+              '• 전체 피드백 종합 분석',
+              '• 테스터 평가 및 품질 개선 인사이트',
+            ],
+            icon: Icons.check_circle,
+            color: Colors.teal,
+          ),
+          SizedBox(height: 40.h),
+
+          // 이용 약관 동의
+          Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12.r),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '✅ 이용 약관',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                SizedBox(height: 12.h),
+                Text(
+                  '• 등록된 앱 정보는 테스터에게 공개됩니다\n'
+                  '• 테스터 피드백은 성실히 검토해 주세요\n'
+                  '• 포인트는 테스트 완료 후 자동 정산됩니다\n'
+                  '• 부적절한 앱 등록 시 서비스 이용이 제한될 수 있습니다',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.grey[700],
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 32.h),
+
+          // 시작하기 버튼
+          SizedBox(
+            width: double.infinity,
+            height: 56.h,
+            child: ElevatedButton(
+              onPressed: () {
+                // 앱 등록 탭으로 이동
+                setState(() {
+                  _selectedIndex = 1; // 앱 탭
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo[700],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.rocket_launch, color: Colors.white, size: 24.sp),
+                  SizedBox(width: 12.w),
+                  Text(
+                    '앱 등록하러 가기',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SizedBox(height: 20.h),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGuideStep({
+    required String stepNumber,
+    required String title,
+    required String description,
+    required List<String> details,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Padding(
+        padding: EdgeInsets.all(20.w),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Step Number Circle
+            Container(
+              width: 60.w,
+              height: 60.w,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Icon(icon, color: color, size: 32.sp),
+              ),
+            ),
+            SizedBox(width: 16.w),
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 4.h),
+                        decoration: BoxDecoration(
+                          color: color,
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Text(
+                          'STEP $stepNumber',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 20.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  SizedBox(height: 12.h),
+                  ...details.map((detail) => Padding(
+                        padding: EdgeInsets.only(bottom: 6.h),
+                        child: Text(
+                          detail,
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.grey[700],
+                            height: 1.4,
+                          ),
+                        ),
+                      )),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
