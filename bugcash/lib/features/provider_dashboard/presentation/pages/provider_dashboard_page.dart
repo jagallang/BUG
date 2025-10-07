@@ -35,6 +35,9 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   // v2.50.4: 약관 동의 로컬 상태 (체크박스 상태만 관리)
   bool _termsCheckboxChecked = false;
 
+  // v2.50.7: 약관 동의 처리 중 로딩 상태
+  bool _isAcceptingTerms = false;
+
   @override
   void initState() {
     super.initState();
@@ -326,6 +329,40 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                   builder: (context, ref, child) {
                     final user = ref.watch(authProvider).user;
                     final termsAccepted = user?.providerProfile?.termsAccepted ?? false;
+
+                    // v2.50.7: 동의 처리 중 로딩 표시
+                    if (_isAcceptingTerms) {
+                      return Container(
+                        padding: EdgeInsets.all(16.w),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8.r),
+                          border: Border.all(color: AppColors.primary, width: 2),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 20.sp,
+                              height: 20.sp,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                              ),
+                            ),
+                            SizedBox(width: 12.w),
+                            Text(
+                              '동의 처리 중...',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
 
                     // 이미 동의한 경우 체크박스 비활성화
                     if (termsAccepted) {
@@ -1440,10 +1477,18 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   // v2.50.1: 이용약관 동의 처리
   // v2.50.3: Firestore 업데이트 완료 후 상태 반영 개선
   Future<void> _handleTermsAcceptance(bool accepted) async {
+    // v2.50.7: 로딩 상태 시작
+    setState(() {
+      _isAcceptingTerms = true;
+    });
+
     try {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser == null) {
         AppLogger.error('사용자가 로그인되지 않았습니다', 'ProviderDashboard', null);
+        setState(() {
+          _isAcceptingTerms = false;
+        });
         return;
       }
 
@@ -1465,11 +1510,19 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
       AppLogger.info('Firestore update completed, waiting for stream update...', 'ProviderDashboard');
 
-      // v2.50.3: Firestore → AuthProvider 스트림 반영 시간 대기
-      await Future.delayed(const Duration(milliseconds: 500));
+      // v2.50.7: Firestore → AuthProvider 스트림 반영 시간 대기 (500ms → 1000ms)
+      await Future.delayed(const Duration(milliseconds: 1000));
 
       // authProvider 재초기화 (Firestore 변경사항 반영)
       ref.invalidate(authProvider);
+
+      // v2.50.7: 로딩 상태 종료
+      if (mounted) {
+        setState(() {
+          _isAcceptingTerms = false;
+          _termsCheckboxChecked = false; // 체크박스 초기화
+        });
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1486,6 +1539,13 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       AppLogger.info('Terms acceptance updated successfully', 'ProviderDashboard');
     } catch (e) {
       AppLogger.error('약관 동의 처리 실패', 'ProviderDashboard', e);
+
+      // v2.50.7: 에러 시 로딩 상태 종료
+      if (mounted) {
+        setState(() {
+          _isAcceptingTerms = false;
+        });
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
