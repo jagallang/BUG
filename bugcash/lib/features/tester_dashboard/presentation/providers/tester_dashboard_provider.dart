@@ -958,8 +958,87 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
   Future<List<MissionCard>> _getCompletedMissionsFromFirestore(String testerId) async {
     try {
-      // Return empty list initially - will be populated with real data
-      return <MissionCard>[];
+      final completedMissions = <MissionCard>[];
+
+      // mission_workflows에서 완료된 미션들 가져오기
+      final completedWorkflows = await FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .where('testerId', isEqualTo: testerId)
+          .where('currentState', whereIn: ['testing_completed', 'settled', 'completed'])
+          .get();
+
+      debugPrint('🔍 COMPLETED_MISSIONS: 총 ${completedWorkflows.docs.length}개 완료 워크플로우 조회됨');
+
+      for (final workflowDoc in completedWorkflows.docs) {
+        final workflowData = workflowDoc.data();
+        final appId = workflowData['appId'];
+        final currentState = workflowData['currentState'] ?? 'completed';
+
+        try {
+          final lookupId = appId.replaceAll('provider_app_', '');
+
+          // Projects에서 앱 정보 가져오기
+          final projectDoc = await FirebaseFirestore.instance
+              .collection('projects')
+              .doc(lookupId)
+              .get();
+
+          final appName = workflowData['appName'] ??
+                          (projectDoc.exists ? projectDoc.data()!['appName'] : null) ??
+                          'Unknown App';
+
+          // 완료일 계산
+          final completedAt = workflowData['completedAt'] as Timestamp?;
+          final settledAt = workflowData['settledAt'] as Timestamp?;
+          final finalDate = settledAt ?? completedAt ?? Timestamp.now();
+
+          // 완료된 미션 카드 생성
+          final missionCard = MissionCard(
+            id: 'completed_mission_${workflowDoc.id}',
+            title: '$appName 테스트 완료',
+            description: '테스트를 성공적으로 완료했습니다!',
+            type: MissionType.featureTesting,
+            rewardPoints: workflowData['totalEarnedReward'] ?? workflowData['dailyReward'] ?? 0,
+            estimatedMinutes: (workflowData['totalDays'] ?? 14) * 20,
+            status: MissionStatus.completed,
+            deadline: finalDate.toDate(),
+            requiredSkills: ['앱테스트', '버그리포트'],
+            appName: appName,
+            currentParticipants: 1,
+            maxParticipants: 1,
+            progress: 100.0,
+            startedAt: (workflowData['startedAt'] as Timestamp?)?.toDate(),
+            difficulty: MissionDifficulty.easy,
+            providerId: workflowData['providerId'] ?? '',
+            isProviderApp: true,
+            originalAppData: {
+              'workflowId': workflowDoc.id,
+              'currentState': currentState,
+              'completedAt': completedAt,
+              'settledAt': settledAt,
+              'appId': appId,
+              'currentDay': workflowData['currentDay'] ?? 0,
+              'totalDays': workflowData['totalDays'] ?? 14,
+              'totalEarnedReward': workflowData['totalEarnedReward'] ?? 0,
+            },
+          );
+
+          completedMissions.add(missionCard);
+          debugPrint('✅ COMPLETED_CARD_ADDED: ${missionCard.title}');
+        } catch (e) {
+          debugPrint('Failed to load completed project data for appId: $appId, error: $e');
+        }
+      }
+
+      // 완료일 기준 내림차순 정렬
+      completedMissions.sort((a, b) {
+        final aDate = a.startedAt ?? DateTime(1970);
+        final bDate = b.startedAt ?? DateTime(1970);
+        return bDate.compareTo(aDate);
+      });
+
+      debugPrint('📤 RETURNING ${completedMissions.length} completed missions');
+      return completedMissions;
     } catch (e) {
       debugPrint('Failed to load completed missions from Firestore: $e');
       return <MissionCard>[];
