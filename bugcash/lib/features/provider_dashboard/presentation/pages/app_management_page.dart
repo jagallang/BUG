@@ -7,8 +7,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/config/feature_flags.dart';
 import 'app_detail_page.dart';
-import 'tester_management_page.dart';
-import 'mission_management_page.dart';
 import 'mission_management_page_v2.dart';
 
 // Provider for managing apps (using optimized projects collection)
