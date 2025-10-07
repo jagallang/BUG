@@ -958,24 +958,83 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
   Future<List<MissionCard>> _getCompletedMissionsFromFirestore(String testerId) async {
     try {
+      debugPrint('');
+      debugPrint('========================================');
+      debugPrint('🔍 [COMPLETED_MISSIONS] 시작');
+      debugPrint('   📌 testerId: $testerId');
+      debugPrint('========================================');
+
       final completedMissions = <MissionCard>[];
 
       // mission_workflows에서 완료된 미션들 가져오기
+      debugPrint('📊 [QUERY] mission_workflows 컬렉션 조회 중...');
+      debugPrint('   - 조건 1: testerId == $testerId');
+      debugPrint('   - 조건 2: currentState IN [testing_completed, settled, completed, deleted_by_tester]');
+
       final completedWorkflows = await FirebaseFirestore.instance
           .collection('mission_workflows')
           .where('testerId', isEqualTo: testerId)
-          .where('currentState', whereIn: ['testing_completed', 'settled', 'completed'])
+          .where('currentState', whereIn: ['testing_completed', 'settled', 'completed', 'deleted_by_tester'])
           .get();
 
-      debugPrint('🔍 COMPLETED_MISSIONS: 총 ${completedWorkflows.docs.length}개 완료 워크플로우 조회됨');
+      debugPrint('');
+      debugPrint('✅ [QUERY_RESULT] 총 ${completedWorkflows.docs.length}개 문서 조회됨');
 
-      for (final workflowDoc in completedWorkflows.docs) {
+      if (completedWorkflows.docs.isEmpty) {
+        debugPrint('⚠️ [WARNING] 완료된 미션 없음!');
+        debugPrint('   💡 디버깅: 모든 workflow 조회 시도...');
+
+        // 디버깅: 조건 없이 모든 workflows 조회 (최대 10개)
+        final allWorkflows = await FirebaseFirestore.instance
+            .collection('mission_workflows')
+            .limit(10)
+            .get();
+
+        debugPrint('');
+        debugPrint('🔍 [DEBUG] mission_workflows 컬렉션 전체 조회 (최대 10개)');
+        debugPrint('   📊 총 ${allWorkflows.docs.length}개 문서 발견');
+        debugPrint('');
+
+        if (allWorkflows.docs.isNotEmpty) {
+          for (var i = 0; i < allWorkflows.docs.length; i++) {
+            final doc = allWorkflows.docs[i];
+            final data = doc.data();
+            debugPrint('   📄 문서 ${i + 1}/${allWorkflows.docs.length}: ${doc.id}');
+            debugPrint('      ├─ 모든 필드:');
+            data.forEach((key, value) {
+              debugPrint('      │  • $key: $value');
+            });
+            debugPrint('');
+          }
+        } else {
+          debugPrint('   ❌ mission_workflows 컬렉션이 완전히 비어있음!');
+        }
+
+        // 추가: testerId로 필터링 시도
+        final filteredWorkflows = await FirebaseFirestore.instance
+            .collection('mission_workflows')
+            .where('testerId', isEqualTo: testerId)
+            .get();
+
+        debugPrint('   🔎 testerId = "$testerId"로 필터링: ${filteredWorkflows.docs.length}개');
+      }
+
+      debugPrint('');
+      for (int i = 0; i < completedWorkflows.docs.length; i++) {
+        final workflowDoc = completedWorkflows.docs[i];
         final workflowData = workflowDoc.data();
         final appId = workflowData['appId'];
         final currentState = workflowData['currentState'] ?? 'completed';
 
+        debugPrint('----------------------------------------');
+        debugPrint('📦 [MISSION ${i + 1}/${completedWorkflows.docs.length}]');
+        debugPrint('   🆔 workflowId: ${workflowDoc.id}');
+        debugPrint('   📱 appId: $appId');
+        debugPrint('   🔄 currentState: $currentState');
+
         try {
           final lookupId = appId.replaceAll('provider_app_', '');
+          debugPrint('   🔍 Projects 조회: $lookupId');
 
           // Projects에서 앱 정보 가져오기
           final projectDoc = await FirebaseFirestore.instance
@@ -983,9 +1042,17 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
               .doc(lookupId)
               .get();
 
+          debugPrint('   📊 Projects 존재 여부: ${projectDoc.exists}');
+
           final appName = workflowData['appName'] ??
                           (projectDoc.exists ? projectDoc.data()!['appName'] : null) ??
                           'Unknown App';
+
+          debugPrint('   📝 앱 이름: $appName');
+          debugPrint('   💰 totalEarnedReward: ${workflowData['totalEarnedReward']}');
+          debugPrint('   💵 dailyReward: ${workflowData['dailyReward']}');
+          debugPrint('   📅 completedAt: ${workflowData['completedAt']}');
+          debugPrint('   💳 settledAt: ${workflowData['settledAt']}');
 
           // 완료일 계산
           final completedAt = workflowData['completedAt'] as Timestamp?;
@@ -1024,23 +1091,37 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           );
 
           completedMissions.add(missionCard);
-          debugPrint('✅ COMPLETED_CARD_ADDED: ${missionCard.title}');
-        } catch (e) {
-          debugPrint('Failed to load completed project data for appId: $appId, error: $e');
+          debugPrint('   ✅ 카드 생성 성공: ${missionCard.title}');
+        } catch (e, stackTrace) {
+          debugPrint('   ❌ 에러 발생!');
+          debugPrint('   📛 에러 메시지: $e');
+          debugPrint('   📜 스택 트레이스: $stackTrace');
         }
       }
 
       // 완료일 기준 내림차순 정렬
+      debugPrint('');
+      debugPrint('🔄 [SORTING] 완료일 기준 정렬 중...');
       completedMissions.sort((a, b) {
         final aDate = a.startedAt ?? DateTime(1970);
         final bDate = b.startedAt ?? DateTime(1970);
         return bDate.compareTo(aDate);
       });
 
-      debugPrint('📤 RETURNING ${completedMissions.length} completed missions');
+      debugPrint('');
+      debugPrint('========================================');
+      debugPrint('📤 [RESULT] 총 ${completedMissions.length}개 완료 미션 반환');
+      debugPrint('========================================');
+      debugPrint('');
+
       return completedMissions;
-    } catch (e) {
-      debugPrint('Failed to load completed missions from Firestore: $e');
+    } catch (e, stackTrace) {
+      debugPrint('');
+      debugPrint('❌❌❌ [FATAL_ERROR] ❌❌❌');
+      debugPrint('완료 미션 조회 중 치명적 에러 발생!');
+      debugPrint('에러: $e');
+      debugPrint('스택 트레이스: $stackTrace');
+      debugPrint('');
       return <MissionCard>[];
     }
   }
