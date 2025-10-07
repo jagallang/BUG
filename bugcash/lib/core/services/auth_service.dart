@@ -1,6 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// v2.53.0: 지갑 자동 생성
+import '../../features/wallet/domain/usecases/wallet_service.dart';
+import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 
 /// Current user service to get authenticated user ID
 class CurrentUserService {
@@ -92,7 +95,9 @@ class CurrentUserService {
     }
   }
   
+  // v2.53.0: 회원가입 시 지갑 자동 생성
   static Future<void> createUserProfile(String userId, Map<String, dynamic> userData) async {
+    // 1. 사용자 프로필 생성
     await FirebaseFirestore.instance
         .collection('users')
         .doc(userId)
@@ -102,6 +107,17 @@ class CurrentUserService {
           'createdAt': FieldValue.serverTimestamp(),
           'updatedAt': FieldValue.serverTimestamp(),
         });
+
+    // 2. 지갑 자동 생성
+    try {
+      final walletRepository = WalletRepositoryImpl();
+      final walletService = WalletService(walletRepository);
+      await walletService.createWalletForNewUser(userId);
+      print('✅ 지갑 생성 완료: userId=$userId');
+    } catch (e) {
+      print('⚠️ 지갑 생성 실패: $e');
+      // 지갑 생성 실패해도 회원가입은 계속 진행
+    }
   }
   
   static Future<void> updateUserProfile(String userId, Map<String, dynamic> userData) async {
