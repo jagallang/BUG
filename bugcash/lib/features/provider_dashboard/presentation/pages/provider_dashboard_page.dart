@@ -88,7 +88,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     final List<BottomNavigationBarItem> navigationItems = [
       const BottomNavigationBarItem(
         icon: Icon(Icons.dashboard),
-        label: '대시보드',
+        label: '사용안내',
       ),
       const BottomNavigationBarItem(
         icon: Icon(Icons.apps),
