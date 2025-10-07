@@ -398,12 +398,14 @@ class HybridAuthService {
 
       final data = doc.data()!;
       final now = DateTime.now();
+      final userType = _parseUserType(data['userType'] ?? 'tester');
       return UserEntity(
         uid: uid,
         email: data['email'] ?? '',
         displayName: data['displayName'] ?? '',
         photoUrl: data['photoUrl'],
-        userType: _parseUserType(data['userType'] ?? 'tester'),
+        primaryRole: userType,
+        roles: [userType],
         country: data['country'] ?? 'KR',
         timezone: data['timezone'] ?? 'Asia/Seoul',
         createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? now,
@@ -440,7 +442,8 @@ class HybridAuthService {
         email: testAccount.email,
         displayName: testAccount.displayName,
         photoUrl: null,
-        userType: testAccount.userType,
+        primaryRole: testAccount.userType,
+        roles: [testAccount.userType],
         country: 'KR',
         timezone: 'Asia/Seoul',
         createdAt: now.subtract(const Duration(days: 30)),
