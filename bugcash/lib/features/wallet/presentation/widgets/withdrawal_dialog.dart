@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/wallet_entity.dart';
 import '../../domain/usecases/wallet_service.dart';
 import '../../data/repositories/wallet_repository_impl.dart';
+import '../../../admin/data/providers/platform_settings_provider.dart';
 
 /// 출금 다이얼로그
 /// - 출금 금액 입력
@@ -31,23 +32,43 @@ class _WithdrawalDialogState extends ConsumerState<WithdrawalDialog> {
   final _accountHolderController = TextEditingController();
 
   bool _isLoading = false;
+  Map<String, dynamic>? _withdrawalSettings;
 
-  // 최소 출금 금액
-  static const int MIN_WITHDRAWAL_AMOUNT = 10000;
-
-  // 출금 수수료 (3%)
-  static const double WITHDRAWAL_FEE_RATE = 0.03;
+  // 동적 설정값 (platform_settings에서 로드)
+  int get _minWithdrawalAmount => _withdrawalSettings?['minAmount'] ?? 30000;
+  int get _allowedUnits => _withdrawalSettings?['allowedUnits'] ?? 10000;
+  double get _feeRate => (_withdrawalSettings?['feeRate'] ?? 0.18).toDouble();
 
   int get _withdrawalAmount {
     return int.tryParse(_amountController.text.replaceAll(',', '')) ?? 0;
   }
 
   int get _withdrawalFee {
-    return (_withdrawalAmount * WITHDRAWAL_FEE_RATE).round();
+    return (_withdrawalAmount * _feeRate).round();
   }
 
   int get _finalAmount {
     return _withdrawalAmount - _withdrawalFee;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWithdrawalSettings();
+  }
+
+  Future<void> _loadWithdrawalSettings() async {
+    try {
+      final settings = await ref.read(withdrawalSettingsProvider.future);
+      if (mounted) {
+        setState(() {
+          _withdrawalSettings = settings;
+        });
+        print('✅ 출금 설정 로드 완료: 최소 ${_minWithdrawalAmount}P, 수수료 ${(_feeRate * 100).toInt()}%');
+      }
+    } catch (e) {
+      print('❌ 출금 설정 로드 실패: $e (기본값 사용)');
+    }
   }
 
   @override
@@ -125,8 +146,12 @@ class _WithdrawalDialogState extends ConsumerState<WithdrawalDialog> {
                       return '출금 금액을 입력하세요';
                     }
                     final amount = int.tryParse(value) ?? 0;
-                    if (amount < MIN_WITHDRAWAL_AMOUNT) {
-                      return '최소 출금 금액은 ${_formatAmount(MIN_WITHDRAWAL_AMOUNT)}입니다';
+                    if (amount < _minWithdrawalAmount) {
+                      return '최소 출금 금액은 ${_formatAmount(_minWithdrawalAmount)}입니다';
+                    }
+                    // 출금 단위 검증
+                    if (amount % _allowedUnits != 0) {
+                      return '${_formatAmount(_allowedUnits)} 단위로 입력해주세요';
                     }
                     if (amount > widget.wallet.balance) {
                       return '출금 가능 금액을 초과했습니다';
@@ -149,7 +174,7 @@ class _WithdrawalDialogState extends ConsumerState<WithdrawalDialog> {
                         _buildAmountRow('출금 요청', _withdrawalAmount),
                         SizedBox(height: 8.h),
                         _buildAmountRow(
-                          '수수료 (3%)',
+                          '수수료 (${(_feeRate * 100).toInt()}%)',
                           _withdrawalFee,
                           color: Colors.red,
                         ),
