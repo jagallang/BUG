@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/exceptions/wallet_exceptions.dart';
 import '../repositories/wallet_repository.dart';
 import '../entities/transaction_entity.dart';
@@ -13,14 +15,14 @@ class WalletService {
       : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// 포인트 충전 (공급자)
-  /// 중복 결제 방지 로직 포함
+  /// Cloud Function을 통한 서버 검증
   Future<void> chargePoints(
     String userId,
     int amount,
     String description, {
     Map<String, dynamic>? metadata,
   }) async {
-    // 금액 유효성 검증
+    // 금액 유효성 검증 (클라이언트 1차 검증)
     if (amount < 1000) {
       throw InvalidAmountException(
         amount: amount,
@@ -29,32 +31,63 @@ class WalletService {
       );
     }
 
-    // 중복 결제 체크 (orderId가 있는 경우)
-    final orderId = metadata?['orderId'] as String?;
-    if (orderId != null && !orderId.startsWith('mock_')) {
-      // Mock 결제는 중복 체크 제외
-      final existingTx = await _firestore
-          .collection('transactions')
-          .where('metadata.orderId', isEqualTo: orderId)
-          .where('status', isEqualTo: TransactionStatus.completed.name)
-          .limit(1)
-          .get();
-
-      if (existingTx.docs.isNotEmpty) {
-        throw DuplicatePaymentException(
-          orderId: orderId,
-          message: '이미 처리된 결제입니다',
-        );
-      }
+    if (amount > 10000000) {
+      throw InvalidAmountException(
+        amount: amount,
+        maxAmount: 10000000,
+        message: '최대 10,000,000원까지 충전 가능합니다',
+      );
     }
 
-    await _repository.updateBalance(
-      userId,
-      amount,
-      TransactionType.charge,
-      description,
-      metadata: metadata,
-    );
+    try {
+      // Cloud Function 호출
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+      final callable = functions.httpsCallable('chargeWallet');
+
+      final result = await callable.call({
+        'userId': userId,
+        'amount': amount,
+        'description': description,
+        'metadata': metadata ?? {},
+      });
+
+      if (kDebugMode) {
+        print('✅ chargeWallet Cloud Function: ${result.data}');
+      }
+    } on FirebaseFunctionsException catch (e) {
+      if (kDebugMode) {
+        print('❌ chargeWallet failed: ${e.code} - ${e.message}');
+      }
+
+      // Firebase Functions Exception을 커스텀 Exception으로 변환
+      if (e.code == 'already-exists') {
+        throw DuplicatePaymentException(
+          message: e.message ?? '이미 처리된 결제입니다',
+        );
+      } else if (e.code == 'invalid-argument') {
+        throw InvalidAmountException(
+          amount: amount,
+          message: e.message ?? '유효하지 않은 금액입니다',
+        );
+      } else if (e.code == 'permission-denied') {
+        throw TransactionFailedException(
+          message: e.message ?? '권한이 없습니다',
+        );
+      }
+
+      throw TransactionFailedException(
+        message: e.message ?? '거래 처리 중 오류가 발생했습니다',
+        originalError: e,
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('❌ Unexpected error: $e');
+      }
+      throw TransactionFailedException(
+        message: '거래 처리 중 오류가 발생했습니다',
+        originalError: e,
+      );
+    }
   }
 
   /// 포인트 차감 (공급자 - 앱 등록 시)

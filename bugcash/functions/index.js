@@ -799,6 +799,116 @@ exports.onTransactionCreated = onDocumentUpdated(
     },
 );
 
+/**
+ * Charge Wallet (포인트 충전)
+ * 서버 검증을 통한 안전한 지갑 잔액 업데이트
+ */
+exports.chargeWallet = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {userId, amount, description, metadata} = request.data;
+  const uid = request.auth?.uid;
+
+  // 1. 인증 확인
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // 2. 본인 지갑만 충전 가능
+  if (uid !== userId) {
+    throw new HttpsError("permission-denied", "Can only charge own wallet");
+  }
+
+  // 3. 금액 검증
+  if (!amount || typeof amount !== "number" || amount < 1000) {
+    throw new HttpsError(
+        "invalid-argument",
+        "Amount must be at least 1000",
+    );
+  }
+
+  if (amount > 10000000) {
+    throw new HttpsError(
+        "invalid-argument",
+        "Amount must not exceed 10,000,000",
+    );
+  }
+
+  // 4. orderId 중복 체크 (Mock 제외)
+  const orderId = metadata?.orderId;
+  if (orderId && !orderId.startsWith("mock_")) {
+    const existingTx = await getFirestore()
+        .collection("transactions")
+        .where("metadata.orderId", "==", orderId)
+        .where("status", "==", "completed")
+        .limit(1)
+        .get();
+
+    if (!existingTx.empty) {
+      throw new HttpsError(
+          "already-exists",
+          "Payment already processed (duplicate orderId)",
+      );
+    }
+  }
+
+  try {
+    // 5. Firestore Transaction으로 원자적 업데이트
+    await getFirestore().runTransaction(async (transaction) => {
+      const walletRef = getFirestore().collection("wallets").doc(userId);
+      const walletDoc = await transaction.get(walletRef);
+
+      // 지갑이 없으면 자동 생성
+      if (!walletDoc.exists) {
+        transaction.set(walletRef, {
+          userId: userId,
+          balance: 0,
+          totalCharged: 0,
+          totalSpent: 0,
+          totalEarned: 0,
+          totalWithdrawn: 0,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+
+      const currentBalance = walletDoc.exists ? walletDoc.data().balance : 0;
+      const newBalance = currentBalance + amount;
+
+      // 지갑 업데이트
+      transaction.update(walletRef, {
+        balance: newBalance,
+        totalCharged: FieldValue.increment(amount),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 거래 내역 생성
+      const transactionRef = getFirestore().collection("transactions").doc();
+      transaction.set(transactionRef, {
+        userId: userId,
+        type: "charge",
+        amount: amount,
+        status: "completed",
+        description: description || "포인트 충전",
+        metadata: metadata || {},
+        createdAt: FieldValue.serverTimestamp(),
+        completedAt: FieldValue.serverTimestamp(),
+      });
+
+      console.log(`Wallet charged: userId=${userId}, amount=${amount}`);
+    });
+
+    return {
+      success: true,
+      message: "Wallet charged successfully",
+    };
+  } catch (error) {
+    console.error("Error charging wallet:", error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError("internal", "Failed to charge wallet");
+  }
+});
+
 // Import migration functions
 const migration = require('./migration.js');
 exports.migrateUserOnWrite = migration.migrateUserOnWrite;

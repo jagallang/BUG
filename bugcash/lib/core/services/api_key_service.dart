@@ -35,28 +35,19 @@ class ApiKeyService {
     String? envKey;
     if (kIsWeb) {
       envKey = dotenv.env['FIREBASE_WEB_API_KEY'];
-      if (kDebugMode) {
-        debugPrint('🔑 Web API Key loaded: ${envKey?.substring(0, 10)}...');
-      }
     } else {
       // 모바일 플랫폼의 경우 안드로이드 키 사용
       envKey = dotenv.env['FIREBASE_ANDROID_API_KEY'];
-      if (kDebugMode) {
-        debugPrint('🔑 Android API Key loaded: ${envKey?.substring(0, 10)}...');
-      }
     }
 
     // 3. 환경변수에서 키를 찾을 수 없으면 플레이스홀더 반환
     if (envKey == null || envKey.isEmpty || envKey.contains('your_') || envKey.contains('_key_here')) {
       if (kDebugMode) {
-        debugPrint('❌ Invalid API key detected, using fallback: $envKey');
+        debugPrint('❌ Invalid API key detected, using fallback');
       }
       return 'your_firebase_api_key_here';
     }
 
-    if (kDebugMode) {
-      debugPrint('✅ Valid API key found: ${envKey.substring(0, 10)}...');
-    }
     return envKey;
   }
 
