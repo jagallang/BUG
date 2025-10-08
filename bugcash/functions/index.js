@@ -909,6 +909,256 @@ exports.chargeWallet = onCall({
   }
 });
 
+/**
+ * suspendUser: 사용자 계정 일시정지/해제 (v2.58.0)
+ * Only admins can suspend/unsuspend user accounts
+ */
+exports.suspendUser = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {userId, suspend, reason, durationDays} = request.data;
+  const adminUid = request.auth?.uid;
+
+  // 1. Authentication check
+  if (!adminUid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // 2. Admin check
+  const isAdminUser = await isAdmin(adminUid);
+  if (!isAdminUser) {
+    throw new HttpsError("permission-denied", "Only admins can suspend users");
+  }
+
+  // 3. Validation
+  if (!userId) {
+    throw new HttpsError("invalid-argument", "User ID is required");
+  }
+
+  if (suspend === undefined || typeof suspend !== "boolean") {
+    throw new HttpsError("invalid-argument", "Suspend flag must be boolean");
+  }
+
+  // 관리자 자신을 정지할 수 없음
+  if (userId === adminUid) {
+    throw new HttpsError("permission-denied", "Cannot suspend your own account");
+  }
+
+  try {
+    const userRef = getFirestore().collection("users").doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      throw new HttpsError("not-found", "User not found");
+    }
+
+    const updateData = {
+      updatedAt: FieldValue.serverTimestamp(),
+    };
+
+    if (suspend) {
+      // 계정 정지
+      const suspendUntil = durationDays && durationDays > 0
+          ? new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000)
+          : null; // null = 영구 정지
+
+      updateData.isSuspended = true;
+      updateData.suspendedAt = FieldValue.serverTimestamp();
+      updateData.suspendedBy = adminUid;
+      updateData.suspendReason = reason || "No reason provided";
+      if (suspendUntil) {
+        updateData.suspendUntil = suspendUntil;
+      }
+
+      console.log(`🔴 Admin ${adminUid} suspended user ${userId} - ` +
+                  `Reason: ${reason} - Duration: ${durationDays ? durationDays + " days" : "permanent"}`);
+    } else {
+      // 계정 정지 해제
+      updateData.isSuspended = false;
+      updateData.suspendedAt = null;
+      updateData.suspendedBy = null;
+      updateData.suspendReason = null;
+      updateData.suspendUntil = null;
+
+      console.log(`✅ Admin ${adminUid} unsuspended user ${userId}`);
+    }
+
+    await userRef.update(updateData);
+
+    return {
+      success: true,
+      message: suspend ?
+        `User ${userId} has been suspended` :
+        `User ${userId} has been unsuspended`,
+      userId: userId,
+      isSuspended: suspend,
+    };
+  } catch (error) {
+    console.error("Error suspending/unsuspending user:", error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError("internal", "Failed to suspend/unsuspend user");
+  }
+});
+
+/**
+ * adjustUserPoints: 관리자가 사용자 포인트/지갑 잔액 조정 (v2.58.0)
+ * Admin can grant, deduct, or reset user points and wallet balance
+ */
+exports.adjustUserPoints = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {userId, adjustmentType, amount, reason} = request.data;
+  const adminUid = request.auth?.uid;
+
+  // 1. Authentication check
+  if (!adminUid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // 2. Admin check
+  const isAdminUser = await isAdmin(adminUid);
+  if (!isAdminUser) {
+    throw new HttpsError("permission-denied", "Only admins can adjust user points");
+  }
+
+  // 3. Validation
+  if (!userId) {
+    throw new HttpsError("invalid-argument", "User ID is required");
+  }
+
+  if (!adjustmentType || !["grant", "deduct", "reset"].includes(adjustmentType)) {
+    throw new HttpsError("invalid-argument",
+        "Adjustment type must be 'grant', 'deduct', or 'reset'");
+  }
+
+  if (adjustmentType !== "reset") {
+    if (!amount || typeof amount !== "number" || amount <= 0) {
+      throw new HttpsError("invalid-argument",
+          "Amount must be a positive number for grant/deduct");
+    }
+  }
+
+  try {
+    const userRef = getFirestore().collection("users").doc(userId);
+    const walletRef = getFirestore().collection("wallets").doc(userId);
+
+    await getFirestore().runTransaction(async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      const walletDoc = await transaction.get(walletRef);
+
+      if (!userDoc.exists) {
+        throw new HttpsError("not-found", "User not found");
+      }
+
+      const userData = userDoc.data();
+      const currentPoints = userData.points || 0;
+
+      // 지갑이 없으면 생성
+      if (!walletDoc.exists) {
+        transaction.set(walletRef, {
+          userId: userId,
+          balance: 0,
+          totalCharged: 0,
+          totalEarned: 0,
+          totalSpent: 0,
+          totalWithdrawn: 0,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+
+      const walletData = walletDoc.exists ? walletDoc.data() : {balance: 0};
+      const currentBalance = walletData.balance || 0;
+
+      let newPoints = currentPoints;
+      let newBalance = currentBalance;
+      let walletUpdate = {};
+      let logMessage = "";
+
+      switch (adjustmentType) {
+        case "grant":
+          // 포인트 지급
+          newPoints = currentPoints + amount;
+          newBalance = currentBalance + amount;
+          walletUpdate = {
+            balance: newBalance,
+            totalEarned: FieldValue.increment(amount),
+            updatedAt: FieldValue.serverTimestamp(),
+          };
+          logMessage = `Admin granted ${amount}P - Reason: ${reason || "No reason"}`;
+          break;
+
+        case "deduct":
+          // 포인트 차감
+          newPoints = Math.max(0, currentPoints - amount);
+          newBalance = Math.max(0, currentBalance - amount);
+          walletUpdate = {
+            balance: newBalance,
+            totalSpent: FieldValue.increment(amount),
+            updatedAt: FieldValue.serverTimestamp(),
+          };
+          logMessage = `Admin deducted ${amount}P - Reason: ${reason || "No reason"}`;
+          break;
+
+        case "reset":
+          // 포인트 리셋 (0으로 초기화)
+          newPoints = 0;
+          newBalance = 0;
+          walletUpdate = {
+            balance: 0,
+            updatedAt: FieldValue.serverTimestamp(),
+          };
+          logMessage = `Admin reset points to 0 - Reason: ${reason || "No reason"}`;
+          break;
+      }
+
+      // User points 업데이트
+      transaction.update(userRef, {
+        points: newPoints,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // Wallet balance 업데이트
+      transaction.update(walletRef, walletUpdate);
+
+      // 거래 내역 기록 (관리자 조정)
+      const transactionRef = getFirestore().collection("transactions").doc();
+      transaction.set(transactionRef, {
+        userId: userId,
+        type: "admin_adjustment",
+        amount: adjustmentType === "reset" ? currentBalance : amount,
+        adjustmentType: adjustmentType,
+        status: "completed",
+        description: `관리자 포인트 조정: ${adjustmentType}`,
+        metadata: {
+          adminId: adminUid,
+          reason: reason || "No reason provided",
+          previousPoints: currentPoints,
+          newPoints: newPoints,
+          previousBalance: currentBalance,
+          newBalance: newBalance,
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        completedAt: FieldValue.serverTimestamp(),
+      });
+
+      console.log(`💰 ${logMessage} - User: ${userId} - Admin: ${adminUid}`);
+    });
+
+    return {
+      success: true,
+      message: `User ${userId} points adjusted successfully`,
+      userId: userId,
+      adjustmentType: adjustmentType,
+      amount: adjustmentType === "reset" ? null : amount,
+    };
+  } catch (error) {
+    console.error("Error adjusting user points:", error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError("internal", "Failed to adjust user points");
+  }
+});
+
 // Import migration functions
 const migration = require('./migration.js');
 exports.migrateUserOnWrite = migration.migrateUserOnWrite;

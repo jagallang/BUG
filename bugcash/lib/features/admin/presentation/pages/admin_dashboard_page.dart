@@ -1063,19 +1063,24 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                       DataColumn(label: Text('이름')),
                       DataColumn(label: Text('이메일')),
                       DataColumn(label: Text('역할')),
+                      DataColumn(label: Text('포인트')),
                       DataColumn(label: Text('가입일')),
                       DataColumn(label: Text('상태')),
+                      DataColumn(label: Text('액션')),
                     ],
                     rows: snapshot.data!.docs.map((doc) {
                       final data = doc.data() as Map<String, dynamic>;
+                      final userId = doc.id;
                       final createdAt = data['createdAt'] as Timestamp?;
                       final dateString = createdAt != null
                           ? DateFormat('yyyy-MM-dd').format(createdAt.toDate())
                           : '미상';
+                      final points = data['points'] ?? 0;
+                      final isSuspended = data['isSuspended'] ?? false;
 
                       return DataRow(
                         cells: [
-                          DataCell(Text(data['name'] ?? 'N/A')),
+                          DataCell(Text(data['displayName'] ?? data['name'] ?? 'N/A')),
                           DataCell(Text(data['email'] ?? 'N/A')),
                           DataCell(
                             Container(
@@ -1084,11 +1089,11 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                                 vertical: 4.h,
                               ),
                               decoration: BoxDecoration(
-                                color: _getRoleColor(data['role'] ?? 'tester'),
+                                color: _getRoleColor(data['role'] ?? data['primaryRole'] ?? 'tester'),
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
                               child: Text(
-                                _getRoleText(data['role'] ?? 'tester'),
+                                _getRoleText(data['role'] ?? data['primaryRole'] ?? 'tester'),
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 12,
@@ -1096,12 +1101,35 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                               ),
                             ),
                           ),
+                          DataCell(Text('${NumberFormat('#,###').format(points)}P')),
                           DataCell(Text(dateString)),
                           DataCell(
-                            Icon(
-                              Icons.check_circle,
-                              color: Colors.green,
-                              size: 16.sp,
+                            isSuspended
+                                ? Icon(Icons.block, color: Colors.red, size: 16.sp)
+                                : Icon(Icons.check_circle, color: Colors.green, size: 16.sp),
+                          ),
+                          DataCell(
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // 포인트 조정 버튼
+                                IconButton(
+                                  icon: const Icon(Icons.monetization_on, size: 18),
+                                  color: Colors.blue,
+                                  onPressed: () => _showAdjustPointsDialog(userId, data),
+                                  tooltip: '포인트 조정',
+                                ),
+                                // 계정 정지/해제 버튼
+                                IconButton(
+                                  icon: Icon(
+                                    isSuspended ? Icons.lock_open : Icons.block,
+                                    size: 18,
+                                  ),
+                                  color: isSuspended ? Colors.green : Colors.red,
+                                  onPressed: () => _showSuspendDialog(userId, data),
+                                  tooltip: isSuspended ? '정지 해제' : '계정 정지',
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -1934,5 +1962,271 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ],
       ),
     );
+  }
+
+  // v2.58.0: 사용자 계정 정지/해제 다이얼로그
+  void _showSuspendDialog(String userId, Map<String, dynamic> userData) {
+    final isSuspended = userData['isSuspended'] ?? false;
+    final displayName = userData['displayName'] ?? userData['name'] ?? 'Unknown';
+    final email = userData['email'] ?? '';
+
+    if (isSuspended) {
+      // 정지 해제 확인
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('계정 정지 해제'),
+          content: Text('$displayName ($email)\n\n계정 정지를 해제하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _suspendUser(userId, suspend: false);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+              child: const Text('정지 해제'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // 정지 설정
+      final reasonController = TextEditingController();
+      int durationDays = 7; // 기본 7일
+
+      showDialog(
+        context: context,
+        builder: (context) => StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            title: const Text('계정 정지'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('$displayName ($email)\n', style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 16),
+                const Text('정지 기간:'),
+                DropdownButton<int>(
+                  value: durationDays,
+                  items: const [
+                    DropdownMenuItem(value: 1, child: Text('1일')),
+                    DropdownMenuItem(value: 7, child: Text('7일')),
+                    DropdownMenuItem(value: 30, child: Text('30일')),
+                    DropdownMenuItem(value: 0, child: Text('영구')),
+                  ],
+                  onChanged: (value) => setState(() => durationDays = value!),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: reasonController,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: '정지 사유',
+                    hintText: '계정 정지 사유를 입력하세요...',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('취소'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _suspendUser(
+                    userId,
+                    suspend: true,
+                    reason: reasonController.text,
+                    durationDays: durationDays,
+                  );
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: const Text('계정 정지'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+  }
+
+  // v2.58.0: 사용자 포인트 조정 다이얼로그
+  void _showAdjustPointsDialog(String userId, Map<String, dynamic> userData) {
+    final displayName = userData['displayName'] ?? userData['name'] ?? 'Unknown';
+    final email = userData['email'] ?? '';
+    final currentPoints = userData['points'] ?? 0;
+
+    final reasonController = TextEditingController();
+    final amountController = TextEditingController();
+    String adjustmentType = 'grant'; // grant, deduct, reset
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('포인트 조정'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('$displayName ($email)', style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('현재 포인트: ${NumberFormat('#,###').format(currentPoints)}P\n'),
+              const SizedBox(height: 16),
+              const Text('조정 유형:'),
+              DropdownButton<String>(
+                value: adjustmentType,
+                items: const [
+                  DropdownMenuItem(value: 'grant', child: Text('💰 포인트 지급')),
+                  DropdownMenuItem(value: 'deduct', child: Text('➖ 포인트 차감')),
+                  DropdownMenuItem(value: 'reset', child: Text('🔄 포인트 리셋 (0으로)')),
+                ],
+                onChanged: (value) => setState(() => adjustmentType = value!),
+              ),
+              const SizedBox(height: 16),
+              if (adjustmentType != 'reset')
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: '포인트',
+                    hintText: '금액을 입력하세요',
+                    border: OutlineInputBorder(),
+                    suffixText: 'P',
+                  ),
+                ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: '사유',
+                  hintText: '조정 사유를 입력하세요...',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final amount = adjustmentType == 'reset'
+                    ? 0
+                    : int.tryParse(amountController.text) ?? 0;
+
+                if (adjustmentType != 'reset' && amount <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('올바른 금액을 입력하세요')),
+                  );
+                  return;
+                }
+
+                Navigator.of(context).pop();
+                _adjustUserPoints(
+                  userId,
+                  adjustmentType: adjustmentType,
+                  amount: amount,
+                  reason: reasonController.text,
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: adjustmentType == 'grant'
+                    ? Colors.green
+                    : adjustmentType == 'deduct'
+                        ? Colors.orange
+                        : Colors.grey,
+              ),
+              child: const Text('조정 실행'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // v2.58.0: Cloud Function - suspendUser 호출
+  Future<void> _suspendUser(
+    String userId, {
+    required bool suspend,
+    String? reason,
+    int? durationDays,
+  }) async {
+    _showLoadingDialog('처리 중...');
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+      final callable = functions.httpsCallable('suspendUser');
+
+      final result = await callable.call({
+        'userId': userId,
+        'suspend': suspend,
+        if (reason != null) 'reason': reason,
+        if (durationDays != null && durationDays > 0) 'durationDays': durationDays,
+      });
+
+      if (mounted) {
+        Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(suspend ? '✅ 계정이 정지되었습니다' : '✅ 계정 정지가 해제되었습니다'),
+            backgroundColor: suspend ? Colors.red : Colors.green,
+          ),
+        );
+        setState(() {}); // 목록 새로고침
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        _showErrorDialog('계정 정지 처리 실패: $e');
+      }
+    }
+  }
+
+  // v2.58.0: Cloud Function - adjustUserPoints 호출
+  Future<void> _adjustUserPoints(
+    String userId, {
+    required String adjustmentType,
+    required int amount,
+    String? reason,
+  }) async {
+    _showLoadingDialog('포인트 조정 중...');
+
+    try {
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+      final callable = functions.httpsCallable('adjustUserPoints');
+
+      final result = await callable.call({
+        'userId': userId,
+        'adjustmentType': adjustmentType,
+        if (adjustmentType != 'reset') 'amount': amount,
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      });
+
+      if (mounted) {
+        Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('✅ 포인트가 ${adjustmentType == 'grant' ? '지급' : adjustmentType == 'deduct' ? '차감' : '리셋'}되었습니다'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        setState(() {}); // 목록 새로고침
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.of(context).pop();
+        _showErrorDialog('포인트 조정 실패: $e');
+      }
+    }
   }
 }

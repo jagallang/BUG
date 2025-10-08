@@ -27,7 +27,13 @@ class UserEntity extends Equatable {
   final int level;
   final int completedMissions;
   final int points;
-  
+  // v2.58.0: 계정 정지 기능
+  final bool isSuspended;
+  final DateTime? suspendedAt;
+  final String? suspendedBy;
+  final String? suspendReason;
+  final DateTime? suspendUntil; // null = 영구 정지
+
   const UserEntity({
     required this.uid,
     required this.email,
@@ -49,6 +55,11 @@ class UserEntity extends Equatable {
     this.level = 1,
     this.completedMissions = 0,
     this.points = 0,
+    this.isSuspended = false,
+    this.suspendedAt,
+    this.suspendedBy,
+    this.suspendReason,
+    this.suspendUntil,
   });
 
   UserEntity copyWith({
@@ -72,6 +83,11 @@ class UserEntity extends Equatable {
     int? level,
     int? completedMissions,
     int? points,
+    bool? isSuspended,
+    DateTime? suspendedAt,
+    String? suspendedBy,
+    String? suspendReason,
+    DateTime? suspendUntil,
   }) {
     return UserEntity(
       uid: uid ?? this.uid,
@@ -94,6 +110,11 @@ class UserEntity extends Equatable {
       level: level ?? this.level,
       completedMissions: completedMissions ?? this.completedMissions,
       points: points ?? this.points,
+      isSuspended: isSuspended ?? this.isSuspended,
+      suspendedAt: suspendedAt ?? this.suspendedAt,
+      suspendedBy: suspendedBy ?? this.suspendedBy,
+      suspendReason: suspendReason ?? this.suspendReason,
+      suspendUntil: suspendUntil ?? this.suspendUntil,
     );
   }
 
@@ -118,6 +139,11 @@ class UserEntity extends Equatable {
       'level': level,
       'completedMissions': completedMissions,
       'points': points,
+      'isSuspended': isSuspended,
+      'suspendedAt': suspendedAt != null ? Timestamp.fromDate(suspendedAt!) : null,
+      'suspendedBy': suspendedBy,
+      'suspendReason': suspendReason,
+      'suspendUntil': suspendUntil != null ? Timestamp.fromDate(suspendUntil!) : null,
     };
   }
 
@@ -205,6 +231,15 @@ class UserEntity extends Equatable {
       level: data['level'] ?? 1,
       completedMissions: data['completedMissions'] ?? 0,
       points: data['points'] ?? 0,
+      isSuspended: data['isSuspended'] ?? false,
+      suspendedAt: data['suspendedAt'] != null
+          ? (data['suspendedAt'] as Timestamp).toDate()
+          : null,
+      suspendedBy: data['suspendedBy'],
+      suspendReason: data['suspendReason'],
+      suspendUntil: data['suspendUntil'] != null
+          ? (data['suspendUntil'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -224,6 +259,13 @@ class UserEntity extends Equatable {
   // 기존 API 호환성을 위한 getter (deprecated)
   @Deprecated('Use primaryRole instead')
   UserType get userType => primaryRole;
+
+  // v2.58.0: 계정 정지 헬퍼 메서드
+  bool get isCurrentlySuspended {
+    if (!isSuspended) return false;
+    if (suspendUntil == null) return true; // 영구 정지
+    return DateTime.now().isBefore(suspendUntil!); // 정지 기간 내
+  }
 
   @override
   List<Object?> get props => [
@@ -247,6 +289,11 @@ class UserEntity extends Equatable {
     level,
     completedMissions,
     points,
+    isSuspended,
+    suspendedAt,
+    suspendedBy,
+    suspendReason,
+    suspendUntil,
   ];
 }
 
