@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../data/services/firebase_auth_service.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../domain/models/user_consent.dart';
 
 final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
   return FirebaseAuthService();
@@ -147,6 +148,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required UserType userType,
     required String country,
     String? phoneNumber,
+    required UserConsent consent,
   }) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
@@ -158,6 +160,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         userType: userType,
         country: country,
         phoneNumber: phoneNumber,
+        consent: consent,
       );
 
       if (userCredential.user != null) {

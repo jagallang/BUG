@@ -7,6 +7,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/type_converter.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../domain/models/user_consent.dart';
 
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -188,6 +189,7 @@ class FirebaseAuthService {
     required UserType userType,
     required String country,
     String? phoneNumber,
+    required UserConsent consent,
   }) async {
     try {
       // Create authentication account
@@ -241,8 +243,17 @@ class FirebaseAuthService {
             });
           }
 
+          // 동의 정보 저장
+          await _firestore
+              .collection('users')
+              .doc(credential.user!.uid)
+              .collection('consents')
+              .doc('signup')
+              .set(consent.toFirestore());
+
           if (kDebugMode) {
             debugPrint('✅ 회원가입 - Firestore 문서 생성 성공');
+            debugPrint('✅ 회원가입 - 동의 정보 저장 완료');
           }
 
           // 회원가입 보너스 자동 지급

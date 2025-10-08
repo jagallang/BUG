@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../domain/models/user_consent.dart';
 import '../providers/auth_provider.dart';
+import 'terms_agreement_page.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -22,7 +24,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   // 모든 신규 사용자는 기본적으로 테스터로 가입
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _agreeToTerms = false;
+  UserConsent? _userConsent;
 
   @override
   void dispose() {
@@ -35,16 +37,34 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     super.dispose();
   }
 
+  /// 약관 동의 페이지 열기
+  Future<void> _openTermsAgreementPage() async {
+    final consent = await Navigator.push<UserConsent>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const TermsAgreementPage(),
+      ),
+    );
+
+    if (consent != null) {
+      setState(() {
+        _userConsent = consent;
+      });
+    }
+  }
+
   Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate() || !_agreeToTerms) {
-      if (!_agreeToTerms) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('이용약관과 개인정보 처리방침에 동의해주세요.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    if (_userConsent == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('약관 동의가 필요합니다. 동의 버튼을 눌러주세요.'),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -58,6 +78,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         phoneNumber: _phoneController.text.trim().isEmpty
             ? null
             : _phoneController.text.trim(),
+        consent: _userConsent!,
       );
 
       if (mounted) {
@@ -284,46 +305,48 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
                 const SizedBox(height: 24),
 
-                // 이용약관 동의
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Checkbox(
-                      value: _agreeToTerms,
-                      onChanged: (value) => setState(() => _agreeToTerms = value ?? false),
+                // 약관 동의 버튼
+                Container(
+                  decoration: BoxDecoration(
+                    color: _userConsent != null ? Colors.green[50] : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _userConsent != null ? Colors.green : Colors.grey[300]!,
+                      width: 2,
                     ),
-                    Expanded(
-                      child: GestureDetector(
-                        onTap: () => setState(() => _agreeToTerms = !_agreeToTerms),
-                        child: RichText(
-                          text: TextSpan(
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            children: [
-                              const TextSpan(text: ''),
-                              TextSpan(
-                                text: '이용약관',
-                                style: TextStyle(
-                                  color: Theme.of(context).primaryColor,
-                                  fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                              const TextSpan(text: ' 및 '),
-                              TextSpan(
-                                text: '개인정보 처리방침',
-                                style: TextStyle(
-                                  color: Theme.of(context).primaryColor,
-                                  fontWeight: FontWeight.w600,
-                                  decoration: TextDecoration.underline,
-                                ),
-                              ),
-                              const TextSpan(text: '에 동의합니다.'),
-                            ],
-                          ),
-                        ),
+                  ),
+                  child: ListTile(
+                    leading: Icon(
+                      _userConsent != null ? Icons.check_circle : Icons.check_circle_outline,
+                      color: _userConsent != null ? Colors.green : Colors.grey,
+                      size: 32,
+                    ),
+                    title: Text(
+                      _userConsent != null ? '약관 동의 완료' : '약관 동의 필요',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: _userConsent != null ? Colors.green[700] : Colors.grey[700],
                       ),
                     ),
-                  ],
+                    subtitle: Text(
+                      _userConsent != null
+                          ? '필수 약관에 모두 동의하셨습니다.'
+                          : '회원가입을 위해 약관에 동의해주세요.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: _userConsent != null ? Colors.green[600] : Colors.grey[600],
+                      ),
+                    ),
+                    trailing: ElevatedButton(
+                      onPressed: _openTermsAgreementPage,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _userConsent != null ? Colors.green : Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      ),
+                      child: Text(_userConsent != null ? '재동의' : '동의하기'),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 32),
 

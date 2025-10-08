@@ -175,3 +175,30 @@ Dev App Server is now running.
 [debug] [2025-10-08T12:05:32.155Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
 [error] 
 [error] Error: Cannot start the Authentication Emulator without a project: run 'firebase init' or provide the --project flag
+[debug] [2025-10-08T16:00:50.534Z] ----------------------------------------------------------------------
+[debug] [2025-10-08T16:00:50.537Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase functions:list
+[debug] [2025-10-08T16:00:50.537Z] CLI Version:   14.7.0
+[debug] [2025-10-08T16:00:50.538Z] Platform:      darwin
+[debug] [2025-10-08T16:00:50.538Z] Node Version:  v20.19.2
+[debug] [2025-10-08T16:00:50.538Z] Time:          Thu Oct 09 2025 01:00:50 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-08T16:00:50.538Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: No currently active project.
+To run this command, you need to specify a project. You have two options:
+- Run this command with --project <alias_or_project_id>.
+- Set an active project by running firebase use --add, then rerun this command.
+To list all the Firebase projects to which you have access, run firebase projects:list.
+To learn about active projects for the CLI, visit https://firebase.google.com/docs/cli#project_aliases
+
+
+[debug] [2025-10-08T16:02:07.592Z] ----------------------------------------------------------------------
+[debug] [2025-10-08T16:02:07.593Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only functions:getPlatformSettings,functions:updatePlatformSettings
+[debug] [2025-10-08T16:02:07.594Z] CLI Version:   14.7.0
+[debug] [2025-10-08T16:02:07.594Z] Platform:      darwin
+[debug] [2025-10-08T16:02:07.594Z] Node Version:  v20.19.2
+[debug] [2025-10-08T16:02:07.594Z] Time:          Thu Oct 09 2025 01:02:07 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-08T16:02:07.594Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
