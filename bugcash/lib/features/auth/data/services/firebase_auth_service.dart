@@ -319,38 +319,11 @@ class FirebaseAuthService {
             .get();
 
         if (!userDoc.exists) {
-          // Create new user document for Google sign-in
-          await _firestore.collection('users').doc(userCredential.user!.uid).set({
-            'email': userCredential.user!.email,
-            'displayName': userCredential.user!.displayName ?? 'User',
-            'photoUrl': userCredential.user!.photoURL,
-            'userType': 'tester', // Default to tester for Google sign-in
-            'country': 'South Korea',
-            'timezone': 'Asia/Seoul',
-            'createdAt': FieldValue.serverTimestamp(),
-            'updatedAt': FieldValue.serverTimestamp(),
-            'lastLoginAt': FieldValue.serverTimestamp(),
-          });
-
-          // Google 로그인 신규 회원 보너스 지급
-          try {
-            if (kDebugMode) {
-              debugPrint('🎁 Google 로그인 신규 회원 보너스 지급 시작 - userId: ${userCredential.user!.uid}');
-            }
-
-            final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
-            final callable = functions.httpsCallable('grantSignupBonus');
-            final result = await callable.call({'userId': userCredential.user!.uid});
-
-            if (kDebugMode) {
-              debugPrint('✅ Google 로그인 신규 회원 보너스 지급 완료: ${result.data}');
-            }
-          } catch (e) {
-            if (kDebugMode) {
-              debugPrint('⚠️ Google 로그인 신규 회원 보너스 지급 실패: $e');
-            }
-            AppLogger.warning('Google signup bonus grant failed: $e', 'FirebaseAuthService');
-          }
+          // 신규 사용자 - 약관 동의가 필요하므로 사용자를 로그아웃하고 null 반환
+          // UI에서 약관 동의 후 completeGoogleSignUp 메서드로 재시도
+          await _auth.signOut();
+          await _googleSignIn.signOut();
+          return null;
         } else {
           // Update last login time
           await _firestore.collection('users').doc(userCredential.user!.uid).update({
@@ -363,6 +336,100 @@ class FirebaseAuthService {
     } catch (e) {
       AppLogger.error('Error during Google sign in', 'FirebaseAuthService', e);
       return null;
+    }
+  }
+
+  /// Google 로그인 완료 (약관 동의 후)
+  Future<UserCredential> completeGoogleSignUp({
+    required UserConsent consent,
+  }) async {
+    try {
+      // Google 로그인 재시도
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('Google 로그인이 취소되었습니다.');
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+
+      if (userCredential.user == null) {
+        throw Exception('Google 인증에 실패했습니다.');
+      }
+
+      if (kDebugMode) {
+        debugPrint('🔵 Google 회원가입 - Firestore 문서 생성 시작: ${userCredential.user!.uid}');
+      }
+
+      // users 컬렉션 문서 생성
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'uid': userCredential.user!.uid,
+        'email': userCredential.user!.email,
+        'displayName': userCredential.user!.displayName ?? 'User',
+        'photoUrl': userCredential.user!.photoURL,
+        'role': 'tester',
+        'userType': 'tester',
+        'country': 'South Korea',
+        'timezone': 'Asia/Seoul',
+        'phoneNumber': null,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'lastLoginAt': FieldValue.serverTimestamp(),
+      });
+
+      // testers 컬렉션 문서 생성
+      await _firestore.collection('testers').doc(userCredential.user!.uid).set({
+        'name': userCredential.user!.displayName ?? 'User',
+        'email': userCredential.user!.email,
+        'level': 'beginner',
+        'totalPoints': 0,
+        'completedMissions': 0,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // 동의 정보 저장
+      await _firestore
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .collection('consents')
+          .doc('signup')
+          .set(consent.toFirestore());
+
+      if (kDebugMode) {
+        debugPrint('✅ Google 회원가입 - Firestore 문서 생성 성공');
+        debugPrint('✅ Google 회원가입 - 동의 정보 저장 완료');
+      }
+
+      // 회원가입 보너스 자동 지급
+      try {
+        if (kDebugMode) {
+          debugPrint('🎁 Google 회원가입 보너스 지급 시작 - userId: ${userCredential.user!.uid}');
+        }
+
+        final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+        final callable = functions.httpsCallable('grantSignupBonus');
+        final result = await callable.call({'userId': userCredential.user!.uid});
+
+        if (kDebugMode) {
+          debugPrint('✅ Google 회원가입 보너스 지급 완료: ${result.data}');
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('⚠️ Google 회원가입 보너스 지급 실패: $e');
+          debugPrint('⚠️ 회원가입은 성공했으나 보너스 지급 중 오류 발생');
+        }
+        AppLogger.warning('Google signup bonus grant failed, but signup succeeded: $e', 'FirebaseAuthService');
+      }
+
+      return userCredential;
+    } catch (e) {
+      AppLogger.error('Error completing Google sign up', 'FirebaseAuthService', e);
+      rethrow;
     }
   }
 

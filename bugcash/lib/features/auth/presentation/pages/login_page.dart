@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/models/user_consent.dart';
 import '../providers/auth_provider.dart';
 import 'signup_page.dart';
+import 'terms_agreement_page.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -45,12 +47,60 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Future<void> _signInWithGoogle() async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Google 로그인은 현재 지원되지 않습니다.'),
-        backgroundColor: Colors.orange,
-      ),
-    );
+    try {
+      // 1단계: Google 로그인 시도
+      await ref.read(authProvider.notifier).signInWithGoogle();
+
+      if (!mounted) return;
+
+      // signInWithGoogle이 null을 반환하면 신규 사용자 (약관 동의 필요)
+      final authState = ref.read(authProvider);
+      if (authState.user == null && authState.errorMessage == null) {
+        // 2단계: 신규 사용자 - 약관 동의 페이지 표시
+        final consent = await Navigator.push<UserConsent>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const TermsAgreementPage(),
+          ),
+        );
+
+        if (consent == null) {
+          // 사용자가 약관 동의를 취소함
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Google 로그인이 취소되었습니다.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+          return;
+        }
+
+        // 3단계: 약관 동의 완료 후 회원가입 완료
+        await ref.read(authProvider.notifier).completeGoogleSignUp(consent: consent);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('🎉 Google 계정으로 가입이 완료되었습니다!\n가입 축하 보너스 5,000P가 지급되었습니다.'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
+      }
+      // 기존 사용자인 경우는 signInWithGoogle에서 자동으로 처리됨
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Google 로그인 실패: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
 

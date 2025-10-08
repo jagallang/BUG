@@ -238,6 +238,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Google 로그인 완료 (약관 동의 후)
+  Future<void> completeGoogleSignUp({
+    required UserConsent consent,
+  }) async {
+    state = state.copyWith(isLoading: true, errorMessage: null);
+
+    try {
+      final userCredential = await _authService.completeGoogleSignUp(
+        consent: consent,
+      );
+
+      if (userCredential.user != null) {
+        // Auth stream listener가 자동으로 사용자 데이터를 로드할 것이므로 여기서는 loading 상태만 해제
+        state = state.copyWith(isLoading: false);
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      );
+      rethrow;
+    }
+  }
+
   Future<void> sendPasswordResetEmail(String email) async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
