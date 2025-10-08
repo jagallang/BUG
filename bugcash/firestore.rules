@@ -103,6 +103,21 @@ service cloud.firestore {
 
       // 삭제: 관리자만 가능
       allow delete: if isAdmin();
+
+      // 동의 정보 서브컬렉션 (consents)
+      match /consents/{consentId} {
+        // 읽기: 본인만 가능, 관리자는 모든 동의 정보 조회 가능
+        allow read: if isUser(userId) || isAdmin();
+
+        // 생성: 본인만 가능 (회원가입 시)
+        allow create: if isUser(userId);
+
+        // 수정: 본인만 가능 (동의 변경 시)
+        allow update: if isUser(userId);
+
+        // 삭제: 관리자만 가능
+        allow delete: if isAdmin();
+      }
     }
 
     // ==============================================
