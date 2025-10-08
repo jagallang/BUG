@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
+import '../../../../core/exceptions/wallet_exceptions.dart';
 import '../../domain/entities/wallet_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../../domain/repositories/wallet_repository.dart';
@@ -57,41 +59,63 @@ class WalletRepositoryImpl implements WalletRepository {
     String description, {
     Map<String, dynamic>? metadata,
   }) async {
-    print('🔵 updateBalance 시작 - userId: $userId, amount: $amount, type: ${type.name}');
+    if (kDebugMode) {
+      print('🔵 updateBalance 시작 - userId: $userId, amount: $amount, type: ${type.name}');
+    }
 
     try {
       await _firestore.runTransaction((transaction) async {
-        print('🔵 Firestore Transaction 시작');
+        if (kDebugMode) {
+          print('🔵 Firestore Transaction 시작');
+        }
 
         final walletRef = _firestore.collection('wallets').doc(userId);
         final walletDoc = await transaction.get(walletRef);
 
-        print('🔵 Wallet 문서 조회 - exists: ${walletDoc.exists}');
+        if (kDebugMode) {
+          print('🔵 Wallet 문서 조회 - exists: ${walletDoc.exists}');
+        }
 
         // 지갑이 없으면 자동 생성 (legacy 사용자 대응)
         if (!walletDoc.exists) {
-          print('⚠️ Wallet not found. Auto-creating wallet for userId: $userId');
+          if (kDebugMode) {
+            print('⚠️ Wallet not found. Auto-creating wallet for userId: $userId');
+          }
           transaction.set(walletRef, WalletEntity.empty(userId).toFirestore());
-          print('✅ Wallet auto-created');
+          if (kDebugMode) {
+            print('✅ Wallet auto-created');
+          }
         }
 
         final wallet = walletDoc.exists
             ? WalletEntity.fromFirestore(userId, walletDoc.data()!)
             : WalletEntity.empty(userId);
-        print('🔵 현재 잔액: ${wallet.balance}');
+
+        if (kDebugMode) {
+          print('🔵 현재 잔액: ${wallet.balance}');
+        }
 
         final isCredit = type == TransactionType.charge || type == TransactionType.earn;
         final newBalance = isCredit ? wallet.balance + amount : wallet.balance - amount;
 
-        print('🔵 새 잔액: $newBalance');
+        if (kDebugMode) {
+          print('🔵 새 잔액: $newBalance');
+        }
 
         if (!isCredit && newBalance < 0) {
-          print('❌ Insufficient balance');
-          throw Exception('Insufficient balance');
+          if (kDebugMode) {
+            print('❌ Insufficient balance');
+          }
+          throw InsufficientBalanceException(
+            currentBalance: wallet.balance,
+            requiredAmount: amount,
+          );
         }
 
         // 지갑 업데이트
-        print('🔵 지갑 업데이트 중...');
+        if (kDebugMode) {
+          print('🔵 지갑 업데이트 중...');
+        }
         transaction.update(walletRef, {
           'balance': newBalance,
           'updatedAt': FieldValue.serverTimestamp(),
@@ -102,7 +126,9 @@ class WalletRepositoryImpl implements WalletRepository {
         });
 
         // 거래 내역 생성
-        print('🔵 거래 내역 생성 중...');
+        if (kDebugMode) {
+          print('🔵 거래 내역 생성 중...');
+        }
         final transactionRef = _firestore.collection('transactions').doc();
         transaction.set(
           transactionRef,
@@ -118,13 +144,19 @@ class WalletRepositoryImpl implements WalletRepository {
           },
         );
 
-        print('✅ Transaction.set 완료');
+        if (kDebugMode) {
+          print('✅ Transaction.set 완료');
+        }
       });
 
-      print('✅ updateBalance 완료');
+      if (kDebugMode) {
+        print('✅ updateBalance 완료');
+      }
     } catch (e, stackTrace) {
-      print('❌ updateBalance 실패: $e');
-      print('StackTrace: $stackTrace');
+      if (kDebugMode) {
+        print('❌ updateBalance 실패: $e');
+        print('StackTrace: $stackTrace');
+      }
       rethrow;
     }
   }

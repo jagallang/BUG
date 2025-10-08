@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/exceptions/wallet_exceptions.dart';
 import '../repositories/wallet_repository.dart';
 import '../entities/transaction_entity.dart';
 
@@ -5,17 +7,47 @@ import '../entities/transaction_entity.dart';
 /// Repository를 통해 포인트 충전/사용/적립/출금 처리
 class WalletService {
   final WalletRepository _repository;
+  final FirebaseFirestore _firestore;
 
-  WalletService(this._repository);
+  WalletService(this._repository, {FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
   /// 포인트 충전 (공급자)
-  /// TODO: 결제 모듈과 연동하여 실제 결제 완료 후 호출
+  /// 중복 결제 방지 로직 포함
   Future<void> chargePoints(
     String userId,
     int amount,
     String description, {
     Map<String, dynamic>? metadata,
   }) async {
+    // 금액 유효성 검증
+    if (amount < 1000) {
+      throw InvalidAmountException(
+        amount: amount,
+        minAmount: 1000,
+        message: '최소 1,000원 이상 충전해주세요',
+      );
+    }
+
+    // 중복 결제 체크 (orderId가 있는 경우)
+    final orderId = metadata?['orderId'] as String?;
+    if (orderId != null && !orderId.startsWith('mock_')) {
+      // Mock 결제는 중복 체크 제외
+      final existingTx = await _firestore
+          .collection('transactions')
+          .where('metadata.orderId', isEqualTo: orderId)
+          .where('status', isEqualTo: TransactionStatus.completed.name)
+          .limit(1)
+          .get();
+
+      if (existingTx.docs.isNotEmpty) {
+        throw DuplicatePaymentException(
+          orderId: orderId,
+          message: '이미 처리된 결제입니다',
+        );
+      }
+    }
+
     await _repository.updateBalance(
       userId,
       amount,

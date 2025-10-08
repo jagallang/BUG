@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../wallet/domain/usecases/wallet_service.dart';
-import '../../../wallet/data/repositories/wallet_repository_impl.dart';
+import '../../../../core/utils/error_message_helper.dart';
 import '../../../wallet/presentation/providers/wallet_provider.dart';
 
 /// Mock 결제 페이지 (테스트용)
@@ -46,9 +45,8 @@ class _MockPaymentPageState extends ConsumerState<MockPaymentPage> {
 
       debugPrint('🔵 WalletService.chargePoints 호출 전');
 
-      // WalletService를 통해 포인트 충전
-      final walletRepo = WalletRepositoryImpl();
-      final walletService = WalletService(walletRepo);
+      // WalletService Provider를 통해 포인트 충전
+      final walletService = ref.read(walletServiceProvider);
 
       await walletService.chargePoints(
         widget.userId,
@@ -93,7 +91,7 @@ class _MockPaymentPageState extends ConsumerState<MockPaymentPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('결제 실패: ${e.toString()}'),
+          content: Text(ErrorMessageHelper.getShortErrorMessage(e)),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 3),
         ),
@@ -130,8 +128,7 @@ class _MockPaymentPageState extends ConsumerState<MockPaymentPage> {
     try {
       // 같은 orderId로 2번 충전 시도
       final mockOrderId = 'duplicate_order_123';
-      final walletRepo = WalletRepositoryImpl();
-      final walletService = WalletService(walletRepo);
+      final walletService = ref.read(walletServiceProvider);
 
       // 첫 번째 충전
       await walletService.chargePoints(
@@ -168,8 +165,8 @@ class _MockPaymentPageState extends ConsumerState<MockPaymentPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('중복 결제 차단: $e'),
-          backgroundColor: Colors.green,
+          content: Text(ErrorMessageHelper.getShortErrorMessage(e)),
+          backgroundColor: Colors.orange,
         ),
       );
     } finally {
@@ -184,8 +181,7 @@ class _MockPaymentPageState extends ConsumerState<MockPaymentPage> {
     setState(() => _isProcessing = true);
 
     try {
-      final walletRepo = WalletRepositoryImpl();
-      final walletService = WalletService(walletRepo);
+      final walletService = ref.read(walletServiceProvider);
 
       // 1000만원 충전 (알림 발생 테스트)
       await walletService.chargePoints(
@@ -215,7 +211,7 @@ class _MockPaymentPageState extends ConsumerState<MockPaymentPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('대량 거래 실패: $e'),
+          content: Text(ErrorMessageHelper.getShortErrorMessage(e)),
           backgroundColor: Colors.red,
         ),
       );
