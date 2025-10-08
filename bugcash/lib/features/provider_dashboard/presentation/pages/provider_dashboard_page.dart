@@ -12,9 +12,6 @@ import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 // v2.51.0: 지갑 기능 추가
-import '../../../wallet/presentation/providers/wallet_provider.dart';
-import '../../../wallet/domain/entities/wallet_entity.dart';
-import '../../../wallet/domain/entities/transaction_entity.dart';
 import '../../../wallet/presentation/widgets/provider_wallet_card.dart';
 // 채팅 기능 제거됨
 // import '../widgets/payment_management_tab.dart';

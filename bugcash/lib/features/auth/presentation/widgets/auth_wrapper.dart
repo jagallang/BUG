@@ -9,7 +9,6 @@ import '../../../admin/presentation/pages/admin_dashboard_page.dart';
 import '../pages/role_selection_page.dart';
 import '../../../../core/services/realtime_sync_service.dart';
 import '../../../../core/utils/logger.dart';
-import '../../../mission/presentation/providers/mission_providers.dart';
 
 class AuthWrapper extends ConsumerStatefulWidget {
   const AuthWrapper({super.key});

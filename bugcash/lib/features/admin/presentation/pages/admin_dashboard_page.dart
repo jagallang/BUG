@@ -48,7 +48,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
     // 관리자 권한이 없는 경우 접근 거부
     final user = authState.user!;
-    final hasAdminRole = user.roles.contains('admin') || user.primaryRole == UserType.admin;
+    final hasAdminRole = user.roles.contains(UserType.admin.name) || user.primaryRole == UserType.admin;
 
     if (!hasAdminRole) {
       return Scaffold(

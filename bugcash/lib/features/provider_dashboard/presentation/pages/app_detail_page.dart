@@ -920,43 +920,4 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
       ),
     );
   }
-
-  String _getTypeDisplayName(String type) {
-    switch (type) {
-      case 'app':
-        return '앱';
-      case 'website':
-        return '웹사이트';
-      case 'service':
-        return '서비스';
-      default:
-        return type;
-    }
-  }
-
-  String _getDifficultyDisplayName(String difficulty) {
-    switch (difficulty) {
-      case 'easy':
-        return '쉬움';
-      case 'medium':
-        return '보통';
-      case 'hard':
-        return '어려움';
-      case 'expert':
-        return '전문가';
-      default:
-        return difficulty;
-    }
-  }
-
-  String _getInstallTypeDisplayName(String type) {
-    switch (type) {
-      case 'play_store':
-        return '구글 플레이 스토어';
-      case 'apk_upload':
-        return 'APK 파일 업로드';
-      default:
-        return type;
-    }
-  }
 }
