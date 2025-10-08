@@ -400,5 +400,39 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ==============================================
+    // 플랫폼 설정 (platform_settings) - 관리자 전용
+    // ==============================================
+    match /platform_settings/{settingType} {
+      // 읽기: 인증된 사용자 누구나 (설정값 조회)
+      allow read: if isAuthenticated();
+
+      // 생성: Cloud Functions만 (초기 설정 생성)
+      allow create: if false;
+
+      // 수정: Cloud Functions만 (관리자가 updatePlatformSettings 함수 사용)
+      allow update: if false;
+
+      // 삭제: 관리자만 가능 (설정 초기화 목적)
+      allow delete: if isAdmin();
+    }
+
+    // ==============================================
+    // 설정 변경 이력 (settings_history) - 감사 로그
+    // ==============================================
+    match /settings_history/{historyId} {
+      // 읽기: 관리자만 (변경 이력 조회)
+      allow read: if isAdmin();
+
+      // 생성: Cloud Functions만 (자동 기록)
+      allow create: if false;
+
+      // 수정: 불가 (이력은 불변)
+      allow update: if false;
+
+      // 삭제: 관리자만 가능 (감사 목적)
+      allow delete: if isAdmin();
+    }
+
   }
 }

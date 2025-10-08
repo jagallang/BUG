@@ -12,6 +12,7 @@ import '../../../../utils/migration_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../wallet/presentation/pages/admin_withdrawal_page.dart';
+import 'platform_settings_page.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -439,6 +440,89 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             'Settings - 플랫폼 설정',
             style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
           ),
+          SizedBox(height: 24.h),
+
+          // 플랫폼 설정 관리 버튼
+          Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.deepPurple, Colors.purple.shade400],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12.r),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.deepPurple.withValues(alpha: 0.3),
+                  spreadRadius: 0,
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Icon(Icons.tune, color: Colors.white, size: 32.sp),
+                ),
+                SizedBox(width: 16.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '플랫폼 설정 관리',
+                        style: TextStyle(
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '보상, 출금, 수수료, 어뷰징 방지 등 모든 설정을 관리합니다',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.white.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 16.w),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PlatformSettingsPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.arrow_forward),
+                  label: const Text('설정 열기'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.deepPurple,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 12.h,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           SizedBox(height: 24.h),
 
           // 설정 카테고리들

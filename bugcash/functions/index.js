@@ -1159,6 +1159,189 @@ exports.adjustUserPoints = onCall({
   }
 });
 
+/**
+ * getPlatformSettings: 플랫폼 설정 조회 (v2.59.0)
+ * Anyone can read settings
+ */
+exports.getPlatformSettings = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {settingType} = request.data;
+
+  // Validate setting type
+  const validTypes = ["rewards", "withdrawal", "platform", "abuse_prevention"];
+  if (!settingType || !validTypes.includes(settingType)) {
+    throw new HttpsError("invalid-argument", "Invalid setting type");
+  }
+
+  try {
+    const settingDoc = await getFirestore()
+        .collection("platform_settings")
+        .doc(settingType)
+        .get();
+
+    if (!settingDoc.exists) {
+      // Return default settings
+      return getDefaultSettings(settingType);
+    }
+
+    return settingDoc.data();
+  } catch (error) {
+    console.error("Error getting settings:", error);
+    throw new HttpsError("internal", "Failed to get settings");
+  }
+});
+
+/**
+ * updatePlatformSettings: 플랫폼 설정 업데이트 (v2.59.0)
+ * Admin only
+ */
+exports.updatePlatformSettings = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {settingType, updates, reason} = request.data;
+  const adminUid = request.auth?.uid;
+
+  // Authentication & Authorization
+  if (!adminUid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  const isAdminUser = await isAdmin(adminUid);
+  if (!isAdminUser) {
+    throw new HttpsError("permission-denied", "Only admins can update settings");
+  }
+
+  // Validation
+  const validTypes = ["rewards", "withdrawal", "platform", "abuse_prevention"];
+  if (!settingType || !validTypes.includes(settingType)) {
+    throw new HttpsError("invalid-argument", "Invalid setting type");
+  }
+
+  if (!updates || typeof updates !== "object") {
+    throw new HttpsError("invalid-argument", "Updates must be an object");
+  }
+
+  try {
+    const settingRef = getFirestore()
+        .collection("platform_settings")
+        .doc(settingType);
+
+    await getFirestore().runTransaction(async (transaction) => {
+      const currentDoc = await transaction.get(settingRef);
+      const currentData = currentDoc.data() || {};
+
+      // Record change history for audit
+      Object.keys(updates).forEach((key) => {
+        const historyRef = getFirestore().collection("settings_history").doc();
+        transaction.set(historyRef, {
+          settingType,
+          settingKey: key,
+          oldValue: currentData[key],
+          newValue: updates[key],
+          changedBy: adminUid,
+          changedAt: FieldValue.serverTimestamp(),
+          reason: reason || "관리자 변경",
+        });
+      });
+
+      // Update settings
+      transaction.set(settingRef, {
+        ...currentData,
+        ...updates,
+        updatedAt: FieldValue.serverTimestamp(),
+        updatedBy: adminUid,
+      }, {merge: true});
+
+      console.log(`✅ Settings updated: ${settingType} by admin ${adminUid}`);
+    });
+
+    return {
+      success: true,
+      message: "Settings updated successfully",
+      settingType,
+    };
+  } catch (error) {
+    console.error("Error updating settings:", error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError("internal", "Failed to update settings");
+  }
+});
+
+// Helper: Get default settings
+function getDefaultSettings(type) {
+  const defaults = {
+    rewards: {
+      signupBonus: {
+        enabled: true,
+        amount: 5000,
+        description: "회원가입 축하 보너스",
+        conditions: {
+          requirePhoneVerification: false,
+          requireEmailVerification: true,
+          oneTimeOnly: true,
+        },
+      },
+      projectCompletionBonus: {
+        enabled: true,
+        testerAmount: 1000,
+        providerAmount: 1000,
+        description: "14일 프로젝트 완료 보너스",
+        conditions: {
+          minDays: 14,
+          requireAllDaysCompleted: true,
+          oneTimePerProject: true,
+        },
+      },
+      dailyMissionReward: {
+        enabled: true,
+        baseAmount: 50,
+        description: "데일리 미션 기본 보상",
+      },
+    },
+    withdrawal: {
+      minAmount: 30000,
+      allowedUnits: 10000,
+      feeRate: 0.18,
+      description: "출금 시 수수료로 차감됩니다",
+      autoApprove: false,
+      processingDays: 5,
+      maxDailyWithdrawals: 3,
+      maxMonthlyAmount: 10000000,
+    },
+    platform: {
+      platformFee: {
+        missionCreation: 0,
+        transactionFee: 0.05,
+      },
+      appRegistration: {
+        cost: 5000,
+        description: "앱 등록 시 포인트로 차감",
+      },
+      missionCreation: {
+        cost: 1000,
+        description: "미션 생성 시 포인트로 차감",
+      },
+    },
+    abuse_prevention: {
+      multiAccountDetection: {
+        enabled: true,
+        checkDeviceId: true,
+        checkIpAddress: true,
+        maxAccountsPerDevice: 1,
+        maxAccountsPerIp: 3,
+      },
+      withdrawalRestrictions: {
+        requireKyc: true,
+        minAccountAge: 7,
+        minCompletedMissions: 1,
+      },
+    },
+  };
+
+  return defaults[type] || {};
+}
+
 // Import migration functions
 const migration = require('./migration.js');
 exports.migrateUserOnWrite = migration.migrateUserOnWrite;
