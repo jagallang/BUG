@@ -8,6 +8,9 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/config/feature_flags.dart';
 import 'app_detail_page.dart';
 import 'mission_management_page_v2.dart';
+import '../../../wallet/domain/usecases/wallet_service.dart';
+import '../../../wallet/data/repositories/wallet_repository_impl.dart';
+import '../../../wallet/presentation/providers/wallet_provider.dart';
 
 // Provider for managing apps (using optimized projects collection)
 final providerAppsProvider = StreamProvider.family<List<ProviderAppModel>, String>((ref, providerId) {
@@ -231,15 +234,101 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     super.dispose();
   }
 
+  /// 앱 등록에 필요한 총 포인트 계산
+  int _calculateRequiredPoints() {
+    // 일일 미션 포인트 × 테스트 기간 × 최대 테스터 수
+    final dailyTotal = _dailyMissionPoints * _testPeriodDays * _maxTesters;
+    // 최종 완료 포인트 × 최대 테스터 수
+    final finalTotal = _finalCompletionPoints * _maxTesters;
+    // 보너스 포인트 × 최대 테스터 수 (최대 50% 지급 가정)
+    final bonusTotal = (_bonusPoints * _maxTesters * 0.5).round();
+
+    return dailyTotal + finalTotal + bonusTotal;
+  }
+
   Future<void> _uploadApp() async {
-    if (_appNameController.text.isEmpty || 
-        _appUrlController.text.isEmpty || 
+    if (_appNameController.text.isEmpty ||
+        _appUrlController.text.isEmpty ||
         _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('모든 필드를 입력해주세요')),
       );
       return;
     }
+
+    // 필요한 포인트 계산
+    final requiredPoints = _calculateRequiredPoints();
+
+    // BuildContext 저장
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    // 현재 잔액 확인 - walletProvider는 StreamProvider이므로 watch 사용
+    final walletAsync = ref.watch(walletProvider(widget.providerId));
+
+    // 로딩 중이거나 에러 상태 처리
+    if (walletAsync.isLoading) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('잔액 정보를 불러오는 중...')),
+      );
+      return;
+    }
+
+    if (walletAsync.hasError) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('잔액 정보 불러오기 실패: ${walletAsync.error}')),
+      );
+      return;
+    }
+
+    final wallet = walletAsync.value!;
+    final balanceDeficit = requiredPoints - wallet.balance;
+
+    if (wallet.balance < requiredPoints) {
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            '포인트가 부족합니다\n'
+            '필요: ${_formatAmount(requiredPoints)}P\n'
+            '보유: ${_formatAmount(wallet.balance)}P\n'
+            '부족: ${_formatAmount(balanceDeficit)}P'
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+
+    // 포인트 차감 확인
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('앱 등록 확인'),
+        content: Text(
+          '앱을 등록하시겠습니까?\n\n'
+          '필요 포인트: ${_formatAmount(requiredPoints)}P\n'
+          '현재 잔액: ${_formatAmount(wallet.balance)}P\n'
+          '차감 후 잔액: ${_formatAmount(wallet.balance - requiredPoints)}P\n\n'
+          '• 테스터 수: $_maxTesters명\n'
+          '• 테스트 기간: $_testPeriodDays일\n'
+          '• 일일 미션: ${_formatAmount(_dailyMissionPoints)}P\n'
+          '• 최종 완료: ${_formatAmount(_finalCompletionPoints)}P',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('등록'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
 
     try {
       final newProject = {
@@ -307,6 +396,24 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
       // Update the document with its ID as appId
       await docRef.update({'appId': docRef.id});
+
+      // 포인트 차감
+      final walletRepo = WalletRepositoryImpl();
+      final walletService = WalletService(walletRepo);
+      await walletService.spendPoints(
+        widget.providerId,
+        requiredPoints,
+        '앱 등록: ${_appNameController.text}',
+        metadata: {
+          'appId': docRef.id,
+          'appName': _appNameController.text,
+          'maxTesters': _maxTesters,
+          'testPeriodDays': _testPeriodDays,
+          'dailyMissionPoints': _dailyMissionPoints,
+          'finalCompletionPoints': _finalCompletionPoints,
+          'bonusPoints': _bonusPoints,
+        },
+      );
 
       if (mounted) {
         // 성공 메시지를 더 명확하게 표시
@@ -2020,5 +2127,13 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         );
       }
     }
+  }
+
+  /// 금액 포맷팅 (천단위 쉼표)
+  String _formatAmount(int amount) {
+    return amount.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
   }
 }

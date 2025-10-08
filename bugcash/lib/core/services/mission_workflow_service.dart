@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/shared/models/mission_workflow_model.dart';
+import '../../features/wallet/domain/usecases/wallet_service.dart';
+import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../utils/logger.dart';
 
 /// MissionWorkflowService Provider
@@ -502,6 +504,31 @@ class MissionWorkflowService {
           .doc(workflowId)
           .update(updateData);
 
+      // 테스터에게 포인트 적립
+      final testerId = data['testerId'] as String?;
+      if (testerId != null && testerId.isNotEmpty) {
+        try {
+          final walletRepo = WalletRepositoryImpl();
+          final walletService = WalletService(walletRepo);
+          await walletService.earnPoints(
+            testerId,
+            dailyReward,
+            'Day $dayNumber 미션 완료: ${data['appName'] ?? ''}',
+            metadata: {
+              'workflowId': workflowId,
+              'appId': data['appId'],
+              'appName': data['appName'],
+              'dayNumber': dayNumber,
+              'rewardType': 'daily',
+            },
+          );
+          AppLogger.info('Daily reward $dailyReward paid to tester $testerId', 'MissionWorkflow');
+        } catch (e) {
+          AppLogger.error('Failed to pay daily reward to tester', 'MissionWorkflow', e);
+          // 포인트 지급 실패해도 미션 승인은 완료
+        }
+      }
+
       // 테스터에게 알림
       await _sendNotificationToTester(
         testerId: data['testerId'] ?? '',
@@ -648,17 +675,76 @@ class MissionWorkflowService {
         'finalRating': finalRating,
       };
 
-      if (bonusReward != null && bonusReward > 0) {
-        final workflow = await getMissionWorkflow(workflowId);
-        updateData['totalEarnedReward'] = workflow.totalEarnedReward + bonusReward;
-        updateData['totalPaidReward'] = workflow.totalPaidReward + bonusReward;
-        updateData['metadata.bonusReward'] = bonusReward;
-      }
-
       await _firestore
           .collection('mission_workflows')
           .doc(workflowId)
           .update(updateData);
+
+      // 최종 완료 보상 계산 - 앱 데이터에서 finalCompletionPoints 가져오기
+      final workflow = await getMissionWorkflow(workflowId);
+      final appDoc = await _firestore.collection('projects').doc(workflow.appId).get();
+      int finalReward = 0;
+
+      if (appDoc.exists) {
+        final appData = appDoc.data()!;
+        final rewards = appData['rewards'] as Map<String, dynamic>?;
+        finalReward = (rewards?['finalCompletionPoints'] as int?) ?? 0;
+      }
+
+      // 테스터에게 최종 완료 포인트 + 보너스 포인트 적립
+      final testerId = workflow.testerId;
+      if (testerId.isNotEmpty) {
+        try {
+          final walletRepo = WalletRepositoryImpl();
+          final walletService = WalletService(walletRepo);
+
+          // 최종 완료 포인트
+          if (finalReward > 0) {
+            await walletService.earnPoints(
+              testerId,
+              finalReward,
+              '프로젝트 최종 완료: ${workflow.appName}',
+              metadata: {
+                'workflowId': workflowId,
+                'appId': workflow.appId,
+                'appName': workflow.appName,
+                'rewardType': 'final',
+              },
+            );
+            AppLogger.info('Final reward $finalReward paid to tester $testerId', 'MissionWorkflow');
+          }
+
+          // 보너스 포인트
+          if (bonusReward != null && bonusReward > 0) {
+            await walletService.earnPoints(
+              testerId,
+              bonusReward,
+              '우수 성과 보너스: ${workflow.appName}',
+              metadata: {
+                'workflowId': workflowId,
+                'appId': workflow.appId,
+                'appName': workflow.appName,
+                'rewardType': 'bonus',
+                'finalRating': finalRating,
+              },
+            );
+            AppLogger.info('Bonus reward $bonusReward paid to tester $testerId', 'MissionWorkflow');
+          }
+
+          // totalEarnedReward, totalPaidReward 업데이트
+          int totalReward = finalReward + (bonusReward ?? 0);
+          if (totalReward > 0) {
+            await _firestore.collection('mission_workflows').doc(workflowId).update({
+              'totalEarnedReward': workflow.totalEarnedReward + totalReward,
+              'totalPaidReward': workflow.totalPaidReward + totalReward,
+              if (bonusReward != null && bonusReward > 0) 'metadata.bonusReward': bonusReward,
+            });
+          }
+        } catch (e) {
+          AppLogger.error('Failed to pay final/bonus reward to tester', 'MissionWorkflow', e);
+          // 포인트 지급 실패해도 프로젝트 완료는 진행
+        }
+      }
 
       AppLogger.info('Project finalized successfully', 'MissionWorkflow');
     } catch (e) {

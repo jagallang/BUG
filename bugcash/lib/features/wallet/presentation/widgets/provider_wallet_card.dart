@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/wallet_entity.dart';
 import '../providers/wallet_provider.dart';
 import '../pages/transaction_history_page.dart';
+import '../../../payment/presentation/pages/charge_point_page.dart';
 
 /// 공급자 지갑 카드 위젯
 /// - 현재 잔액 표시
@@ -136,9 +137,10 @@ class ProviderWalletCard extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  // TODO: Payment 페이지로 이동
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('결제 기능은 개발 예정입니다')),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ChargePointPage(userId: providerId),
+                    ),
                   );
                 },
                 icon: const Icon(Icons.credit_card),

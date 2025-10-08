@@ -437,6 +437,368 @@ async function processFinalPayouts(projectId) {
   // - Create transaction records
 }
 
+/**
+ * ==========================================
+ * Payment & Wallet Security Functions
+ * ==========================================
+ */
+
+/**
+ * Verify Toss Payment Server-Side
+ * 결제 검증을 서버에서 수행하여 위변조 방지
+ */
+exports.verifyTossPayment = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {paymentKey, orderId, amount, userId} = request.data;
+  const uid = request.auth?.uid;
+
+  // Authentication check
+  if (!uid || uid !== userId) {
+    throw new HttpsError("permission-denied", "Invalid user authentication");
+  }
+
+  if (!paymentKey || !orderId || !amount) {
+    throw new HttpsError("invalid-argument", "Missing payment verification data");
+  }
+
+  try {
+    // 1. Toss Payments API로 결제 검증
+    const tossSecretKey = process.env.TOSS_SECRET_KEY;
+    if (!tossSecretKey) {
+      throw new HttpsError("internal", "Toss secret key not configured");
+    }
+
+    const response = await fetch(
+        `https://api.tosspayments.com/v1/payments/${paymentKey}`,
+        {
+          method: "GET",
+          headers: {
+            "Authorization": `Basic ${Buffer.from(tossSecretKey + ":").toString("base64")}`,
+            "Content-Type": "application/json",
+          },
+        },
+    );
+
+    if (!response.ok) {
+      throw new HttpsError("internal", "Failed to verify payment with Toss");
+    }
+
+    const paymentData = await response.json();
+
+    // 2. 결제 데이터 검증
+    if (paymentData.orderId !== orderId) {
+      throw new HttpsError("failed-precondition", "Order ID mismatch");
+    }
+
+    if (paymentData.totalAmount !== amount) {
+      throw new HttpsError("failed-precondition", "Amount mismatch");
+    }
+
+    if (paymentData.status !== "DONE") {
+      throw new HttpsError("failed-precondition", "Payment not completed");
+    }
+
+    // 3. 중복 결제 확인
+    const existingTransaction = await getFirestore()
+        .collection("transactions")
+        .where("metadata.paymentKey", "==", paymentKey)
+        .limit(1)
+        .get();
+
+    if (!existingTransaction.empty) {
+      throw new HttpsError("already-exists", "Payment already processed");
+    }
+
+    // 4. 트랜잭션으로 지갑 잔액 업데이트
+    const pointsEarned = Math.floor(amount); // 1원 = 1포인트
+    const db = getFirestore();
+
+    await db.runTransaction(async (transaction) => {
+      const walletRef = db.collection("wallets").doc(userId);
+      const walletDoc = await transaction.get(walletRef);
+
+      if (!walletDoc.exists) {
+        // 지갑이 없으면 생성
+        transaction.set(walletRef, {
+          userId: userId,
+          balance: pointsEarned,
+          totalCharged: pointsEarned,
+          totalEarned: 0,
+          totalSpent: 0,
+          totalWithdrawn: 0,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      } else {
+        // 기존 지갑 업데이트
+        const currentBalance = walletDoc.data().balance || 0;
+        const currentTotalCharged = walletDoc.data().totalCharged || 0;
+
+        transaction.update(walletRef, {
+          balance: currentBalance + pointsEarned,
+          totalCharged: currentTotalCharged + pointsEarned,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+
+      // 5. 거래 내역 생성
+      const transactionRef = db.collection("transactions").doc();
+      transaction.set(transactionRef, {
+        userId: userId,
+        type: "charge",
+        amount: pointsEarned,
+        status: "completed",
+        description: `포인트 충전 ${pointsEarned.toLocaleString()}P`,
+        metadata: {
+          paymentKey: paymentKey,
+          orderId: orderId,
+          paymentAmount: amount,
+          paymentMethod: paymentData.method,
+          approvedAt: paymentData.approvedAt,
+        },
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    });
+
+    console.log(`Payment verified and ${pointsEarned}P credited to user ${userId}`);
+
+    return {
+      success: true,
+      pointsEarned: pointsEarned,
+      message: "Payment verified and points credited",
+    };
+  } catch (error) {
+    console.error("Payment verification error:", error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError("internal", "Payment verification failed");
+  }
+});
+
+/**
+ * Validate Wallet Transaction
+ * 포인트 거래 전 검증 (잔액 확인, 한도 확인 등)
+ */
+exports.validateWalletTransaction = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {userId, type, amount} = request.data;
+  const uid = request.auth?.uid;
+
+  if (!uid || uid !== userId) {
+    throw new HttpsError("permission-denied", "Invalid user authentication");
+  }
+
+  if (!type || !amount || amount <= 0) {
+    throw new HttpsError("invalid-argument", "Invalid transaction data");
+  }
+
+  try {
+    const walletDoc = await getFirestore()
+        .collection("wallets")
+        .doc(userId)
+        .get();
+
+    if (!walletDoc.exists) {
+      throw new HttpsError("not-found", "Wallet not found");
+    }
+
+    const wallet = walletDoc.data();
+    const balance = wallet.balance || 0;
+
+    // 출금/사용 시 잔액 확인
+    if (type === "spend" || type === "withdraw") {
+      if (balance < amount) {
+        return {
+          valid: false,
+          reason: "insufficient_balance",
+          message: `잔액 부족 (잔액: ${balance}P, 필요: ${amount}P)`,
+          currentBalance: balance,
+          requiredAmount: amount,
+        };
+      }
+
+      // 출금 한도 확인 (일일 100만원)
+      if (type === "withdraw") {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const todayWithdrawals = await getFirestore()
+            .collection("transactions")
+            .where("userId", "==", userId)
+            .where("type", "==", "withdraw")
+            .where("createdAt", ">=", today)
+            .get();
+
+        const todayTotal = todayWithdrawals.docs.reduce(
+            (sum, doc) => sum + (doc.data().amount || 0),
+            0,
+        );
+
+        const withdrawalLimit = 1000000; // 100만원
+        if (todayTotal + amount > withdrawalLimit) {
+          return {
+            valid: false,
+            reason: "daily_limit_exceeded",
+            message: `일일 출금 한도 초과 (오늘 출금: ${todayTotal}P, 한도: ${withdrawalLimit}P)`,
+            todayTotal: todayTotal,
+            limit: withdrawalLimit,
+          };
+        }
+      }
+    }
+
+    return {
+      valid: true,
+      currentBalance: balance,
+      message: "Transaction validation passed",
+    };
+  } catch (error) {
+    console.error("Transaction validation error:", error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError("internal", "Transaction validation failed");
+  }
+});
+
+/**
+ * Process Withdrawal Request with Admin Approval
+ * 출금 신청은 관리자 승인 필요
+ */
+exports.processWithdrawal = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {transactionId, approve, rejectionReason} = request.data;
+  const uid = request.auth?.uid;
+
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // 관리자 권한 확인
+  const adminCheck = await isAdmin(uid);
+  if (!adminCheck) {
+    throw new HttpsError("permission-denied", "Only admins can process withdrawals");
+  }
+
+  if (!transactionId || typeof approve !== "boolean") {
+    throw new HttpsError("invalid-argument", "Invalid request parameters");
+  }
+
+  try {
+    const db = getFirestore();
+
+    await db.runTransaction(async (transaction) => {
+      const txRef = db.collection("transactions").doc(transactionId);
+      const txDoc = await transaction.get(txRef);
+
+      if (!txDoc.exists) {
+        throw new HttpsError("not-found", "Transaction not found");
+      }
+
+      const txData = txDoc.data();
+
+      if (txData.type !== "withdraw") {
+        throw new HttpsError("invalid-argument", "Not a withdrawal transaction");
+      }
+
+      if (txData.status !== "pending") {
+        throw new HttpsError("failed-precondition", "Transaction already processed");
+      }
+
+      // 승인 처리
+      if (approve) {
+        transaction.update(txRef, {
+          status: "completed",
+          processedAt: FieldValue.serverTimestamp(),
+          processedBy: uid,
+        });
+
+        console.log(`Withdrawal ${transactionId} approved by admin ${uid}`);
+      } else {
+        // 거부 시 잔액 복구
+        const walletRef = db.collection("wallets").doc(txData.userId);
+        const walletDoc = await transaction.get(walletRef);
+
+        if (walletDoc.exists) {
+          const currentBalance = walletDoc.data().balance || 0;
+          transaction.update(walletRef, {
+            balance: currentBalance + txData.amount,
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
+
+        transaction.update(txRef, {
+          status: "cancelled",
+          processedAt: FieldValue.serverTimestamp(),
+          processedBy: uid,
+          rejectionReason: rejectionReason || "관리자가 거부함",
+        });
+
+        console.log(`Withdrawal ${transactionId} rejected by admin ${uid}`);
+      }
+    });
+
+    return {
+      success: true,
+      message: approve ? "Withdrawal approved" : "Withdrawal rejected",
+    };
+  } catch (error) {
+    console.error("Withdrawal processing error:", error);
+    if (error instanceof HttpsError) throw error;
+    throw new HttpsError("internal", "Failed to process withdrawal");
+  }
+});
+
+/**
+ * Monitor Suspicious Transactions
+ * 의심스러운 거래 모니터링 (Firestore Trigger)
+ */
+exports.onTransactionCreated = onDocumentUpdated(
+    "transactions/{transactionId}",
+    async (event) => {
+      const transactionId = event.params.transactionId;
+      const afterData = event.data?.after?.data();
+
+      if (!afterData) return;
+
+      try {
+        // 비정상적으로 큰 금액 체크
+        if (afterData.amount > 10000000) { // 1000만원 초과
+          console.warn(`⚠️ Large transaction detected: ${transactionId}, amount: ${afterData.amount}`);
+
+          await getFirestore().collection("alerts").add({
+            type: "large_transaction",
+            transactionId: transactionId,
+            userId: afterData.userId,
+            amount: afterData.amount,
+            createdAt: FieldValue.serverTimestamp(),
+          });
+        }
+
+        // 짧은 시간 내 다수 거래 체크
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+        const recentTransactions = await getFirestore()
+            .collection("transactions")
+            .where("userId", "==", afterData.userId)
+            .where("createdAt", ">=", fiveMinutesAgo)
+            .get();
+
+        if (recentTransactions.size > 10) {
+          console.warn(`⚠️ Rapid transactions detected: User ${afterData.userId}, count: ${recentTransactions.size}`);
+
+          await getFirestore().collection("alerts").add({
+            type: "rapid_transactions",
+            userId: afterData.userId,
+            transactionCount: recentTransactions.size,
+            createdAt: FieldValue.serverTimestamp(),
+          });
+        }
+      } catch (error) {
+        console.error("Transaction monitoring error:", error);
+      }
+    },
+);
+
 // Import migration functions
 const migration = require('./migration.js');
 exports.migrateUserOnWrite = migration.migrateUserOnWrite;

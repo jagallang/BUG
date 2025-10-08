@@ -265,4 +265,188 @@ cd ..
 
 ---
 
+## 🔐 Cloud Functions & Security 배포
+
+### 1단계: Toss Payments Secret Key 설정
+
+#### 개발 환경 (.env 파일)
+```bash
+cd functions
+echo "TOSS_SECRET_KEY=test_sk_YOUR_SECRET_KEY" > .env
+```
+
+#### 프로덕션 환경 (Firebase 환경 변수)
+```bash
+# 방법 1: Firebase Functions Config (권장)
+firebase functions:config:set toss.secret_key="live_sk_YOUR_SECRET_KEY"
+
+# 방법 2: Secret Manager 사용 (더 안전)
+firebase functions:secrets:set TOSS_SECRET_KEY
+# 프롬프트에서 실제 키 입력
+```
+
+### 2단계: Cloud Functions 배포
+
+#### 전체 함수 배포
+```bash
+firebase deploy --only functions
+```
+
+#### 특정 함수만 배포
+```bash
+# 결제 검증 함수
+firebase deploy --only functions:verifyTossPayment
+
+# 출금 처리 함수
+firebase deploy --only functions:processWithdrawal
+
+# 거래 검증 함수
+firebase deploy --only functions:validateWalletTransaction
+
+# 거래 모니터링 트리거
+firebase deploy --only functions:onTransactionCreated
+```
+
+### 3단계: Firestore Security Rules 배포
+```bash
+firebase deploy --only firestore:rules
+```
+
+**중요**: Security Rules는 반드시 배포해야 합니다!
+- wallets 컬렉션: 클라이언트 쓰기 차단
+- transactions 컬렉션: Cloud Functions만 쓰기 가능
+
+### 4단계: 배포된 함수 목록 확인
+```bash
+firebase functions:list
+```
+
+**주요 함수들:**
+- `verifyTossPayment` - Toss 결제 서버 검증 및 포인트 충전
+- `validateWalletTransaction` - 거래 전 유효성 검사 (잔액, 한도)
+- `processWithdrawal` - 관리자 출금 승인/거부
+- `onTransactionCreated` - 의심 거래 자동 모니터링
+
+### 5단계: 배포 후 테스트
+
+#### 로컬 에뮬레이터로 테스트 (권장)
+```bash
+# Functions + Firestore 에뮬레이터 시작
+firebase emulators:start --only functions,firestore,auth
+
+# Flutter 앱에서 에뮬레이터 연결 (main.dart에서 설정)
+```
+
+#### 프로덕션 테스트
+1. Flutter 앱에서 실제 결제 진행
+2. Firebase Console → Functions → Logs 확인
+3. Firestore → transactions/wallets 컬렉션 데이터 확인
+4. 거래 내역 정상 생성 여부 확인
+
+### 6단계: 보안 체크리스트
+- [ ] Toss Secret Key가 .env 파일에만 있고 Git에 커밋되지 않았는지 확인
+- [ ] .gitignore에 functions/.env 포함 확인
+- [ ] Firestore Rules 배포 완료 (wallets/transactions 쓰기 차단)
+- [ ] Cloud Functions 리전이 asia-northeast1로 설정 확인
+- [ ] Firebase Console에서 함수 실행 권한 확인
+- [ ] 관리자 계정에 isAdmin=true 설정 확인
+
+### 7단계: 모니터링 설정
+
+#### 실시간 로그 확인
+```bash
+# 전체 로그 스트림
+firebase functions:log
+
+# 특정 함수 로그만
+firebase functions:log --only verifyTossPayment
+
+# 에러만 필터링
+firebase functions:log --only verifyTossPayment | grep ERROR
+```
+
+#### Firebase Console에서 모니터링
+1. Functions → Health 탭
+   - 실행 시간
+   - 오류율
+   - 호출 횟수
+2. Firestore → Usage 탭
+   - 읽기/쓰기 작업 수
+   - 저장소 사용량
+3. Alerts 컬렉션
+   - 의심 거래 알림 확인
+
+### 8단계: 문제 해결
+
+#### 함수 호출 실패 (permission-denied)
+```bash
+# Firebase Authentication 설정 확인
+firebase auth:export users.json
+# 사용자 UID와 Functions 인증 일치 확인
+```
+
+#### 환경 변수 접근 불가
+```bash
+# 현재 설정된 환경 변수 확인
+firebase functions:config:get
+
+# 재설정 후 재배포
+firebase functions:config:set toss.secret_key="YOUR_KEY"
+firebase deploy --only functions
+```
+
+#### Toss API 호출 오류
+- Secret Key 형식 확인 (test_sk_* 또는 live_sk_*)
+- Toss Developers Console에서 키 활성화 상태 확인
+- API 요청 로그 확인 (firebase functions:log)
+
+#### Security Rules 위반
+```bash
+# Rules 문법 검사
+firebase deploy --only firestore:rules --dry-run
+
+# Rules 재배포
+firebase deploy --only firestore:rules
+```
+
+### 9단계: 비용 예상 (한국 리전 기준)
+
+#### Cloud Functions (무료 할당량)
+- 호출: 200만 회/월
+- 컴퓨팅: 400,000 GB-초/월
+- 네트워크: 5GB/월
+
+#### 예상 월간 비용 (소규모 서비스)
+- 결제 1000건/월: 약 $0.20
+- 출금 처리 100건/월: 약 $0.02
+- 거래 모니터링 트리거: 약 $0.10
+- **총 예상 비용**: $0-2/월
+
+#### 예상 월간 비용 (중규모 서비스)
+- 결제 10,000건/월: 약 $2
+- 출금 처리 1,000건/월: 약 $0.20
+- 거래 모니터링: 약 $1
+- **총 예상 비용**: $5-10/월
+
+### 10단계: 성능 최적화
+
+#### Cold Start 개선
+```javascript
+// functions/index.js 상단에 추가
+const functions = require('firebase-functions').region('asia-northeast1');
+// 최소 인스턴스 유지 (유료 플랜 필요)
+exports.verifyTossPayment = functions
+  .runWith({ minInstances: 1 })
+  .https.onCall(async (data, context) => { ... });
+```
+
+#### 타임아웃 설정
+```javascript
+exports.verifyTossPayment = functions
+  .runWith({ timeoutSeconds: 30, memory: '256MB' })
+  .https.onCall(async (data, context) => { ... });
+```
+
+---
+
 **🚀 축하합니다! BugCash 앱이 성공적으로 배포되었습니다! 🚀**

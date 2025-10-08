@@ -11,6 +11,7 @@ import 'project_detail_page.dart';
 import '../../../../utils/migration_helper.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
+import '../../../wallet/presentation/pages/admin_withdrawal_page.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -369,6 +370,20 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               SizedBox(width: 16.w),
               Expanded(child: _buildFinanceCard('수수료 수익', '₩700,000', Colors.green, Icons.monetization_on)),
             ],
+          ),
+
+          SizedBox(height: 24.h),
+
+          // 출금 관리 바로가기 버튼
+          ElevatedButton.icon(
+            onPressed: _navigateToWithdrawalManagement,
+            icon: const Icon(Icons.arrow_circle_up),
+            label: const Text('출금 신청 관리'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+            ),
           ),
 
           SizedBox(height: 24.h),
@@ -1506,6 +1521,15 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   void _showProjectFilters() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('필터 기능 (개발 중)')),
+    );
+  }
+
+  // Finance 액션들
+  void _navigateToWithdrawalManagement() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const AdminWithdrawalPage(),
+      ),
     );
   }
 

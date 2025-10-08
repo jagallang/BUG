@@ -25,4 +25,13 @@ abstract class WalletRepository {
 
   /// 월별 통계
   Future<int> getMonthlyAmount(String userId, TransactionType type);
+
+  /// 상태별 출금 신청 목록 조회 (관리자용)
+  Stream<List<TransactionEntity>> getWithdrawalsByStatus(TransactionStatus status);
+
+  /// 출금 승인 (관리자)
+  Future<void> approveWithdrawal(String transactionId);
+
+  /// 출금 거부 (관리자)
+  Future<void> rejectWithdrawal(String transactionId, String reason);
 }

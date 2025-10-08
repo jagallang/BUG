@@ -342,5 +342,68 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    // ==============================================
+    // 지갑 관리 (wallets) - 보안 강화
+    // ==============================================
+    match /wallets/{walletId} {
+      // 읽기: 본인 지갑만, 관리자는 모든 지갑 조회 가능
+      allow read: if isAuthenticated() &&
+                     (request.auth.uid == walletId || isAdmin());
+
+      // 생성: 본인 지갑만 생성 가능, 초기 잔액은 0이어야 함
+      allow create: if isAuthenticated() &&
+                    request.auth.uid == walletId &&
+                    request.resource.data.userId == request.auth.uid &&
+                    request.resource.data.balance == 0 &&
+                    request.resource.data.totalCharged == 0 &&
+                    request.resource.data.totalEarned == 0 &&
+                    request.resource.data.totalSpent == 0 &&
+                    request.resource.data.totalWithdrawn == 0;
+
+      // 수정: Cloud Functions만 가능 (잔액 변경은 서버에서만)
+      // 클라이언트는 지갑 잔액 직접 수정 불가
+      allow update: if false;
+
+      // 삭제: 관리자만 가능
+      allow delete: if isAdmin();
+    }
+
+    // ==============================================
+    // 거래 내역 관리 (transactions) - 보안 강화
+    // ==============================================
+    match /transactions/{transactionId} {
+      // 읽기: 본인 거래 내역만, 관리자는 모든 거래 조회 가능
+      allow read: if isAuthenticated() &&
+                     (request.auth.uid == resource.data.userId || isAdmin());
+
+      // 생성: Cloud Functions만 가능 (모든 거래는 서버 검증 필요)
+      // 클라이언트는 거래 생성 불가
+      allow create: if false;
+
+      // 수정: Cloud Functions만 가능 (상태 변경은 서버에서만)
+      // 예외: 관리자는 출금 승인/거부 가능 (processWithdrawal 함수 사용)
+      allow update: if false;
+
+      // 삭제: 관리자만 가능 (감사 목적으로 거래 내역은 삭제 금지 원칙)
+      allow delete: if isAdmin();
+    }
+
+    // ==============================================
+    // 보안 알림 (alerts) - 관리자 전용
+    // ==============================================
+    match /alerts/{alertId} {
+      // 읽기: 관리자만
+      allow read: if isAdmin();
+
+      // 생성: Cloud Functions만 (자동 생성)
+      allow create: if false;
+
+      // 수정: 관리자만 (처리 상태 변경)
+      allow update: if isAdmin();
+
+      // 삭제: 관리자만
+      allow delete: if isAdmin();
+    }
+
   }
 }

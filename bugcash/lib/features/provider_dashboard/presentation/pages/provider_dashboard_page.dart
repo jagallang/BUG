@@ -284,182 +284,156 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
           SizedBox(height: 40.h),
 
-          // v2.50.2: 이용 약관 동의 (모달)
-          Container(
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: Colors.grey[300]!),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // v2.50.2: 이용 약관 동의 (모달) - 한 번 동의하면 숨김 처리
+          Consumer(
+            builder: (context, ref, child) {
+              final user = ref.watch(authProvider).user;
+              final termsAccepted = user?.providerProfile?.termsAccepted ?? false;
+
+              // 이미 동의한 경우 전체 섹션 숨김
+              if (termsAccepted) {
+                return SizedBox.shrink();
+              }
+
+              return Container(
+                padding: EdgeInsets.all(20.w),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(color: Colors.grey[300]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '✅ 이용 약관',
-                      style: TextStyle(
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _showTermsDialog(context),
-                      icon: Icon(Icons.article, size: 18.sp),
-                      label: Text('자세히 보기'),
-                      style: TextButton.styleFrom(
-                        foregroundColor: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                Text(
-                  'BugCash 앱 테스트 서비스 이용약관 및 개인정보처리방침에 대한 동의가 필요합니다.',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey[700],
-                    height: 1.5,
-                  ),
-                ),
-                SizedBox(height: 16.h),
-                // v2.50.4: 동의 체크박스 (로컬 상태)
-                Consumer(
-                  builder: (context, ref, child) {
-                    final user = ref.watch(authProvider).user;
-                    final termsAccepted = user?.providerProfile?.termsAccepted ?? false;
-
-                    // v2.50.7: 동의 처리 중 로딩 표시
-                    if (_isAcceptingTerms) {
-                      return Container(
-                        padding: EdgeInsets.all(16.w),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(color: AppColors.primary, width: 2),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SizedBox(
-                              width: 20.sp,
-                              height: 20.sp,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                              ),
-                            ),
-                            SizedBox(width: 12.w),
-                            Text(
-                              '동의 처리 중...',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    // 이미 동의한 경우 체크박스 비활성화
-                    if (termsAccepted) {
-                      return Container(
-                        padding: EdgeInsets.all(16.w),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8.r),
-                          border: Border.all(color: AppColors.primary, width: 2),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.check_circle, color: AppColors.primary, size: 24.sp),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Text(
-                                '이용약관에 동의하셨습니다',
-                                style: TextStyle(
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }
-
-                    // 미동의 상태: 체크박스 + 동의 버튼
-                    return Column(
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8.r),
-                            border: Border.all(
-                              color: _termsCheckboxChecked ? AppColors.primary : Colors.grey[400]!,
-                              width: 2,
-                            ),
-                          ),
-                          child: CheckboxListTile(
-                            value: _termsCheckboxChecked,
-                            onChanged: (value) {
-                              setState(() {
-                                _termsCheckboxChecked = value ?? false;
-                              });
-                            },
-                            title: Text(
-                              '이용약관 및 개인정보처리방침에 동의합니다',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            controlAffinity: ListTileControlAffinity.leading,
-                            activeColor: AppColors.primary,
-                            dense: true,
+                        Text(
+                          '✅ 이용 약관',
+                          style: TextStyle(
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
                         ),
-                        SizedBox(height: 12.h),
-                        // v2.50.4: 동의 버튼
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48.h,
-                          child: ElevatedButton(
-                            onPressed: _termsCheckboxChecked
-                                ? () => _handleTermsAcceptance(true)
-                                : null,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: _termsCheckboxChecked
-                                  ? AppColors.primary
-                                  : Colors.grey[400],
-                              disabledBackgroundColor: Colors.grey[400],
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                            ),
-                            child: Text(
-                              _termsCheckboxChecked ? '동의하기' : '체크박스를 선택해주세요',
-                              style: TextStyle(
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
+                        TextButton.icon(
+                          onPressed: () => _showTermsDialog(context),
+                          icon: Icon(Icons.article, size: 18.sp),
+                          label: Text('자세히 보기'),
+                          style: TextButton.styleFrom(
+                            foregroundColor: AppColors.primary,
                           ),
                         ),
                       ],
-                    );
-                  },
+                    ),
+                    SizedBox(height: 12.h),
+                    Text(
+                      'BugCash 앱 테스트 서비스 이용약관 및 개인정보처리방침에 대한 동의가 필요합니다.',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        color: Colors.grey[700],
+                        height: 1.5,
+                      ),
+                    ),
+                    SizedBox(height: 16.h),
+                    // v2.50.4: 동의 체크박스 (로컬 상태)
+                    // v2.50.7: 동의 처리 중 로딩 표시
+                    _isAcceptingTerms
+                        ? Container(
+                            padding: EdgeInsets.all(16.w),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8.r),
+                              border: Border.all(color: AppColors.primary, width: 2),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 20.sp,
+                                  height: 20.sp,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                  ),
+                                ),
+                                SizedBox(width: 12.w),
+                                Text(
+                                  '동의 처리 중...',
+                                  style: TextStyle(
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Column(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  border: Border.all(
+                                    color: _termsCheckboxChecked ? AppColors.primary : Colors.grey[400]!,
+                                    width: 2,
+                                  ),
+                                ),
+                                child: CheckboxListTile(
+                                  value: _termsCheckboxChecked,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _termsCheckboxChecked = value ?? false;
+                                    });
+                                  },
+                                  title: Text(
+                                    '이용약관 및 개인정보처리방침에 동의합니다',
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  controlAffinity: ListTileControlAffinity.leading,
+                                  activeColor: AppColors.primary,
+                                  dense: true,
+                                ),
+                              ),
+                              SizedBox(height: 12.h),
+                              // v2.50.4: 동의 버튼
+                              SizedBox(
+                                width: double.infinity,
+                                height: 48.h,
+                                child: ElevatedButton(
+                                  onPressed: _termsCheckboxChecked
+                                      ? () => _handleTermsAcceptance(true)
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: _termsCheckboxChecked
+                                        ? AppColors.primary
+                                        : Colors.grey[400],
+                                    disabledBackgroundColor: Colors.grey[400],
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    _termsCheckboxChecked ? '동의하기' : '체크박스를 선택해주세요',
+                                    style: TextStyle(
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
           SizedBox(height: 20.h),
         ],
@@ -766,35 +740,39 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                   ),
                 ),
                 SizedBox(width: 12.w),
-                ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${_selectedChargeAmount}원 결제 기능은 곧 추가됩니다!'),
-                        backgroundColor: Colors.indigo[700],
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo[700],
-                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.payment, color: Colors.white, size: 20.sp),
-                      SizedBox(width: 8.w),
-                      Text(
-                        '결제하기',
-                        style: TextStyle(
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${_selectedChargeAmount}원 결제 기능은 곧 추가됩니다!'),
+                          backgroundColor: Colors.indigo[700],
                         ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo[700],
+                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
-                    ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.payment, color: Colors.white, size: 20.sp),
+                        SizedBox(width: 8.w),
+                        Text(
+                          '결제하기',
+                          style: TextStyle(
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

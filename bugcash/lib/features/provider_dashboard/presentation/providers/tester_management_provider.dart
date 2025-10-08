@@ -199,15 +199,18 @@ String _mapWorkflowStateToStatus(MissionWorkflowState state) {
     case MissionWorkflowState.applicationSubmitted:
       return 'pending';
     case MissionWorkflowState.applicationApproved:
+    case MissionWorkflowState.inProgress:
     case MissionWorkflowState.missionInProgress:
     case MissionWorkflowState.dailyMissionStarted:
     case MissionWorkflowState.dailyMissionCompleted:
     case MissionWorkflowState.dailyMissionApproved:
+    case MissionWorkflowState.testingCompleted:
     case MissionWorkflowState.projectCompleted:
     case MissionWorkflowState.projectApproved:
     case MissionWorkflowState.projectFinalized:
       return 'approved';
     case MissionWorkflowState.applicationRejected:
+    case MissionWorkflowState.dailyMissionRejected:
       return 'rejected';
     case MissionWorkflowState.paused:
       return 'paused';

@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.6.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.55.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,51 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.6.0)
+## ✨ 주요 기능 (v2.55.0)
+
+### 💰 포인트 충전 시스템 (v2.55.0) - **PAYMENT & WALLET SYSTEM**
+- **💳 Mock 결제 테스트 시스템**
+  - ✅ Toss API 없이 결제 로직 단독 테스트 가능
+  - 🧪 4가지 시나리오 테스트 (성공, 실패, 중복 결제, 대량 거래)
+  - 📝 상세 디버그 로그로 문제 추적 용이
+  - 🔄 개발 모드(kDebugMode)에서 자동 Mock 결제 사용
+
+- **🏦 자동 지갑 생성 시스템**
+  - 🆕 Legacy 사용자 대응: 지갑이 없으면 자동 생성
+  - 💾 Firestore Transaction으로 원자성 보장
+  - ⚠️ "Wallet not found" 에러 완전 해결
+  - 🔒 잔액 부족 체크 및 에러 처리
+
+- **🔧 Web 플랫폼 호환성 강화**
+  - ✅ `DateTime.now()` → `FieldValue.serverTimestamp()` 변경
+  - 🌐 "Dart exception thrown from converted Future" 에러 해결
+  - 📊 TransactionEntity → 직접 Map 변환으로 성능 개선
+  - 🔍 디버그 로그 전면 추가 (🔵, ✅, ❌ 이모지로 구분)
+
+- **💼 공급자 대시보드 개선**
+  - 🎯 이용약관 한 번 동의 후 자동 숨김
+  - 🔄 BoxConstraints 레이아웃 에러 수정
+  - 📱 Flexible wrapper로 반응형 버튼 배치
+  - ✨ Consumer 패턴으로 실시간 UI 업데이트
+
+- **📊 Firestore 데이터 구조**
+  - **wallets 컬렉션**: 사용자 지갑 정보
+    - balance, totalCharged, totalSpent, totalEarned, totalWithdrawn
+    - createdAt, updatedAt (서버 타임스탬프)
+  - **transactions 컬렉션**: 거래 내역
+    - type (charge/spend/earn/withdraw), amount, status
+    - metadata (paymentKey, orderId 등), createdAt, completedAt
+
+- **🎯 결제 워크플로우**:
+  ```
+  1. 공급자: 대시보드 → 지갑 탭 → "결제하기" 클릭
+  2. 시스템: kDebugMode면 MockPaymentPage로 라우팅
+  3. 사용자: "결제 성공" 시나리오 선택
+  4. 시스템: WalletService.chargePoints() 호출
+  5. WalletRepository: 지갑 존재 확인 → 없으면 자동 생성
+  6. Firestore: Transaction으로 balance 업데이트 + 거래내역 생성
+  7. UI: SnackBar로 성공 메시지 표시 + 지갑 provider 새로고침
+  ```
 
 ### 🎨 미션 카드 UI/UX 개선 (v2.6.0) - **MISSION CARD UI/UX IMPROVEMENTS**
 - **4개 버튼 가로 배치 시스템**

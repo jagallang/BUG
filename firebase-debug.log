@@ -116,3 +116,62 @@
 [debug] 
 [error] 
 [error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-08T12:05:30.669Z] ----------------------------------------------------------------------
+[debug] [2025-10-08T12:05:30.673Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase emulators:start --only functions,firestore,auth
+[debug] [2025-10-08T12:05:30.673Z] CLI Version:   14.7.0
+[debug] [2025-10-08T12:05:30.673Z] Platform:      darwin
+[debug] [2025-10-08T12:05:30.674Z] Node Version:  v20.19.2
+[debug] [2025-10-08T12:05:30.674Z] Time:          Wed Oct 08 2025 21:05:30 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-08T12:05:30.674Z] ----------------------------------------------------------------------
+[debug] 
+[warn] ⚠  functions: The functions emulator is configured but there is no functions source directory. Have you run firebase init functions? {"metadata":{"emulator":{"name":"functions"},"message":"The functions emulator is configured but there is no functions source directory. Have you run firebase init functions?"}}
+[debug] [2025-10-08T12:05:30.705Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-08T12:05:30.705Z] > authorizing via signed-in user (episode0611@gmail.com)
+[warn] ⚠  Could not find config (firebase.json) so using defaults. 
+[debug] [2025-10-08T12:05:30.801Z] openjdk version "17.0.14" 2025-01-21
+
+[debug] [2025-10-08T12:05:30.801Z] OpenJDK Runtime Environment Homebrew (build 17.0.14+0)
+OpenJDK 64-Bit Server VM Homebrew (build 17.0.14+0, mixed mode, sharing)
+
+[debug] [2025-10-08T12:05:30.807Z] Parsed Java major version: 17
+[info] i  emulators: Starting emulators: auth, functions, firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, functions, firestore"}}
+[debug] [2025-10-08T12:05:30.936Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-08T12:05:30.936Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-08T12:05:30.936Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-08T12:05:30.936Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-08T12:05:30.936Z] assigned listening specs for emulators {"user":{"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[warn] ⚠  functions: The functions emulator is configured but there is no functions source directory. Have you run firebase init functions? {"metadata":{"emulator":{"name":"functions"},"message":"The functions emulator is configured but there is no functions source directory. Have you run firebase init functions?"}}
+[warn] ⚠  firestore: Did not find a Cloud Firestore rules file specified in a firebase.json config file. {"metadata":{"emulator":{"name":"firestore"},"message":"Did not find a Cloud Firestore rules file specified in a firebase.json config file."}}
+[warn] ⚠  firestore: The emulator will default to allowing all reads and writes. Learn more about this option: https://firebase.google.com/docs/emulator-suite/install_and_configure#security_rules_configuration. {"metadata":{"emulator":{"name":"firestore"},"message":"The emulator will default to allowing all reads and writes. Learn more about this option: https://firebase.google.com/docs/emulator-suite/install_and_configure#security_rules_configuration."}}
+[debug] [2025-10-08T12:05:30.937Z] [firestore] Could not enable single_project_mode: missing projectId.
+[debug] [2025-10-08T12:05:30.939Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-10-08T12:05:30.939Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/Users/isan/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id",""],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/Users/isan/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to firestore-debug.log"}}
+[debug] [2025-10-08T12:05:31.559Z] Oct 08, 2025 9:05:31 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 08, 2025 9:05:31 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://127.0.0.1:9150\n"}}
+[debug] [2025-10-08T12:05:31.571Z] API endpoint: http:// {"metadata":{"emulator":{"name":"firestore"},"message":"API endpoint: http://"}}
+[debug] [2025-10-08T12:05:31.571Z] 127.0.0.1:8080
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"127.0.0.1:8080\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2025-10-08T12:05:31.755Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] i  emulators: Shutting down emulators. {"metadata":{"emulator":{"name":"hub"},"message":"Shutting down emulators."}}
+[info] i  firestore: Stopping Firestore Emulator {"metadata":{"emulator":{"name":"firestore"},"message":"Stopping Firestore Emulator"}}
+[debug] [2025-10-08T12:05:31.756Z] *** shutting down gRPC server since JVM is shutting down
+ {"metadata":{"emulator":{"name":"firestore"},"message":"*** shutting down gRPC server since JVM is shutting down\n"}}
+[debug] [2025-10-08T12:05:31.759Z] *** server shut down
+ {"metadata":{"emulator":{"name":"firestore"},"message":"*** server shut down\n"}}
+[debug] [2025-10-08T12:05:32.155Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[error] 
+[error] Error: Cannot start the Authentication Emulator without a project: run 'firebase init' or provide the --project flag
