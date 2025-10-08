@@ -1894,7 +1894,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   /// 비밀번호 재인증 다이얼로그 표시
   Future<void> _showPasswordConfirmationDialog(ProviderAppModel app) async {
     final passwordController = TextEditingController();
-    bool isLoading = false;
     bool showPassword = false;
 
     await showDialog<bool>(
@@ -2000,7 +1999,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                         contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 14.h),
                       ),
                       onFieldSubmitted: (_) {
-                        if (passwordController.text.isNotEmpty && !isLoading) {
+                        if (passwordController.text.isNotEmpty) {
                           _verifyPasswordAndDelete(dialogContext, app, passwordController.text, setState);
                         }
                       },
@@ -2010,7 +2009,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: isLoading ? null : () {
+                  onPressed: () {
                     Navigator.of(dialogContext).pop();
                   },
                   child: Text(
@@ -2022,7 +2021,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: isLoading || passwordController.text.isEmpty ? null : () {
+                  onPressed: passwordController.text.isEmpty ? null : () {
                     _verifyPasswordAndDelete(dialogContext, app, passwordController.text, setState);
                   },
                   style: ElevatedButton.styleFrom(
@@ -2032,22 +2031,13 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                   ),
-                  child: isLoading
-                      ? SizedBox(
-                          width: 16.w,
-                          height: 16.h,
-                          child: const CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          '삭제',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                  child: Text(
+                    '삭제',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             );
@@ -2064,6 +2054,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     String password,
     StateSetter setState,
   ) async {
+    // async 전에 Navigator 미리 가져오기
+    final navigator = Navigator.of(dialogContext);
+
     try {
       // 현재 로그인된 사용자 정보 가져오기
       final currentUser = FirebaseAuth.instance.currentUser;
@@ -2080,8 +2073,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       await currentUser.reauthenticateWithCredential(credential);
 
       // 재인증 성공시 다이얼로그 닫기
-      if (Navigator.of(dialogContext).canPop()) {
-        Navigator.of(dialogContext).pop();
+      if (!mounted) return;
+      if (navigator.canPop()) {
+        navigator.pop();
       }
 
       // 앱 삭제 실행

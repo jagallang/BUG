@@ -158,6 +158,7 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
     if (firstConfirmed != true) return;
 
     // 2단계: 최종 승인 확인
+    if (!mounted) return;
     final finalConfirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

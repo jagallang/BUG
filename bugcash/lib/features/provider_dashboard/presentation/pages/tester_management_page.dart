@@ -1084,6 +1084,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
             ),
             ElevatedButton(
               onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 Navigator.pop(context);
                 await _workflowService.finalizeProject(
                   workflowId: workflow.id,
@@ -1094,7 +1095,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
                   bonusReward: int.tryParse(bonusController.text) ?? 0,
                 );
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     const SnackBar(
                       content: Text('프로젝트를 최종 승인했습니다'),
                       backgroundColor: Colors.blue,
@@ -1182,8 +1183,9 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
           ),
           ElevatedButton(
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               if (rejectionReasonController.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
+                messenger.showSnackBar(
                   const SnackBar(
                     content: Text('거절 사유를 입력해주세요'),
                     backgroundColor: Colors.red,
@@ -1206,7 +1208,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
                 );
 
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     const SnackBar(
                       content: Text('일일 미션을 거절했습니다'),
                       backgroundColor: Colors.red,
@@ -1215,7 +1217,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                       content: Text('거절 처리 중 오류가 발생했습니다: ${e.toString()}'),
                       backgroundColor: Colors.red,

@@ -610,11 +610,8 @@ class MissionManagementService {
         .snapshots()
         .handleError((error) {
           AppLogger.error('watchTesterSettlements 에러', 'MissionService', error);
-          return null;
         })
         .map((snapshot) {
-          if (snapshot == null) return <MissionSettlementModel>[];
-
           final settlements = snapshot.docs
               .map((doc) {
                 try {
