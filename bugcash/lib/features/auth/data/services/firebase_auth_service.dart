@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/utils/type_converter.dart';
@@ -243,6 +244,28 @@ class FirebaseAuthService {
           if (kDebugMode) {
             debugPrint('✅ 회원가입 - Firestore 문서 생성 성공');
           }
+
+          // 회원가입 보너스 자동 지급
+          try {
+            if (kDebugMode) {
+              debugPrint('🎁 회원가입 보너스 지급 시작 - userId: ${credential.user!.uid}');
+            }
+
+            final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+            final callable = functions.httpsCallable('grantSignupBonus');
+            final result = await callable.call({'userId': credential.user!.uid});
+
+            if (kDebugMode) {
+              debugPrint('✅ 회원가입 보너스 지급 완료: ${result.data}');
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('⚠️ 회원가입 보너스 지급 실패: $e');
+              debugPrint('⚠️ 회원가입은 성공했으나 보너스 지급 중 오류 발생');
+            }
+            // 에러 발생해도 회원가입은 성공으로 처리
+            AppLogger.warning('Signup bonus grant failed, but signup succeeded: $e', 'FirebaseAuthService');
+          }
         } catch (e) {
           if (kDebugMode) {
             debugPrint('❌ 회원가입 - Firestore 문서 생성 실패: $e');
@@ -297,6 +320,26 @@ class FirebaseAuthService {
             'updatedAt': FieldValue.serverTimestamp(),
             'lastLoginAt': FieldValue.serverTimestamp(),
           });
+
+          // Google 로그인 신규 회원 보너스 지급
+          try {
+            if (kDebugMode) {
+              debugPrint('🎁 Google 로그인 신규 회원 보너스 지급 시작 - userId: ${userCredential.user!.uid}');
+            }
+
+            final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+            final callable = functions.httpsCallable('grantSignupBonus');
+            final result = await callable.call({'userId': userCredential.user!.uid});
+
+            if (kDebugMode) {
+              debugPrint('✅ Google 로그인 신규 회원 보너스 지급 완료: ${result.data}');
+            }
+          } catch (e) {
+            if (kDebugMode) {
+              debugPrint('⚠️ Google 로그인 신규 회원 보너스 지급 실패: $e');
+            }
+            AppLogger.warning('Google signup bonus grant failed: $e', 'FirebaseAuthService');
+          }
         } else {
           // Update last login time
           await _firestore.collection('users').doc(userCredential.user!.uid).update({

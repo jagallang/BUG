@@ -1342,6 +1342,156 @@ function getDefaultSettings(type) {
   return defaults[type] || {};
 }
 
+/**
+ * grantSignupBonus: 회원가입 보너스 자동 지급 (v2.61.0)
+ * 회원가입 시 플랫폼 설정에 따라 환영 보너스 포인트 지급
+ */
+exports.grantSignupBonus = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {userId} = request.data;
+  const adminUid = request.auth?.uid;
+
+  // Authentication check
+  if (!adminUid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // Validate input
+  if (!userId) {
+    throw new HttpsError("invalid-argument", "userId is required");
+  }
+
+  // 본인 또는 관리자만 호출 가능
+  const isAdminUser = await isAdmin(adminUid);
+  if (adminUid !== userId && !isAdminUser) {
+    throw new HttpsError(
+        "permission-denied",
+        "Only the user or admin can grant signup bonus",
+    );
+  }
+
+  try {
+    console.log(`회원가입 보너스 지급 시작: userId=${userId}`);
+
+    // 1. 플랫폼 설정 로드
+    const settingsDoc = await getFirestore()
+        .collection("platform_settings")
+        .doc("rewards")
+        .get();
+
+    let bonusAmount = 5000; // 기본값
+    let bonusEnabled = true;
+
+    if (settingsDoc.exists) {
+      const settings = settingsDoc.data();
+      bonusAmount = settings.signupBonus?.amount || 5000;
+      bonusEnabled = settings.signupBonus?.enabled !== false;
+    }
+
+    console.log(`보너스 설정: enabled=${bonusEnabled}, amount=${bonusAmount}`);
+
+    if (!bonusEnabled) {
+      throw new HttpsError(
+          "failed-precondition",
+          "Signup bonus is currently disabled",
+      );
+    }
+
+    // 2. 사용자 문서 확인 및 중복 지급 방지
+    const userRef = getFirestore().collection("users").doc(userId);
+    const userDoc = await userRef.get();
+
+    if (!userDoc.exists) {
+      throw new HttpsError("not-found", "User not found");
+    }
+
+    const userData = userDoc.data();
+    if (userData.signupBonusGranted === true) {
+      throw new HttpsError(
+          "already-exists",
+          "Signup bonus already granted to this user",
+      );
+    }
+
+    // 3. Firestore Transaction으로 지갑 생성 및 보너스 지급
+    await getFirestore().runTransaction(async (transaction) => {
+      const walletRef = getFirestore().collection("wallets").doc(userId);
+      const walletDoc = await transaction.get(walletRef);
+
+      let newBalance = bonusAmount;
+      let newTotalEarned = bonusAmount;
+
+      if (walletDoc.exists) {
+        // 지갑이 이미 존재하면 업데이트
+        const walletData = walletDoc.data();
+        newBalance = (walletData.balance || 0) + bonusAmount;
+        newTotalEarned = (walletData.totalEarned || 0) + bonusAmount;
+
+        transaction.update(walletRef, {
+          balance: newBalance,
+          totalEarned: newTotalEarned,
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      } else {
+        // 지갑이 없으면 새로 생성
+        transaction.set(walletRef, {
+          userId: userId,
+          balance: newBalance,
+          totalCharged: 0,
+          totalEarned: newTotalEarned,
+          totalSpent: 0,
+          totalWithdrawn: 0,
+          createdAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+      }
+
+      // 4. transaction 기록 생성
+      const transactionRef = getFirestore().collection("transactions").doc();
+      transaction.set(transactionRef, {
+        userId: userId,
+        type: "signup_bonus",
+        amount: bonusAmount,
+        description: "회원가입 축하 보너스",
+        status: "completed",
+        createdAt: FieldValue.serverTimestamp(),
+        metadata: {
+          source: "grantSignupBonus",
+          bonusType: "signup",
+        },
+      });
+
+      // 5. 사용자 문서에 지급 완료 마킹
+      transaction.update(userRef, {
+        signupBonusGranted: true,
+        signupBonusGrantedAt: FieldValue.serverTimestamp(),
+      });
+
+      console.log(`회원가입 보너스 지급 완료: userId=${userId}, amount=${bonusAmount}P`);
+    });
+
+    return {
+      success: true,
+      message: `회원가입 보너스 ${bonusAmount}P가 지급되었습니다.`,
+      amount: bonusAmount,
+    };
+  } catch (error) {
+    console.error("회원가입 보너스 지급 실패:", error);
+
+    // HttpsError는 그대로 throw
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+
+    // 기타 에러는 internal로 처리
+    throw new HttpsError(
+        "internal",
+        `Failed to grant signup bonus: ${error.message}`,
+    );
+  }
+});
+
 // Import migration functions
 const migration = require('./migration.js');
 exports.migrateUserOnWrite = migration.migrateUserOnWrite;

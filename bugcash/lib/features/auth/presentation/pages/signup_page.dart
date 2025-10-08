@@ -64,8 +64,9 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('회원가입이 완료되었습니다!'),
+            content: Text('🎉 회원가입이 완료되었습니다!\n가입 축하 보너스 5,000P가 지급되었습니다.'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 4),
           ),
         );
       }
@@ -130,14 +131,14 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.info_outline, color: Colors.blue[600], size: 24),
+                      Icon(Icons.card_giftcard, color: Colors.blue[600], size: 24),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '테스터로 시작하세요!',
+                              '🎁 가입 축하 보너스 5,000P 지급!',
                               style: TextStyle(
                                 fontWeight: FontWeight.w600,
                                 color: Colors.blue[700],
@@ -145,7 +146,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '가입 후 앱 테스트에 참여하고 리워드를 받으세요.\n나중에 앱 공급자로 업그레이드할 수 있습니다.',
+                              '테스터로 시작하여 앱 테스트에 참여하고 리워드를 받으세요.\n나중에 앱 공급자로 업그레이드할 수 있습니다.',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.blue[600],
