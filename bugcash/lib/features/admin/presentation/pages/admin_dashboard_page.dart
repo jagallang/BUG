@@ -384,14 +384,17 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 SizedBox(height: 24),
 
                 // 출금 관리 바로가기 버튼
-                ElevatedButton.icon(
-                  onPressed: _navigateToWithdrawalManagement,
-                  icon: const Icon(Icons.arrow_circle_up),
-                  label: const Text('출금 신청 관리'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                SizedBox(
+                  width: 200,
+                  child: ElevatedButton.icon(
+                    onPressed: _navigateToWithdrawalManagement,
+                    icon: const Icon(Icons.arrow_circle_up),
+                    label: const Text('출금 신청 관리'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    ),
                   ),
                 ),
 
