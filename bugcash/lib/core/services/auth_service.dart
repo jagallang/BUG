@@ -113,9 +113,7 @@ class CurrentUserService {
       final walletRepository = WalletRepositoryImpl();
       final walletService = WalletService(walletRepository);
       await walletService.createWalletForNewUser(userId);
-      print('✅ 지갑 생성 완료: userId=$userId');
     } catch (e) {
-      print('⚠️ 지갑 생성 실패: $e');
       // 지갑 생성 실패해도 회원가입은 계속 진행
     }
   }

@@ -13,7 +13,7 @@ class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn(
-    clientId: '810712240857-1r76sh9fa1rd877esdd4m69t82s8qsmk.apps.googleusercontent.com',
+    clientId: '335851774651-s1v854i43o3f3590lbh203dr73p18fmj.apps.googleusercontent.com',
   );
 
   /// UserEntity 생성을 위한 팩토리 메소드 (다중 역할 지원)
@@ -335,9 +335,9 @@ class FirebaseAuthService {
       }
 
       return userCredential;
-    } catch (e) {
+    } catch (e, stackTrace) {
       AppLogger.error('Error during Google sign in', 'FirebaseAuthService', e);
-      return null;
+      rethrow;
     }
   }
 
