@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.70.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.71.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,25 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.70.0)
+## ✨ 주요 기능 (v2.71.0)
+
+### 🎨 관리자 대시보드 반응형 UI 개선 (v2.71.0) - **ADMIN RESPONSIVE UI**
+- **📱 전체 화면 활용 레이아웃**
+  - 🖥️ 넓은 모니터(1920px+)에서 콘텐츠가 전체 너비 활용
+  - 🚫 전역 ResponsiveWrapper 제거하여 각 대시보드 독립적 제어
+  - 📐 사이드바: 240px 고정, 패딩: 24px 고정
+  - ✨ 한 화면에 모든 콘텐츠 표시 가능
+
+- **🔤 고정 크기 타이포그래피**
+  - 📏 ScreenUtil 반응형 크기(.sp, .w, .h) → 고정 픽셀 값 변경 (229개 이상)
+  - 🎯 화면 크기와 관계없이 적절한 글자/요소 크기 유지
+  - 📖 가독성 향상: 제목 24px, 일반 16px, 소 12px 고정
+  - 💯 초대형 모니터에서도 UI 요소가 과도하게 커지지 않음
+
+- **🏗️ 기술적 개선**
+  - ResponsiveBreakpoints.maxAdminDashboardWidth: 1920px 추가
+  - getAdminDashboardPaddingHorizontal() 메서드 추가
+  - Finance 탭 테이블과 통계가 여유롭게 표시
 
 ### 📊 관리자 대시보드 Finance 탭 고도화 (v2.70.0) - **ADMIN FINANCE DASHBOARD**
 - **📈 실시간 요약 카드 (v2.69.0)**
