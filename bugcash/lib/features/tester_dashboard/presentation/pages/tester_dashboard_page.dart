@@ -1050,6 +1050,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   },
                   icon: const Icon(Icons.refresh),
                   label: const Text('새로고침'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
+                    foregroundColor: Colors.white,
+                  ),
                 ),
               ],
             ),
