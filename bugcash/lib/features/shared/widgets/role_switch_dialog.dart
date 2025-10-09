@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../auth/domain/entities/user_entity.dart';
 import '../../auth/presentation/providers/auth_provider.dart';
 import '../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import '../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 
-/// v2.80.3: 역할 전환 다이얼로그 (자동 화면 전환 추가)
+/// v2.80.4: 역할 전환 다이얼로그 (자동 역할 추가 지원)
 class RoleSwitchDialog extends ConsumerWidget {
   final UserEntity user;
   final UserType targetRole;
@@ -30,8 +31,33 @@ class RoleSwitchDialog extends ConsumerWidget {
 
   Future<void> _handleSwitchRole(BuildContext context, WidgetRef ref) async {
     try {
-      // 역할 전환
-      await ref.read(authProvider.notifier).switchRole(targetRole);
+      // v2.80.4: 역할이 없으면 자동으로 추가
+      List<String> updatedRoles = user.roles.map((r) => r.name).toList();
+
+      if (!user.roles.contains(targetRole)) {
+        // targetRole이 roles 배열에 없으면 추가
+        updatedRoles.add(targetRole.name);
+
+        // Firebase에 roles 배열과 primaryRole 동시 업데이트
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .update({
+          'roles': updatedRoles,
+          'primaryRole': targetRole.name,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        // AuthProvider 상태 동기화
+        final authService = ref.read(firebaseAuthServiceProvider);
+        final updatedUser = await authService.getUserData(user.uid);
+        if (updatedUser != null) {
+          ref.read(authProvider.notifier).setUser(updatedUser);
+        }
+      } else {
+        // roles 배열에 이미 있으면 기존 로직 사용
+        await ref.read(authProvider.notifier).switchRole(targetRole);
+      }
 
       if (context.mounted) {
         // 다이얼로그 닫기

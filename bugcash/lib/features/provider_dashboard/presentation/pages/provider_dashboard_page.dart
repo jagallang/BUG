@@ -1681,22 +1681,12 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   // v2.80.0: 역할 전환 다이얼로그 표시
-  // v2.80.2: 역할 전환 다이얼로그 (테스터로 전환)
+  // v2.80.4: 역할 전환 다이얼로그 (역할 체크 제거)
   void _showRoleSwitchDialog(BuildContext context) {
     final authState = ref.read(authProvider);
     if (authState.user == null) return;
 
-    // 테스터 역할이 있는지 확인
-    if (!authState.user!.roles.contains(UserType.tester)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ 테스터 역할이 없습니다.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
+    // v2.80.4: 역할 체크 제거 - 다이얼로그에서 자동으로 역할 추가
     showDialog(
       context: context,
       builder: (context) => RoleSwitchDialog(
