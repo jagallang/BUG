@@ -833,28 +833,22 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             ),
           ),
           Container(
-            height: 60.h + MediaQuery.of(context).padding.bottom, // 시스템 내비게이션 바 높이 추가
+            height: 50.h + MediaQuery.of(context).padding.bottom, // v2.75.1: 높이 감소 (60→50)
             decoration: BoxDecoration(
-              color: Colors.white, // 배경 중립화
-              border: Border(
-                top: BorderSide(
-                  color: AppColors.neutral200,
-                  width: 1,
-                ),
-              ),
+              color: Theme.of(context).colorScheme.primary, // v2.75.1: 상단 AppBar와 동일한 색상
             ),
             child: Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom), // 하단 세이프 에리어 패딩
               child: TabBar(
-                labelColor: AppColors.neutral800,
-                unselectedLabelColor: AppColors.neutral500,
-                indicatorColor: AppColors.primary,
-                indicatorWeight: 2,
+                labelColor: Colors.white, // v2.75.1: 흰색 텍스트
+                unselectedLabelColor: Colors.white70, // v2.75.1: 반투명 흰색
+                indicatorColor: Colors.white, // v2.75.1: 흰색 인디케이터
+                indicatorWeight: 3,
                 indicatorPadding: EdgeInsets.symmetric(horizontal: 8.w),
                 splashFactory: InkRipple.splashFactory,
-                overlayColor: WidgetStateProperty.all(AppColors.neutral100),
+                overlayColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.1)),
                 labelStyle: TextStyle(
-                  fontSize: 12.sp, // v2.74.0: 정산 탭 제거로 폰트 크기 복원
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.w600,
                 ),
                 unselectedLabelStyle: TextStyle(
@@ -862,9 +856,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   fontWeight: FontWeight.normal,
                 ),
                 tabs: [
-                  Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 18.w)),
-                  Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 18.w)),
-                  Tab(text: '완료', icon: Icon(Icons.check_circle, size: 18.w)),
+                  Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 24.w)), // v2.75.1: 아이콘 크기 증가 (18→24)
+                  Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 24.w)),
+                  Tab(text: '완료', icon: Icon(Icons.check_circle, size: 24.w)),
                 ],
               ),
             ),
