@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // v2.50.1: 이용약관 동의 저장
+import 'package:intl/intl.dart'; // v2.72.0: 거래 내역 날짜 포맷팅
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -139,21 +140,65 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('알림 기능 (개발 중)')),
-              );
-            },
-          ),
+          // v2.73.0: 4개 아이콘 배치
+          // 1. 프로필 아이콘
           IconButton(
             icon: const Icon(Icons.account_circle, color: Colors.white),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('프로필 기능 (개발 중)')),
-              );
+            tooltip: '프로필',
+            onPressed: () => _navigateToProfile(context),
+          ),
+          // 2. 지갑 아이콘 (공급자 전용: 포인트 충전)
+          IconButton(
+            icon: const Icon(Icons.wallet, color: Colors.white),
+            tooltip: '포인트 충전',
+            onPressed: () => _navigateToChargePoints(context),
+          ),
+          // 3. 알림 아이콘
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+            tooltip: '알림',
+            onPressed: () => _showNotifications(context),
+          ),
+          // 4. 햄버거 메뉴
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            tooltip: '메뉴',
+            offset: Offset(0, 50.h),
+            onSelected: (String value) {
+              debugPrint('🔵 PopupMenu 선택됨: $value');
+              switch (value) {
+                case 'settings':
+                  debugPrint('🔵 설정 메뉴 선택');
+                  _navigateToSettings(context);
+                  break;
+                case 'logout':
+                  debugPrint('🔵 로그아웃 메뉴 선택');
+                  _showLogoutConfirmation(context);
+                  break;
+              }
             },
+            itemBuilder: (BuildContext context) => [
+              PopupMenuItem<String>(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    Icon(Icons.settings, color: Theme.of(context).colorScheme.primary),
+                    SizedBox(width: 12.w),
+                    const Text('설정'),
+                  ],
+                ),
+              ),
+              PopupMenuItem<String>(
+                value: 'logout',
+                child: Row(
+                  children: [
+                    Icon(Icons.logout, color: Colors.red[600]),
+                    SizedBox(width: 12.w),
+                    const Text('로그아웃', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -783,48 +828,78 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     );
   }
 
-  // 📊 거래 내역
+  // 📊 거래 내역 (v2.72.0: Firestore 실시간 데이터)
   Widget _buildTransactionHistory() {
-    // 하드코딩된 샘플 거래 내역
-    final List<Map<String, dynamic>> transactions = [
-      {
-        'type': 'charge',
-        'description': '포인트 충전',
-        'amount': 30000,
-        'date': '2025-01-26 14:23',
-        'balance': 80000,
-      },
-      {
-        'type': 'spend',
-        'description': '앱테스트 프로젝트 등록',
-        'amount': -20000,
-        'date': '2025-01-25 10:15',
-        'balance': 50000,
-      },
-      {
-        'type': 'charge',
-        'description': '포인트 충전',
-        'amount': 50000,
-        'date': '2025-01-24 16:30',
-        'balance': 70000,
-      },
-      {
-        'type': 'spend',
-        'description': '앱테스트 프로젝트 등록',
-        'amount': -15000,
-        'date': '2025-01-23 09:45',
-        'balance': 20000,
-      },
-      {
-        'type': 'charge',
-        'description': '포인트 충전',
-        'amount': 10000,
-        'date': '2025-01-22 11:20',
-        'balance': 35000,
-      },
-    ];
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('transactions')
+          .where('userId', isEqualTo: widget.providerId)
+          .orderBy('createdAt', descending: true)
+          .limit(10)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
 
-    return Card(
+        if (snapshot.hasError) {
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red, size: 48.sp),
+                  SizedBox(height: 16.h),
+                  Text(
+                    '거래 내역을 불러올 수 없습니다',
+                    style: TextStyle(fontSize: 16.sp, color: Colors.grey[700]),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                children: [
+                  Icon(Icons.receipt_long_outlined, color: Colors.grey, size: 48.sp),
+                  SizedBox(height: 16.h),
+                  Text(
+                    '아직 거래 내역이 없습니다',
+                    style: TextStyle(fontSize: 16.sp, color: Colors.grey[700]),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final transactions = snapshot.data!.docs;
+
+        return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12.r),
@@ -850,10 +925,24 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             ),
             SizedBox(height: 16.h),
 
-            ...transactions.map((transaction) {
-              final isCharge = transaction['type'] == 'charge';
-              final icon = isCharge ? Icons.add_circle : Icons.remove_circle;
-              final color = isCharge ? Colors.green[600]! : Colors.red[600]!;
+            ...transactions.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+              final type = data['type'] as String? ?? 'unknown';
+              final amount = data['amount'] as int? ?? 0;
+              final description = data['description'] as String? ?? '거래';
+              final createdAt = data['createdAt'] as Timestamp?;
+
+              // 날짜 포맷팅
+              String dateString = '미상';
+              if (createdAt != null) {
+                final date = createdAt.toDate();
+                dateString = DateFormat('yyyy-MM-dd HH:mm').format(date);
+              }
+
+              // 타입에 따른 아이콘과 색상
+              final isPositive = type == 'charge' || type == 'earn';
+              final icon = isPositive ? Icons.add_circle : Icons.remove_circle;
+              final color = isPositive ? Colors.green[600]! : Colors.red[600]!;
 
               return Container(
                 margin: EdgeInsets.only(bottom: 12.h),
@@ -872,7 +961,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            transaction['description'],
+                            description,
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w600,
@@ -881,7 +970,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                           ),
                           SizedBox(height: 4.h),
                           Text(
-                            transaction['date'],
+                            dateString,
                             style: TextStyle(
                               fontSize: 12.sp,
                               color: Colors.grey[600],
@@ -890,26 +979,13 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                         ],
                       ),
                     ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${isCharge ? '+' : ''}${transaction['amount'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} P',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: color,
-                          ),
-                        ),
-                        SizedBox(height: 4.h),
-                        Text(
-                          '잔액: ${transaction['balance'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} P',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
+                    Text(
+                      '${isPositive ? '+' : ''}${NumberFormat('#,###').format(amount)} P',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
                     ),
                   ],
                 ),
@@ -918,25 +994,28 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
             SizedBox(height: 12.h),
 
-            Center(
-              child: TextButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('전체 거래 내역 기능은 곧 추가됩니다!')),
-                  );
-                },
-                child: Text(
-                  '더보기',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.indigo[700],
+            if (transactions.length >= 10)
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('전체 거래 내역 기능은 곧 추가됩니다!')),
+                    );
+                  },
+                  child: Text(
+                    '더보기',
+                    style: TextStyle(
+                      fontSize: 14.sp,
+                      color: Colors.indigo[700],
+                    ),
                   ),
                 ),
               ),
-            ),
           ],
         ),
       ),
+    );
+      },
     );
   }
 
@@ -1538,5 +1617,71 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         );
       }
     }
+  }
+
+  // v2.73.0: 프로필 페이지로 이동
+  void _navigateToProfile(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('프로필 페이지 (개발 중)'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // v2.73.0: 포인트 충전 페이지로 이동 (공급자 전용)
+  void _navigateToChargePoints(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('포인트 충전 페이지 (개발 중)'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // v2.73.0: 알림 표시
+  void _showNotifications(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('알림 기능 (개발 중)'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // v2.73.0: 설정 페이지로 이동
+  void _navigateToSettings(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('설정 페이지 (개발 중)'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // v2.73.0: 로그아웃 확인
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('로그아웃'),
+          content: const Text('정말 로그아웃하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('취소'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await ref.read(authProvider.notifier).signOut();
+              },
+              child: const Text('로그아웃', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

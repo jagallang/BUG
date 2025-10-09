@@ -49,7 +49,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     with TickerProviderStateMixin {
   late TabController _tabController;
   late ScrollController _scrollController;
-  bool _isAppBarExpanded = false;
   int? _navigateToMissionSubTab; // 미션 서브탭 네비게이션 신호
 
   // [MVP] 타이머 UI 제거 - 백그라운드에서만 작동
@@ -156,10 +155,24 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     super.dispose();
   }
 
-  void _toggleAppBar() {
-    setState(() {
-      _isAppBarExpanded = !_isAppBarExpanded;
-    });
+  // v2.73.0: 프로필 페이지로 이동
+  void _navigateToProfile(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('프로필 페이지 (개발 중)'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // v2.73.0: 거래 내역 페이지로 이동
+  void _navigateToWallet(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('거래 내역 페이지 (개발 중)'),
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   void _showProviderApplicationDialog(BuildContext context) {
@@ -415,131 +428,47 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           body: CustomScrollView(
             controller: _scrollController,
             slivers: [
-              // App Bar with Profile
+              // App Bar - v2.73.0: 단순화 및 4개 아이콘 배치
               SliverAppBar(
-                expandedHeight: _isAppBarExpanded ? 200.h : kToolbarHeight,
-                collapsedHeight: kToolbarHeight,
-                floating: false,
                 pinned: true,
-                elevation: 0,
+                elevation: 2,
                 backgroundColor: Theme.of(context).colorScheme.primary,
-                snap: false,
                 automaticallyImplyLeading: false,
-                flexibleSpace: _isAppBarExpanded ? FlexibleSpaceBar(
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
-                        ],
-                      ),
-                    ),
-                    child: SafeArea(
-                      child: Padding(
-                        padding: ResponsiveWrapper.getResponsivePadding(context),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            // Top spacing to avoid overlap with title
-                            SizedBox(height: 60.h),
-
-                            // Greeting and notifications
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '안녕하세요! 👋',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16.sp,
-                                        ),
-                                      ),
-                                      Text(
-                                        '오늘도 화이팅!',
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.8),
-                                          fontSize: 14.sp,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Notification and settings
-                                IconButton(
-                                  onPressed: () => _showNotifications(context),
-                                  icon: Badge(
-                                    label: Text('${dashboardState.unreadNotifications}'),
-                                    isLabelVisible: dashboardState.unreadNotifications > 0,
-                                    child: const Icon(
-                                      Icons.notifications,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: () => _showProfileSettings(context),
-                                  icon: const Icon(
-                                    Icons.account_circle,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            SizedBox(height: 16.h),
-
-                            // Quick stats
-                            if (dashboardState.testerProfile != null)
-                              _buildQuickStats(context, dashboardState.testerProfile!),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ) : null,
-                title: GestureDetector(
-                  onTap: _toggleAppBar,
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 16.w,
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
-                        child: Icon(
-                          Icons.person,
-                          color: Colors.white,
-                          size: 18.w,
-                        ),
-                      ),
-                      SizedBox(width: 8.w),
-                      Expanded(
-                        child: Text(
-                          dashboardState.testerProfile?.name ?? '테스터',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Icon(
-                        _isAppBarExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                        color: Colors.white,
-                      ),
-                    ],
+                title: Text(
+                  '테스터 대시보드',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 actions: [
-                  // Hamburger menu
+                  // 1. 프로필 아이콘
+                  IconButton(
+                    icon: const Icon(Icons.account_circle, color: Colors.white),
+                    tooltip: '프로필',
+                    onPressed: () => _navigateToProfile(context),
+                  ),
+                  // 2. 지갑 아이콘
+                  IconButton(
+                    icon: const Icon(Icons.wallet, color: Colors.white),
+                    tooltip: '거래 내역',
+                    onPressed: () => _navigateToWallet(context),
+                  ),
+                  // 3. 알림 아이콘 (Badge 포함)
+                  IconButton(
+                    icon: Badge(
+                      label: Text('${dashboardState.unreadNotifications}'),
+                      isLabelVisible: dashboardState.unreadNotifications > 0,
+                      child: const Icon(Icons.notifications, color: Colors.white),
+                    ),
+                    tooltip: '알림',
+                    onPressed: () => _showNotifications(context),
+                  ),
+                  // 4. 햄버거 메뉴
                   PopupMenuButton<String>(
                     icon: const Icon(Icons.menu, color: Colors.white),
+                    tooltip: '메뉴',
                     offset: Offset(0, 50.h),
                     onSelected: (String value) {
                       debugPrint('🔵 PopupMenu 선택됨: $value');
@@ -2377,9 +2306,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     return StreamBuilder<List<MissionSettlementModel>>(
       stream: missionService.watchTesterSettlements(widget.testerId),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        // v2.55.0: 로딩 상태를 더 엄격하게 체크 (waiting이면서 data가 null일 때만 로딩)
+        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
           return const BugCashLoadingWidget(
-            message: '미션 목록을 불러오는 중...',
+            message: '정산 정보를 불러오는 중...',
           );
         }
 
