@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.80.4-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.83.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,37 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.80.4)
+## ✨ 주요 기능 (v2.83.0)
+
+### 🎨 공급자 대시보드 색상 통일 (v2.83.0) - **PROVIDER DASHBOARD COLOR UNIFICATION**
+- **🎨 파스텔 블루 색상 일관성**
+  - ✅ **전체 색상 통일**: AppColors.providerBluePrimary (#5BA3D0) 파스텔 블루로 통일
+  - 🔄 **Material → Custom**: Colors.blue.shadeXXX → AppColors.providerBlue 시리즈로 교체
+  - 📐 **일관된 브랜드 경험**: 앱 카드, 버튼, AppBar, 미션 카드 모두 동일한 블루 팔레트 사용
+
+- **📦 색상 적용 범위**
+  - 🏠 **앱 관리 페이지**: 앱 카드 배경/테두리, 아이콘 컨테이너, 카테고리 뱃지, 수정/미션 버튼
+  - 📝 **앱 상세 페이지**: AppBar, 모든 섹션 제목 (5개 섹션)
+  - 🎯 **미션 관리 페이지**: AppBar, TabBar, 모든 미션 카드 (대기/진행/완료/삭제/보류)
+
+- **🎯 색상 매핑 전략**
+  - 🌊 **Very Light**: providerBlueLight.withValues(alpha: 0.3) - 카드 배경
+  - 💙 **Light**: providerBlueLight (#8FC5E3) - 테두리, 밝은 액센트
+  - 🔵 **Primary**: providerBluePrimary (#5BA3D0) - 메인 요소, 버튼
+  - 🌑 **Dark**: providerBlueDark (#4284AC) - 텍스트, 제목
+
+### 🚀 UX 개선 (v2.82.0) - **AUTHENTICATION FLOW SIMPLIFICATION**
+- **⚡ 간소화된 인증 플로우**
+  - ✅ **직접 대시보드 이동**: 로그인 후 역할 선택 화면 제거
+  - 🎯 **primaryRole 기반 라우팅**: 사용자의 기본 역할로 바로 이동
+  - 🔄 **대시보드 내 전환**: 역할 전환은 대시보드 내에서 가능
+  - ⏱️ **빠른 접근**: 불필요한 중간 단계 제거로 사용성 향상
+
+### 🎨 공급자 대시보드 블루 컨셉 (v2.81.0) - **PROVIDER DASHBOARD BLUE CONCEPT**
+- **💙 새로운 블루 디자인 적용**
+  - 🎨 앱 카드, 미션 버튼, 미션 관리 페이지에 블루 컨셉 적용
+  - ✨ 그라데이션, 테두리, 쉐도우로 현대적인 UI 구현
+  - 📱 일관된 시각적 경험 제공
 
 ### 🔄 역할 전환 시스템 (v2.80.0~v2.80.4) - **ROLE SWITCHING SYSTEM**
 - **🔀 양방향 역할 전환 (v2.80.4)**
