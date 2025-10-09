@@ -64,7 +64,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this); // 미션, 게시판
+    _tabController = TabController(length: 3, vsync: this); // 미션 서브탭: 미션 찾기, 진행 중, 완료
     _scrollController = ScrollController();
 
     // TabController 초기화 완료
@@ -527,24 +527,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 ],
               ),
 
-              // Tab Bar
-              SliverPersistentHeader(
-                delegate: _SliverTabBarDelegate(
-                  TabBar(
-                    controller: _tabController,
-                    tabs: const [
-                      Tab(text: '미션', icon: Icon(Icons.assignment)),
-                      Tab(text: '게시판', icon: Icon(Icons.forum)),
-                    ],
-                    labelColor: Theme.of(context).colorScheme.primary,
-                    unselectedLabelColor: Colors.grey,
-                    indicatorColor: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-                pinned: true,
-              ),
-
-              // Tab Content
+              // 미션 콘텐츠 (게시판 탭 제거)
               SliverFillRemaining(
                 child: dashboardState.isLoading
                     ? const BugCashLoadingWidget(
@@ -552,27 +535,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       )
                     : dashboardState.error != null
                         ? _buildErrorWidget(dashboardState.error!)
-                        : TabBarView(
-                            controller: _tabController,
-                            children: [
-                              // 미션 (미션 찾기 + 진행 중인 미션 통합)
-                              _buildMissionTab(),
-
-                              // 게시판 (커뮤니티)
-                              Card(
-                                child: Padding(
-                                  padding: ResponsiveWrapper.getResponsivePadding(context),
-                                  child: Column(
-                                    children: [
-                                      Text('커뮤니티 게시판', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
-                                      SizedBox(height: 8.h),
-                                      Text('테스터 커뮤니티 준비 중'),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                        : _buildMissionTab(),
               ),
             ],
           ),
