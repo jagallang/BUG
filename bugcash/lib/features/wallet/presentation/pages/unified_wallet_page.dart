@@ -108,13 +108,7 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
 
           SizedBox(height: 16.h),
 
-          // 2. 월간 통계 (테스터만 표시)
-          if (widget.userType == 'tester') ...[
-            _buildTesterMonthlyStats(context),
-            SizedBox(height: 16.h),
-          ],
-
-          // 3. 빠른 작업 버튼 (역할별)
+          // 2. 빠른 작업 버튼 (역할별)
           if (widget.userType == 'tester')
             _buildWithdrawalButton(context, wallet)
           else
@@ -165,7 +159,7 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                 ),
                 SizedBox(width: 12.w),
                 Text(
-                  widget.userType == 'tester' ? '출금 가능 포인트' : '보유 포인트',
+                  widget.userType == 'tester' ? '내 포인트' : '보유 포인트',
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 16.sp,
@@ -188,50 +182,6 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
       ),
     );
   }
-
-  /// 테스터 월간 통계
-  Widget _buildTesterMonthlyStats(BuildContext context) {
-    final monthlyEarnedAsync = ref.watch(monthlyEarnedProvider(widget.userId));
-
-    return Row(
-      children: [
-        Expanded(
-          child: monthlyEarnedAsync.when(
-            data: (amount) => _buildStatCard(
-              context,
-              '이번 달 적립',
-              amount,
-              Icons.savings_outlined,
-              Colors.green,
-            ),
-            loading: () => _buildLoadingStatCard(context, '이번 달 적립'),
-            error: (_, __) => _buildErrorStatCard(context, '이번 달 적립'),
-          ),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: monthlyEarnedAsync.when(
-            data: (_) {
-              final walletAsync = ref.watch(walletProvider(widget.userId));
-              return walletAsync.maybeWhen(
-                data: (wallet) => _buildStatCard(
-                  context,
-                  '총 적립 금액',
-                  wallet.totalEarned,
-                  Icons.trending_up,
-                  Colors.blue,
-                ),
-                orElse: () => _buildLoadingStatCard(context, '총 적립 금액'),
-              );
-            },
-            loading: () => _buildLoadingStatCard(context, '총 적립 금액'),
-            error: (_, __) => _buildErrorStatCard(context, '총 적립 금액'),
-          ),
-        ),
-      ],
-    );
-  }
-
 
   /// 통계 카드
   Widget _buildStatCard(
