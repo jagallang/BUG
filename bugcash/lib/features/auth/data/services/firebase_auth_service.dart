@@ -12,7 +12,9 @@ import '../../domain/models/user_consent.dart';
 class FirebaseAuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: '810712240857-1r76sh9fa1rd877esdd4m69t82s8qsmk.apps.googleusercontent.com',
+  );
 
   /// UserEntity 생성을 위한 팩토리 메소드 (다중 역할 지원)
   UserEntity _createUserEntityFromData(String uid, Map<String, dynamic> data) {
