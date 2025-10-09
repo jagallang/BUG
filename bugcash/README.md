@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.55.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.70.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,43 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.55.0)
+## ✨ 주요 기능 (v2.70.0)
+
+### 📊 관리자 대시보드 Finance 탭 고도화 (v2.70.0) - **ADMIN FINANCE DASHBOARD**
+- **📈 실시간 요약 카드 (v2.69.0)**
+  - 💰 **이번 달 충전**: Firestore transactions에서 실시간 집계
+  - 💸 **이번 달 지급**: earn/withdraw 타입 거래 합계
+  - 💵 **수수료 수익**: 지급액의 10% 자동 계산
+  - ⚡ StreamBuilder로 자동 업데이트
+  - 🎨 로딩 중 스켈레톤 UI 표시
+  - ❌ 에러 발생 시 "₩-" 표시
+
+- **🗓️ 빠른 날짜 필터 (v2.70.0)**
+  - 📅 **6개 빠른 필터 버튼**
+    - 오늘 / 이번 주 / 이번 달 / 지난 달 / 최근 3개월 / 전체
+  - 🎯 FilterChip으로 선택 상태 시각화 (파란색 하이라이트)
+  - 🔢 자동 날짜 범위 계산 함수
+  - 📌 기본값: 이번 달 (1일 ~ 현재)
+  - 🔄 커스텀 날짜 선택 시 빠른 필터 자동 해제
+
+- **🎨 컴팩트 필터 UI (v2.70.1)**
+  - 📏 상태 드롭다운 고정 너비 (120w)
+  - 📆 날짜 선택기에 달력 아이콘 추가
+  - ♻️ 초기화 버튼 아이콘화 (공간 절약)
+  - 📐 전체 패딩/폰트 크기 축소
+
+- **📋 거래 내역 관리**
+  - 🏷️ 3개 서브탭: 전체 내역 / 충전 내역 / 지급 내역
+  - 🔍 상태별 필터 (전체/대기중/완료/실패)
+  - 📊 7개 컬럼 DataTable (날짜, 사용자, 유형, 금액, 상태, 설명, 상세)
+  - 🔄 클라이언트 측 필터링 (Firestore 인덱스 에러 방지)
+  - 📱 반응형 디자인
+
+- **🎯 기술적 특징**
+  - StreamBuilder + Firestore 실시간 스트리밍
+  - 클라이언트 측 필터링으로 복잡한 쿼리 회피
+  - Flutter ScreenUtil로 반응형 구현
+  - 상태별 에러 핸들링 (로딩/에러/빈 화면)
 
 ### 💰 포인트 충전 시스템 (v2.55.0) - **PAYMENT & WALLET SYSTEM**
 - **💳 Mock 결제 테스트 시스템**
