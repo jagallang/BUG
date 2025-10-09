@@ -6,7 +6,7 @@ class AppConfig {
   static bool get enableLogging => !isProduction && kDebugMode;
 
   // App-specific settings
-  static const String appName = 'BugCash';
+  static const String appName = '벅스리워드';
   static const String appVersion = '1.0.0';
 
   // Feature flags

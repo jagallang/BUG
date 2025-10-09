@@ -127,7 +127,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               children: [
                 const SizedBox(height: 20),
                 Text(
-                  'BugCash 회원가입',
+                  '벅스리워드 회원가입',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: Colors.black,

@@ -30,7 +30,7 @@ class SplashPage extends StatelessWidget {
               ),
               SizedBox(height: 32.h),
               Text(
-                'BugCash',
+                '벅스리워드',
                 style: TextStyle(
                   fontSize: 42.sp,
                   fontWeight: FontWeight.bold,

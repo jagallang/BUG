@@ -249,7 +249,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         children: [
           // 📱 앱 테스트 사용 가이드
           Text(
-            '📱 BugCash 앱 테스트 사용 가이드',
+            '📱 벅스리워드 앱 테스트 사용 가이드',
             style: TextStyle(
               fontSize: 28.sp,
               fontWeight: FontWeight.bold,
@@ -384,7 +384,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                     ),
                     SizedBox(height: 12.h),
                     Text(
-                      'BugCash 앱 테스트 서비스 이용약관 및 개인정보처리방침에 대한 동의가 필요합니다.',
+                      '벅스리워드 앱 테스트 서비스 이용약관 및 개인정보처리방침에 대한 동의가 필요합니다.',
                       style: TextStyle(
                         fontSize: 14.sp,
                         color: Colors.grey[700],
@@ -1401,7 +1401,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'BugCash 서비스 이용약관',
+                    '벅스리워드 서비스 이용약관',
                     style: TextStyle(
                       fontSize: 22.sp,
                       fontWeight: FontWeight.bold,
@@ -1424,7 +1424,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                     children: [
                       _buildTermsSection(
                         '제1조 (목적)',
-                        '본 약관은 BugCash(이하 "회사")가 제공하는 앱 테스트 중개 서비스(이하 "서비스")의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.',
+                        '본 약관은 벅스리워드(이하 "회사")가 제공하는 앱 테스트 중개 서비스(이하 "서비스")의 이용과 관련하여 회사와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.',
                       ),
                       _buildTermsSection(
                         '제2조 (정의)',

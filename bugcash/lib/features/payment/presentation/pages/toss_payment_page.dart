@@ -102,7 +102,7 @@ class _TossPaymentPageState extends ConsumerState<TossPaymentPage> {
       final result = await _paymentWidget.requestPayment(
         paymentInfo: PaymentInfo(
           orderId: _orderId!,
-          orderName: 'BugCash 포인트 충전 ${_formatAmount(widget.amount)}원',
+          orderName: '벅스리워드 포인트 충전 ${_formatAmount(widget.amount)}원',
           customerName: widget.userId,
         ),
       );

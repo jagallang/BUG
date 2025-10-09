@@ -94,7 +94,7 @@ class _TermsAgreementPageState extends State<TermsAgreementPage> {
                   children: [
                     // 헤더
                     Text(
-                      'BugCash 서비스 이용을 위해\n약관에 동의해주세요',
+                      '벅스리워드 서비스 이용을 위해\n약관에 동의해주세요',
                       style: TextStyle(
                         fontSize: 22.sp,
                         fontWeight: FontWeight.bold,

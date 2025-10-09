@@ -25,7 +25,7 @@ enum PaymentStatus {
 class PaymentEntity extends Equatable {
   final String paymentKey; // 토스 결제 고유 키
   final String orderId; // 주문 ID (자체 생성)
-  final String orderName; // 주문명 (BugCash 포인트 충전 10,000원)
+  final String orderName; // 주문명 (벅스리워드 포인트 충전 10,000원)
   final int amount; // 결제 금액 (원)
   final PaymentMethod method; // 결제 방법
   final PaymentStatus status; // 결제 상태
@@ -56,7 +56,7 @@ class PaymentEntity extends Equatable {
     return PaymentEntity(
       paymentKey: '', // 토스에서 발급받음
       orderId: orderId,
-      orderName: 'BugCash 포인트 충전 ${_formatAmount(amount)}원',
+      orderName: '벅스리워드 포인트 충전 ${_formatAmount(amount)}원',
       amount: amount,
       method: PaymentMethod.card, // 기본값
       status: PaymentStatus.ready,

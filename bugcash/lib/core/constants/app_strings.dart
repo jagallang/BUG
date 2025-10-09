@@ -1,5 +1,5 @@
 class AppStrings {
-  static const String welcomeTitle = 'BugCash에 오신 것을 환영합니다!';
+  static const String welcomeTitle = '벅스리워드에 오신 것을 환영합니다!';
   static const String welcomeSubtitle = '버그를 찾고, 캐시를 받으세요';
   
   static const String loginWithGoogle = 'Google로 시작하기';

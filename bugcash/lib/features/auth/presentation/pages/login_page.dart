@@ -157,7 +157,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               const SizedBox(height: 32),
               
               Text(
-                'BugCash',
+                '벅스리워드',
                 style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.black,

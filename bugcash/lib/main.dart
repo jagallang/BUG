@@ -91,7 +91,7 @@ class BugCashWebApp extends StatelessWidget {
             textScaler: TextScaler.linear(_getWebResponsiveTextScale(context)),
           ),
           child: MaterialApp(
-            title: 'BugCash - 웹 앱 테스트 플랫폼',
+            title: '벅스리워드 - 웹 앱 테스트 플랫폼',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             localizationsDelegates: const [
