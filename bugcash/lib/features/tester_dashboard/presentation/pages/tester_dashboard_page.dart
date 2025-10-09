@@ -192,134 +192,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  void _showProviderApplicationDialog(BuildContext context) {
-    final passwordController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.business, color: Colors.orange),
-            SizedBox(width: 12),
-            Text('공급자 모드 신청'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              '공급자 모드로 전환하여 앱 테스팅 미션을 생성하고 관리할 수 있습니다.',
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              '신분 확인을 위해 비밀번호를 입력해주세요:',
-              style: TextStyle(fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                hintText: '비밀번호 입력',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.lock),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              passwordController.dispose();
-              Navigator.pop(context);
-            },
-            child: const Text('취소'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // 비밀번호 확인 후 공급자 모드로 전환
-              _verifyPasswordAndSwitchToProvider(passwordController.text);
-              passwordController.dispose();
-              Navigator.pop(context);
-            },
-            child: const Text('신청'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _verifyPasswordAndSwitchToProvider(String password) async {
-    if (password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('❌ 비밀번호를 입력해주세요'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    try {
-      // 현재 사용자 정보 가져오기
-      final currentUser = ref.read(authProvider).user;
-      if (currentUser == null) {
-        throw Exception('사용자 정보를 찾을 수 없습니다');
-      }
-
-      // 비밀번호 검증을 위해 재인증 시도
-      final credential = EmailAuthProvider.credential(
-        email: currentUser.email,
-        password: password,
-      );
-
-      // 비밀번호 검증
-      await FirebaseAuth.instance.currentUser?.reauthenticateWithCredential(credential);
-
-      // mounted 체크 후 네비게이션
-      if (!mounted) return;
-
-      // 공급자 대시보드로 전환 (실제 사용자 ID 사용)
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => ProviderDashboardPage(
-            providerId: currentUser.uid,
-          ),
-        ),
-      );
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('✅ 공급자 모드로 전환되었습니다!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      String errorMessage = '❌ 인증에 실패했습니다';
-
-      if (e.toString().contains('wrong-password') || e.toString().contains('invalid-credential')) {
-        errorMessage = '❌ 비밀번호가 올바르지 않습니다';
-      } else if (e.toString().contains('too-many-requests')) {
-        errorMessage = '❌ 너무 많은 시도로 인해 일시적으로 차단되었습니다';
-      } else if (e.toString().contains('network-request-failed')) {
-        errorMessage = '❌ 네트워크 연결을 확인해주세요';
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(errorMessage),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
+  // v2.80.1: 공급자 신청 메뉴 제거됨 (역할 전환 기능으로 통합)
 
   void _showLogoutConfirmation(BuildContext context) {
     debugPrint('🟡 _showLogoutConfirmation 호출됨');
@@ -510,10 +383,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     onSelected: (String value) {
                       debugPrint('🔵 PopupMenu 선택됨: $value');
                       switch (value) {
-                        case 'provider':
-                          debugPrint('🔵 공급자 신청 메뉴 선택');
-                          _showProviderApplicationDialog(context);
-                          break;
+                        // v2.80.1: 공급자 신청 메뉴 제거 (역할 전환 아이콘으로 대체)
                         case 'settings':
                           debugPrint('🔵 설정 메뉴 선택');
                           _navigateToSettings(context);
@@ -525,16 +395,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       }
                     },
                     itemBuilder: (BuildContext context) => [
-                      PopupMenuItem<String>(
-                        value: 'provider',
-                        child: Row(
-                          children: [
-                            Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
-                            SizedBox(width: 12.w),
-                            const Text('공급자 신청'),
-                          ],
-                        ),
-                      ),
+                      // v2.80.1: 공급자 신청 메뉴 제거 (역할 전환 아이콘으로 대체)
                       PopupMenuItem<String>(
                         value: 'settings',
                         child: Row(
