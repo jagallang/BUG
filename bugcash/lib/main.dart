@@ -105,9 +105,7 @@ class BugCashWebApp extends StatelessWidget {
               Locale('ko', ''),
             ],
             locale: const Locale('ko', ''),  // 기본 언어를 한글로 설정
-            home: const ResponsiveWrapper(
-              child: AuthWrapper(),
-            ),
+            home: const AuthWrapper(),
           ),
         );
       },

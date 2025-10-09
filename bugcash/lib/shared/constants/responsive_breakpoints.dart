@@ -37,6 +37,9 @@ class ResponsiveBreakpoints {
   /// Max width for wide content (dashboards)
   static const double maxWideWidth = 1440;
 
+  /// Max width for admin dashboard (larger for data-heavy views)
+  static const double maxAdminDashboardWidth = 1920;
+
   // ============================================
   // Grid System
   // ============================================
@@ -77,14 +80,14 @@ class ResponsiveBreakpoints {
 
   /// Font size scale factors
   /// 작은 화면에서 가독성을 위해 크게 확대하여 사용성 향상
-  /// 웹 모바일 180%, 작은 태블릿 130%로 강화된 스케일링
+  /// 웹 모바일 120%, 작은 태블릿 110%로 적절한 스케일링
   /// 최소 폰트 크기 보장으로 사용성 개선
   static const double mobileFontScale = 1.1; // 모바일에서 110% 확대
-  static const double webMobileFontScale = 1.4; // 웹 모바일 180% 확대
-  static const double smallTabletFontScale = 1.3; // 작은 태블릿에서 130% 확대
+  static const double webMobileFontScale = 1.2; // 웹 모바일 120% 확대 (130%에서 추가 10% 감소)
+  static const double smallTabletFontScale = 1.1; // 작은 태블릿에서 110% 확대 (120%에서 추가 10% 감소)
   static const double tabletFontScale = 1.0;
-  static const double desktopFontScale = 1.1;
-  static const double wideDesktopFontScale = 1.2;
+  static const double desktopFontScale = 1.0;
+  static const double wideDesktopFontScale = 1.0;
 
   /// 최소 폰트 스케일 (접근성 보장을 위한 최소 크기)
   /// 어떤 화면 크기에서도 이 값 이하로 내려가지 않음
@@ -153,7 +156,7 @@ class ResponsiveBreakpoints {
   }
 
   /// Get appropriate font scale for screen width
-  /// 웹 전용: 작은 화면(<600px) 165%, 작은 태블릿(600-768px) 145% 확대
+  /// 웹 전용: 작은 화면(<600px) 120%, 작은 태블릿(600-768px) 110% 확대
   /// 모바일 앱: 기존 110% 스케일 유지
   /// 최소 폰트 스케일 보장으로 가독성 개선
   static double getFontScale(double width, {bool isWeb = false}) {
@@ -183,5 +186,13 @@ class ResponsiveBreakpoints {
     if (isTabletWidth(width)) return sidebarWidthTablet;
     if (isDesktopWidth(width)) return sidebarWidthDesktop;
     return sidebarWidthWideDesktop;
+  }
+
+  /// Get admin dashboard specific padding (wider content area)
+  static double getAdminDashboardPaddingHorizontal(double width) {
+    if (isMobileWidth(width)) return mobilePaddingHorizontal;
+    if (isTabletWidth(width)) return tabletPaddingHorizontal;
+    if (isDesktopWidth(width)) return 24.0; // 데스크탑: 더 좁은 패딩
+    return 32.0; // 와이드 데스크탑: 콘텐츠 영역 최대 활용
   }
 }
