@@ -250,13 +250,21 @@ class AppColors {
     ),
   ];
 
-  /// Provider 전용 색상 (전문적이고 비즈니스 친화적)
-  static const Color providerPrimary = Color(0xFF2196F3);
-  static const Color providerSecondary = Color(0xFF64B5F6);
-  static const Color providerAccent = Color(0xFF0288D1);
+  /// Provider 전용 색상 (청량한 파스텔 블루 bugs 테마) - v2.78.0
+  static const Color providerPrimary = Color(0xFF5BA3D0);           // 메인 파스텔 블루
+  static const Color providerSecondary = Color(0xFF8FC5E3);         // 밝은 파스텔 블루
+  static const Color providerAccent = Color(0xFF7BB7D9);            // 액센트 블루
+  static const Color providerBluePrimary = Color(0xFF5BA3D0);       // 메인 파스텔 블루
+  static const Color providerBlueLight = Color(0xFF8FC5E3);         // 밝은 파스텔 블루
+  static const Color providerBlueDark = Color(0xFF4284AC);          // 진한 블루
+  static const Color providerBlueAccent = Color(0xFF7BB7D9);        // 액센트 블루
   static const List<Color> providerGradient = [
-    Color(0xFF2196F3),
-    Color(0xFF3F51B5),
+    Color(0xFF5BA3D0),  // 파스텔 블루
+    Color(0xFF8FC5E3),  // 밝은 파스텔 블루
+  ];
+  static const List<Color> providerBlueGradient = [
+    Color(0xFF5BA3D0),  // 파스텔 블루
+    Color(0xFF8FC5E3),  // 밝은 파스텔 블루
   ];
   static List<BoxShadow> providerCardShadow = [
     BoxShadow(
