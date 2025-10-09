@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../../domain/entities/payment_entity.dart';
 
 /// 토스 페이먼츠 API DataSource
+///
+/// ⚠️ [개발 중] 토스페이먼츠 결제 기능은 현재 개발 중입니다.
+/// TODO: 토스페이먼츠 API 연동 완료 필요
 class TossPaymentDataSource {
   final String _clientKey; // 클라이언트 키 (프론트엔드용)
   final String _secretKey; // 시크릿 키 (백엔드용)

@@ -969,12 +969,12 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       // mission_workflows에서 완료된 미션들 가져오기
       debugPrint('📊 [QUERY] mission_workflows 컬렉션 조회 중...');
       debugPrint('   - 조건 1: testerId == $testerId');
-      debugPrint('   - 조건 2: currentState IN [testing_completed, settled, completed, deleted_by_tester]');
+      debugPrint('   - 조건 2: currentState IN [testing_completed, settled, completed, project_completed]');
 
       final completedWorkflows = await FirebaseFirestore.instance
           .collection('mission_workflows')
           .where('testerId', isEqualTo: testerId)
-          .where('currentState', whereIn: ['testing_completed', 'settled', 'completed', 'deleted_by_tester'])
+          .where('currentState', whereIn: ['testing_completed', 'settled', 'completed', 'project_completed'])
           .get();
 
       debugPrint('');

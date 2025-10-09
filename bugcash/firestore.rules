@@ -450,6 +450,24 @@ service cloud.firestore {
     }
 
     // ==============================================
+    // 정산 관리 (settlements) - 테스터 정산 데이터
+    // ==============================================
+    match /settlements/{settlementId} {
+      // 읽기: 본인 정산 내역만, 관리자는 모든 정산 조회 가능
+      allow read: if isAuthenticated() &&
+                     (request.auth.uid == resource.data.testerId || isAdmin());
+
+      // 생성: Cloud Functions만 가능 (정산 데이터는 서버에서 생성)
+      allow create: if false;
+
+      // 수정: Cloud Functions만 가능 (정산 처리는 서버에서만)
+      allow update: if false;
+
+      // 삭제: 관리자만 가능
+      allow delete: if isAdmin();
+    }
+
+    // ==============================================
     // 관리자 슈퍼유저 규칙 - 모든 컬렉션 접근 허용
     // ==============================================
     // 위에 명시적으로 정의되지 않은 모든 컬렉션에 대해 관리자 접근 허용

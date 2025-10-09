@@ -9,12 +9,17 @@ initializeApp();
  * Helper Functions
  */
 
-// Check if user is admin
+// Check if user is admin (v2.72.0: primaryRole/roles 배열 체크)
 async function isAdmin(uid) {
   if (!uid) return false;
   try {
     const userDoc = await getFirestore().collection("users").doc(uid).get();
-    return userDoc.exists && userDoc.data().role === "admin";
+    if (!userDoc.exists) return false;
+
+    const userData = userDoc.data();
+    // primaryRole 또는 roles 배열에서 admin 확인
+    return userData.primaryRole === "admin" ||
+           (userData.roles && userData.roles.includes("admin"));
   } catch (error) {
     console.error("Error checking admin role:", error);
     return false;
@@ -1490,6 +1495,44 @@ exports.grantSignupBonus = onCall({
         `Failed to grant signup bonus: ${error.message}`,
     );
   }
+});
+
+/**
+ * adminManageWallet: 관리자 전용 지갑 관리 함수 (v2.65.0)
+ * Alias for adjustUserPoints with parameter name mapping for wallet management
+ * actionType (add/subtract/reset) -> adjustmentType (grant/deduct/reset)
+ */
+exports.adminManageWallet = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {userId, actionType, amount, reason} = request.data;
+
+  // Map actionType to adjustmentType
+  const typeMapping = {
+    'add': 'grant',
+    'subtract': 'deduct',
+    'reset': 'reset',
+  };
+
+  const adjustmentType = typeMapping[actionType];
+
+  if (!adjustmentType) {
+    throw new HttpsError("invalid-argument",
+        "Action type must be 'add', 'subtract', or 'reset'");
+  }
+
+  // Call the existing adjustUserPoints function with mapped parameters
+  const adjustRequest = {
+    ...request,
+    data: {
+      userId,
+      adjustmentType,
+      amount,
+      reason,
+    },
+  };
+
+  return exports.adjustUserPoints.run(adjustRequest);
 });
 
 // Import migration functions

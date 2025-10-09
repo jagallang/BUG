@@ -14,6 +14,8 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 // v2.51.0: 지갑 기능 추가
 import '../../../wallet/presentation/widgets/provider_wallet_card.dart';
+// v2.74.0: 통합 지갑 페이지 추가
+import '../../../wallet/presentation/pages/unified_wallet_page.dart';
 // 채팅 기능 제거됨
 // import '../widgets/payment_management_tab.dart';
 
@@ -63,8 +65,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       case 1:
         return _buildAppsTab();
       case 2:
-        return _buildPaymentTab();
-      case 3:
+        // v2.74.0: 결제 탭 제거로 인덱스 변경 (2번 -> 관리자 탭)
         // 관리자 권한이 있는 경우에만 관리자 탭 표시
         if (hasAdminRole) {
           return _buildAdminTab();
@@ -90,7 +91,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     final hasAdminRole = user?.roles.contains(UserType.admin) == true ||
                         user?.primaryRole == UserType.admin;
 
-    // 관리자 권한에 따라 네비게이션 아이템 구성
+    // v2.74.0: 결제 탭 제거, 관리자 권한에 따라 네비게이션 아이템 구성
     final List<BottomNavigationBarItem> navigationItems = [
       const BottomNavigationBarItem(
         icon: Icon(Icons.dashboard),
@@ -99,10 +100,6 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       const BottomNavigationBarItem(
         icon: Icon(Icons.apps),
         label: '앱 관리',
-      ),
-      const BottomNavigationBarItem(
-        icon: Icon(Icons.payment),
-        label: '결제',
       ),
       // 관리자 권한이 있을 때만 관리자 탭 표시
       if (hasAdminRole)
@@ -1629,12 +1626,14 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
     );
   }
 
-  // v2.73.0: 포인트 충전 페이지로 이동 (공급자 전용)
+  // v2.74.0: 통합 지갑 페이지로 이동 (공급자 전용)
   void _navigateToChargePoints(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('포인트 충전 페이지 (개발 중)'),
-        duration: Duration(seconds: 2),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => UnifiedWalletPage(
+          userId: widget.providerId,
+          userType: 'provider',
+        ),
       ),
     );
   }

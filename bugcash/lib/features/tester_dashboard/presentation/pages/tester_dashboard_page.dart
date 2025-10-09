@@ -32,6 +32,8 @@ import '../../../mission/domain/entities/mission_workflow_entity.dart';
 import '../../../../core/utils/logger.dart';
 // v2.52.0: 지갑 기능 추가
 import '../../../wallet/presentation/widgets/tester_wallet_card.dart';
+// v2.74.0: 통합 지갑 페이지 추가
+import '../../../wallet/presentation/pages/unified_wallet_page.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -165,12 +167,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
-  // v2.73.0: 거래 내역 페이지로 이동
+  // v2.74.0: 통합 지갑 페이지로 이동
   void _navigateToWallet(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('거래 내역 페이지 (개발 중)'),
-        duration: Duration(seconds: 2),
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => UnifiedWalletPage(
+          userId: widget.testerId,
+          userType: 'tester',
+        ),
       ),
     );
   }
@@ -827,7 +831,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
   Widget _buildMissionTab() {
     return DefaultTabController(
-      length: 4,
+      length: 3, // v2.74.0: 정산 탭 제거로 3개로 변경
       animationDuration: const Duration(milliseconds: 350), // 부드러운 애니메이션
       initialIndex: _navigateToMissionSubTab ?? 0, // 탭 전환 신호가 있으면 해당 탭으로 시작
       child: Builder(
@@ -861,8 +865,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   _buildActiveMissionsTab(),
                   // 완료된 미션 탭
                   _buildCompletedMissionsTab(),
-                  // 정산 탭
-                  _buildSettlementTab(),
                 ],
               ),
             ),
@@ -889,18 +891,17 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 splashFactory: InkRipple.splashFactory,
                 overlayColor: WidgetStateProperty.all(AppColors.neutral100),
                 labelStyle: TextStyle(
-                  fontSize: 11.sp, // 폰트 크기 약간 줄임 (4개 탭을 위해)
+                  fontSize: 12.sp, // v2.74.0: 정산 탭 제거로 폰트 크기 복원
                   fontWeight: FontWeight.w600,
                 ),
                 unselectedLabelStyle: TextStyle(
-                  fontSize: 11.sp,
+                  fontSize: 12.sp,
                   fontWeight: FontWeight.normal,
                 ),
                 tabs: [
-                  Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 16.w)),
-                  Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 16.w)),
-                  Tab(text: '완료', icon: Icon(Icons.check_circle, size: 16.w)),
-                  Tab(text: '정산', icon: Icon(Icons.monetization_on, size: 16.w)),
+                  Tab(text: '미션 찾기', icon: Icon(Icons.search, size: 18.w)),
+                  Tab(text: '진행 중', icon: Icon(Icons.play_circle, size: 18.w)),
+                  Tab(text: '완료', icon: Icon(Icons.check_circle, size: 18.w)),
                 ],
               ),
             ),

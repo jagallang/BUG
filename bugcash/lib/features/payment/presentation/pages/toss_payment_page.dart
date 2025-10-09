@@ -12,6 +12,9 @@ import '../providers/payment_provider.dart';
 import 'payment_success_page.dart';
 
 /// 토스 결제 위젯 페이지
+///
+/// ⚠️ [개발 중] 토스페이먼츠 결제 기능은 현재 개발 중입니다.
+/// TODO: 토스페이먼츠 Widget SDK 연동 및 결제 프로세스 구현 필요
 class TossPaymentPage extends ConsumerStatefulWidget {
   final String userId;
   final int amount;

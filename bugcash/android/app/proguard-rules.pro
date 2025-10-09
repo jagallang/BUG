@@ -24,3 +24,7 @@
 
 # BugCash specific classes
 -keep class com.bugcash.app.** { *; }
+
+# Google Play Core (for deferred components)
+-keep class com.google.android.play.core.** { *; }
+-dontwarn com.google.android.play.core.**
