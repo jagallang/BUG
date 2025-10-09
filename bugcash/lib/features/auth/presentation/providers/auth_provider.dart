@@ -277,6 +277,39 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// v2.80.0: 역할 전환
+  Future<void> switchRole(UserType newRole) async {
+    if (state.user == null) return;
+
+    try {
+      if (kDebugMode) {
+        debugPrint('🔄 AuthProvider.switchRole() - 시작: ${state.user!.primaryRole} → $newRole');
+      }
+
+      state = state.copyWith(isLoading: true, errorMessage: null);
+
+      // Firestore의 primaryRole 업데이트
+      await _authService.updateUserRole(state.user!.uid, newRole);
+
+      if (kDebugMode) {
+        debugPrint('✅ AuthProvider.switchRole() - 역할 전환 완료');
+      }
+
+      // Auth stream이 자동으로 변경사항을 감지하여 state를 업데이트할 것이므로
+      // 여기서는 loading 상태만 해제
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ AuthProvider.switchRole() - 오류: $e');
+      }
+      state = state.copyWith(
+        isLoading: false,
+        errorMessage: e.toString(),
+      );
+      rethrow;
+    }
+  }
+
   Future<void> signOut() async {
     if (kDebugMode) {
       debugPrint('🔴 AuthProvider.signOut() - 시작');

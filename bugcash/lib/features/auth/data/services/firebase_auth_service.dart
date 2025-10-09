@@ -132,6 +132,30 @@ class FirebaseAuthService {
     });
   }
 
+  /// v2.80.0: 사용자 역할 전환
+  Future<void> updateUserRole(String uid, UserType newRole) async {
+    try {
+      if (kDebugMode) {
+        debugPrint('🔄 FirebaseAuthService.updateUserRole() - 시작: $uid, newRole: $newRole');
+      }
+
+      await _firestore.collection('users').doc(uid).update({
+        'primaryRole': newRole.name,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (kDebugMode) {
+        debugPrint('✅ FirebaseAuthService.updateUserRole() - 역할 업데이트 완료');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ FirebaseAuthService.updateUserRole() - 오류: $e');
+      }
+      AppLogger.error('Error updating user role', 'FirebaseAuthService', e);
+      rethrow;
+    }
+  }
+
   Future<UserCredential> signInWithEmailAndPassword({
     required String email,
     required String password,

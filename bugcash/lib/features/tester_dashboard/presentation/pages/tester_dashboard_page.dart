@@ -34,6 +34,8 @@ import '../../../../core/utils/logger.dart';
 import '../../../wallet/presentation/widgets/tester_wallet_card.dart';
 // v2.74.0: 통합 지갑 페이지 추가
 import '../../../wallet/presentation/pages/unified_wallet_page.dart';
+// v2.80.0: 역할 전환 다이얼로그
+import '../../../shared/widgets/role_switch_dialog.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -176,6 +178,17 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           userType: 'tester',
         ),
       ),
+    );
+  }
+
+  // v2.80.0: 역할 전환 다이얼로그 표시
+  void _showRoleSwitchDialog(BuildContext context) {
+    final authState = ref.read(authProvider);
+    if (authState.user == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => RoleSwitchDialog(user: authState.user!),
     );
   }
 
@@ -461,6 +474,12 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   ],
                 ),
                 actions: [
+                  // 0. 역할 전환 아이콘 (v2.80.0)
+                  IconButton(
+                    icon: const Icon(Icons.swap_horiz, color: Colors.white),
+                    tooltip: '역할 전환',
+                    onPressed: () => _showRoleSwitchDialog(context),
+                  ),
                   // 1. 프로필 아이콘
                   IconButton(
                     icon: const Icon(Icons.account_circle, color: Colors.white),

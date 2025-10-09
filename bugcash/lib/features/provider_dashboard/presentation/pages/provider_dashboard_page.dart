@@ -18,6 +18,8 @@ import '../../../wallet/presentation/widgets/provider_wallet_card.dart';
 import '../../../wallet/presentation/pages/unified_wallet_page.dart';
 // 채팅 기능 제거됨
 // import '../widgets/payment_management_tab.dart';
+// v2.80.0: 역할 전환 다이얼로그
+import '../../../shared/widgets/role_switch_dialog.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -151,6 +153,12 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           ],
         ),
         actions: [
+          // v2.80.0: 역할 전환 아이콘
+          IconButton(
+            icon: const Icon(Icons.swap_horiz, color: Colors.white),
+            tooltip: '역할 전환',
+            onPressed: () => _showRoleSwitchDialog(context),
+          ),
           // v2.73.0: 4개 아이콘 배치
           // 1. 프로필 아이콘
           IconButton(
@@ -1669,6 +1677,17 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         content: Text('설정 페이지 (개발 중)'),
         duration: Duration(seconds: 2),
       ),
+    );
+  }
+
+  // v2.80.0: 역할 전환 다이얼로그 표시
+  void _showRoleSwitchDialog(BuildContext context) {
+    final authState = ref.read(authProvider);
+    if (authState.user == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => RoleSwitchDialog(user: authState.user!),
     );
   }
 
