@@ -522,7 +522,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                           icon: const Icon(Icons.add, size: 18),
                           label: const Text('앱 등록'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: Colors.indigo[900], // v2.76.0: 색상 통일
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                             shape: RoundedRectangleBorder(
@@ -1177,7 +1177,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                     child: ElevatedButton(
                       onPressed: _uploadApp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: Colors.indigo[900], // v2.76.0: 색상 통일
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.r),
                         ),
@@ -1261,7 +1261,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                           icon: const Icon(Icons.add, size: 18),
                           label: const Text('앱 등록'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
+                            backgroundColor: Colors.indigo[900], // v2.76.0: 색상 통일
                             foregroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
                             shape: RoundedRectangleBorder(

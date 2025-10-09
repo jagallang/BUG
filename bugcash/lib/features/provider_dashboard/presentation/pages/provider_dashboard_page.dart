@@ -264,7 +264,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               '• 앱 아이콘 및 스크린샷 업로드',
             ],
             icon: Icons.app_settings_alt, // v2.50.3: 설정이 들어간 앱 아이콘
-            color: Colors.blue,
+            color: Colors.indigo[800]!, // v2.76.0: 색상 통일
           ),
           SizedBox(height: 12.h),
 
@@ -278,7 +278,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               '• 테스터 탭에서 지원 현황 확인',
             ],
             icon: Icons.people,
-            color: Colors.green,
+            color: Colors.indigo[800]!, // v2.76.0: 색상 통일
           ),
           SizedBox(height: 12.h),
 
@@ -293,7 +293,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               '• 오늘 탭에서 일일 미션 확인',
             ],
             icon: Icons.assignment_turned_in, // v2.50.3: 체크 표시가 있는 과제 아이콘
-            color: Colors.orange,
+            color: Colors.indigo[800]!, // v2.76.0: 색상 통일
           ),
           SizedBox(height: 12.h),
 
@@ -308,7 +308,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               '• 승인 시 테스터에게 포인트 지급',
             ],
             icon: Icons.rate_review,
-            color: Colors.purple,
+            color: Colors.indigo[800]!, // v2.76.0: 색상 통일
           ),
           SizedBox(height: 12.h),
 
@@ -322,7 +322,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               '• 테스터 평가 및 품질 개선 인사이트',
             ],
             icon: Icons.check_circle,
-            color: Colors.teal,
+            color: Colors.indigo[800]!, // v2.76.0: 색상 통일
           ),
           SizedBox(height: 40.h),
 
@@ -733,7 +733,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           children: [
             Row(
               children: [
-                Icon(Icons.add_card, color: Colors.indigo[700], size: 24.sp),
+                Icon(Icons.add_card, color: Colors.indigo[900], size: 24.sp), // v2.76.0: 색상 통일
                 SizedBox(width: 8.w),
                 Text(
                   '포인트 충전',
@@ -789,12 +789,12 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('${_selectedChargeAmount}원 결제 기능은 곧 추가됩니다!'),
-                          backgroundColor: Colors.indigo[700],
+                          backgroundColor: Colors.indigo[900], // v2.76.0: 색상 통일
                         ),
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo[700],
+                      backgroundColor: Colors.indigo[900], // v2.76.0: 색상 통일
                       padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.r),
@@ -908,7 +908,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
           children: [
             Row(
               children: [
-                Icon(Icons.receipt_long, color: Colors.indigo[700], size: 24.sp),
+                Icon(Icons.receipt_long, color: Colors.indigo[900], size: 24.sp), // v2.76.0: 색상 통일
                 SizedBox(width: 8.w),
                 Text(
                   '최근 거래 내역',
@@ -1003,7 +1003,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                     '더보기',
                     style: TextStyle(
                       fontSize: 14.sp,
-                      color: Colors.indigo[700],
+                      color: Colors.indigo[900], // v2.76.0: 색상 통일
                     ),
                   ),
                 ),
