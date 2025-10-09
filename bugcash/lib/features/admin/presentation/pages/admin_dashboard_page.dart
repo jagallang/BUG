@@ -25,6 +25,16 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
+  // v2.68.0: Finance 탭 - 거래 내역 필터 상태
+  int _transactionsTabIndex = 0; // 0: 전체, 1: 충전, 2: 지급
+  String _transactionsFilterType = 'all'; // all, charge, earn, withdraw
+  String _transactionsFilterStatus = 'all'; // all, pending, completed, failed
+
+  // v2.70.0: 빠른 날짜 필터
+  String _quickDateFilter = 'thisMonth'; // today, thisWeek, thisMonth, lastMonth, last3Months, all
+  DateTime _transactionsStartDate = DateTime(DateTime.now().year, DateTime.now().month, 1); // 이번 달 1일
+  DateTime _transactionsEndDate = DateTime.now();
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -349,48 +359,265 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     );
   }
 
-  // 4. Finance Tab - 포인트/수익 관리
+  // 4. Finance Tab - 포인트/수익 관리 (v2.68.0: 서브탭 추가)
   Widget _buildFinanceTab() {
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: ResponsiveWrapper.getResponsivePadding(context),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Finance - 포인트 & 수익 관리',
+                  style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 24.h),
+
+                // v2.69.0: 금융 요약 (실시간 데이터)
+                _buildFinanceSummaryCards(),
+
+                SizedBox(height: 24.h),
+
+                // 출금 관리 바로가기 버튼
+                ElevatedButton.icon(
+                  onPressed: _navigateToWithdrawalManagement,
+                  icon: const Icon(Icons.arrow_circle_up),
+                  label: const Text('출금 신청 관리'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
+                  ),
+                ),
+
+                SizedBox(height: 24.h),
+
+                // 서브탭 (전체/충전/지급)
+                TabBar(
+                  onTap: (index) {
+                    setState(() {
+                      _transactionsTabIndex = index;
+                      // 탭에 따라 필터 타입 자동 설정
+                      if (index == 0) {
+                        _transactionsFilterType = 'all';
+                      } else if (index == 1) {
+                        _transactionsFilterType = 'charge';
+                      } else {
+                        _transactionsFilterType = 'earn'; // 지급 탭은 earn, withdraw 포함
+                      }
+                    });
+                  },
+                  labelColor: Colors.blue,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: Colors.blue,
+                  tabs: const [
+                    Tab(text: '전체 내역'),
+                    Tab(text: '충전 내역'),
+                    Tab(text: '지급 내역'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          // 서브탭 콘텐츠
+          Expanded(
+            child: TabBarView(
+              children: [
+                _buildTransactionContent('all'),
+                _buildTransactionContent('charge'),
+                _buildTransactionContent('disbursement'),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // v2.68.0: 거래 내역 콘텐츠 (탭별)
+  Widget _buildTransactionContent(String tabType) {
     return SingleChildScrollView(
       padding: ResponsiveWrapper.getResponsivePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Finance - 포인트 & 수익 관리',
-            style: TextStyle(fontSize: 24.sp, fontWeight: FontWeight.bold),
-          ),
-          SizedBox(height: 24.h),
+          // 필터 UI
+          _buildTransactionFilters(tabType),
+          SizedBox(height: 16.h),
+          // 거래 내역 테이블
+          _buildTransactionsTable(tabType),
+        ],
+      ),
+    );
+  }
 
-          // 금융 요약
-          Row(
+  // v2.68.0: 거래 내역 필터 UI
+  Widget _buildTransactionFilters(String tabType) {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '필터',
+            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 12.h),
+
+          // v2.70.0: 빠른 날짜 필터 버튼
+          Wrap(
+            spacing: 8.w,
+            runSpacing: 8.h,
             children: [
-              Expanded(child: _buildFinanceCard('이번 달 충전', '₩2,500,000', Colors.blue, Icons.add_circle)),
-              SizedBox(width: 16.w),
-              Expanded(child: _buildFinanceCard('이번 달 지급', '₩1,800,000', Colors.red, Icons.remove_circle)),
-              SizedBox(width: 16.w),
-              Expanded(child: _buildFinanceCard('수수료 수익', '₩700,000', Colors.green, Icons.monetization_on)),
+              _buildQuickFilterChip('오늘', 'today'),
+              _buildQuickFilterChip('이번 주', 'thisWeek'),
+              _buildQuickFilterChip('이번 달', 'thisMonth'),
+              _buildQuickFilterChip('지난 달', 'lastMonth'),
+              _buildQuickFilterChip('최근 3개월', 'last3Months'),
+              _buildQuickFilterChip('전체', 'all'),
             ],
           ),
+          SizedBox(height: 16.h),
 
-          SizedBox(height: 24.h),
-
-          // 출금 관리 바로가기 버튼
-          ElevatedButton.icon(
-            onPressed: _navigateToWithdrawalManagement,
-            icon: const Icon(Icons.arrow_circle_up),
-            label: const Text('출금 신청 관리'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // 상태 드롭다운 - 크기 축소
+              SizedBox(
+                width: 120.w,
+                child: DropdownButtonFormField<String>(
+                  value: _transactionsFilterStatus,
+                  decoration: InputDecoration(
+                    labelText: '상태',
+                    border: const OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                    isDense: true,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'all', child: Text('전체')),
+                    DropdownMenuItem(value: 'pending', child: Text('대기중')),
+                    DropdownMenuItem(value: 'completed', child: Text('완료')),
+                    DropdownMenuItem(value: 'failed', child: Text('실패')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _transactionsFilterStatus = value;
+                      });
+                    }
+                  },
+                ),
+              ),
+              SizedBox(width: 12.w),
+              // 날짜 범위 - 더 컴팩트하게
+              InkWell(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _transactionsStartDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _transactionsStartDate = picked;
+                      _quickDateFilter = ''; // 커스텀 날짜 선택 시 빠른 필터 해제
+                    });
+                  }
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[400]!),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.calendar_today, size: 16.sp, color: Colors.grey[700]),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '${_transactionsStartDate.year}-${_transactionsStartDate.month.toString().padLeft(2, '0')}-${_transactionsStartDate.day.toString().padLeft(2, '0')}',
+                        style: TextStyle(fontSize: 13.sp),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                child: Text('~', style: TextStyle(fontSize: 14.sp, color: Colors.grey[600])),
+              ),
+              InkWell(
+                onTap: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: _transactionsEndDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                  );
+                  if (picked != null) {
+                    setState(() {
+                      _transactionsEndDate = picked;
+                      _quickDateFilter = ''; // 커스텀 날짜 선택 시 빠른 필터 해제
+                    });
+                  }
+                },
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[400]!),
+                    borderRadius: BorderRadius.circular(4.r),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.calendar_today, size: 16.sp, color: Colors.grey[700]),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '${_transactionsEndDate.year}-${_transactionsEndDate.month.toString().padLeft(2, '0')}-${_transactionsEndDate.day.toString().padLeft(2, '0')}',
+                        style: TextStyle(fontSize: 13.sp),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              // 필터 초기화 버튼 - 아이콘만
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    _transactionsFilterStatus = 'all';
+                    _quickDateFilter = 'thisMonth';
+                    _applyQuickDateFilter('thisMonth');
+                  });
+                },
+                icon: const Icon(Icons.refresh),
+                tooltip: '초기화',
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.grey[200],
+                  foregroundColor: Colors.black87,
+                ),
+              ),
+            ],
           ),
-
-          SizedBox(height: 24.h),
-
-          // 거래 내역 테이블
-          _buildTransactionsTable(),
         ],
       ),
     );
@@ -1296,33 +1523,353 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     );
   }
 
-  Widget _buildTransactionsTable() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
-            spreadRadius: 0,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+  // v2.68.0: 거래 내역 테이블 (Firestore 실시간 연동)
+  Widget _buildTransactionsTable(String tabType) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _getTransactionsStream(tabType),
+      builder: (context, snapshot) {
+        // 로딩 상태
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: Padding(
+              padding: EdgeInsets.all(40.w),
+              child: const CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        // 에러 상태
+        if (snapshot.hasError) {
+          return Container(
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+                SizedBox(height: 16.h),
+                Text(
+                  '데이터를 불러오는 중 오류가 발생했습니다',
+                  style: TextStyle(fontSize: 16.sp, color: Colors.red),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  '${snapshot.error}',
+                  style: TextStyle(fontSize: 12.sp, color: Colors.grey),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // 데이터가 없는 경우
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return Container(
+            padding: EdgeInsets.all(40.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.inbox_outlined, size: 64.sp, color: Colors.grey[400]),
+                SizedBox(height: 16.h),
+                Text(
+                  '거래 내역이 없습니다',
+                  style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // 클라이언트 측 필터링
+        final filteredDocs = _applyTransactionFilters(snapshot.data!.docs, tabType);
+
+        if (filteredDocs.isEmpty) {
+          return Container(
+            padding: EdgeInsets.all(40.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12.r),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.filter_list_off, size: 64.sp, color: Colors.grey[400]),
+                SizedBox(height: 16.h),
+                Text(
+                  '필터 조건에 맞는 거래 내역이 없습니다',
+                  style: TextStyle(fontSize: 16.sp, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // 거래 내역 테이블
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withValues(alpha: 0.1),
+                spreadRadius: 0,
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(Colors.grey[100]),
+              columns: [
+                DataColumn(label: Text('날짜/시간', style: TextStyle(fontWeight: FontWeight.bold))),
+                DataColumn(label: Text('사용자', style: TextStyle(fontWeight: FontWeight.bold))),
+                DataColumn(label: Text('유형', style: TextStyle(fontWeight: FontWeight.bold))),
+                DataColumn(label: Text('금액', style: TextStyle(fontWeight: FontWeight.bold))),
+                DataColumn(label: Text('상태', style: TextStyle(fontWeight: FontWeight.bold))),
+                DataColumn(label: Text('설명', style: TextStyle(fontWeight: FontWeight.bold))),
+                DataColumn(label: Text('상세', style: TextStyle(fontWeight: FontWeight.bold))),
+              ],
+              rows: filteredDocs.map((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+                final type = data['type'] ?? '';
+                final amount = data['amount'] as int? ?? 0;
+                final status = data['status'] ?? '';
+                final description = data['description'] ?? '';
+                final userId = data['userId'] ?? '';
+
+                return DataRow(
+                  cells: [
+                    DataCell(Text(
+                      createdAt != null
+                          ? '${createdAt.year}-${createdAt.month.toString().padLeft(2, '0')}-${createdAt.day.toString().padLeft(2, '0')} ${createdAt.hour.toString().padLeft(2, '0')}:${createdAt.minute.toString().padLeft(2, '0')}'
+                          : '-',
+                    )),
+                    DataCell(Text(userId.length > 20 ? '${userId.substring(0, 20)}...' : userId)),
+                    DataCell(Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: _getTransactionTypeColor(type).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        _getTransactionTypeText(type),
+                        style: TextStyle(
+                          color: _getTransactionTypeColor(type),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    )),
+                    DataCell(Text(
+                      '${_getSignForType(type)}₩${NumberFormat('#,###').format(amount)}',
+                      style: TextStyle(
+                        color: _getSignForType(type) == '+' ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )),
+                    DataCell(Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: _getTransactionStatusColor(status).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4.r),
+                      ),
+                      child: Text(
+                        _getTransactionStatusText(status),
+                        style: TextStyle(
+                          color: _getTransactionStatusColor(status),
+                        ),
+                      ),
+                    )),
+                    DataCell(SizedBox(
+                      width: 200.w,
+                      child: Text(
+                        description,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    )),
+                    DataCell(
+                      IconButton(
+                        icon: Icon(Icons.info_outline, size: 20.sp),
+                        onPressed: () => _showTransactionDetailDialog(doc.id, data),
+                      ),
+                    ),
+                  ],
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // v2.68.0: Firestore 거래 내역 스트림
+  Stream<QuerySnapshot> _getTransactionsStream(String tabType) {
+    Query query = FirebaseFirestore.instance.collection('transactions');
+
+    // 기본 정렬만 적용 (클라이언트 측 필터링 사용)
+    return query.orderBy('createdAt', descending: true).limit(100).snapshots();
+  }
+
+  // v2.68.0: 클라이언트 측 필터링
+  List<QueryDocumentSnapshot> _applyTransactionFilters(List<QueryDocumentSnapshot> docs, String tabType) {
+    return docs.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final type = data['type'] ?? '';
+      final status = data['status'] ?? '';
+      final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+
+      // 날짜 필터링
+      if (createdAt != null) {
+        if (createdAt.isBefore(_transactionsStartDate) || createdAt.isAfter(_transactionsEndDate.add(const Duration(days: 1)))) {
+          return false;
+        }
+      }
+
+      // 탭별 필터
+      if (tabType == 'charge') {
+        if (type != 'charge') return false;
+      } else if (tabType == 'disbursement') {
+        if (type != 'earn' && type != 'withdraw') return false;
+      }
+
+      // 상태 필터
+      if (_transactionsFilterStatus != 'all' && status != _transactionsFilterStatus) {
+        return false;
+      }
+
+      return true;
+    }).toList();
+  }
+
+  // v2.68.0: 거래 유형별 색상
+  Color _getTransactionTypeColor(String type) {
+    switch (type) {
+      case 'charge':
+        return Colors.blue;
+      case 'earn':
+        return Colors.green;
+      case 'withdraw':
+        return Colors.orange;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // v2.68.0: 거래 유형별 텍스트
+  String _getTransactionTypeText(String type) {
+    switch (type) {
+      case 'charge':
+        return '충전';
+      case 'earn':
+        return '적립';
+      case 'withdraw':
+        return '출금';
+      default:
+        return type;
+    }
+  }
+
+  // v2.68.0: 거래 유형별 부호
+  String _getSignForType(String type) {
+    if (type == 'charge' || type == 'earn') {
+      return '+';
+    }
+    return '-';
+  }
+
+  // v2.68.0: 거래 상태별 색상
+  Color _getTransactionStatusColor(String status) {
+    switch (status) {
+      case 'completed':
+        return Colors.green;
+      case 'pending':
+        return Colors.orange;
+      case 'failed':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // v2.68.0: 거래 상태별 텍스트
+  String _getTransactionStatusText(String status) {
+    switch (status) {
+      case 'completed':
+        return '완료';
+      case 'pending':
+        return '대기중';
+      case 'failed':
+        return '실패';
+      default:
+        return status;
+    }
+  }
+
+  // v2.68.0: 거래 상세 정보 다이얼로그
+  void _showTransactionDetailDialog(String transactionId, Map<String, dynamic> data) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('거래 상세 정보'),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildDetailRow('거래 ID', transactionId),
+              _buildDetailRow('사용자 ID', data['userId'] ?? '-'),
+              _buildDetailRow('유형', _getTransactionTypeText(data['type'] ?? '')),
+              _buildDetailRow('금액', '₩${NumberFormat('#,###').format(data['amount'] ?? 0)}'),
+              _buildDetailRow('상태', _getTransactionStatusText(data['status'] ?? '')),
+              _buildDetailRow('설명', data['description'] ?? '-'),
+              _buildDetailRow('생성일', (data['createdAt'] as Timestamp?)?.toDate().toString() ?? '-'),
+              if (data['metadata'] != null) ...[
+                const Divider(),
+                Text('메타데이터', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp)),
+                SizedBox(height: 8.h),
+                Text(data['metadata'].toString()),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('닫기'),
           ),
         ],
       ),
-      child: Padding(
-        padding: ResponsiveWrapper.getResponsivePadding(context),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '거래 내역',
-              style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 4.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 80.w,
+            child: Text(
+              '$label:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14.sp),
             ),
-            SizedBox(height: 16.h),
-            const Text('거래 내역 테이블이 여기에 표시됩니다.'),
-          ],
-        ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 14.sp),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1362,6 +1909,205 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ],
       ),
     );
+  }
+
+  // v2.69.0: Finance 요약 카드 (실시간 데이터)
+  Widget _buildFinanceSummaryCards() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: _getTransactionsStream('all'),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          // 로딩 중 스켈레톤 UI
+          return Row(
+            children: [
+              Expanded(child: _buildSkeletonCard()),
+              SizedBox(width: 16.w),
+              Expanded(child: _buildSkeletonCard()),
+              SizedBox(width: 16.w),
+              Expanded(child: _buildSkeletonCard()),
+            ],
+          );
+        }
+
+        if (snapshot.hasError) {
+          // 에러 발생 시 기본값
+          return Row(
+            children: [
+              Expanded(child: _buildFinanceCard('이번 달 충전', '₩-', Colors.blue, Icons.add_circle)),
+              SizedBox(width: 16.w),
+              Expanded(child: _buildFinanceCard('이번 달 지급', '₩-', Colors.red, Icons.remove_circle)),
+              SizedBox(width: 16.w),
+              Expanded(child: _buildFinanceCard('수수료 수익', '₩-', Colors.green, Icons.monetization_on)),
+            ],
+          );
+        }
+
+        // 이번 달 집계
+        final stats = _calculateMonthlyStats(snapshot.data?.docs ?? []);
+
+        return Row(
+          children: [
+            Expanded(
+              child: _buildFinanceCard(
+                '이번 달 충전',
+                '₩${NumberFormat('#,###').format(stats['charge'] ?? 0)}',
+                Colors.blue,
+                Icons.add_circle,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: _buildFinanceCard(
+                '이번 달 지급',
+                '₩${NumberFormat('#,###').format(stats['disbursement'] ?? 0)}',
+                Colors.red,
+                Icons.remove_circle,
+              ),
+            ),
+            SizedBox(width: 16.w),
+            Expanded(
+              child: _buildFinanceCard(
+                '수수료 수익',
+                '₩${NumberFormat('#,###').format(stats['fee'] ?? 0)}',
+                Colors.green,
+                Icons.monetization_on,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // v2.69.0: 이번 달 통계 집계
+  Map<String, int> _calculateMonthlyStats(List<QueryDocumentSnapshot> docs) {
+    final now = DateTime.now();
+    final monthStart = DateTime(now.year, now.month, 1);
+    final monthEnd = DateTime(now.year, now.month + 1, 1).subtract(const Duration(seconds: 1));
+
+    int chargeTotal = 0;
+    int disbursementTotal = 0;
+    int feeTotal = 0;
+
+    for (final doc in docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final type = data['type'] ?? '';
+      final status = data['status'] ?? '';
+      final amount = (data['amount'] ?? 0) as int;
+      final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+
+      // 완료된 거래만 집계
+      if (status != 'completed') continue;
+
+      // 이번 달 거래만 집계
+      if (createdAt == null || createdAt.isBefore(monthStart) || createdAt.isAfter(monthEnd)) {
+        continue;
+      }
+
+      // 타입별 집계
+      if (type == 'charge') {
+        chargeTotal += amount;
+      } else if (type == 'earn' || type == 'withdraw') {
+        disbursementTotal += amount;
+        // 수수료는 지급액의 10% (또는 별도 fee 필드 사용)
+        final fee = (data['fee'] ?? (amount * 0.1).round()) as int;
+        feeTotal += fee;
+      }
+    }
+
+    return {
+      'charge': chargeTotal,
+      'disbursement': disbursementTotal,
+      'fee': feeTotal,
+    };
+  }
+
+  // v2.69.0: 로딩 중 스켈레톤 카드
+  Widget _buildSkeletonCard() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 80.w,
+            height: 24.h,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Container(
+            width: 60.w,
+            height: 14.h,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4.r),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // v2.70.0: 빠른 필터 칩 위젯
+  Widget _buildQuickFilterChip(String label, String value) {
+    final isSelected = _quickDateFilter == value;
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (selected) {
+        setState(() {
+          _quickDateFilter = value;
+          _applyQuickDateFilter(value);
+        });
+      },
+      selectedColor: Colors.blue[100],
+      checkmarkColor: Colors.blue,
+      backgroundColor: Colors.grey[100],
+      labelStyle: TextStyle(
+        fontSize: 14.sp,
+        color: isSelected ? Colors.blue[900] : Colors.grey[700],
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+    );
+  }
+
+  // v2.70.0: 빠른 필터 날짜 범위 적용
+  void _applyQuickDateFilter(String filter) {
+    final now = DateTime.now();
+    switch (filter) {
+      case 'today':
+        _transactionsStartDate = DateTime(now.year, now.month, now.day);
+        _transactionsEndDate = now;
+        break;
+      case 'thisWeek':
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        _transactionsStartDate = DateTime(weekStart.year, weekStart.month, weekStart.day);
+        _transactionsEndDate = now;
+        break;
+      case 'thisMonth':
+        _transactionsStartDate = DateTime(now.year, now.month, 1);
+        _transactionsEndDate = now;
+        break;
+      case 'lastMonth':
+        final lastMonth = DateTime(now.year, now.month - 1, 1);
+        _transactionsStartDate = lastMonth;
+        _transactionsEndDate = DateTime(now.year, now.month, 1).subtract(const Duration(days: 1));
+        break;
+      case 'last3Months':
+        _transactionsStartDate = DateTime(now.year, now.month - 3, 1);
+        _transactionsEndDate = now;
+        break;
+      case 'all':
+        _transactionsStartDate = DateTime(2020, 1, 1);
+        _transactionsEndDate = now.add(const Duration(days: 1));
+        break;
+    }
   }
 
   Widget _buildReportsTable() {
