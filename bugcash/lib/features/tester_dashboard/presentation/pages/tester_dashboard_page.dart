@@ -36,6 +36,7 @@ import '../../../wallet/presentation/widgets/tester_wallet_card.dart';
 import '../../../wallet/presentation/pages/unified_wallet_page.dart';
 // v2.80.0: 역할 전환 다이얼로그
 import '../../../shared/widgets/role_switch_dialog.dart';
+import '../../../auth/domain/entities/user_entity.dart' show UserType;
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -182,13 +183,28 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   // v2.80.0: 역할 전환 다이얼로그 표시
+  // v2.80.2: 역할 전환 다이얼로그 (공급자로 전환)
   void _showRoleSwitchDialog(BuildContext context) {
     final authState = ref.read(authProvider);
     if (authState.user == null) return;
 
+    // 공급자 역할이 있는지 확인
+    if (!authState.user!.roles.contains(UserType.provider)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('❌ 공급자 역할이 없습니다.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     showDialog(
       context: context,
-      builder: (context) => RoleSwitchDialog(user: authState.user!),
+      builder: (context) => RoleSwitchDialog(
+        user: authState.user!,
+        targetRole: UserType.provider,
+      ),
     );
   }
 

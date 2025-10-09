@@ -98,7 +98,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'BugCash'**
+  /// **'벅스리워드'**
   String get appTitle;
 
   /// No description provided for @welcome.

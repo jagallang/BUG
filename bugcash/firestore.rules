@@ -94,10 +94,15 @@ service cloud.firestore {
                     request.auth.uid == userId &&
                     (validateNewUserFormat() || validateLegacyUserFormat());
 
-      // 수정: 본인 정보만 수정 가능, 관리자는 역할 변경 가능
+      // 수정: 본인 정보만 수정 가능, primaryRole은 roles 배열 내에서만 변경 가능 (v2.80.2)
       // lastLoginAt 필드만 수정하는 경우 별도 허용 (로그인 시)
       allow update: if isUser(userId) &&
-                    (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']) ||
+                    (// lastLoginAt만 수정
+                     request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']) ||
+                     // primaryRole만 수정: roles 배열에 포함된 값이어야 함
+                     (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['primaryRole', 'updatedAt']) &&
+                      request.resource.data.primaryRole in resource.data.roles) ||
+                     // 다른 필드 수정 (roles 관련 필드 제외)
                      !canModifyRoles()) ||
                     isAdmin();
 
