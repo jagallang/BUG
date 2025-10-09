@@ -108,13 +108,11 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
 
           SizedBox(height: 16.h),
 
-          // 2. 월간 통계 (역할별)
-          if (widget.userType == 'tester')
-            _buildTesterMonthlyStats(context)
-          else
-            _buildProviderMonthlyStats(context),
-
-          SizedBox(height: 16.h),
+          // 2. 월간 통계 (테스터만 표시)
+          if (widget.userType == 'tester') ...[
+            _buildTesterMonthlyStats(context),
+            SizedBox(height: 16.h),
+          ],
 
           // 3. 빠른 작업 버튼 (역할별)
           if (widget.userType == 'tester')
@@ -234,43 +232,6 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
     );
   }
 
-  /// 공급자 월간 통계
-  Widget _buildProviderMonthlyStats(BuildContext context) {
-    final monthlyChargedAsync = ref.watch(monthlyChargedProvider(widget.userId));
-    final monthlySpentAsync = ref.watch(monthlySpentProvider(widget.userId));
-
-    return Row(
-      children: [
-        Expanded(
-          child: monthlyChargedAsync.when(
-            data: (amount) => _buildStatCard(
-              context,
-              '이번 달 충전',
-              amount,
-              Icons.add_circle_outline,
-              Colors.blue,
-            ),
-            loading: () => _buildLoadingStatCard(context, '이번 달 충전'),
-            error: (_, __) => _buildErrorStatCard(context, '이번 달 충전'),
-          ),
-        ),
-        SizedBox(width: 12.w),
-        Expanded(
-          child: monthlySpentAsync.when(
-            data: (amount) => _buildStatCard(
-              context,
-              '이번 달 사용',
-              amount,
-              Icons.remove_circle_outline,
-              Colors.orange,
-            ),
-            loading: () => _buildLoadingStatCard(context, '이번 달 사용'),
-            error: (_, __) => _buildErrorStatCard(context, '이번 달 사용'),
-          ),
-        ),
-      ],
-    );
-  }
 
   /// 통계 카드
   Widget _buildStatCard(
