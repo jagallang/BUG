@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.71.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.80.4-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,34 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.71.0)
+## ✨ 주요 기능 (v2.80.4)
+
+### 🔄 역할 전환 시스템 (v2.80.0~v2.80.4) - **ROLE SWITCHING SYSTEM**
+- **🔀 양방향 역할 전환 (v2.80.4)**
+  - ✅ **모든 사용자 자유 전환**: 테스터 ↔ 공급자 제약 없이 전환 가능
+  - 🆕 **자동 역할 추가**: 역할이 없으면 Firebase에 자동 추가
+  - 🔒 **보안 강화**: admin 역할 자동 추가 차단, 기존 역할 제거 불가
+  - 📊 **Firebase Rules**: `roles` 배열 업데이트 권한 추가
+
+- **📱 자동 화면 전환 (v2.80.3)**
+  - 🚀 역할 전환 성공 시 해당 대시보드로 자동 이동
+  - 🔙 `Navigator.pushReplacement`로 뒤로가기 방지
+  - ✨ 새 화면에서 성공 스넥바 표시
+
+- **🎯 간소화된 UI (v2.80.2)**
+  - 💬 간단한 확인 메시지: "공급자로 전환하시겠습니까?"
+  - ❌ 복잡한 역할 선택 UI 제거
+  - ⚡ targetRole 파라미터로 직접 전달
+
+- **🔧 Firebase 권한 수정 (v2.80.2)**
+  - 🔓 primaryRole 변경 권한: `roles` 배열 내 값으로만 변경 가능
+  - 📝 Firestore Rules 업데이트: 사용자 본인이 역할 전환 가능
+
+- **🆕 다중 역할 지원 (v2.80.0)**
+  - 👥 UserEntity에 `roles` 배열과 `primaryRole` 필드 추가
+  - 🔄 역할 전환 다이얼로그: 사용자가 보유한 역할 간 전환
+  - 🏠 RoleSelectionPage: 다중 역할 사용자 초기 역할 선택
+  - 🎨 대시보드별 역할 전환 버튼 추가
 
 ### 🎨 관리자 대시보드 반응형 UI 개선 (v2.71.0) - **ADMIN RESPONSIVE UI**
 - **📱 전체 화면 활용 레이아웃**
