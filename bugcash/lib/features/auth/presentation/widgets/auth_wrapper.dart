@@ -45,10 +45,9 @@ class _AuthWrapperState extends ConsumerState<AuthWrapper> {
 
     final userData = authState.user!;
 
-    // 다중 역할 사용자는 역할 선택 화면으로 이동
-    if (userData.canSwitchRoles) {
-      return RoleSelectionPage(userData: userData);
-    }
+    // v2.82.0: 역할 선택 단계 제거 - primaryRole로 바로 이동
+    // 다중 역할이어도 대시보드에서 역할 전환 가능
+    // (불필요한 중간 단계 제거로 UX 개선)
 
     // v2.13.2: 단일 역할 사용자 안전성 검증
     // primaryRole이 roles에 포함되지 않는 경우 roles.first 사용

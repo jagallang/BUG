@@ -75,8 +75,10 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
+        backgroundColor: AppColors.providerBluePrimary,
+        elevation: 2,
+        shadowColor: AppColors.providerBluePrimary.withValues(alpha: 0.3),
+        foregroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -85,15 +87,16 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
               style: TextStyle(
                 fontSize: 20.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: Colors.white,
+                letterSpacing: -0.5,
               ),
             ),
             Text(
               widget.app.appName,
               style: TextStyle(
                 fontSize: 14.sp,
-                color: Colors.grey[600],
-                fontWeight: FontWeight.normal,
+                color: AppColors.providerBlueLight.withValues(alpha: 0.8),
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -110,16 +113,18 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         ],
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: AppColors.primary,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: Colors.grey[600],
+          indicatorColor: Colors.white,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: AppColors.providerBlueLight.withValues(alpha: 0.7),
           labelStyle: TextStyle(
             fontSize: 14.sp,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
           ),
           unselectedLabelStyle: TextStyle(
             fontSize: 14.sp,
-            fontWeight: FontWeight.normal,
+            fontWeight: FontWeight.w500,
           ),
           tabs: const [
             Tab(text: '테스터'), // v2.36.0: 신청 대기 + 진행 중인 테스터
@@ -325,10 +330,24 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
   /// v2.35.0: 진행 중인 테스터 정보 카드 (버튼 없음, 읽기 전용)
   Widget _buildActiveTesterInfoCard(MissionWorkflowEntity mission) {
-    return Card(
+    return Container(
       margin: EdgeInsets.only(bottom: 12.h),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Row(
@@ -373,10 +392,24 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
   /// 테스터 신청 카드 (v2.14.0)
   Widget _buildTesterApplicationCard(MissionWorkflowEntity mission) {
-    return Card(
+    return Container(
       margin: EdgeInsets.only(bottom: 12.h),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -386,7 +419,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
               children: [
                 CircleAvatar(
                   radius: 20.r,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  backgroundColor: Colors.blue.shade100,
                   child: Text(
                     mission.testerName.isNotEmpty
                       ? mission.testerName[0].toUpperCase()
@@ -394,7 +427,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.primary,
+                      color: Colors.blue.shade700,
                     ),
                   ),
                 ),
@@ -795,10 +828,24 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
     print('   └─ latestDayNumber: $latestDayNumber');
 
-    return Card(
+    return Container(
       margin: EdgeInsets.only(bottom: 12.h),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -896,10 +943,24 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
   /// v2.37.0: 검토 완료 미션 카드 (다음 날 미션 만들기 버튼 포함)
   Widget _buildApprovedMissionCard(MissionWorkflowEntity mission) {
-    return Card(
+    return Container(
       margin: EdgeInsets.only(bottom: 12.h),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(
@@ -1045,10 +1106,24 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   }
 
   Widget _buildInProgressMissionCard(MissionWorkflowEntity mission) {
-    return Card(
+    return Container(
       margin: EdgeInsets.only(bottom: 12.h),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: Padding(
         padding: EdgeInsets.all(16.w),
         child: Column(

@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/constants/app_colors.dart';
 import 'app_management_page.dart';
 
 class AppDetailPage extends ConsumerStatefulWidget {
@@ -356,13 +357,16 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.indigo[900],
+        backgroundColor: AppColors.providerBluePrimary,
         foregroundColor: Colors.white,
+        elevation: 2,
+        shadowColor: AppColors.providerBluePrimary.withValues(alpha: 0.3),
         title: Text(
           '앱 게시 관리',
           style: TextStyle(
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
             fontSize: 18.sp,
+            letterSpacing: -0.5,
           ),
         ),
         actions: [
@@ -420,7 +424,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.indigo[900],
+                color: AppColors.providerBlueDark,
               ),
             ),
             SizedBox(height: 16.h),
@@ -501,7 +505,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.indigo[900],
+                color: AppColors.providerBlueDark,
               ),
             ),
             SizedBox(height: 8.h),
@@ -648,7 +652,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.indigo[900],
+                color: AppColors.providerBlueDark,
               ),
             ),
             SizedBox(height: 8.h),
@@ -822,7 +826,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.indigo[900],
+                color: AppColors.providerBlueDark,
               ),
             ),
             SizedBox(height: 8.h),
@@ -868,7 +872,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
-                color: Colors.indigo[900],
+                color: AppColors.providerBlueDark,
               ),
             ),
             SizedBox(height: 8.h),

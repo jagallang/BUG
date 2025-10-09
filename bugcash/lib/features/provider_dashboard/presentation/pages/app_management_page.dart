@@ -603,9 +603,20 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       margin: EdgeInsets.only(bottom: 12.h),
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12.r),
-        boxShadow: AppColors.cardShadowMedium,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(16.r),
+        border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -618,16 +629,27 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           Row(
             children: [
               Container(
-                width: 48.w,
-                height: 48.h,
+                width: 56.w,
+                height: 56.h,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.r),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.providerBluePrimary, AppColors.providerBlueDark],
+                  ),
+                  borderRadius: BorderRadius.circular(12.r),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.providerBluePrimary.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Icon(
-                  Icons.apps,
-                  color: AppColors.primary,
-                  size: 24.sp,
+                  Icons.apps_rounded,
+                  color: Colors.white,
+                  size: 28.sp,
                 ),
               ),
               SizedBox(width: 12.w),
@@ -638,17 +660,27 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                     Text(
                       app.appName,
                       style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.providerBlueDark,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      app.category,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        color: Colors.grey[600],
+                    SizedBox(height: 6.h),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
+                      decoration: BoxDecoration(
+                        color: AppColors.providerBlueLight.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(4.r),
+                        border: Border.all(color: AppColors.providerBlueLight, width: 1),
+                      ),
+                      child: Text(
+                        app.category,
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.providerBluePrimary,
+                        ),
                       ),
                     ),
                   ],
@@ -1858,7 +1890,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           }
         },
         style: OutlinedButton.styleFrom(
-          side: const BorderSide(color: AppColors.primary),
+          side: BorderSide(color: AppColors.providerBluePrimary, width: 1.5),
+          backgroundColor: AppColors.providerBlueLight.withValues(alpha: 0.2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.r),
           ),
@@ -1867,9 +1900,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         child: Text(
           '수정',
           style: TextStyle(
-            color: AppColors.primary,
+            color: AppColors.providerBluePrimary,
             fontSize: 12.sp,
-            fontWeight: FontWeight.w500,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -1902,19 +1935,30 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           FeatureFlagUtils.logFeatureUsage('mission_management_v2', app.providerId);
         } : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: canUse ? AppColors.primary : Colors.grey[400],
+          backgroundColor: canUse ? AppColors.providerBluePrimary : Colors.grey[400],
+          foregroundColor: Colors.white,
+          elevation: canUse ? 2 : 0,
+          shadowColor: canUse ? AppColors.providerBluePrimary.withValues(alpha: 0.4) : null,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.r),
           ),
           padding: EdgeInsets.symmetric(horizontal: 8.w),
         ),
-        child: Text(
-          '미션',
-          style: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w500,
-            color: canUse ? Colors.white : Colors.grey[600],
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.assignment_rounded, size: 14.sp),
+            SizedBox(width: 4.w),
+            Text(
+              '미션',
+              style: TextStyle(
+                fontSize: 12.sp,
+                fontWeight: FontWeight.w600,
+                color: canUse ? Colors.white : Colors.grey[600],
+              ),
+            ),
+          ],
         ),
       ),
     );
