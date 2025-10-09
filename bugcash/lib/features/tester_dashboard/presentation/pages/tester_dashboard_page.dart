@@ -432,19 +432,33 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           body: CustomScrollView(
             controller: _scrollController,
             slivers: [
-              // App Bar - v2.73.0: 단순화 및 4개 아이콘 배치
+              // App Bar - v2.77.0: 오렌지 테마 적용 및 로고 변경
               SliverAppBar(
                 pinned: true,
                 elevation: 2,
-                backgroundColor: Theme.of(context).colorScheme.primary,
+                backgroundColor: AppColors.testerOrangePrimary,
                 automaticallyImplyLeading: false,
-                title: Text(
-                  '테스터 대시보드',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // BUGS 텍스트 로고 (이미지 준비 전까지 임시)
+                    Text(
+                      'BUGS',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24.sp,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 2,
+                            color: Colors.black.withValues(alpha: 0.3),
+                            offset: const Offset(1, 1),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
                 actions: [
                   // 1. 프로필 아이콘
@@ -835,14 +849,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           Container(
             height: 50.h + MediaQuery.of(context).padding.bottom, // v2.75.1: 높이 감소 (60→50)
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary, // v2.75.1: 상단 AppBar와 동일한 색상
+              color: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
             ),
             child: Padding(
               padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom), // 하단 세이프 에리어 패딩
               child: TabBar(
                 labelColor: Colors.white, // v2.75.1: 흰색 텍스트
                 unselectedLabelColor: Colors.white70, // v2.75.1: 반투명 흰색
-                indicatorColor: Colors.white, // v2.75.1: 흰색 인디케이터
+                indicatorColor: AppColors.testerYellowLight, // v2.77.0: 옐로우 인디케이터
                 indicatorWeight: 3,
                 indicatorPadding: EdgeInsets.symmetric(horizontal: 8.w),
                 splashFactory: InkRipple.splashFactory,

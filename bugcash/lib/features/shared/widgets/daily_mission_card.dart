@@ -121,14 +121,14 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                   Icon(
                     Icons.monetization_on,
                     size: 16.sp,
-                    color: AppColors.primary,
+                    color: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
                   ),
                   SizedBox(width: 4.w),
                   Text(
                     '${widget.mission.baseReward.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
                     style: TextStyle(
                       fontSize: 12.sp,
-                      color: AppColors.primary,
+                      color: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -232,8 +232,8 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
               icon: Icon(Icons.hourglass_empty, size: 16.sp),
               label: Text('공급자 승인 대기 중', style: TextStyle(fontSize: 13.sp)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                disabledBackgroundColor: Colors.orange.withValues(alpha: 0.6),
+                backgroundColor: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
+                disabledBackgroundColor: AppColors.testerOrangePrimary.withValues(alpha: 0.6),
                 disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
@@ -414,7 +414,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
               child: _buildRowButton(
                 icon: canStart ? Icons.play_arrow : Icons.check,
                 label: canStart ? '미션진행중' : '시작됨',
-                color: Colors.blue,
+                color: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
                 enabled: canStart,
                 onPressed: canStart ? widget.onStart : null,
               ),
@@ -425,7 +425,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
               child: _buildRowButton(
                 icon: Icons.check_circle,
                 label: '완료',
-                color: Colors.orange,
+                color: AppColors.testerYellow, // v2.77.0: 옐로우 테마
                 enabled: canComplete,
                 onPressed: canComplete ? widget.onComplete : null,
               ),

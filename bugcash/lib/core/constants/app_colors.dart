@@ -220,13 +220,22 @@ class AppColors {
   // Phase 4: 사용자 타입별 맞춤화 색상 시스템
   // ============================================
 
-  /// Tester 전용 색상 (심플하고 중립적인 느낌)
-  static const Color testerPrimary = Color(0xFFF5F5F5);
-  static const Color testerSecondary = Color(0xFFEEEEEE);
-  static const Color testerAccent = Color(0xFFE0E0E0);
+  /// Tester 전용 색상 (오렌지/옐로우 bugs 테마) - v2.77.0
+  static const Color testerPrimary = Color(0xFFFF9800);           // 메인 오렌지
+  static const Color testerSecondary = Color(0xFFFFB74D);         // 밝은 오렌지
+  static const Color testerAccent = Color(0xFFFFC107);            // 액센트 옐로우
+  static const Color testerOrangePrimary = Color(0xFFFF9800);     // 메인 오렌지
+  static const Color testerOrangeLight = Color(0xFFFFB74D);       // 밝은 오렌지
+  static const Color testerOrangeDark = Color(0xFFF57C00);        // 진한 오렌지
+  static const Color testerYellow = Color(0xFFFFC107);            // 액센트 옐로우
+  static const Color testerYellowLight = Color(0xFFFFD54F);       // 밝은 옐로우
   static const List<Color> testerGradient = [
-    Color(0xFFFAFAFA),  // neutral50
-    Color(0xFFF5F5F5),  // neutral100
+    Color(0xFFFF9800),  // 오렌지
+    Color(0xFFFFB74D),  // 밝은 오렌지
+  ];
+  static const List<Color> testerOrangeGradient = [
+    Color(0xFFFF9800),  // 오렌지
+    Color(0xFFFFB74D),  // 밝은 오렌지
   ];
   static List<BoxShadow> testerCardShadow = [
     BoxShadow(
