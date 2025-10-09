@@ -31,7 +31,16 @@
           "package_name": "com.bugcash.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "810712240857-b6vg07h8benuohkatmue5ec63p81g2ba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bugcash.app",
+            "certificate_hash": "0886ea24e15b7acdb6e1b8a03c8828e0c907ad85"
+          }
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA0hLevMSRKZpoMaF4Sb_YgvR7ED1VR6Xo"
@@ -39,7 +48,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "810712240857-1r76sh9fa1rd877esdd4m69t82s8qsmk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     },
@@ -50,7 +64,16 @@
           "package_name": "com.bugcash.app.debug"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "810712240857-b6vg07h8benuohkatmue5ec63p81g2ba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bugcash.app.debug",
+            "certificate_hash": "0886ea24e15b7acdb6e1b8a03c8828e0c907ad85"
+          }
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA0hLevMSRKZpoMaF4Sb_YgvR7ED1VR6Xo"
@@ -58,7 +81,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "810712240857-1r76sh9fa1rd877esdd4m69t82s8qsmk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

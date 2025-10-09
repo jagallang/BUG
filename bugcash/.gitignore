@@ -78,3 +78,7 @@ firebase-debug.*.log
 bugcash-firebase-adminsdk.json
 credentials/
 service-account*.json
+
+# Google OAuth Client Secret Files - NEVER COMMIT
+**/client_secret_*.json
+client_secret_*.json
