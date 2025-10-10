@@ -63,6 +63,24 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
   // 스크린샷 서비스
   final ScreenshotService _screenshotService = ScreenshotService();
+
+  // v2.87.0: 미션 검색/필터 상태
+  String _searchKeyword = '';
+  String? _selectedCategory;
+  String _sortOrder = 'latest'; // 'latest' or 'oldest'
+  final List<String> _categories = [
+    'Productivity',
+    'Social',
+    'Entertainment',
+    'Education',
+    'Health & Fitness',
+    'Finance',
+    'Shopping',
+    'Travel',
+    'Food & Drink',
+    'Games',
+    'Other',
+  ];
   
   @override
   void initState() {
@@ -770,54 +788,261 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
+  /// v2.87.0: 미션 검색/필터 바 위젯
+  Widget _buildSearchFilterBar() {
+    return Container(
+      padding: EdgeInsets.all(16.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: AppColors.testerCardShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 검색창
+          TextField(
+            onChanged: (value) {
+              setState(() {
+                _searchKeyword = value;
+              });
+            },
+            decoration: InputDecoration(
+              hintText: '앱 이름 또는 키워드로 검색...',
+              prefixIcon: Icon(Icons.search, color: AppColors.testerOrangePrimary),
+              filled: true,
+              fillColor: Colors.grey[50],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12.r),
+                borderSide: BorderSide(color: AppColors.testerOrangePrimary, width: 2),
+              ),
+              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+            ),
+          ),
+          SizedBox(height: 12.h),
+
+          // 카테고리 칩 + 정렬 + 초기화
+          Row(
+            children: [
+              // 카테고리 스크롤
+              Expanded(
+                child: SizedBox(
+                  height: 36.h,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children: [
+                      ..._categories.map((category) => _buildCategoryChip(category)),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+
+              // 정렬 드롭다운
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                decoration: BoxDecoration(
+                  color: AppColors.testerOrangePrimary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: AppColors.testerOrangePrimary.withValues(alpha: 0.3)),
+                ),
+                child: DropdownButton<String>(
+                  value: _sortOrder,
+                  underline: const SizedBox(),
+                  icon: Icon(Icons.arrow_drop_down, color: AppColors.testerOrangePrimary, size: 20.w),
+                  items: const [
+                    DropdownMenuItem(value: 'latest', child: Text('최신순')),
+                    DropdownMenuItem(value: 'oldest', child: Text('오래된순')),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _sortOrder = value;
+                      });
+                    }
+                  },
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: AppColors.testerOrangePrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              SizedBox(width: 8.w),
+
+              // 초기화 버튼
+              InkWell(
+                onTap: () {
+                  setState(() {
+                    _searchKeyword = '';
+                    _selectedCategory = null;
+                    _sortOrder = 'latest';
+                  });
+                },
+                borderRadius: BorderRadius.circular(8.r),
+                child: Container(
+                  padding: EdgeInsets.all(8.w),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Icon(Icons.refresh, color: Colors.grey[700], size: 20.w),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// v2.87.0: 카테고리 필터 칩 위젯
+  Widget _buildCategoryChip(String category) {
+    final isSelected = _selectedCategory == category;
+    return Padding(
+      padding: EdgeInsets.only(right: 8.w),
+      child: FilterChip(
+        label: Text(category),
+        selected: isSelected,
+        onSelected: (selected) {
+          setState(() {
+            _selectedCategory = selected ? category : null;
+          });
+        },
+        backgroundColor: Colors.transparent,
+        selectedColor: AppColors.testerOrangePrimary,
+        checkmarkColor: Colors.white,
+        labelStyle: TextStyle(
+          fontSize: 12.sp,
+          color: isSelected ? Colors.white : AppColors.testerOrangePrimary,
+          fontWeight: FontWeight.w600,
+        ),
+        side: BorderSide(
+          color: AppColors.testerOrangePrimary,
+          width: 1.5,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
+      ),
+    );
+  }
+
+  /// v2.87.0: 미션 필터링 및 정렬 로직
+  List<MissionCard> _filterAndSortMissions(List<MissionCard> missions) {
+    List<MissionCard> filtered = missions;
+
+    // 1. 키워드 필터링 (앱 이름, 제목, 설명)
+    if (_searchKeyword.isNotEmpty) {
+      final keyword = _searchKeyword.toLowerCase();
+      filtered = filtered.where((mission) {
+        return mission.appName.toLowerCase().contains(keyword) ||
+               mission.title.toLowerCase().contains(keyword) ||
+               mission.description.toLowerCase().contains(keyword);
+      }).toList();
+    }
+
+    // 2. 카테고리 필터링
+    if (_selectedCategory != null) {
+      filtered = filtered.where((mission) {
+        final category = mission.originalAppData?['category'] as String?;
+        return category == _selectedCategory;
+      }).toList();
+    }
+
+    // 3. 정렬 (최신순/오래된순)
+    filtered.sort((a, b) {
+      final aTime = a.originalAppData?['createdAt'] as Timestamp?;
+      final bTime = b.originalAppData?['createdAt'] as Timestamp?;
+
+      if (aTime == null || bTime == null) return 0;
+
+      if (_sortOrder == 'latest') {
+        return bTime.compareTo(aTime); // 최신순 (내림차순)
+      } else {
+        return aTime.compareTo(bTime); // 오래된순 (오름차순)
+      }
+    });
+
+    return filtered;
+  }
+
+  /// v2.87.0: 검색 결과 없음 상태 위젯
+  Widget _buildEmptyState({required bool hasFilters}) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            hasFilters ? Icons.search_off : Icons.inbox_outlined,
+            size: 64.w,
+            color: Colors.grey[400],
+          ),
+          SizedBox(height: 16.h),
+          Text(
+            hasFilters ? '검색 결과가 없습니다' : '사용 가능한 미션이 없습니다',
+            style: TextStyle(
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Text(
+            hasFilters
+                ? '다른 검색어나 필터를 시도해보세요'
+                : '새로운 미션이 등록되면 알려드릴게요!',
+            style: TextStyle(
+              fontSize: 14.sp,
+              color: Colors.grey[500],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMissionDiscoveryTab() {
     final dashboardState = ref.watch(testerDashboardProvider);
-    
-    if (dashboardState.availableMissions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.search_off, size: 64.w, color: Colors.grey[400]),
-            SizedBox(height: 16.h),
-            Text(
-              '사용 가능한 미션이 없습니다',
-              style: TextStyle(
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[600],
-              ),
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              '새로운 미션이 등록되면 알려드릴게요!',
-              style: TextStyle(
-                fontSize: 14.sp,
-                color: Colors.grey[500],
-              ),
-            ),
-          ],
+
+    // v2.87.0: 필터링 및 정렬 적용
+    final filteredMissions = _filterAndSortMissions(dashboardState.availableMissions);
+    final hasFilters = _searchKeyword.isNotEmpty || _selectedCategory != null;
+
+    // v2.87.0: Column 레이아웃 (검색 바 + 미션 리스트)
+    return Column(
+      children: [
+        // 검색/필터 바
+        _buildSearchFilterBar(),
+
+        // 미션 리스트
+        Expanded(
+          child: filteredMissions.isEmpty
+              ? _buildEmptyState(hasFilters: hasFilters)
+              : ListView.builder(
+                  padding: ResponsiveWrapper.getResponsivePadding(context),
+                  itemCount: filteredMissions.length,
+                  itemBuilder: (context, index) {
+                    final mission = filteredMissions[index];
+                    return Padding(
+                      padding: EdgeInsets.only(bottom: 12.h),
+                      child: _buildMissionCard(
+                        mission: mission,
+                        title: mission.title.isNotEmpty ? mission.title : '미션 ${mission.id}',
+                        description: mission.description.isNotEmpty ? mission.description : '새로운 테스트 미션에 참여해보세요!',
+                        reward: '${mission.rewardPoints}P',
+                        deadline: mission.deadlineText,
+                        participants: mission.participantsText,
+                      ),
+                    );
+                  },
+                ),
         ),
-      );
-    }
-    
-    return ListView.builder(
-      padding: ResponsiveWrapper.getResponsivePadding(context),
-      itemCount: dashboardState.availableMissions.length,
-      itemBuilder: (context, index) {
-        final mission = dashboardState.availableMissions[index];
-        return Padding(
-          padding: EdgeInsets.only(bottom: 12.h),
-          child: _buildMissionCard(
-            mission: mission,
-            title: mission.title.isNotEmpty ? mission.title : '미션 ${mission.id}',
-            description: mission.description.isNotEmpty ? mission.description : '새로운 테스트 미션에 참여해보세요!',
-            reward: '${mission.rewardPoints}P',  // v2.19.0: 동적 총 리워드
-            deadline: mission.deadlineText,      // v2.19.0: '바로 진행' 또는 '모집 마감'
-            participants: mission.participantsText,  // v2.19.0: '3/5' 형식
-          ),
-        );
-      },
+      ],
     );
   }
 
