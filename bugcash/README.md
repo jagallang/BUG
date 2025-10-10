@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.83.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.93.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,32 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.83.0)
+## ✨ 주요 기능 (v2.93.0)
+
+### 📱 모바일 반응형 UI 오버플로우 수정 (v2.93.0) - **MOBILE RESPONSIVE OVERFLOW FIX**
+- **🔧 Phase 1 HIGH RISK 전면 수정**
+  - ✅ **5개 파일 12곳 수정**: 공급자/테스터 대시보드, 로그인, 지갑, 다이얼로그
+  - 🎯 **핵심 화면 안정화**: 사용 빈도 높은 페이지 우선 처리
+  - 📱 **여러 디바이스 지원**: Galaxy S23, iPhone SE 등 다양한 화면 크기 대응
+
+- **🛠️ 적용 패턴**
+  - 🔤 **Flexible + overflow**: 긴 텍스트에 TextOverflow.ellipsis 적용
+  - 📐 **mainAxisSize.min**: Row/Column 공간 최소화로 오버플로우 방지
+  - 🎨 **crossAxisAlignment.start**: 아이콘+텍스트 Row 정렬 개선
+  - 📏 **maxLines**: 3-5줄 제한으로 긴 컨텐츠 안전하게 표시
+
+- **✅ 수정된 화면**
+  - 🏢 **공급자 - 미션 관리**: 테스터 목록 헤더, 삭제 요청 카드 (4곳)
+  - 💰 **지갑 - 포인트 충전**: 드롭다운 긴 텍스트, 결제 버튼 (2곳)
+  - 📝 **테스터 - 일일 미션 제출**: 에러 배너, 긴 질문 텍스트 (2곳)
+  - 🔐 **로그인 페이지**: 체크박스, 회원가입 링크 (2곳)
+  - 💬 **일일 제출 검토 다이얼로그**: 헤더, 피드백 텍스트 (2곳)
+
+### 🐛 공급자 모드 드롭다운 오버플로우 수정 (v2.92.0) - **PROVIDER DROPDOWN OVERFLOW FIX**
+- **🔧 공급자 UI 안정화**
+  - ✅ **앱 관리 탭**: '게시' 드롭다운 버튼 아이콘/텍스트 크기 축소 (12sp, 11sp)
+  - ✅ **앱 등록 탭**: 카테고리, 일일 테스트 시간, 승인 조건 드롭다운에 isExpanded: true 추가
+  - 📱 **2개 파일 수정**: app_management_page.dart, app_detail_page.dart
 
 ### 🎨 공급자 대시보드 색상 통일 (v2.83.0) - **PROVIDER DASHBOARD COLOR UNIFICATION**
 - **🎨 파스텔 블루 색상 일관성**
