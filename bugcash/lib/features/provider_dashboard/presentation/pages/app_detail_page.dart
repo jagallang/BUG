@@ -452,6 +452,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             SizedBox(height: 16.h),
             DropdownButtonFormField<String>(
               value: _selectedCategory,
+              isExpanded: true,
               decoration: InputDecoration(
                 labelText: '카테고리',
                 border: OutlineInputBorder(
@@ -787,6 +788,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
                 Expanded(
                   child: DropdownButtonFormField<String>(
                     value: _getSafeDropdownValue(_selectedDailyTestTime, _dailyTestTimes),
+                    isExpanded: true,
                     items: _dailyTestTimes.map((time) {
                       return DropdownMenuItem(
                         value: time,
@@ -887,6 +889,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
             // v2.43.4: 승인 조건만 남김
             DropdownButtonFormField<String>(
               value: _selectedApprovalCondition,
+              isExpanded: true,
               decoration: InputDecoration(
                 labelText: '승인 조건',
                 border: OutlineInputBorder(

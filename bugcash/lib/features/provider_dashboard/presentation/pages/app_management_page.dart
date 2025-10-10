@@ -1814,9 +1814,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.visibility, color: Colors.green, size: 14.sp),
-                    SizedBox(width: 4.w),
-                    Text('게시', style: TextStyle(fontSize: 12.sp)),
+                    Icon(Icons.visibility, color: Colors.green, size: 12.sp),
+                    SizedBox(width: 2.w),
+                    Text('게시', style: TextStyle(fontSize: 11.sp)),
                   ],
                 ),
               ),
@@ -1825,9 +1825,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.visibility_off, color: Colors.grey, size: 14.sp),
-                    SizedBox(width: 4.w),
-                    Text('숨김', style: TextStyle(fontSize: 12.sp)),
+                    Icon(Icons.visibility_off, color: Colors.grey, size: 12.sp),
+                    SizedBox(width: 2.w),
+                    Text('숨김', style: TextStyle(fontSize: 11.sp)),
                   ],
                 ),
               ),
