@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../../shared/widgets/loading_widgets.dart';
 import '../../../../shared/widgets/responsive_wrapper.dart';
 import '../../../../shared/constants/responsive_breakpoints.dart';
+import '../../../../core/constants/app_colors.dart'; // v2.89.0: 관리자 색상 사용
 import 'test_data_page.dart';
 import 'project_detail_page.dart';
 import '../../../../utils/migration_helper.dart';
@@ -507,6 +508,188 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     );
     if (picked != null && picked != _projectEndDate) {
       setState(() => _projectEndDate = picked);
+    }
+  }
+
+  // v2.90.0: 액션 버튼 헬퍼 위젯
+  Widget _buildActionButton({
+    required String label,
+    required Color color,
+    required VoidCallback onPressed,
+  }) {
+    return SizedBox(
+      width: 80,
+      height: 32,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.zero,
+        ),
+        child: Text(label),
+      ),
+    );
+  }
+
+  // v2.90.0: 프로젝트 게시 (status → 'open')
+  Future<void> _publishProject(String projectId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('프로젝트 게시'),
+        content: const Text('이 프로젝트를 게시하시겠습니까?\n테스터들이 미션을 볼 수 있게 됩니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+            child: const Text('게시'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('projects')
+            .doc(projectId)
+            .update({'status': 'open'});
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ 프로젝트가 게시되었습니다'),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 게시 실패: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // v2.90.0: 프로젝트 숨김 (status → 'closed')
+  Future<void> _hideProject(String projectId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('프로젝트 숨김'),
+        content: const Text('이 프로젝트를 숨기시겠습니까?\n테스터들이 더 이상 볼 수 없게 됩니다.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+            child: const Text('숨김'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('projects')
+            .doc(projectId)
+            .update({'status': 'closed'});
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ 프로젝트가 숨겨졌습니다'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 숨김 실패: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // v2.90.0: 프로젝트 삭제
+  Future<void> _deleteProject(String projectId, String appName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('프로젝트 삭제'),
+        content: Text(
+          '정말로 "$appName" 프로젝트를 삭제하시겠습니까?\n\n'
+          '⚠️ 이 작업은 되돌릴 수 없습니다!\n'
+          '- 프로젝트 데이터 영구 삭제\n'
+          '- 관련 미션 데이터 삭제\n'
+          '- 테스터 진행 기록 삭제',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red[700]),
+            child: const Text('삭제'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      _showLoadingDialog('프로젝트 삭제 중...');
+
+      try {
+        // Firestore 프로젝트 문서 삭제
+        await FirebaseFirestore.instance
+            .collection('projects')
+            .doc(projectId)
+            .delete();
+
+        // TODO: 관련 서브컬렉션 삭제 (missions, tester progress 등)
+        // 필요시 Cloud Function으로 처리
+
+        if (mounted) {
+          Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('✅ 프로젝트가 삭제되었습니다'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('❌ 삭제 실패: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -1132,14 +1315,18 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           itemBuilder: (context, index) {
             final doc = filteredDocs[index];
             final data = doc.data() as Map<String, dynamic>;
-            return _buildProjectCard(doc.id, data);
+            return _buildProjectCard(doc.id, data, currentTab: status);
           },
         );
       },
     );
   }
 
-  Widget _buildProjectCard(String projectId, Map<String, dynamic> data) {
+  Widget _buildProjectCard(
+    String projectId,
+    Map<String, dynamic> data, {
+    required String currentTab, // v2.90.0: 현재 탭 정보
+  }) {
     final status = data['status'] ?? 'pending';
     final appName = data['appName'] ?? '알 수 없는 앱';
     final providerId = data['providerId'] ?? '';
@@ -1298,35 +1485,61 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 const Spacer(),
                 Wrap(
                   spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    if (status == 'pending' || status == 'draft') ...[
-                      SizedBox(
-                        width: 80,
-                        height: 32,
-                        child: ElevatedButton(
+                    // v2.90.0: 전체 탭에서는 모든 관리 액션 표시
+                    if (currentTab == 'all') ...[
+                      // 승인/거절 버튼 (pending, draft 상태만)
+                      if (status == 'pending' || status == 'draft') ...[
+                        _buildActionButton(
+                          label: '승인',
+                          color: Colors.green,
                           onPressed: () => _approveProject(projectId),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.zero,
-                          ),
-                          child: const Text('승인'),
                         ),
-                      ),
-                      SizedBox(
-                        width: 80,
-                        height: 32,
-                        child: ElevatedButton(
+                        _buildActionButton(
+                          label: '거절',
+                          color: Colors.red,
                           onPressed: () => _rejectProject(projectId),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.zero,
-                          ),
-                          child: const Text('거부'),
                         ),
+                      ],
+                      // 게시 버튼 (approved 상태만)
+                      if (status == 'approved') ...[
+                        _buildActionButton(
+                          label: '게시',
+                          color: Colors.blue,
+                          onPressed: () => _publishProject(projectId),
+                        ),
+                      ],
+                      // 숨김 버튼 (open 상태만)
+                      if (status == 'open') ...[
+                        _buildActionButton(
+                          label: '숨김',
+                          color: Colors.orange,
+                          onPressed: () => _hideProject(projectId),
+                        ),
+                      ],
+                      // 삭제 버튼 (모든 상태)
+                      _buildActionButton(
+                        label: '삭제',
+                        color: Colors.red[700]!,
+                        onPressed: () => _deleteProject(projectId, appName),
                       ),
+                    ] else ...[
+                      // 다른 탭에서는 기존 로직 유지
+                      if (status == 'pending' || status == 'draft') ...[
+                        _buildActionButton(
+                          label: '승인',
+                          color: Colors.green,
+                          onPressed: () => _approveProject(projectId),
+                        ),
+                        _buildActionButton(
+                          label: '거절',
+                          color: Colors.red,
+                          onPressed: () => _rejectProject(projectId),
+                        ),
+                      ],
                     ],
+                    // 상세보기 버튼 (모든 탭)
                     SizedBox(
                       width: 80,
                       height: 32,
@@ -2630,12 +2843,6 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     if (confirmed == true) {
       await ref.read(authProvider.notifier).signOut();
     }
-  }
-
-  void _showProjectFilters() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('필터 기능 (개발 중)')),
-    );
   }
 
   // Finance 액션들
