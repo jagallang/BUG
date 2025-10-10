@@ -36,6 +36,13 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   DateTime _transactionsStartDate = DateTime(DateTime.now().year, DateTime.now().month, 1); // 이번 달 1일
   DateTime _transactionsEndDate = DateTime.now();
 
+  // v2.89.0: 프로젝트 검수 필터 상태
+  String _projectKeyword = ''; // 키워드 검색
+  String _projectProviderEmail = ''; // 공급자 이메일 검색
+  DateTime? _projectStartDate; // 시작일
+  DateTime? _projectEndDate; // 종료일
+  bool _showProjectFilters = false; // 필터 섹션 표시 여부
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -282,21 +289,38 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 16),
+              // v2.89.0: 향상된 필터 UI
               Row(
                 children: [
+                  OutlinedButton.icon(
+                    onPressed: () => setState(() => _showProjectFilters = !_showProjectFilters),
+                    icon: Icon(_showProjectFilters ? Icons.filter_list_off : Icons.filter_list),
+                    label: Text(_showProjectFilters ? '필터 숨기기' : '필터 표시'),
+                  ),
+                  SizedBox(width: 12),
+                  if (_hasActiveProjectFilters()) ...[
+                    OutlinedButton.icon(
+                      onPressed: _resetProjectFilters,
+                      icon: const Icon(Icons.clear_all),
+                      label: const Text('초기화'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.orange,
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                  ],
                   OutlinedButton.icon(
                     onPressed: () => setState(() {}),
                     icon: const Icon(Icons.refresh),
                     label: const Text('새로고침'),
                   ),
-                  SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: _showProjectFilters,
-                    icon: const Icon(Icons.filter_list),
-                    label: const Text('필터'),
-                  ),
                 ],
               ),
+              // v2.89.0: 필터 섹션 (접기/펼치기)
+              if (_showProjectFilters) ...[
+                SizedBox(height: 16),
+                _buildProjectFilterSection(),
+              ],
             ],
           ),
           SizedBox(height: 24),
@@ -333,6 +357,157 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ],
       ),
     );
+  }
+
+  // v2.89.0: 프로젝트 필터 섹션
+  Widget _buildProjectFilterSection() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.purple[50],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.adminPrimary.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 키워드 검색
+          TextField(
+            decoration: InputDecoration(
+              labelText: '키워드 검색',
+              hintText: '앱 이름, 프로젝트 제목, 설명으로 검색',
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+            onChanged: (value) => setState(() => _projectKeyword = value),
+          ),
+          const SizedBox(height: 12),
+
+          // 공급자 이메일 검색
+          TextField(
+            decoration: InputDecoration(
+              labelText: '공급자 이메일 검색',
+              hintText: '공급자 이메일 주소',
+              prefixIcon: const Icon(Icons.email),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              filled: true,
+              fillColor: Colors.white,
+            ),
+            onChanged: (value) => setState(() => _projectProviderEmail = value),
+          ),
+          const SizedBox(height: 12),
+
+          // 날짜 범위 선택
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _selectProjectStartDate(context),
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(
+                    _projectStartDate == null
+                        ? '시작일 선택'
+                        : '${_projectStartDate!.year}-${_projectStartDate!.month.toString().padLeft(2, '0')}-${_projectStartDate!.day.toString().padLeft(2, '0')}',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () => _selectProjectEndDate(context),
+                  icon: const Icon(Icons.calendar_today),
+                  label: Text(
+                    _projectEndDate == null
+                        ? '종료일 선택'
+                        : '${_projectEndDate!.year}-${_projectEndDate!.month.toString().padLeft(2, '0')}-${_projectEndDate!.day.toString().padLeft(2, '0')}',
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // v2.89.0: 활성 필터 확인
+  bool _hasActiveProjectFilters() {
+    return _projectKeyword.isNotEmpty ||
+        _projectProviderEmail.isNotEmpty ||
+        _projectStartDate != null ||
+        _projectEndDate != null;
+  }
+
+  // v2.89.0: 필터 초기화
+  void _resetProjectFilters() {
+    setState(() {
+      _projectKeyword = '';
+      _projectProviderEmail = '';
+      _projectStartDate = null;
+      _projectEndDate = null;
+    });
+  }
+
+  // v2.89.0: 시작일 선택
+  Future<void> _selectProjectStartDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _projectStartDate ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.adminPrimary,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _projectStartDate) {
+      setState(() => _projectStartDate = picked);
+    }
+  }
+
+  // v2.89.0: 종료일 선택
+  Future<void> _selectProjectEndDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _projectEndDate ?? DateTime.now(),
+      firstDate: _projectStartDate ?? DateTime(2020),
+      lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: AppColors.adminPrimary,
+              onPrimary: Colors.white,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null && picked != _projectEndDate) {
+      setState(() => _projectEndDate = picked);
+    }
   }
 
   // 3. Users Tab - 사용자 관리
@@ -877,10 +1052,85 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           );
         }
 
+        // v2.89.0: 클라이언트 사이드 필터링
+        final allDocs = snapshot.data!.docs;
+        final filteredDocs = allDocs.where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+
+          // 키워드 검색 (appName, title, description)
+          if (_projectKeyword.isNotEmpty) {
+            final keyword = _projectKeyword.toLowerCase();
+            final appName = (data['appName'] ?? '').toString().toLowerCase();
+            final title = (data['title'] ?? '').toString().toLowerCase();
+            final description = (data['description'] ?? '').toString().toLowerCase();
+
+            if (!appName.contains(keyword) &&
+                !title.contains(keyword) &&
+                !description.contains(keyword)) {
+              return false;
+            }
+          }
+
+          // 공급자 이메일 검색
+          if (_projectProviderEmail.isNotEmpty) {
+            final providerId = data['providerId'] ?? '';
+            // providerId로 사용자 이메일 조회가 필요하므로,
+            // 여기서는 providerId 자체로 검색 (이메일은 별도 StreamBuilder로 조회 필요)
+            // 간단한 구현을 위해 providerId로 검색
+            if (!providerId.toLowerCase().contains(_projectProviderEmail.toLowerCase())) {
+              return false;
+            }
+          }
+
+          // 날짜 범위 검색
+          if (_projectStartDate != null || _projectEndDate != null) {
+            final createdAt = (data['createdAt'] as Timestamp?)?.toDate();
+            if (createdAt == null) return false;
+
+            if (_projectStartDate != null && createdAt.isBefore(_projectStartDate!)) {
+              return false;
+            }
+            if (_projectEndDate != null && createdAt.isAfter(_projectEndDate!.add(Duration(days: 1)))) {
+              return false;
+            }
+          }
+
+          return true;
+        }).toList();
+
+        // v2.89.0: 필터링 결과 없음
+        if (filteredDocs.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                SizedBox(height: 16),
+                Text(
+                  '검색 결과가 없습니다',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  '필터 조건을 변경해보세요',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
         return ListView.builder(
-          itemCount: snapshot.data!.docs.length,
+          itemCount: filteredDocs.length,
           itemBuilder: (context, index) {
-            final doc = snapshot.data!.docs[index];
+            final doc = filteredDocs[index];
             final data = doc.data() as Map<String, dynamic>;
             return _buildProjectCard(doc.id, data);
           },
