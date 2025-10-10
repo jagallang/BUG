@@ -45,6 +45,9 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   // v2.50.7: 약관 동의 처리 중 로딩 상태
   bool _isAcceptingTerms = false;
 
+  // v2.88.0: 로컬 약관 동의 상태 (즉시 UI 숨김 처리용)
+  bool _termsAcceptedLocally = false;
+
   @override
   void initState() {
     super.initState();
@@ -354,8 +357,8 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
               final user = ref.watch(authProvider).user;
               final termsAccepted = user?.providerProfile?.termsAccepted ?? false;
 
-              // 이미 동의한 경우 전체 섹션 숨김
-              if (termsAccepted) {
+              // v2.88.0: 로컬 상태 OR Firestore 상태로 숨김 (즉시 반응)
+              if (termsAccepted || _termsAcceptedLocally) {
                 return SizedBox.shrink();
               }
 
@@ -1596,10 +1599,12 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
       ref.invalidate(authProvider);
 
       // v2.50.7: 로딩 상태 종료
+      // v2.88.0: 로컬 약관 동의 상태 업데이트 (즉시 UI 숨김)
       if (mounted) {
         setState(() {
           _isAcceptingTerms = false;
           _termsCheckboxChecked = false; // 체크박스 초기화
+          _termsAcceptedLocally = accepted; // v2.88.0: 로컬 상태 업데이트
         });
       }
 
