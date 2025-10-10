@@ -799,43 +799,31 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 검색창
-          TextField(
-            onChanged: (value) {
-              setState(() {
-                _searchKeyword = value;
-              });
-            },
-            decoration: InputDecoration(
-              hintText: '앱 이름 또는 키워드로 검색...',
-              prefixIcon: Icon(Icons.search, color: AppColors.testerOrangePrimary),
-              filled: true,
-              fillColor: Colors.grey[50],
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide.none,
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12.r),
-                borderSide: BorderSide(color: AppColors.testerOrangePrimary, width: 2),
-              ),
-              contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-            ),
-          ),
-          SizedBox(height: 12.h),
-
-          // 카테고리 칩 + 정렬 + 초기화
+          // v2.87.1: 검색창 + 정렬 + 초기화 (1번째 줄)
           Row(
             children: [
-              // 카테고리 스크롤
+              // 검색창
               Expanded(
-                child: SizedBox(
-                  height: 36.h,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      ..._categories.map((category) => _buildCategoryChip(category)),
-                    ],
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchKeyword = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: '앱 이름 또는 키워드로 검색...',
+                    prefixIcon: Icon(Icons.search, color: AppColors.testerOrangePrimary),
+                    filled: true,
+                    fillColor: Colors.grey[50],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.r),
+                      borderSide: BorderSide(color: AppColors.testerOrangePrimary, width: 2),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                   ),
                 ),
               ),
@@ -893,6 +881,18 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 ),
               ),
             ],
+          ),
+          SizedBox(height: 12.h),
+
+          // v2.87.1: 카테고리 칩 (2번째 줄 - 전체 너비 사용)
+          SizedBox(
+            height: 36.h,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                ..._categories.map((category) => _buildCategoryChip(category)),
+              ],
+            ),
           ),
         ],
       ),
