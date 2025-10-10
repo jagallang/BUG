@@ -42,7 +42,7 @@ class TesterWalletCard extends ConsumerWidget {
                   children: [
                     Icon(
                       Icons.account_balance_wallet,
-                      color: Theme.of(context).primaryColor,
+                      color: AppColors.testerOrangePrimary,
                       size: 28,
                     ),
                     const SizedBox(width: 12),
@@ -121,7 +121,7 @@ class TesterWalletCard extends ConsumerWidget {
                       '총 적립 금액',
                       wallet.totalEarned,
                       Icons.trending_up,
-                      Colors.blue,
+                      AppColors.testerOrangePrimary,
                     ),
                   ),
                 ],
