@@ -527,7 +527,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           foregroundColor: Colors.white,
           padding: EdgeInsets.zero,
         ),
-        child: Text(label),
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 11), // v2.90.1: 텍스트 크기 60% 축소
+        ),
       ),
     );
   }
@@ -1548,7 +1551,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.zero,
                         ),
-                        child: const Text('상세보기'),
+                        child: const Text(
+                          '상세보기',
+                          style: TextStyle(fontSize: 11), // v2.90.1: 텍스트 크기 60% 축소
+                        ),
                       ),
                     ),
                   ],
