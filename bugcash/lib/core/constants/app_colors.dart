@@ -250,18 +250,12 @@ class AppColors {
     ),
   ];
 
-  /// Provider 전용 색상 (청량한 파스텔 블루 bugs 테마) - v2.78.0
-  static const Color providerPrimary = Color(0xFF5BA3D0);           // 메인 파스텔 블루
-  static const Color providerSecondary = Color(0xFF8FC5E3);         // 밝은 파스텔 블루
-  static const Color providerAccent = Color(0xFF7BB7D9);            // 액센트 블루
-  static const Color providerBluePrimary = Color(0xFF5BA3D0);       // 메인 파스텔 블루
-  static const Color providerBlueLight = Color(0xFF8FC5E3);         // 밝은 파스텔 블루
-  static const Color providerBlueDark = Color(0xFF4284AC);          // 진한 블루
-  static const Color providerBlueAccent = Color(0xFF7BB7D9);        // 액센트 블루
-  static const List<Color> providerGradient = [
-    Color(0xFF5BA3D0),  // 파스텔 블루
-    Color(0xFF8FC5E3),  // 밝은 파스텔 블루
-  ];
+  /// Provider 전용 색상 (청량한 파스텔 블루 테마) - v2.78.0, v2.84.0 중복 제거
+  /// 공급자 대시보드 전체에 일관되게 사용되는 파스텔 블루 색상 팔레트
+  static const Color providerBluePrimary = Color(0xFF5BA3D0);       // 메인 파스텔 블루 (AppBar, 버튼, 주요 요소)
+  static const Color providerBlueLight = Color(0xFF8FC5E3);         // 밝은 파스텔 블루 (테두리, 밝은 액센트)
+  static const Color providerBlueDark = Color(0xFF4284AC);          // 진한 블루 (텍스트, 제목)
+  static const Color providerBlueAccent = Color(0xFF7BB7D9);        // 액센트 블루 (강조 요소)
   static const List<Color> providerBlueGradient = [
     Color(0xFF5BA3D0),  // 파스텔 블루
     Color(0xFF8FC5E3),  // 밝은 파스텔 블루
@@ -306,7 +300,7 @@ class AppColors {
       case 'tester':
         return testerPrimary;
       case 'provider':
-        return providerPrimary;
+        return providerBluePrimary;
       case 'admin':
         return adminPrimary;
       default:
@@ -319,7 +313,7 @@ class AppColors {
       case 'tester':
         return testerGradient;
       case 'provider':
-        return providerGradient;
+        return providerBlueGradient;
       case 'admin':
         return adminGradient;
       default:
