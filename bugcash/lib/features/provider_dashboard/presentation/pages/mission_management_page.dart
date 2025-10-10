@@ -183,12 +183,15 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                       children: [
                         Icon(Icons.hourglass_empty, size: 20.sp, color: Colors.orange),
                         SizedBox(width: 8.w),
-                        Text(
-                          '테스터 신청 대기중 (${applications.length}명)',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                        Flexible(
+                          child: Text(
+                            '테스터 신청 대기중 (${applications.length}명)',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -257,12 +260,15 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                       children: [
                         Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
                         SizedBox(width: 8.w),
-                        Text(
-                          '승인된 테스터 (${approvedTesters.length}명)',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                        Flexible(
+                          child: Text(
+                            '승인된 테스터 (${approvedTesters.length}명)',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -1303,7 +1309,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                               fontWeight: FontWeight.w600,
                               color: Colors.black87,
                             ),
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -1316,9 +1322,12 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                       children: [
                         Icon(Icons.apps, size: 16.sp, color: Colors.grey[600]),
                         SizedBox(width: 6.w),
-                        Text(
-                          deletion.appName,
-                          style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
+                        Expanded(
+                          child: Text(
+                            deletion.appName,
+                            style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -1329,9 +1338,12 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                       children: [
                         Icon(Icons.person, size: 16.sp, color: Colors.grey[600]),
                         SizedBox(width: 6.w),
-                        Text(
-                          deletion.testerName,
-                          style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
+                        Expanded(
+                          child: Text(
+                            deletion.testerName,
+                            style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),

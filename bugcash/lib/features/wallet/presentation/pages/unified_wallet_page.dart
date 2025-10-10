@@ -424,9 +424,12 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                         items: chargeOptions.map((amount) {
                           return DropdownMenuItem<int>(
                             value: amount,
-                            child: Text(
-                              '${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원 (${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} P)',
-                              style: TextStyle(fontSize: 16.sp),
+                            child: Flexible(
+                              child: Text(
+                                '${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원 (${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} P)',
+                                style: TextStyle(fontSize: 16.sp),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           );
                         }).toList(),
@@ -465,12 +468,15 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                       children: [
                         Icon(Icons.payment, color: Colors.white, size: 20.sp),
                         SizedBox(width: 8.w),
-                        Text(
-                          '결제하기',
-                          style: TextStyle(
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        Flexible(
+                          child: Text(
+                            '결제하기',
+                            style: TextStyle(
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

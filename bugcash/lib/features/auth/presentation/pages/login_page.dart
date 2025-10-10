@@ -235,14 +235,21 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: _rememberMe,
-                              onChanged: (value) => setState(() => _rememberMe = value ?? false),
-                            ),
-                            const Text('로그인 상태 유지'),
-                          ],
+                        Flexible(
+                          child: Row(
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                onChanged: (value) => setState(() => _rememberMe = value ?? false),
+                              ),
+                              Flexible(
+                                child: Text(
+                                  '로그인 상태 유지',
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
@@ -352,23 +359,30 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               // Sign Up Link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '아직 계정이 없으신가요? ',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SignUpPage()),
-                      );
-                    },
+                  Flexible(
                     child: Text(
-                      '회원가입',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                        fontWeight: FontWeight.w600,
-                        decoration: TextDecoration.underline,
+                      '아직 계정이 없으신가요? ',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Flexible(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const SignUpPage()),
+                        );
+                      },
+                      child: Text(
+                        '회원가입',
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),

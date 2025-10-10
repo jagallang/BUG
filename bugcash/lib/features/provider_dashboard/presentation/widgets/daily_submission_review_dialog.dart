@@ -173,11 +173,13 @@ class _DailySubmissionReviewDialogState
                 ),
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.rate_review, color: Colors.blue, size: 28.w),
                   SizedBox(width: 12.w),
                   Expanded(
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
@@ -186,6 +188,8 @@ class _DailySubmissionReviewDialogState
                             fontSize: 20.sp,
                             fontWeight: FontWeight.bold,
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           '제출일: ${DateFormat('yyyy-MM-dd HH:mm').format(widget.interaction.testerCompletedAt!)}',
@@ -193,6 +197,8 @@ class _DailySubmissionReviewDialogState
                             fontSize: 14.sp,
                             color: Colors.grey[600],
                           ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
@@ -224,6 +230,8 @@ class _DailySubmissionReviewDialogState
                         child: Text(
                           widget.interaction.testerFeedback ?? '피드백 없음',
                           style: TextStyle(fontSize: 14.sp),
+                          maxLines: 5,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),

@@ -301,11 +301,13 @@ class _DailyMissionSubmissionPageState
                           borderRadius: BorderRadius.circular(8.0),
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Icon(Icons.warning_amber, color: Colors.orange.shade700),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
+                                mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
@@ -429,6 +431,8 @@ class _DailyMissionSubmissionPageState
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 8),
                 TextFormField(
