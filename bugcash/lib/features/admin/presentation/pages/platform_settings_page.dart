@@ -466,49 +466,25 @@ class _PlatformSettingsPageState extends State<PlatformSettingsPage>
     );
   }
 
+  // v2.91.0: 숫자 입력 필드 (새로운 StatefulWidget 사용)
   Widget _buildNumberField(String label, int value, Function(int) onChanged) {
-    final controller = TextEditingController(text: value.toString());
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        onChanged: (text) {
-          if (text.isNotEmpty) {
-            onChanged(int.parse(text));
-          }
-        },
-      ),
+    return _NumberInputField(
+      label: label,
+      initialValue: value,
+      onChanged: onChanged,
     );
   }
 
+  // v2.91.0: 퍼센트 입력 필드 (새로운 StatefulWidget 사용)
   Widget _buildPercentageField(
       String label, int value, Function(int) onChanged) {
-    final controller = TextEditingController(text: value.toString());
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-          suffixText: '%',
-        ),
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        onChanged: (text) {
-          if (text.isNotEmpty) {
-            onChanged(int.parse(text));
-          }
-        },
-      ),
+    return _NumberInputField(
+      label: label,
+      initialValue: value,
+      onChanged: onChanged,
+      suffixText: '%',
+      minValue: 0,
+      maxValue: 100,
     );
   }
 
@@ -592,5 +568,153 @@ class _PlatformSettingsPageState extends State<PlatformSettingsPage>
           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
           (Match m) => '${m[1]},',
         );
+  }
+}
+
+// v2.91.0: StatefulWidget으로 분리된 숫자 입력 필드 (입력 버그 수정)
+class _NumberInputField extends StatefulWidget {
+  final String label;
+  final int initialValue;
+  final ValueChanged<int> onChanged;
+  final String? suffixText;
+  final int? minValue;
+  final int? maxValue;
+
+  const _NumberInputField({
+    required this.label,
+    required this.initialValue,
+    required this.onChanged,
+    this.suffixText,
+    this.minValue,
+    this.maxValue,
+  });
+
+  @override
+  State<_NumberInputField> createState() => _NumberInputFieldState();
+}
+
+class _NumberInputFieldState extends State<_NumberInputField> {
+  late TextEditingController _controller;
+  late int _currentValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentValue = widget.initialValue;
+    _controller = TextEditingController(text: _currentValue.toString());
+  }
+
+  @override
+  void didUpdateWidget(_NumberInputField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 외부에서 값이 변경된 경우에만 컨트롤러 업데이트
+    if (widget.initialValue != oldWidget.initialValue &&
+        widget.initialValue != _currentValue) {
+      _currentValue = widget.initialValue;
+      _controller.text = _currentValue.toString();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _increment() {
+    final newValue = _currentValue + 1;
+    if (widget.maxValue == null || newValue <= widget.maxValue!) {
+      _updateValue(newValue);
+    }
+  }
+
+  void _decrement() {
+    final newValue = _currentValue - 1;
+    if (widget.minValue == null || newValue >= widget.minValue!) {
+      _updateValue(newValue);
+    }
+  }
+
+  void _updateValue(int value) {
+    setState(() {
+      _currentValue = value;
+      _controller.text = value.toString();
+      _controller.selection = TextSelection.fromPosition(
+        TextPosition(offset: _controller.text.length),
+      );
+    });
+    widget.onChanged(value);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: widget.label,
+                border: const OutlineInputBorder(),
+                suffixText: widget.suffixText,
+              ),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (text) {
+                if (text.isNotEmpty) {
+                  final value = int.tryParse(text);
+                  if (value != null) {
+                    _currentValue = value;
+                    widget.onChanged(value);
+                  }
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 8),
+          // 상하 버튼
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 40,
+                height: 32,
+                child: IconButton(
+                  onPressed: _increment,
+                  icon: const Icon(Icons.arrow_drop_up, size: 24),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  style: IconButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      side: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              SizedBox(
+                width: 40,
+                height: 32,
+                child: IconButton(
+                  onPressed: _decrement,
+                  icon: const Icon(Icons.arrow_drop_down, size: 24),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  style: IconButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                      side: BorderSide(color: Colors.grey.shade300),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
