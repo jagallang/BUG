@@ -4,6 +4,7 @@ import '../../domain/entities/wallet_entity.dart';
 import '../providers/wallet_provider.dart';
 import '../pages/transaction_history_page.dart';
 import 'withdrawal_dialog.dart';
+import '../../../../core/constants/app_colors.dart';
 
 /// 테스터 지갑 카드 위젯
 /// - 현재 잔액 표시
@@ -107,7 +108,7 @@ class TesterWalletCard extends ConsumerWidget {
                         '이번 달 적립',
                         amount,
                         Icons.savings_outlined,
-                        Colors.green,
+                        AppColors.testerOrangePrimary,
                       ),
                       loading: () => _buildLoadingStatCard(context, '이번 달 적립'),
                       error: (_, __) => _buildErrorStatCard(context, '이번 달 적립'),
@@ -166,7 +167,7 @@ class TesterWalletCard extends ConsumerWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  backgroundColor: Colors.green,
+                  backgroundColor: AppColors.testerOrangePrimary,
                 ),
               ),
             ),
@@ -183,8 +184,8 @@ class TesterWalletCard extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Colors.green.shade700,
-            Colors.green.shade500,
+            AppColors.testerOrangePrimary,
+            AppColors.testerOrangeLight,
           ],
         ),
         borderRadius: BorderRadius.circular(12),
