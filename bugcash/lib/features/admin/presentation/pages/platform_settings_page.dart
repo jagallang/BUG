@@ -334,17 +334,22 @@ class _PlatformSettingsPageState extends State<PlatformSettingsPage>
             (value) => _updateNestedField('appRegistration', 'cost', value),
           ),
           const Divider(height: 32),
-          _buildSectionHeader('⚙️ 앱 등록 설정'),
+          _buildSectionHeader('⚙️ 플랫폼 비용 시스템'),
           _buildSwitchTile(
-            '포인트 검증 활성화',
+            '플랫폼 비용 시스템 활성화',
             pointValidation['enabled'] ?? true,
             (value) => _updateNestedField('pointValidation', 'enabled', value),
           ),
           Padding(
             padding: const EdgeInsets.only(left: 16, top: 4, bottom: 8),
             child: Text(
-              '• ON: 앱 등록 시 잔액 확인 및 포인트 차감 수행\n'
-              '• OFF: 포인트 검증 건너뛰기 (빠른 등록, 50-75% 속도 개선)',
+              '• ON: 모든 비용 검증 및 차감 수행 (정상 운영)\n'
+              '   - 앱 등록 비용 차감\n'
+              '   - 미션 생성 비용 차감\n'
+              '   - 출금/정산 시 플랫폼 수수료 차감\n\n'
+              '• OFF: 모든 비용 검증 건너뛰기 (테스트용)\n'
+              '   - 빠른 등록/생성 (50-75% 속도 개선)\n'
+              '   - 수수료 없이 출금 가능',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey[600],

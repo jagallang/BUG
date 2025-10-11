@@ -34,11 +34,16 @@ class _WithdrawalDialogState extends ConsumerState<WithdrawalDialog> {
 
   bool _isLoading = false;
   Map<String, dynamic>? _withdrawalSettings;
+  bool _platformCostSystemEnabled = true; // v2.101.0: 플랫폼 비용 시스템 활성화 여부
 
   // 동적 설정값 (platform_settings에서 로드)
   int get _minWithdrawalAmount => _withdrawalSettings?['minAmount'] ?? 30000;
   int get _allowedUnits => _withdrawalSettings?['allowedUnits'] ?? 10000;
-  double get _feeRate => (_withdrawalSettings?['feeRate'] ?? 0.18).toDouble();
+  double get _feeRate {
+    // v2.101.0: 플랫폼 비용 시스템 비활성화 시 수수료 0%
+    if (!_platformCostSystemEnabled) return 0.0;
+    return (_withdrawalSettings?['feeRate'] ?? 0.18).toDouble();
+  }
 
   int get _withdrawalAmount {
     return int.tryParse(_amountController.text.replaceAll(',', '')) ?? 0;
@@ -56,6 +61,7 @@ class _WithdrawalDialogState extends ConsumerState<WithdrawalDialog> {
   void initState() {
     super.initState();
     _loadWithdrawalSettings();
+    _loadPlatformCostSystemSettings(); // v2.101.0
   }
 
   Future<void> _loadWithdrawalSettings() async {
@@ -69,6 +75,22 @@ class _WithdrawalDialogState extends ConsumerState<WithdrawalDialog> {
       }
     } catch (e) {
       debugPrint('❌ 출금 설정 로드 실패: $e (기본값 사용)');
+    }
+  }
+
+  // v2.101.0: 플랫폼 비용 시스템 활성화 여부 로드
+  Future<void> _loadPlatformCostSystemSettings() async {
+    try {
+      final platformSettings = await ref.read(platformSettingsProvider.notifier).getPlatformSettings();
+      final pointValidation = platformSettings['pointValidation'] as Map<String, dynamic>?;
+      if (mounted) {
+        setState(() {
+          _platformCostSystemEnabled = pointValidation?['enabled'] ?? true;
+        });
+        debugPrint('✅ 플랫폼 비용 시스템: ${_platformCostSystemEnabled ? "활성화" : "비활성화"}');
+      }
+    } catch (e) {
+      debugPrint('❌ 플랫폼 비용 시스템 설정 로드 실패: $e (기본값: 활성화)');
     }
   }
 
