@@ -201,12 +201,15 @@ class _EscrowManagementTabState extends State<EscrowManagementTab> {
 
   /// 검색 필터 UI
   Widget _buildEscrowFilters() {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: Card(
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Row(
               children: [
@@ -393,6 +396,9 @@ class _EscrowManagementTabState extends State<EscrowManagementTab> {
               ),
             ),
           ],
+        ),
+            ),
+          ),
         ),
       ),
     );
