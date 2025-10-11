@@ -145,11 +145,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   int _finalCompletionPoints = 1000;
   int _bonusPoints = 500;
 
-  // Requirements
-  final _minExperienceController = TextEditingController();
-  final _specialRequirementsController = TextEditingController();
-  List<String> _requiredSpecializations = [];
-
   final List<String> _categories = [
     'Productivity',
     'Social',
@@ -201,21 +196,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     'linux',
   ];
 
-  final List<String> _specializations = [
-    'UI/UX Testing',
-    'Performance Testing',
-    'Security Testing',
-    'API Testing',
-    'Mobile Testing',
-    'Web Testing',
-    'Game Testing',
-    'E-commerce Testing',
-    'Payment Testing',
-    'Accessibility Testing',
-    'Localization Testing',
-    'Device Testing',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -229,8 +209,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     _testingGuidelinesController.dispose();
     _minOSVersionController.dispose();
     _appStoreUrlController.dispose();
-    _minExperienceController.dispose();
-    _specialRequirementsController.dispose();
     super.dispose();
   }
 
@@ -367,9 +345,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         // Requirements matching indexed fields
         'requirements': {
           'platforms': _selectedPlatforms,
-          'minExperience': _minExperienceController.text.isEmpty ? 'beginner' : _minExperienceController.text,
-          'specializations': _requiredSpecializations,
-          'specialRequirements': _specialRequirementsController.text,
           'maxParticipants': _maxTesters,
           'testDuration': _testPeriodDays,
         },
@@ -445,8 +420,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               _testingGuidelinesController.clear();
               _minOSVersionController.clear();
               _appStoreUrlController.clear();
-              _minExperienceController.clear();
-              _specialRequirementsController.clear();
               _selectedCategory = 'Productivity';
               _selectedInstallType = 'play_store';
               _selectedDifficulty = 'easy';
@@ -457,7 +430,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               _dailyMissionPoints = 100;
               _finalCompletionPoints = 1000;
               _bonusPoints = 500;
-              _requiredSpecializations = [];
             });
           }
         });
@@ -1106,35 +1078,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             ),
             SizedBox(height: 20.h),
 
-            // Requirements Section
-            _buildSectionHeader('테스터 요구사항'),
-            SizedBox(height: 12.h),
-            TextField(
-              controller: _minExperienceController,
-              decoration: InputDecoration(
-                labelText: '최소 경험 레벨',
-                hintText: 'beginner, intermediate, advanced, expert',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            _buildSpecializationSelector(),
-            SizedBox(height: 12.h),
-            TextField(
-              controller: _specialRequirementsController,
-              maxLines: 2,
-              decoration: InputDecoration(
-                labelText: '특별 요구사항',
-                hintText: '추가적인 요구사항이나 주의사항을 입력하세요',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-            ),
-            SizedBox(height: 20.h),
-
             // Additional Info Section
             _buildSectionHeader('추가 정보'),
             SizedBox(height: 12.h),
@@ -1427,50 +1370,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           checkmarkColor: AppColors.primary,
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildSpecializationSelector() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '필요한 전문 분야 (선택)',
-          style: TextStyle(
-            fontSize: 14.sp,
-            color: Colors.grey[700],
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Wrap(
-          spacing: 8.w,
-          runSpacing: 8.h,
-          children: _specializations.map((spec) {
-            final isSelected = _requiredSpecializations.contains(spec);
-            return FilterChip(
-              label: Text(
-                spec,
-                style: TextStyle(fontSize: 12.sp),
-              ),
-              selected: isSelected,
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    if (!_requiredSpecializations.contains(spec)) {
-                      _requiredSpecializations.add(spec);
-                    }
-                  } else {
-                    _requiredSpecializations.remove(spec);
-                  }
-                });
-              },
-              backgroundColor: Colors.grey[200],
-              selectedColor: AppColors.primary.withValues(alpha: 0.2),
-              checkmarkColor: AppColors.primary,
-            );
-          }).toList(),
-        ),
-      ],
     );
   }
 
