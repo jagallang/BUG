@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -233,11 +234,27 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       return;
     }
 
-    // v2.99.0: Feature Flag에 따른 조건부 포인트 검증
+    // v2.100.0: Firebase 설정에서 포인트 검증 활성화 여부 읽기
+    bool enablePointValidation = true; // 기본값
+    try {
+      final settingsDoc = await FirebaseFirestore.instance
+          .collection('platformSettings')
+          .doc('platform')
+          .get();
+
+      if (settingsDoc.exists) {
+        final pointValidation = settingsDoc.data()?['pointValidation'] as Map<String, dynamic>?;
+        enablePointValidation = pointValidation?['enabled'] ?? true;
+      }
+    } catch (e) {
+      AppLogger.warning('포인트 검증 설정 읽기 실패, 기본값(true) 사용: $e', 'AppManagement');
+    }
+
+    // v2.99.0: 조건부 포인트 검증
     final requiredPoints = _calculateRequiredPoints();
     int? walletBalance;
 
-    if (FeatureFlags.enablePointValidationOnAppRegistration) {
+    if (enablePointValidation) {
       // BuildContext 저장
       final scaffoldMessenger = ScaffoldMessenger.of(context);
 
@@ -287,7 +304,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       builder: (context) => AlertDialog(
         title: const Text('앱 등록 확인'),
         content: Text(
-          FeatureFlags.enablePointValidationOnAppRegistration
+          enablePointValidation
             ? '앱을 등록하시겠습니까?\n\n'
               '필요 포인트: ${_formatAmount(requiredPoints)}P\n'
               '현재 잔액: ${_formatAmount(walletBalance!)}P\n'
@@ -402,8 +419,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       // Update the document with its ID as appId
       await docRef.update({'appId': docRef.id});
 
-      // v2.99.0: 조건부 포인트 차감 (Feature Flag 활성화 시에만)
-      if (FeatureFlags.enablePointValidationOnAppRegistration) {
+      // v2.100.0: 조건부 포인트 차감 (Firebase 설정 기반)
+      if (enablePointValidation) {
         final walletRepo = WalletRepositoryImpl();
         final walletService = WalletService(walletRepo);
         await walletService.spendPoints(

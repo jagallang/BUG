@@ -320,6 +320,7 @@ class _PlatformSettingsPageState extends State<PlatformSettingsPage>
     final appReg = _currentSettings!['appRegistration'] ?? {};
     final missionCreate = _currentSettings!['missionCreation'] ?? {};
     final commission = _currentSettings!['commissionRate'] ?? {};
+    final pointValidation = _currentSettings!['pointValidation'] ?? {};
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -331,6 +332,24 @@ class _PlatformSettingsPageState extends State<PlatformSettingsPage>
             '등록 비용 (P)',
             appReg['cost'] ?? 5000,
             (value) => _updateNestedField('appRegistration', 'cost', value),
+          ),
+          const Divider(height: 32),
+          _buildSectionHeader('⚙️ 앱 등록 설정'),
+          _buildSwitchTile(
+            '포인트 검증 활성화',
+            pointValidation['enabled'] ?? true,
+            (value) => _updateNestedField('pointValidation', 'enabled', value),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, top: 4, bottom: 8),
+            child: Text(
+              '• ON: 앱 등록 시 잔액 확인 및 포인트 차감 수행\n'
+              '• OFF: 포인트 검증 건너뛰기 (빠른 등록, 50-75% 속도 개선)',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+              ),
+            ),
           ),
           const Divider(height: 32),
           _buildSectionHeader('📝 미션 생성 비용'),
