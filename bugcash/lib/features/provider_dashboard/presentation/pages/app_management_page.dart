@@ -143,7 +143,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   int _testPeriodDays = 14;
   int _dailyMissionPoints = 100;
   int _finalCompletionPoints = 1000;
-  int _bonusPoints = 500;
 
   final List<String> _categories = [
     'Productivity',
@@ -218,10 +217,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     final dailyTotal = _dailyMissionPoints * _testPeriodDays * _maxTesters;
     // 최종 완료 포인트 × 최대 테스터 수
     final finalTotal = _finalCompletionPoints * _maxTesters;
-    // 보너스 포인트 × 최대 테스터 수 (최대 50% 지급 가정)
-    final bonusTotal = (_bonusPoints * _maxTesters * 0.5).round();
 
-    return dailyTotal + finalTotal + bonusTotal;
+    return dailyTotal + finalTotal;
   }
 
   Future<void> _uploadApp() async {
@@ -338,7 +335,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         'rewards': {
           'dailyMissionPoints': _dailyMissionPoints,
           'finalCompletionPoints': _finalCompletionPoints,
-          'bonusPoints': _bonusPoints,
           'currency': 'KRW',
         },
 
@@ -386,7 +382,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           'testPeriodDays': _testPeriodDays,
           'dailyMissionPoints': _dailyMissionPoints,
           'finalCompletionPoints': _finalCompletionPoints,
-          'bonusPoints': _bonusPoints,
         },
       );
 
@@ -429,7 +424,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               _testPeriodDays = 14;
               _dailyMissionPoints = 100;
               _finalCompletionPoints = 1000;
-              _bonusPoints = 500;
             });
           }
         });
@@ -1055,22 +1049,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               decoration: InputDecoration(
                 labelText: '최종 완료 포인트',
                 hintText: '전체 미션 완료 시 지급되는 포인트',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            // 보너스 포인트
-            TextFormField(
-              initialValue: _bonusPoints.toString(),
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                _bonusPoints = int.tryParse(value) ?? 500;
-              },
-              decoration: InputDecoration(
-                labelText: '보너스 포인트',
-                hintText: '우수한 성과 시 추가 지급되는 포인트',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
                 ),
