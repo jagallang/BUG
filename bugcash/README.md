@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.93.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.102.1-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,24 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.93.0)
+## ✨ 주요 기능 (v2.102.1)
+
+### 🔒 에스크로 시스템 버그 수정 (v2.102.1) - **ESCROW SYSTEM BUG FIX**
+- **🛡️ 보안 강화**
+  - ✅ **권한 검증 구현**: payoutFromEscrow, refundEscrow에 관리자/공급자 권한 체크 추가
+  - ✅ **에러 핸들링 개선**: HttpsError 타입 보존으로 정확한 에러 메시지 전달
+  - 🔐 **불법 인출 방지**: 더 이상 누구나 에스크로에서 포인트를 인출할 수 없음
+
+- **💰 앱 등록 에스크로 통합**
+  - ✅ **직접 차감 제거**: walletService.spendPoints() 제거
+  - ✅ **Cloud Function 연동**: depositToEscrow 호출로 변경
+  - 🏦 **안전한 포인트 보관**: 공급자 포인트가 SYSTEM_ESCROW 계정으로 이동
+  - 📊 **추적 가능**: escrow_holdings 문서 자동 생성으로 투명한 관리
+
+- **🔧 기술 개선**
+  - 📁 **4개 파일 수정**: functions/index.js, app_management_page.dart, firestore.rules, firestore.indexes.json
+  - 🔄 **트랜잭션 안전성**: Firestore 트랜잭션으로 원자성 보장
+  - 📈 **Firestore 인덱스**: escrow_holdings 복합 인덱스 추가 (appId+status, providerId+status+createdAt)
 
 ### 📱 모바일 반응형 UI 오버플로우 수정 (v2.93.0) - **MOBILE RESPONSIVE OVERFLOW FIX**
 - **🔧 Phase 1 HIGH RISK 전면 수정**
