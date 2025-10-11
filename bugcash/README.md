@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.102.1-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.103.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,26 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.102.1)
+## ✨ 주요 기능 (v2.103.0)
+
+### 🏦 관리자 에스크로 관리 탭 (v2.103.0) - **ADMIN ESCROW MANAGEMENT TAB**
+- **📊 실시간 에스크로 대시보드**
+  - ✅ **요약 카드**: 총 보관 금액, 활성 앱 수, 총 지급 금액, 총 환불 금액 실시간 표시
+  - 🔍 **검색 필터**: 날짜 범위, 앱 이름, 공급자 이메일, 상태별 필터링
+  - 📋 **보관 내역 테이블**: 앱별 에스크로 상세 정보 (입금액/지출액/잔액/상태)
+  - 🔎 **상세 보기 다이얼로그**: 거래 내역 타임라인 (입금/지급/환불)
+
+- **🎨 독립 탭 구조**
+  - 🏦 **7번째 메인 탭**: Finance 탭과 동일한 레벨의 독립적인 탭
+  - 🎨 **Teal 테마**: Finance 탭(파란색)과 구별되는 청록색 컨셉
+  - 📱 **반응형 디자인**: 데스크톱/모바일 모두 최적화
+  - 🔄 **실시간 업데이트**: StreamBuilder 기반 Firestore 실시간 동기화
+
+- **🔧 기술 구현**
+  - 📁 **모듈화**: escrow_management_tab.dart (1020 lines) 별도 파일로 분리
+  - 🗂️ **Firestore 쿼리**: escrow_holdings 컬렉션 기반 데이터 조회
+  - ⚙️ **클라이언트 필터링**: 복잡한 다중 조건 필터링 구현
+  - 📊 **집계 기능**: 실시간 금액 합계 및 통계 계산
 
 ### 🔒 에스크로 시스템 버그 수정 (v2.102.1) - **ESCROW SYSTEM BUG FIX**
 - **🛡️ 보안 강화**
