@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,10 +65,10 @@ class _WithdrawalDialogState extends ConsumerState<WithdrawalDialog> {
         setState(() {
           _withdrawalSettings = settings;
         });
-        print('✅ 출금 설정 로드 완료: 최소 ${_minWithdrawalAmount}P, 수수료 ${(_feeRate * 100).toInt()}%');
+        debugPrint('✅ 출금 설정 로드 완료: 최소 ${_minWithdrawalAmount}P, 수수료 ${(_feeRate * 100).toInt()}%');
       }
     } catch (e) {
-      print('❌ 출금 설정 로드 실패: $e (기본값 사용)');
+      debugPrint('❌ 출금 설정 로드 실패: $e (기본값 사용)');
     }
   }
 

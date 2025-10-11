@@ -11,7 +11,6 @@ import 'core/services/api_key_service.dart';
 import 'firebase_options.dart';
 import 'features/auth/presentation/widgets/auth_wrapper.dart';
 import 'shared/theme/app_theme.dart';
-import 'shared/widgets/responsive_wrapper.dart';
 import 'shared/constants/responsive_breakpoints.dart';
 
 // 웹용 반응형 크기 헬퍼 - 깔끔한 크기로 조정

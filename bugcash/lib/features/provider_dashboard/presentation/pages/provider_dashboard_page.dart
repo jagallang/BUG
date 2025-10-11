@@ -674,7 +674,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.r),
           gradient: LinearGradient(
-            colors: [Colors.indigo[700]!, AppColors.providerBluePrimary!],
+            colors: [Colors.indigo[700]!, AppColors.providerBluePrimary],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

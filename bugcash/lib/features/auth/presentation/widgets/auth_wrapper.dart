@@ -6,7 +6,6 @@ import '../pages/login_page.dart';
 import '../../../tester_dashboard/presentation/pages/tester_dashboard_page.dart';
 import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 import '../../../admin/presentation/pages/admin_dashboard_page.dart';
-import '../pages/role_selection_page.dart';
 import '../../../../core/services/realtime_sync_service.dart';
 import '../../../../core/utils/logger.dart';
 

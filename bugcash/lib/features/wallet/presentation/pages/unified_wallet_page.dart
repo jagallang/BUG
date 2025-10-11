@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../domain/entities/wallet_entity.dart';
+import '../../domain/entities/transaction_entity.dart';
 import '../providers/wallet_provider.dart';
 import '../widgets/withdrawal_dialog.dart';
 import 'transaction_history_page.dart';
@@ -572,7 +573,7 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                 final recentTransactions = transactions.take(3).toList();
                 return Column(
                   children: recentTransactions.map((transaction) {
-                    final isPositive = transaction.type == 'charge' || transaction.type == 'earn';
+                    final isPositive = transaction.type == TransactionType.charge || transaction.type == TransactionType.earn;
                     final color = isPositive ? Colors.green : Colors.red;
                     final icon = isPositive ? Icons.add : Icons.remove;
 

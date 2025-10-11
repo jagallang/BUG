@@ -23,7 +23,6 @@ class MissionDetailPage extends ConsumerStatefulWidget {
 
 class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   bool _isApplying = false;
-  bool _isLoadingAppDetails = false;
   bool _isLoadingApplicationStatus = false;
   bool _hasAlreadyApplied = false;
   String? _applicationStatus;
@@ -139,9 +138,6 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
   // 공급자가 등록한 앱 상세정보를 Firestore에서 가져오기
   Future<void> _loadAppDetails() async {
-    setState(() {
-      _isLoadingAppDetails = true;
-    });
 
     try {
       Map<String, dynamic>? appData;
@@ -250,7 +246,6 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         if (appData != null && detectedProviderId != null) {
           _appDetails!['detectedProviderId'] = detectedProviderId;
         }
-        _isLoadingAppDetails = false;
       });
 
       // 결과 로깅 강화
@@ -263,9 +258,6 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         AppLogger.warning('⚠️ 앱 데이터는 있지만 providerId 누락 - AppId: $appId', 'MissionDetailPage');
       }
     } catch (e) {
-      setState(() {
-        _isLoadingAppDetails = false;
-      });
       AppLogger.error('Failed to load app details', 'MissionDetailPage', e);
     }
   }

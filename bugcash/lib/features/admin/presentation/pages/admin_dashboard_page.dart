@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
 import '../../../../shared/widgets/loading_widgets.dart';
-import '../../../../shared/widgets/responsive_wrapper.dart';
-import '../../../../shared/constants/responsive_breakpoints.dart';
 import '../../../../core/constants/app_colors.dart'; // v2.89.0: 관리자 색상 사용
 import 'test_data_page.dart';
 import 'project_detail_page.dart';
@@ -28,8 +25,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   final PageController _pageController = PageController();
 
   // v2.68.0: Finance 탭 - 거래 내역 필터 상태
-  int _transactionsTabIndex = 0; // 0: 전체, 1: 충전, 2: 지급
-  String _transactionsFilterType = 'all'; // all, charge, earn, withdraw
+  int _transactionsTabIndex = 0;
+  String _transactionsFilterType = 'all';
   String _transactionsFilterStatus = 'all'; // all, pending, completed, failed
 
   // v2.70.0: 빠른 날짜 필터
@@ -69,7 +66,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
     // 관리자 권한이 없는 경우 접근 거부
     final user = authState.user!;
-    final hasAdminRole = user.roles.contains(UserType.admin.name) || user.primaryRole == UserType.admin;
+    final hasAdminRole = user.roles.contains(UserType.admin) || user.primaryRole == UserType.admin;
 
     if (!hasAdminRole) {
       return Scaffold(

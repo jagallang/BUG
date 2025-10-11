@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../features/shared/models/mission_management_model.dart';
 import '../../features/shared/models/mission_workflow_model.dart';
@@ -604,25 +605,25 @@ class MissionManagementService {
 
   /// 테스터 정산 목록 조회 (테스터 기반)
   Stream<List<MissionSettlementModel>> watchTesterSettlements(String testerId) {
-    print('🔍 [Settlement] 정산 스트림 시작: testerId=$testerId');
+    debugPrint('🔍 [Settlement] 정산 스트림 시작: testerId=$testerId');
 
     return _firestore
         .collection(_settlementsCollection)
         .where('testerId', isEqualTo: testerId)
         .snapshots()
         .handleError((error) {
-          print('❌ [Settlement] 에러 발생: $error');
+          debugPrint('❌ [Settlement] 에러 발생: $error');
           AppLogger.error('watchTesterSettlements 에러', 'MissionService', error);
         })
         .map((snapshot) {
-          print('📊 [Settlement] 데이터 수신: ${snapshot.docs.length}개');
+          debugPrint('📊 [Settlement] 데이터 수신: ${snapshot.docs.length}개');
 
           final settlements = snapshot.docs
               .map((doc) {
                 try {
                   return MissionSettlementModel.fromFirestore(doc);
                 } catch (e) {
-                  print('⚠️ [Settlement] 파싱 에러: ${doc.id}');
+                  debugPrint('⚠️ [Settlement] 파싱 에러: ${doc.id}');
                   AppLogger.error('Settlement 파싱 에러', 'MissionService', e);
                   return null;
                 }
@@ -633,7 +634,7 @@ class MissionManagementService {
           // 메모리에서 정렬 (calculatedAt 기준 내림차순)
           settlements.sort((a, b) => b.calculatedAt.compareTo(a.calculatedAt));
 
-          print('✅ [Settlement] 최종 반환: ${settlements.length}개');
+          debugPrint('✅ [Settlement] 최종 반환: ${settlements.length}개');
           return settlements;
         });
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -51,12 +52,12 @@ class PlatformSettingsNotifier extends StateNotifier<Map<String, PlatformSetting
     // 캐시 확인
     final cached = state[settingType];
     if (cached != null && !cached.isExpired) {
-      print('✅ PlatformSettings - 캐시된 $settingType 설정 사용');
+      debugPrint('✅ PlatformSettings - 캐시된 $settingType 설정 사용');
       return cached.data;
     }
 
     try {
-      print('🔄 PlatformSettings - $settingType 설정 로드 중...');
+      debugPrint('🔄 PlatformSettings - $settingType 설정 로드 중...');
 
       final callable = _functions.httpsCallable('getPlatformSettings');
       final result = await callable.call({'settingType': settingType});
@@ -72,10 +73,10 @@ class PlatformSettingsNotifier extends StateNotifier<Map<String, PlatformSetting
         ),
       };
 
-      print('✅ PlatformSettings - $settingType 설정 로드 완료');
+      debugPrint('✅ PlatformSettings - $settingType 설정 로드 완료');
       return data;
     } catch (e) {
-      print('❌ PlatformSettings - $settingType 설정 로드 실패: $e');
+      debugPrint('❌ PlatformSettings - $settingType 설정 로드 실패: $e');
 
       // 기본값 반환
       return _getDefaultSettings(settingType);
@@ -86,10 +87,10 @@ class PlatformSettingsNotifier extends StateNotifier<Map<String, PlatformSetting
   void clearCache([String? settingType]) {
     if (settingType != null) {
       state = {...state}..remove(settingType);
-      print('🗑️ PlatformSettings - $settingType 캐시 삭제');
+      debugPrint('🗑️ PlatformSettings - $settingType 캐시 삭제');
     } else {
       state = {};
-      print('🗑️ PlatformSettings - 전체 캐시 삭제');
+      debugPrint('🗑️ PlatformSettings - 전체 캐시 삭제');
     }
   }
 

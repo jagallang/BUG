@@ -31,22 +31,22 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
   /// v2.17.1: 갤러리에서 이미지 선택 (디버깅 로그 추가)
   Future<void> _pickImages() async {
     try {
-      print('🖱️ [ImageUploadWidget] _pickImages called!');
-      print('   ├─ Current images: ${widget.selectedImages.length}');
-      print('   ├─ Max images: ${widget.maxImages}');
-      print('   ├─ Is uploading: $_isUploading');
+      debugPrint('🖱️ [ImageUploadWidget] _pickImages called!');
+      debugPrint('   ├─ Current images: ${widget.selectedImages.length}');
+      debugPrint('   ├─ Max images: ${widget.maxImages}');
+      debugPrint('   ├─ Is uploading: $_isUploading');
 
       final remainingSlots = widget.maxImages - widget.selectedImages.length;
-      print('   └─ Remaining slots: $remainingSlots');
+      debugPrint('   └─ Remaining slots: $remainingSlots');
 
       if (remainingSlots <= 0) {
-        print('❌ [ImageUploadWidget] Max limit reached');
+        debugPrint('❌ [ImageUploadWidget] Max limit reached');
         _showMessage('최대 ${widget.maxImages}장까지만 선택 가능합니다.');
         return;
       }
 
       setState(() => _isUploading = true);
-      print('📂 [ImageUploadWidget] Opening file picker...');
+      debugPrint('📂 [ImageUploadWidget] Opening file picker...');
 
       // 여러 이미지 선택
       final List<XFile> images = await _picker.pickMultiImage(
@@ -55,10 +55,10 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
         imageQuality: 85,
       );
 
-      print('✅ [ImageUploadWidget] Files selected: ${images.length}');
+      debugPrint('✅ [ImageUploadWidget] Files selected: ${images.length}');
 
       if (images.isEmpty) {
-        print('ℹ️ [ImageUploadWidget] No files selected (user cancelled)');
+        debugPrint('ℹ️ [ImageUploadWidget] No files selected (user cancelled)');
         setState(() => _isUploading = false);
         return;
       }
@@ -67,7 +67,7 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
       final imagesToAdd = images.take(remainingSlots).toList();
 
       if (images.length > remainingSlots) {
-        print('⚠️ [ImageUploadWidget] Limiting to $remainingSlots files');
+        debugPrint('⚠️ [ImageUploadWidget] Limiting to $remainingSlots files');
         _showMessage('${remainingSlots}장만 추가됩니다.');
       }
 
@@ -75,17 +75,17 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
       final updatedList = [...widget.selectedImages, ...imagesToAdd];
       widget.onImagesChanged(updatedList);
 
-      print('✅ [ImageUploadWidget] Images added: ${imagesToAdd.length}, total: ${updatedList.length}');
+      debugPrint('✅ [ImageUploadWidget] Images added: ${imagesToAdd.length}, total: ${updatedList.length}');
       AppLogger.info('Images selected: ${imagesToAdd.length} added, total: ${updatedList.length}', 'ImageUploadWidget');
 
     } catch (e, stackTrace) {
-      print('💥 [ImageUploadWidget] Error: $e');
-      print('Stack trace: $stackTrace');
+      debugPrint('💥 [ImageUploadWidget] Error: $e');
+      debugPrint('Stack trace: $stackTrace');
       AppLogger.error('Failed to pick images: $e', 'ImageUploadWidget');
       _showMessage('이미지 선택 중 오류가 발생했습니다.');
     } finally {
       setState(() => _isUploading = false);
-      print('🏁 [ImageUploadWidget] _pickImages completed');
+      debugPrint('🏁 [ImageUploadWidget] _pickImages completed');
     }
   }
 
