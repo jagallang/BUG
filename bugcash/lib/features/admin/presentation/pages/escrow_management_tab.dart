@@ -403,8 +403,7 @@ class _EscrowManagementTabState extends State<EscrowManagementTab> {
             ),
           ],
         ),
-            ),
-          ),
+      ),
         ),
       ),
     );
