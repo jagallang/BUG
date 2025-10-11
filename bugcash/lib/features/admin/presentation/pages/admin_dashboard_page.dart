@@ -12,6 +12,7 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import '../../../wallet/presentation/pages/admin_withdrawal_page.dart';
 import 'platform_settings_page.dart';
+import 'escrow_management_tab.dart'; // v2.103.0: 에스크로 관리 탭
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -171,8 +172,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 _buildNavItem(1, Icons.folder_open, 'Projects', '프로젝트 검수'),
                 _buildNavItem(2, Icons.people, 'Users', '사용자 관리'),
                 _buildNavItem(3, Icons.account_balance_wallet, 'Finance', '포인트/수익'),
-                _buildNavItem(4, Icons.report_problem, 'Reports', '신고 처리'),
-                _buildNavItem(5, Icons.settings, 'Settings', '플랫폼 설정'),
+                _buildNavItem(4, Icons.account_balance, 'Escrow', '에스크로 관리'),
+                _buildNavItem(5, Icons.report_problem, 'Reports', '신고 처리'),
+                _buildNavItem(6, Icons.settings, 'Settings', '플랫폼 설정'),
               ],
             ),
           ),
@@ -186,6 +188,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 _buildProjectsTab(),
                 _buildUsersTab(),
                 _buildFinanceTab(),
+                const EscrowManagementTab(),
                 _buildReportsTab(),
                 _buildSettingsTab(),
               ],
