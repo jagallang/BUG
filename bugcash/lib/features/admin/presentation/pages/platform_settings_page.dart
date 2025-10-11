@@ -327,13 +327,6 @@ class _PlatformSettingsPageState extends State<PlatformSettingsPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader('📱 앱 등록 비용'),
-          _buildNumberField(
-            '등록 비용 (P)',
-            appReg['cost'] ?? 5000,
-            (value) => _updateNestedField('appRegistration', 'cost', value),
-          ),
-          const Divider(height: 32),
           _buildSectionHeader('⚙️ 플랫폼 비용 시스템'),
           _buildSwitchTile(
             '플랫폼 비용 시스템 활성화',
@@ -355,6 +348,13 @@ class _PlatformSettingsPageState extends State<PlatformSettingsPage>
                 color: Colors.grey[600],
               ),
             ),
+          ),
+          const Divider(height: 32),
+          _buildSectionHeader('📱 앱 등록 비용'),
+          _buildNumberField(
+            '등록 비용 (P)',
+            appReg['cost'] ?? 5000,
+            (value) => _updateNestedField('appRegistration', 'cost', value),
           ),
           const Divider(height: 32),
           _buildSectionHeader('📝 미션 생성 비용'),
