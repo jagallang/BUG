@@ -136,11 +136,15 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   final _minOSVersionController = TextEditingController();
   final _appStoreUrlController = TextEditingController();
 
+  // v2.98.0: 숫자 입력 필드 컨트롤러
+  final _maxTestersController = TextEditingController();
+  final _testPeriodDaysController = TextEditingController();
+  final _dailyMissionPointsController = TextEditingController();
+  final _finalCompletionPointsController = TextEditingController();
+
   // Advanced options
   String _selectedCategory = 'Productivity';
   String _selectedInstallType = 'play_store';
-  String _selectedDifficulty = 'easy';
-  String _selectedType = 'functional';
   List<String> _selectedPlatforms = ['android'];
   int _maxTesters = 10;
   int _testPeriodDays = 14;
@@ -174,24 +178,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     'Other',
   ];
 
-  final List<String> _difficulties = [
-    'easy',
-    'medium',
-    'hard',
-    'expert',
-  ];
-
-  final List<String> _types = [
-    'functional',
-    'usability',
-    'performance',
-    'security',
-    'compatibility',
-    'regression',
-    'exploratory',
-    'automated',
-  ];
-
   final List<String> _platforms = [
     'android',
     'ios',
@@ -204,6 +190,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   @override
   void initState() {
     super.initState();
+    // v2.98.0: 숫자 입력 필드 초기화
+    _maxTestersController.text = _maxTesters.toString();
+    _testPeriodDaysController.text = _testPeriodDays.toString();
+    _dailyMissionPointsController.text = _dailyMissionPoints.toString();
+    _finalCompletionPointsController.text = _finalCompletionPoints.toString();
   }
 
   @override
@@ -214,6 +205,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     _testingGuidelinesController.dispose();
     _minOSVersionController.dispose();
     _appStoreUrlController.dispose();
+    // v2.98.0: 숫자 입력 필드 컨트롤러 dispose
+    _maxTestersController.dispose();
+    _testPeriodDaysController.dispose();
+    _dailyMissionPointsController.dispose();
+    _finalCompletionPointsController.dispose();
     super.dispose();
   }
 
@@ -335,7 +331,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       }
 
       final newProject = {
-        'type': _selectedType,
         'appId': '', // Will be set to document ID after creation
         'appName': _appNameController.text,
         'appUrl': _appUrlController.text,
@@ -345,7 +340,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         'platform': _selectedPlatforms.first, // Primary platform
         'providerId': widget.providerId,
         'status': 'draft', // New projects start as draft
-        'difficulty': _selectedDifficulty,
 
         // Extended fields matching database indexes
         'maxTesters': _maxTesters,
@@ -383,8 +377,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         // Metadata with all config
         'metadata': {
           'installType': _selectedInstallType,
-          'difficulty': _selectedDifficulty,
-          'type': _selectedType,
           'platforms': _selectedPlatforms,
           'version': '1.0',
           'configVersion': '2.0', // Indicate this is the new enhanced format
@@ -449,8 +441,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               _appScreenshots = []; // v2.97.0: 스크린샷 초기화
               _selectedCategory = 'Productivity';
               _selectedInstallType = 'play_store';
-              _selectedDifficulty = 'easy';
-              _selectedType = 'functional';
               _selectedPlatforms = ['android'];
               _maxTesters = 10;
               _testPeriodDays = 14;
@@ -874,57 +864,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             ),
             SizedBox(height: 12.h),
 
-            // Type and Difficulty Row
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedType,
-                    items: _types.map((type) {
-                      return DropdownMenuItem(
-                        value: type,
-                        child: Text(_getTypeDisplayName(type)),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedType = value!;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      labelText: '테스트 유형',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedDifficulty,
-                    items: _difficulties.map((difficulty) {
-                      return DropdownMenuItem(
-                        value: difficulty,
-                        child: Text(_getDifficultyDisplayName(difficulty)),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedDifficulty = value!;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      labelText: '난이도',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 12.h),
 
             // Install Type and Category Row
             Row(
@@ -1027,38 +966,120 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             // Testing Configuration Section
             _buildSectionHeader('테스트 설정'),
             SizedBox(height: 12.h),
-            // Max Testers and Test Period Row
+            // Max Testers and Test Period Row (v2.98.0: 증가/감소 버튼 추가)
             Row(
               children: [
                 Expanded(
-                  child: TextFormField(
-                    initialValue: _maxTesters.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      _maxTesters = int.tryParse(value) ?? 10;
-                    },
-                    decoration: InputDecoration(
-                      labelText: '최대 테스터 수',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _maxTestersController,
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            _maxTesters = int.tryParse(value) ?? 10;
+                          },
+                          decoration: InputDecoration(
+                            labelText: '최대 테스터 수',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(width: 4.w),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: 32.w,
+                            height: 25.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.add, size: 16.sp),
+                              onPressed: () {
+                                setState(() {
+                                  _maxTesters++;
+                                  _maxTestersController.text = _maxTesters.toString();
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32.w,
+                            height: 25.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.remove, size: 16.sp),
+                              onPressed: () {
+                                setState(() {
+                                  if (_maxTesters > 1) {
+                                    _maxTesters--;
+                                    _maxTestersController.text = _maxTesters.toString();
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
-                  child: TextFormField(
-                    initialValue: _testPeriodDays.toString(),
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      _testPeriodDays = int.tryParse(value) ?? 14;
-                    },
-                    decoration: InputDecoration(
-                      labelText: '테스트 기간 (일)',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _testPeriodDaysController,
+                          keyboardType: TextInputType.number,
+                          onChanged: (value) {
+                            _testPeriodDays = int.tryParse(value) ?? 14;
+                          },
+                          decoration: InputDecoration(
+                            labelText: '테스트 기간 (일)',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.r),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      SizedBox(width: 4.w),
+                      Column(
+                        children: [
+                          SizedBox(
+                            width: 32.w,
+                            height: 25.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.add, size: 16.sp),
+                              onPressed: () {
+                                setState(() {
+                                  _testPeriodDays++;
+                                  _testPeriodDaysController.text = _testPeriodDays.toString();
+                                });
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            width: 32.w,
+                            height: 25.h,
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: Icon(Icons.remove, size: 16.sp),
+                              onPressed: () {
+                                setState(() {
+                                  if (_testPeriodDays > 1) {
+                                    _testPeriodDays--;
+                                    _testPeriodDaysController.text = _testPeriodDays.toString();
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -1068,36 +1089,118 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             // 고급 보상 시스템 (3단계)
             _buildSectionHeader('고급 보상 설정'),
             SizedBox(height: 12.h),
-            // 일일 미션 포인트
-            TextFormField(
-              initialValue: _dailyMissionPoints.toString(),
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                _dailyMissionPoints = int.tryParse(value) ?? 100;
-              },
-              decoration: InputDecoration(
-                labelText: '일일 미션 포인트',
-                hintText: '매일 완료 시 지급되는 포인트',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
+            // 일일 미션 포인트 (v2.98.0: 증가/감소 버튼 추가)
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _dailyMissionPointsController,
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _dailyMissionPoints = int.tryParse(value) ?? 100;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '일일 미션 포인트',
+                      hintText: '매일 완료 시 지급되는 포인트',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(width: 4.w),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 32.w,
+                      height: 25.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.add, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            _dailyMissionPoints += 10;
+                            _dailyMissionPointsController.text = _dailyMissionPoints.toString();
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 32.w,
+                      height: 25.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.remove, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            if (_dailyMissionPoints > 10) {
+                              _dailyMissionPoints -= 10;
+                              _dailyMissionPointsController.text = _dailyMissionPoints.toString();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
             SizedBox(height: 12.h),
-            // 최종 완료 포인트
-            TextFormField(
-              initialValue: _finalCompletionPoints.toString(),
-              keyboardType: TextInputType.number,
-              onChanged: (value) {
-                _finalCompletionPoints = int.tryParse(value) ?? 1000;
-              },
-              decoration: InputDecoration(
-                labelText: '최종 완료 포인트',
-                hintText: '전체 미션 완료 시 지급되는 포인트',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.r),
+            // 최종 완료 포인트 (v2.98.0: 증가/감소 버튼 추가)
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _finalCompletionPointsController,
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _finalCompletionPoints = int.tryParse(value) ?? 1000;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '최종 완료 포인트',
+                      hintText: '전체 미션 완료 시 지급되는 포인트',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                SizedBox(width: 4.w),
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 32.w,
+                      height: 25.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.add, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            _finalCompletionPoints += 100;
+                            _finalCompletionPointsController.text = _finalCompletionPoints.toString();
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 32.w,
+                      height: 25.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.remove, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            if (_finalCompletionPoints > 100) {
+                              _finalCompletionPoints -= 100;
+                              _finalCompletionPointsController.text = _finalCompletionPoints.toString();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
             SizedBox(height: 20.h),
 
@@ -1396,43 +1499,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     );
   }
 
-  String _getTypeDisplayName(String type) {
-    switch (type) {
-      case 'functional':
-        return '기능 테스트';
-      case 'usability':
-        return '사용성 테스트';
-      case 'performance':
-        return '성능 테스트';
-      case 'security':
-        return '보안 테스트';
-      case 'compatibility':
-        return '호환성 테스트';
-      case 'regression':
-        return '회귀 테스트';
-      case 'exploratory':
-        return '탐색적 테스트';
-      case 'automated':
-        return '자동화 테스트';
-      default:
-        return type;
-    }
-  }
-
-  String _getDifficultyDisplayName(String difficulty) {
-    switch (difficulty) {
-      case 'easy':
-        return '쉬움';
-      case 'medium':
-        return '보통';
-      case 'hard':
-        return '어려움';
-      case 'expert':
-        return '전문가';
-      default:
-        return difficulty;
-    }
-  }
 
   String _getPlatformDisplayName(String platform) {
     switch (platform) {
