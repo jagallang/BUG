@@ -357,11 +357,26 @@ service cloud.firestore {
     }
 
     // ==============================================
-    // 미션 워크플로 관리 (mission_workflows) - 임시 전체 허용
+    // 미션 워크플로 관리 (mission_workflows) - v2.104.1: 세분화된 권한 체크
     // ==============================================
     match /mission_workflows/{workflowId} {
-      // 임시로 모든 인증된 사용자에게 전체 권한 허용 (테스트용)
-      allow read, write: if isAuthenticated();
+      // 읽기: 본인(테스터), 공급자, 관리자만
+      allow read: if isAuthenticated() &&
+                     (request.auth.uid == resource.data.testerId ||
+                      request.auth.uid == resource.data.providerId ||
+                      isAdmin());
+
+      // 생성: 테스터 본인만 신청 가능 (testerId가 본인 uid와 일치)
+      allow create: if isAuthenticated() &&
+                    request.resource.data.testerId == request.auth.uid;
+
+      // 수정: 공급자 또는 관리자만 (승인/거부 처리)
+      allow update: if isAuthenticated() &&
+                    (request.auth.uid == resource.data.providerId ||
+                     isAdmin());
+
+      // 삭제: 관리자만
+      allow delete: if isAdmin();
     }
 
     // ==============================================
