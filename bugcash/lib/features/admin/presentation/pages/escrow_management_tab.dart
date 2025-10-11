@@ -105,7 +105,7 @@ class _EscrowManagementTabState extends State<EscrowManagementTab> {
 
           if (status == 'refunded') {
             // 환불된 건의 원래 잔액 (환불 시점 remainingAmount)
-            refundedAmount += (data['totalAmount'] ?? 0) as int - (data['spentAmount'] ?? 0) as int;
+            refundedAmount += ((data['totalAmount'] ?? 0) as int) - ((data['spentAmount'] ?? 0) as int);
           }
         }
 
@@ -371,27 +371,26 @@ class _EscrowManagementTabState extends State<EscrowManagementTab> {
 
             const SizedBox(height: 16),
 
-            // 버튼
-            Row(
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    setState(() {}); // 필터 적용 (StreamBuilder가 자동 갱신)
-                  },
-                  icon: const Icon(Icons.search),
-                  label: const Text('검색'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: _resetFilters,
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('초기화'),
-                ),
-              ],
+            // 버튼들
+            ElevatedButton.icon(
+              onPressed: () {
+                setState(() {}); // 필터 적용 (StreamBuilder가 자동 갱신)
+              },
+              icon: const Icon(Icons.search, size: 18),
+              label: const Text('검색'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: _resetFilters,
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('초기화'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
             ),
           ],
         ),
