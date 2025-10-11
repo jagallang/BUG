@@ -233,64 +233,75 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       return;
     }
 
-    // 필요한 포인트 계산
+    // v2.99.0: Feature Flag에 따른 조건부 포인트 검증
     final requiredPoints = _calculateRequiredPoints();
+    int? walletBalance;
 
-    // BuildContext 저장
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    if (FeatureFlags.enablePointValidationOnAppRegistration) {
+      // BuildContext 저장
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    // 현재 잔액 확인 - walletProvider는 StreamProvider이므로 watch 사용
-    final walletAsync = ref.watch(walletProvider(widget.providerId));
+      // 현재 잔액 확인 - walletProvider는 StreamProvider이므로 watch 사용
+      final walletAsync = ref.watch(walletProvider(widget.providerId));
 
-    // 로딩 중이거나 에러 상태 처리
-    if (walletAsync.isLoading) {
-      scaffoldMessenger.showSnackBar(
-        const SnackBar(content: Text('잔액 정보를 불러오는 중...')),
-      );
-      return;
-    }
+      // 로딩 중이거나 에러 상태 처리
+      if (walletAsync.isLoading) {
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(content: Text('잔액 정보를 불러오는 중...')),
+        );
+        return;
+      }
 
-    if (walletAsync.hasError) {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text('잔액 정보 불러오기 실패: ${walletAsync.error}')),
-      );
-      return;
-    }
+      if (walletAsync.hasError) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(content: Text('잔액 정보 불러오기 실패: ${walletAsync.error}')),
+        );
+        return;
+      }
 
-    final wallet = walletAsync.value!;
-    final balanceDeficit = requiredPoints - wallet.balance;
+      final wallet = walletAsync.value!;
+      walletBalance = wallet.balance;
+      final balanceDeficit = requiredPoints - wallet.balance;
 
-    if (wallet.balance < requiredPoints) {
-      if (!mounted) return;
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            '포인트가 부족합니다\n'
-            '필요: ${_formatAmount(requiredPoints)}P\n'
-            '보유: ${_formatAmount(wallet.balance)}P\n'
-            '부족: ${_formatAmount(balanceDeficit)}P'
+      if (wallet.balance < requiredPoints) {
+        if (!mounted) return;
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              '포인트가 부족합니다\n'
+              '필요: ${_formatAmount(requiredPoints)}P\n'
+              '보유: ${_formatAmount(wallet.balance)}P\n'
+              '부족: ${_formatAmount(balanceDeficit)}P'
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 5),
-        ),
-      );
-      return;
+        );
+        return;
+      }
     }
 
-    // 포인트 차감 확인
+    // 포인트 차감 확인 (검증 활성화 시 잔액 정보 포함, 비활성화 시 기본 확인만)
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('앱 등록 확인'),
         content: Text(
-          '앱을 등록하시겠습니까?\n\n'
-          '필요 포인트: ${_formatAmount(requiredPoints)}P\n'
-          '현재 잔액: ${_formatAmount(wallet.balance)}P\n'
-          '차감 후 잔액: ${_formatAmount(wallet.balance - requiredPoints)}P\n\n'
-          '• 테스터 수: $_maxTesters명\n'
-          '• 테스트 기간: $_testPeriodDays일\n'
-          '• 일일 미션: ${_formatAmount(_dailyMissionPoints)}P\n'
-          '• 최종 완료: ${_formatAmount(_finalCompletionPoints)}P',
+          FeatureFlags.enablePointValidationOnAppRegistration
+            ? '앱을 등록하시겠습니까?\n\n'
+              '필요 포인트: ${_formatAmount(requiredPoints)}P\n'
+              '현재 잔액: ${_formatAmount(walletBalance!)}P\n'
+              '차감 후 잔액: ${_formatAmount(walletBalance - requiredPoints)}P\n\n'
+              '• 테스터 수: $_maxTesters명\n'
+              '• 테스트 기간: $_testPeriodDays일\n'
+              '• 일일 미션: ${_formatAmount(_dailyMissionPoints)}P\n'
+              '• 최종 완료: ${_formatAmount(_finalCompletionPoints)}P'
+            : '앱을 등록하시겠습니까?\n\n'
+              '• 테스터 수: $_maxTesters명\n'
+              '• 테스트 기간: $_testPeriodDays일\n'
+              '• 일일 미션: ${_formatAmount(_dailyMissionPoints)}P\n'
+              '• 최종 완료: ${_formatAmount(_finalCompletionPoints)}P\n\n'
+              '⚠️ 포인트 검증이 비활성화되어 있습니다.',
         ),
         actions: [
           TextButton(
@@ -391,22 +402,24 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       // Update the document with its ID as appId
       await docRef.update({'appId': docRef.id});
 
-      // 포인트 차감
-      final walletRepo = WalletRepositoryImpl();
-      final walletService = WalletService(walletRepo);
-      await walletService.spendPoints(
-        widget.providerId,
-        requiredPoints,
-        '앱 등록: ${_appNameController.text}',
-        metadata: {
-          'appId': docRef.id,
-          'appName': _appNameController.text,
-          'maxTesters': _maxTesters,
-          'testPeriodDays': _testPeriodDays,
-          'dailyMissionPoints': _dailyMissionPoints,
-          'finalCompletionPoints': _finalCompletionPoints,
-        },
-      );
+      // v2.99.0: 조건부 포인트 차감 (Feature Flag 활성화 시에만)
+      if (FeatureFlags.enablePointValidationOnAppRegistration) {
+        final walletRepo = WalletRepositoryImpl();
+        final walletService = WalletService(walletRepo);
+        await walletService.spendPoints(
+          widget.providerId,
+          requiredPoints,
+          '앱 등록: ${_appNameController.text}',
+          metadata: {
+            'appId': docRef.id,
+            'appName': _appNameController.text,
+            'maxTesters': _maxTesters,
+            'testPeriodDays': _testPeriodDays,
+            'dailyMissionPoints': _dailyMissionPoints,
+            'finalCompletionPoints': _finalCompletionPoints,
+          },
+        );
+      }
 
       if (mounted) {
         // 성공 메시지를 더 명확하게 표시

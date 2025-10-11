@@ -18,6 +18,11 @@ class FeatureFlags {
   /// 관리자만 새로운 기능에 접근 가능한지 여부
   static const bool restrictToAdminOnly = false;
 
+  /// v2.99.0: 앱 등록 시 포인트 검증 활성화 여부 (기본값: true)
+  /// - true: 잔액 확인 및 포인트 차감 수행
+  /// - false: 포인트 검증 건너뛰기 (빠른 등록)
+  static const bool enablePointValidationOnAppRegistration = true;
+
   /// 환경별 설정
   static bool get isProduction => const bool.fromEnvironment('dart.vm.product');
   static bool get isDevelopment => !isProduction;
@@ -66,6 +71,7 @@ class FeatureFlagManager {
     'new_mission_management': FeatureFlags.enableNewMissionManagement,
     'legacy_mission_management': FeatureFlags.enableLegacyMissionManagement,
     'debug_mode': FeatureFlags.enableDebugMode,
+    'point_validation_on_app_registration': FeatureFlags.enablePointValidationOnAppRegistration, // v2.99.0
   };
 
   /// Flag 값 가져오기
@@ -86,6 +92,7 @@ class FeatureFlagManager {
       _runtimeFlags['new_mission_management'] = FeatureFlags.enableNewMissionManagement;
       _runtimeFlags['legacy_mission_management'] = FeatureFlags.enableLegacyMissionManagement;
       _runtimeFlags['debug_mode'] = FeatureFlags.enableDebugMode;
+      _runtimeFlags['point_validation_on_app_registration'] = FeatureFlags.enablePointValidationOnAppRegistration; // v2.99.0
     }
   }
 
