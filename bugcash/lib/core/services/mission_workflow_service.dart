@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/shared/models/mission_workflow_model.dart';
 import '../../features/wallet/domain/usecases/wallet_service.dart';
@@ -691,44 +692,48 @@ class MissionWorkflowService {
         finalReward = (rewards?['finalCompletionPoints'] as int?) ?? 0;
       }
 
-      // 테스터에게 최종 완료 포인트 + 보너스 포인트 적립
+      // v2.104.0: 에스크로 시스템 연동 - 최종 완료 시 에스크로에서 포인트 지급
       final testerId = workflow.testerId;
       if (testerId.isNotEmpty) {
         try {
-          final walletRepo = WalletRepositoryImpl();
-          final walletService = WalletService(walletRepo);
+          final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+          final payoutFunction = functions.httpsCallable('payoutFromEscrow');
 
           // 최종 완료 포인트
           if (finalReward > 0) {
-            await walletService.earnPoints(
-              testerId,
-              finalReward,
-              '프로젝트 최종 완료: ${workflow.appName}',
-              metadata: {
+            await payoutFunction.call({
+              'appId': workflow.appId,
+              'testerId': testerId,
+              'testerName': workflow.testerName,
+              'amount': finalReward,
+              'description': '프로젝트 최종 완료: ${workflow.appName}',
+              'metadata': {
                 'workflowId': workflowId,
                 'appId': workflow.appId,
                 'appName': workflow.appName,
                 'rewardType': 'final',
               },
-            );
-            AppLogger.info('Final reward $finalReward paid to tester $testerId', 'MissionWorkflow');
+            });
+            AppLogger.info('Final reward $finalReward paid from escrow to tester $testerId', 'MissionWorkflow');
           }
 
           // 보너스 포인트
           if (bonusReward != null && bonusReward > 0) {
-            await walletService.earnPoints(
-              testerId,
-              bonusReward,
-              '우수 성과 보너스: ${workflow.appName}',
-              metadata: {
+            await payoutFunction.call({
+              'appId': workflow.appId,
+              'testerId': testerId,
+              'testerName': workflow.testerName,
+              'amount': bonusReward,
+              'description': '우수 성과 보너스: ${workflow.appName}',
+              'metadata': {
                 'workflowId': workflowId,
                 'appId': workflow.appId,
                 'appName': workflow.appName,
                 'rewardType': 'bonus',
                 'finalRating': finalRating,
               },
-            );
-            AppLogger.info('Bonus reward $bonusReward paid to tester $testerId', 'MissionWorkflow');
+            });
+            AppLogger.info('Bonus reward $bonusReward paid from escrow to tester $testerId', 'MissionWorkflow');
           }
 
           // totalEarnedReward, totalPaidReward 업데이트
