@@ -3,9 +3,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/config/feature_flags.dart';
+import '../../../../core/services/storage_service.dart';
+import '../../../../shared/widgets/image_upload_widget.dart';
 import 'app_detail_page.dart';
 import 'mission_management_page_v2.dart';
 import '../../../wallet/domain/usecases/wallet_service.dart';
@@ -143,6 +146,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   int _testPeriodDays = 14;
   int _dailyMissionPoints = 100;
   int _finalCompletionPoints = 1000;
+
+  // v2.97.0: 앱 스크린샷 (최대 3장)
+  List<XFile> _appScreenshots = [];
 
   final List<String> _categories = [
     'Productivity',
@@ -306,6 +312,28 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     if (confirm != true || !mounted) return;
 
     try {
+      // v2.97.0: 스크린샷 업로드 (있을 경우)
+      List<String> screenshotUrls = [];
+      if (_appScreenshots.isNotEmpty) {
+        final storageService = StorageService();
+        final tempAppId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
+
+        for (int i = 0; i < _appScreenshots.length; i++) {
+          try {
+            final url = await storageService.uploadAppScreenshot(
+              appId: tempAppId,
+              file: _appScreenshots[i],
+              index: i,
+            );
+            screenshotUrls.add(url);
+            AppLogger.info('Screenshot $i uploaded: $url', 'AppManagement');
+          } catch (e) {
+            AppLogger.error('Screenshot $i upload failed: $e', 'AppManagement');
+            // 스크린샷 업로드 실패 시 계속 진행 (선택사항이므로)
+          }
+        }
+      }
+
       final newProject = {
         'type': _selectedType,
         'appId': '', // Will be set to document ID after creation
@@ -330,6 +358,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         'testingGuidelines': _testingGuidelinesController.text,
         'minOSVersion': _minOSVersionController.text,
         'appStoreUrl': _appStoreUrlController.text,
+
+        // v2.97.0: App screenshots
+        'screenshots': screenshotUrls,
 
         // 고급 보상 시스템 (3단계)
         'rewards': {
@@ -415,6 +446,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               _testingGuidelinesController.clear();
               _minOSVersionController.clear();
               _appStoreUrlController.clear();
+              _appScreenshots = []; // v2.97.0: 스크린샷 초기화
               _selectedCategory = 'Productivity';
               _selectedInstallType = 'play_store';
               _selectedDifficulty = 'easy';
@@ -817,6 +849,19 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             // Basic Information Section
             _buildSectionHeader('기본 정보'),
             SizedBox(height: 12.h),
+            // v2.97.0: App Screenshots Section
+            _buildSectionHeader('앱 스크린샷 (최대 3장)'),
+            SizedBox(height: 12.h),
+            ImageUploadWidget(
+              selectedImages: _appScreenshots,
+              onImagesChanged: (images) {
+                setState(() => _appScreenshots = images);
+              },
+              maxImages: 3,
+              emptyStateText: '앱 스크린샷을 추가해주세요 (최대 3장)',
+            ),
+            SizedBox(height: 20.h),
+
             // App Name
             TextField(
               controller: _appNameController,
