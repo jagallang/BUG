@@ -966,121 +966,111 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             // Testing Configuration Section
             _buildSectionHeader('테스트 설정'),
             SizedBox(height: 12.h),
-            // Max Testers and Test Period Row (v2.98.0: 증가/감소 버튼 추가)
+            // Max Testers and Test Period Row (v2.98.1: 레이아웃 수정)
             Row(
               children: [
                 Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _maxTestersController,
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            _maxTesters = int.tryParse(value) ?? 10;
-                          },
-                          decoration: InputDecoration(
-                            labelText: '최대 테스터 수',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                          ),
-                        ),
+                  child: TextFormField(
+                    controller: _maxTestersController,
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _maxTesters = int.tryParse(value) ?? 10;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '최대 테스터 수',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
-                      SizedBox(width: 4.w),
-                      Column(
-                        children: [
-                          SizedBox(
-                            width: 32.w,
-                            height: 25.h,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.add, size: 16.sp),
-                              onPressed: () {
-                                setState(() {
-                                  _maxTesters++;
-                                  _maxTestersController.text = _maxTesters.toString();
-                                });
-                              },
-                            ),
-                          ),
-                          SizedBox(
-                            width: 32.w,
-                            height: 25.h,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.remove, size: 16.sp),
-                              onPressed: () {
-                                setState(() {
-                                  if (_maxTesters > 1) {
-                                    _maxTesters--;
-                                    _maxTestersController.text = _maxTesters.toString();
-                                  }
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
+                ),
+                SizedBox(width: 4.w),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 32.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.add, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            _maxTesters++;
+                            _maxTestersController.text = _maxTesters.toString();
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 32.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.remove, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            if (_maxTesters > 1) {
+                              _maxTesters--;
+                              _maxTestersController.text = _maxTesters.toString();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(width: 12.w),
                 Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _testPeriodDaysController,
-                          keyboardType: TextInputType.number,
-                          onChanged: (value) {
-                            _testPeriodDays = int.tryParse(value) ?? 14;
-                          },
-                          decoration: InputDecoration(
-                            labelText: '테스트 기간 (일)',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8.r),
-                            ),
-                          ),
-                        ),
+                  child: TextFormField(
+                    controller: _testPeriodDaysController,
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _testPeriodDays = int.tryParse(value) ?? 14;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '테스트 기간 (일)',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
                       ),
-                      SizedBox(width: 4.w),
-                      Column(
-                        children: [
-                          SizedBox(
-                            width: 32.w,
-                            height: 25.h,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.add, size: 16.sp),
-                              onPressed: () {
-                                setState(() {
-                                  _testPeriodDays++;
-                                  _testPeriodDaysController.text = _testPeriodDays.toString();
-                                });
-                              },
-                            ),
-                          ),
-                          SizedBox(
-                            width: 32.w,
-                            height: 25.h,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.remove, size: 16.sp),
-                              onPressed: () {
-                                setState(() {
-                                  if (_testPeriodDays > 1) {
-                                    _testPeriodDays--;
-                                    _testPeriodDaysController.text = _testPeriodDays.toString();
-                                  }
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
+                ),
+                SizedBox(width: 4.w),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 32.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.add, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            _testPeriodDays++;
+                            _testPeriodDaysController.text = _testPeriodDays.toString();
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 32.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.remove, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            if (_testPeriodDays > 1) {
+                              _testPeriodDays--;
+                              _testPeriodDaysController.text = _testPeriodDays.toString();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1089,7 +1079,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             // 고급 보상 시스템 (3단계)
             _buildSectionHeader('고급 보상 설정'),
             SizedBox(height: 12.h),
-            // 일일 미션 포인트 (v2.98.0: 증가/감소 버튼 추가)
+            // 일일 미션 포인트 (v2.98.1: 레이아웃 수정)
             Row(
               children: [
                 Expanded(
@@ -1110,10 +1100,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                 ),
                 SizedBox(width: 4.w),
                 Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
                       width: 32.w,
-                      height: 25.h,
+                      height: 28.h,
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         icon: Icon(Icons.add, size: 16.sp),
@@ -1127,7 +1118,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                     ),
                     SizedBox(
                       width: 32.w,
-                      height: 25.h,
+                      height: 28.h,
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         icon: Icon(Icons.remove, size: 16.sp),
@@ -1146,7 +1137,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               ],
             ),
             SizedBox(height: 12.h),
-            // 최종 완료 포인트 (v2.98.0: 증가/감소 버튼 추가)
+            // 최종 완료 포인트 (v2.98.1: 레이아웃 수정)
             Row(
               children: [
                 Expanded(
@@ -1167,10 +1158,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                 ),
                 SizedBox(width: 4.w),
                 Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
                       width: 32.w,
-                      height: 25.h,
+                      height: 28.h,
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         icon: Icon(Icons.add, size: 16.sp),
@@ -1184,7 +1176,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                     ),
                     SizedBox(
                       width: 32.w,
-                      height: 25.h,
+                      height: 28.h,
                       child: IconButton(
                         padding: EdgeInsets.zero,
                         icon: Icon(Icons.remove, size: 16.sp),
