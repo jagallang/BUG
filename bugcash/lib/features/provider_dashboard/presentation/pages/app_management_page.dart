@@ -238,7 +238,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     bool enablePointValidation = true; // 기본값
     try {
       final settingsDoc = await FirebaseFirestore.instance
-          .collection('platformSettings')
+          .collection('platform_settings')
           .doc('platform')
           .get();
 
@@ -419,23 +419,37 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       // Update the document with its ID as appId
       await docRef.update({'appId': docRef.id});
 
-      // v2.100.0: 조건부 포인트 차감 (Firebase 설정 기반)
+      // v2.102.1: 에스크로 시스템 통합 (Cloud Function 호출)
       if (enablePointValidation) {
-        final walletRepo = WalletRepositoryImpl();
-        final walletService = WalletService(walletRepo);
-        await walletService.spendPoints(
-          widget.providerId,
-          requiredPoints,
-          '앱 등록: ${_appNameController.text}',
-          metadata: {
-            'appId': docRef.id,
-            'appName': _appNameController.text,
+        // Get user document for providerName
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.providerId)
+            .get();
+
+        final providerName = userDoc.data()?['displayName'] ?? '공급자';
+
+        // Call depositToEscrow Cloud Function
+        final depositFunction = FirebaseFunctions.instanceFor(region: 'asia-northeast1')
+            .httpsCallable('depositToEscrow');
+
+        final result = await depositFunction.call({
+          'appId': docRef.id,
+          'appName': _appNameController.text,
+          'providerId': widget.providerId,
+          'providerName': providerName,
+          'amount': requiredPoints,
+          'breakdown': {
             'maxTesters': _maxTesters,
             'testPeriodDays': _testPeriodDays,
             'dailyMissionPoints': _dailyMissionPoints,
             'finalCompletionPoints': _finalCompletionPoints,
+            'dailyTotal': _dailyMissionPoints * _testPeriodDays * _maxTesters,
+            'finalTotal': _finalCompletionPoints * _maxTesters,
           },
-        );
+        });
+
+        AppLogger.info('Escrow deposit successful: ${result.data}', 'AppManagement');
       }
 
       if (mounted) {

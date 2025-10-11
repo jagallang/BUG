@@ -138,11 +138,12 @@ service cloud.firestore {
       // 읽기: 임시로 모든 인증된 사용자 허용 (테스트용)
       allow read: if isAuthenticated();
 
-      // 생성: 공급자만 가능
+      // 생성: 공급자만 가능 (v2.101.2: appName 필드도 허용)
       allow create: if isProvider() &&
-                    validateRequiredFields(['title', 'description', 'providerId', 'status']) &&
                     request.resource.data.providerId == request.auth.uid &&
-                    request.resource.data.status == 'draft';
+                    request.resource.data.status == 'draft' &&
+                    (request.resource.data.keys().hasAll(['title', 'description', 'providerId', 'status']) ||
+                     request.resource.data.keys().hasAll(['appName', 'description', 'providerId', 'status']));
 
       // 수정: 상태 변경은 Cloud Functions만, 일반 필드는 공급자가 수정 가능
       allow update: if isProjectProvider(projectId) &&
@@ -381,9 +382,10 @@ service cloud.firestore {
                     request.resource.data.totalSpent == 0 &&
                     request.resource.data.totalWithdrawn == 0;
 
-      // 수정: Cloud Functions만 가능 (잔액 변경은 서버에서만)
-      // 클라이언트는 지갑 잔액 직접 수정 불가
-      allow update: if false;
+      // 수정: 본인 지갑만, 관리자 (v2.101.2: 임시로 클라이언트 수정 허용)
+      // TODO: 추후 Cloud Functions로 이전 필요
+      allow update: if isAuthenticated() &&
+                    (request.auth.uid == walletId || isAdmin());
 
       // 삭제: 관리자만 가능
       allow delete: if isAdmin();
@@ -397,13 +399,15 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                      (request.auth.uid == resource.data.userId || isAdmin());
 
-      // 생성: Cloud Functions만 가능 (모든 거래는 서버 검증 필요)
-      // 클라이언트는 거래 생성 불가
-      allow create: if false;
+      // 생성: 본인 거래만, 관리자 (v2.101.2: 임시로 클라이언트 생성 허용)
+      // TODO: 추후 Cloud Functions로 이전 필요
+      allow create: if isAuthenticated() &&
+                    (request.resource.data.userId == request.auth.uid || isAdmin());
 
-      // 수정: Cloud Functions만 가능 (상태 변경은 서버에서만)
-      // 예외: 관리자는 출금 승인/거부 가능 (processWithdrawal 함수 사용)
-      allow update: if false;
+      // 수정: 본인 거래만, 관리자 (v2.101.2: 임시로 클라이언트 수정 허용)
+      // TODO: 추후 Cloud Functions로 이전 필요
+      allow update: if isAuthenticated() &&
+                    (request.auth.uid == resource.data.userId || isAdmin());
 
       // 삭제: 관리자만 가능 (감사 목적으로 거래 내역은 삭제 금지 원칙)
       allow delete: if isAdmin();
@@ -476,6 +480,18 @@ service cloud.firestore {
 
       // 삭제: 관리자만 가능
       allow delete: if isAdmin();
+    }
+
+    // ==============================================
+    // v2.102.0: 에스크로 홀딩 관리 (escrow_holdings)
+    // ==============================================
+    match /escrow_holdings/{holdingId} {
+      // 읽기: 공급자 본인, 관리자
+      allow read: if isAuthenticated() &&
+                     (request.auth.uid == resource.data.providerId || isAdmin());
+
+      // 생성/수정/삭제: Cloud Functions만 가능 (에스크로는 서버에서만 관리)
+      allow create, update, delete: if false;
     }
 
     // ==============================================

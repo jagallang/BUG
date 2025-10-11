@@ -1535,6 +1535,537 @@ exports.adminManageWallet = onCall({
   return exports.adjustUserPoints.run(adjustRequest);
 });
 
+// ============================================================================
+// v2.102.0: ESCROW SYSTEM - 에스크로 시스템
+// ============================================================================
+
+const ESCROW_ACCOUNT_ID = "SYSTEM_ESCROW";
+
+/**
+ * depositToEscrow - 앱 등록 시 공급자 포인트를 에스크로로 예치
+ * @param {string} appId - 앱 ID
+ * @param {string} providerId - 공급자 ID
+ * @param {number} amount - 예치 금액
+ * @param {object} breakdown - 금액 세부사항
+ */
+exports.depositToEscrow = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {appId, appName, providerId, providerName, amount, breakdown} = request.data;
+  const uid = request.auth?.uid;
+
+  // 인증 확인
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // 공급자 본인 확인
+  if (uid !== providerId) {
+    throw new HttpsError("permission-denied", "You can only deposit for your own apps");
+  }
+
+  // 입력 검증
+  if (!appId || !providerId || !amount || amount <= 0) {
+    throw new HttpsError("invalid-argument", "Invalid parameters");
+  }
+
+  try {
+    return await getFirestore().runTransaction(async (transaction) => {
+      // 1. 공급자 지갑 조회
+      const providerWalletRef = getFirestore().collection("wallets").doc(providerId);
+      const providerWallet = await transaction.get(providerWalletRef);
+
+      if (!providerWallet.exists) {
+        throw new HttpsError("not-found", "Provider wallet not found");
+      }
+
+      const providerBalance = providerWallet.data().balance || 0;
+
+      // 2. 잔액 확인
+      if (providerBalance < amount) {
+        throw new HttpsError("failed-precondition", `Insufficient balance. Required: ${amount}, Available: ${providerBalance}`);
+      }
+
+      // 3. 에스크로 지갑 조회
+      const escrowWalletRef = getFirestore().collection("wallets").doc(ESCROW_ACCOUNT_ID);
+      const escrowWallet = await transaction.get(escrowWalletRef);
+
+      if (!escrowWallet.exists) {
+        throw new HttpsError("not-found", "Escrow wallet not found");
+      }
+
+      const escrowBalance = escrowWallet.data().balance || 0;
+
+      // 4. 공급자 지갑 차감
+      transaction.update(providerWalletRef, {
+        balance: providerBalance - amount,
+        totalSpent: FieldValue.increment(amount),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 5. 에스크로 지갑 증가
+      transaction.update(escrowWalletRef, {
+        balance: escrowBalance + amount,
+        totalEarned: FieldValue.increment(amount),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 6. 공급자 거래 내역 생성
+      const providerTransactionRef = getFirestore().collection("transactions").doc();
+      transaction.set(providerTransactionRef, {
+        userId: providerId,
+        type: "spend",
+        amount: amount,
+        status: "completed",
+        description: `앱 등록 에스크로 예치: ${appName}`,
+        metadata: {
+          appId: appId,
+          appName: appName,
+          escrowType: "deposit",
+          ...breakdown,
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        completedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 7. 에스크로 거래 내역 생성
+      const escrowTransactionRef = getFirestore().collection("transactions").doc();
+      transaction.set(escrowTransactionRef, {
+        userId: ESCROW_ACCOUNT_ID,
+        type: "earn",
+        amount: amount,
+        status: "completed",
+        description: `에스크로 예치 수령: ${appName} (공급자: ${providerName})`,
+        metadata: {
+          appId: appId,
+          appName: appName,
+          providerId: providerId,
+          providerName: providerName,
+          escrowType: "deposit",
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        completedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 8. escrow_holdings 문서 생성
+      const holdingRef = getFirestore().collection("escrow_holdings").doc();
+      transaction.set(holdingRef, {
+        holdingId: holdingRef.id,
+        appId: appId,
+        appName: appName,
+        providerId: providerId,
+        providerName: providerName,
+        totalAmount: amount,
+        remainingAmount: amount,
+        spentAmount: 0,
+        status: "active",
+        breakdown: breakdown || {},
+        transactions: [
+          {
+            type: "deposit",
+            amount: amount,
+            from: providerId,
+            to: ESCROW_ACCOUNT_ID,
+            description: "앱 등록 에스크로 예치",
+            createdAt: FieldValue.serverTimestamp(),
+          },
+        ],
+        depositedAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      console.log(`✅ Escrow deposit successful - App: ${appId}, Amount: ${amount}`);
+
+      return {
+        success: true,
+        holdingId: holdingRef.id,
+        providerBalance: providerBalance - amount,
+        escrowBalance: escrowBalance + amount,
+      };
+    });
+  } catch (error) {
+    console.error("❌ Escrow deposit failed:", error);
+    // v2.102.1: HttpsError 타입 보존
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * payoutFromEscrow - 미션 완료 시 에스크로에서 테스터에게 지급
+ * @param {string} appId - 앱 ID
+ * @param {string} testerId - 테스터 ID
+ * @param {number} amount - 지급 금액
+ * @param {string} description - 지급 사유
+ */
+exports.payoutFromEscrow = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {appId, testerId, testerName, amount, description, metadata} = request.data;
+  const adminUid = request.auth?.uid;
+
+  // 인증 확인
+  if (!adminUid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // 입력 검증
+  if (!appId || !testerId || !amount || amount <= 0) {
+    throw new HttpsError("invalid-argument", "Invalid parameters");
+  }
+
+  // v2.102.1: 관리자 또는 공급자 권한 확인
+  const isAdminUser = await isAdmin(adminUid);
+  const isAppProvider = await isProjectProvider(adminUid, appId);
+
+  if (!isAdminUser && !isAppProvider) {
+    throw new HttpsError("permission-denied", "Only admin or app provider can authorize payouts");
+  }
+
+  try {
+    return await getFirestore().runTransaction(async (transaction) => {
+      // 1. escrow_holdings 조회
+      const holdingsSnapshot = await getFirestore()
+          .collection("escrow_holdings")
+          .where("appId", "==", appId)
+          .where("status", "==", "active")
+          .limit(1)
+          .get();
+
+      if (holdingsSnapshot.empty) {
+        throw new HttpsError("not-found", "Active escrow holding not found for this app");
+      }
+
+      const holdingDoc = holdingsSnapshot.docs[0];
+      const holdingRef = holdingDoc.ref;
+      const holding = holdingDoc.data();
+
+      // 2. 에스크로 잔액 확인
+      if (holding.remainingAmount < amount) {
+        throw new HttpsError("failed-precondition", `Insufficient escrow balance. Required: ${amount}, Available: ${holding.remainingAmount}`);
+      }
+
+      // 3. 에스크로 지갑 조회
+      const escrowWalletRef = getFirestore().collection("wallets").doc(ESCROW_ACCOUNT_ID);
+      const escrowWallet = await transaction.get(escrowWalletRef);
+      const escrowBalance = escrowWallet.data().balance || 0;
+
+      // 4. 테스터 지갑 조회
+      const testerWalletRef = getFirestore().collection("wallets").doc(testerId);
+      const testerWallet = await transaction.get(testerWalletRef);
+
+      if (!testerWallet.exists) {
+        throw new HttpsError("not-found", "Tester wallet not found");
+      }
+
+      const testerBalance = testerWallet.data().balance || 0;
+
+      // 5. 에스크로 지갑 차감
+      transaction.update(escrowWalletRef, {
+        balance: escrowBalance - amount,
+        totalSpent: FieldValue.increment(amount),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 6. 테스터 지갑 증가
+      transaction.update(testerWalletRef, {
+        balance: testerBalance + amount,
+        totalEarned: FieldValue.increment(amount),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 7. escrow_holdings 업데이트
+      const newTransactions = holding.transactions || [];
+      newTransactions.push({
+        type: "payout",
+        amount: amount,
+        from: ESCROW_ACCOUNT_ID,
+        to: testerId,
+        description: description || "미션 완료 보상",
+        createdAt: FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(holdingRef, {
+        remainingAmount: holding.remainingAmount - amount,
+        spentAmount: (holding.spentAmount || 0) + amount,
+        transactions: newTransactions,
+        lastPayoutAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 8. 에스크로 거래 내역 생성
+      const escrowTransactionRef = getFirestore().collection("transactions").doc();
+      transaction.set(escrowTransactionRef, {
+        userId: ESCROW_ACCOUNT_ID,
+        type: "spend",
+        amount: amount,
+        status: "completed",
+        description: `에스크로 지급: ${description} (테스터: ${testerName})`,
+        metadata: {
+          appId: appId,
+          testerId: testerId,
+          testerName: testerName,
+          escrowType: "payout",
+          ...(metadata || {}),
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        completedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 9. 테스터 거래 내역 생성
+      const testerTransactionRef = getFirestore().collection("transactions").doc();
+      transaction.set(testerTransactionRef, {
+        userId: testerId,
+        type: "earn",
+        amount: amount,
+        status: "completed",
+        description: description || "미션 완료 보상",
+        metadata: {
+          appId: appId,
+          escrowType: "payout",
+          ...(metadata || {}),
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        completedAt: FieldValue.serverTimestamp(),
+      });
+
+      console.log(`✅ Escrow payout successful - App: ${appId}, Tester: ${testerId}, Amount: ${amount}`);
+
+      return {
+        success: true,
+        testerBalance: testerBalance + amount,
+        escrowBalance: escrowBalance - amount,
+        remainingEscrow: holding.remainingAmount - amount,
+      };
+    });
+  } catch (error) {
+    console.error("❌ Escrow payout failed:", error);
+    // v2.102.1: HttpsError 타입 보존
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * refundEscrow - 앱 종료 시 잔액을 공급자에게 환불
+ * @param {string} appId - 앱 ID
+ */
+exports.refundEscrow = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {appId} = request.data;
+  const adminUid = request.auth?.uid;
+
+  // 인증 확인
+  if (!adminUid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // 입력 검증
+  if (!appId) {
+    throw new HttpsError("invalid-argument", "App ID is required");
+  }
+
+  // v2.102.1: 관리자 또는 공급자 권한 확인
+  const isAdminUser = await isAdmin(adminUid);
+  const isAppProvider = await isProjectProvider(adminUid, appId);
+
+  if (!isAdminUser && !isAppProvider) {
+    throw new HttpsError("permission-denied", "Only admin or app provider can authorize refunds");
+  }
+
+  try {
+    return await getFirestore().runTransaction(async (transaction) => {
+      // 1. escrow_holdings 조회
+      const holdingsSnapshot = await getFirestore()
+          .collection("escrow_holdings")
+          .where("appId", "==", appId)
+          .where("status", "==", "active")
+          .limit(1)
+          .get();
+
+      if (holdingsSnapshot.empty) {
+        throw new HttpsError("not-found", "Active escrow holding not found for this app");
+      }
+
+      const holdingDoc = holdingsSnapshot.docs[0];
+      const holdingRef = holdingDoc.ref;
+      const holding = holdingDoc.data();
+      const refundAmount = holding.remainingAmount;
+
+      // 환불할 금액이 없으면 바로 완료 처리
+      if (refundAmount <= 0) {
+        transaction.update(holdingRef, {
+          status: "completed",
+          completedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        return {
+          success: true,
+          refundAmount: 0,
+          message: "No amount to refund",
+        };
+      }
+
+      // 2. 에스크로 지갑 조회
+      const escrowWalletRef = getFirestore().collection("wallets").doc(ESCROW_ACCOUNT_ID);
+      const escrowWallet = await transaction.get(escrowWalletRef);
+      const escrowBalance = escrowWallet.data().balance || 0;
+
+      // 3. 공급자 지갑 조회
+      const providerWalletRef = getFirestore().collection("wallets").doc(holding.providerId);
+      const providerWallet = await transaction.get(providerWalletRef);
+      const providerBalance = providerWallet.data().balance || 0;
+
+      // 4. 에스크로 지갑 차감
+      transaction.update(escrowWalletRef, {
+        balance: escrowBalance - refundAmount,
+        totalSpent: FieldValue.increment(refundAmount),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 5. 공급자 지갑 증가
+      transaction.update(providerWalletRef, {
+        balance: providerBalance + refundAmount,
+        totalEarned: FieldValue.increment(refundAmount),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 6. escrow_holdings 업데이트
+      const newTransactions = holding.transactions || [];
+      newTransactions.push({
+        type: "refund",
+        amount: refundAmount,
+        from: ESCROW_ACCOUNT_ID,
+        to: holding.providerId,
+        description: "앱 종료로 인한 에스크로 환불",
+        createdAt: FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(holdingRef, {
+        remainingAmount: 0,
+        status: "refunded",
+        transactions: newTransactions,
+        refundedAt: FieldValue.serverTimestamp(),
+        completedAt: FieldValue.serverTimestamp(),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 7. 거래 내역 생성 (에스크로)
+      const escrowTransactionRef = getFirestore().collection("transactions").doc();
+      transaction.set(escrowTransactionRef, {
+        userId: ESCROW_ACCOUNT_ID,
+        type: "spend",
+        amount: refundAmount,
+        status: "completed",
+        description: `에스크로 환불: ${holding.appName} (공급자: ${holding.providerName})`,
+        metadata: {
+          appId: appId,
+          providerId: holding.providerId,
+          escrowType: "refund",
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        completedAt: FieldValue.serverTimestamp(),
+      });
+
+      // 8. 거래 내역 생성 (공급자)
+      const providerTransactionRef = getFirestore().collection("transactions").doc();
+      transaction.set(providerTransactionRef, {
+        userId: holding.providerId,
+        type: "refund",
+        amount: refundAmount,
+        status: "completed",
+        description: `앱 종료 에스크로 환불: ${holding.appName}`,
+        metadata: {
+          appId: appId,
+          escrowType: "refund",
+        },
+        createdAt: FieldValue.serverTimestamp(),
+        completedAt: FieldValue.serverTimestamp(),
+      });
+
+      console.log(`✅ Escrow refund successful - App: ${appId}, Amount: ${refundAmount}`);
+
+      return {
+        success: true,
+        refundAmount: refundAmount,
+        providerBalance: providerBalance + refundAmount,
+        escrowBalance: escrowBalance - refundAmount,
+      };
+    });
+  } catch (error) {
+    console.error("❌ Escrow refund failed:", error);
+    // v2.102.1: HttpsError 타입 보존
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError("internal", error.message);
+  }
+});
+
+/**
+ * getEscrowBalance - 앱의 에스크로 잔액 조회
+ * @param {string} appId - 앱 ID
+ */
+exports.getEscrowBalance = onCall({
+  region: "asia-northeast1",
+}, async (request) => {
+  const {appId} = request.data;
+  const uid = request.auth?.uid;
+
+  // 인증 확인
+  if (!uid) {
+    throw new HttpsError("unauthenticated", "User must be authenticated");
+  }
+
+  // 입력 검증
+  if (!appId) {
+    throw new HttpsError("invalid-argument", "App ID is required");
+  }
+
+  try {
+    const holdingsSnapshot = await getFirestore()
+        .collection("escrow_holdings")
+        .where("appId", "==", appId)
+        .where("status", "==", "active")
+        .limit(1)
+        .get();
+
+    if (holdingsSnapshot.empty) {
+      return {
+        success: true,
+        found: false,
+        message: "No active escrow holding found",
+      };
+    }
+
+    const holding = holdingsSnapshot.docs[0].data();
+
+    return {
+      success: true,
+      found: true,
+      totalAmount: holding.totalAmount,
+      remainingAmount: holding.remainingAmount,
+      spentAmount: holding.spentAmount || 0,
+      status: holding.status,
+      breakdown: holding.breakdown || {},
+    };
+  } catch (error) {
+    console.error("❌ Get escrow balance failed:", error);
+    // v2.102.1: HttpsError 타입 보존
+    if (error instanceof HttpsError) {
+      throw error;
+    }
+    throw new HttpsError("internal", error.message);
+  }
+});
+
 // Import migration functions
 const migration = require('./migration.js');
 exports.migrateUserOnWrite = migration.migrateUserOnWrite;
