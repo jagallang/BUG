@@ -54,7 +54,7 @@ service cloud.firestore {
 
     // 데이터 변경시 필수 필드 검증
     function validateRequiredFields(requiredFields) {
-      return requiredFields.hasAll(request.resource.data.keys());
+      return request.resource.data.keys().hasAll(requiredFields);
     }
 
     // 새 형식 사용자 데이터 검증 (다중 역할 지원)
