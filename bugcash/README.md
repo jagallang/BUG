@@ -5,13 +5,34 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.108.3-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.108.4-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.108.4)
+
+### 🔧 앱 등록 중복 클릭 방지 (v2.108.4) - **DUPLICATE CLICK PREVENTION**
+- **🎯 문제 해결**
+  - ✅ **중복 등록 방지**: 빠른 연속 클릭 시 중복 앱 생성 방지
+  - ✅ **중복 포인트 차감 방지**: 한 번만 포인트 차감되도록 보장
+  - ✅ **UX 개선**: 등록 진행 중 버튼 비활성화 및 로딩 표시
+
+- **📋 수정 내용**
+  - 🚦 **_isSubmitting 플래그 추가**: 앱 등록 진행 상태 추적
+  - 🔒 **중복 실행 방지**: 함수 시작 시 플래그 검사
+  - ⏳ **버튼 로딩 표시**: 등록 중 CircularProgressIndicator 표시
+  - ✅ **모든 exit point 관리**: 성공/에러 케이스 모두 플래그 해제
+
+- **🔧 기술 구현**
+  - 📁 **1개 파일 수정**: app_management_page.dart
+  - 🔄 **State 변수 추가**: `bool _isSubmitting = false` (Line 130)
+  - 🛡️ **가드 로직**: `_uploadApp()` 함수 시작 부분 (Line 227-231)
+  - 🎨 **UI 개선**: 버튼 비활성화 + 로딩 표시 (Line 1329, 1336-1345)
+  - ✅ **플래그 관리**: 등록 시작/완료/에러 시 적절히 설정/해제
 
 ## ✨ 주요 기능 (v2.108.3)
 

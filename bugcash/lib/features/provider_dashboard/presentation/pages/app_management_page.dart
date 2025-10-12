@@ -127,6 +127,7 @@ class AppManagementPage extends ConsumerStatefulWidget {
 
 class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   bool _showUploadDialog = false;
+  bool _isSubmitting = false; // v2.108.4: 중복 클릭 방지
   // Basic info controllers
   final _appNameController = TextEditingController();
   final _appUrlController = TextEditingController();
@@ -223,6 +224,12 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   }
 
   Future<void> _uploadApp() async {
+    // v2.108.4: 중복 실행 방지
+    if (_isSubmitting) {
+      AppLogger.warning('App registration already in progress', 'AppManagement');
+      return;
+    }
+
     if (_appNameController.text.isEmpty ||
         _appUrlController.text.isEmpty ||
         _descriptionController.text.isEmpty) {
@@ -332,6 +339,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     );
 
     if (confirm != true || !mounted) return;
+
+    // v2.108.4: 등록 시작 - 플래그 설정
+    setState(() => _isSubmitting = true);
 
     try {
       // v2.97.0: 스크린샷 업로드 (있을 경우)
@@ -469,6 +479,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
         );
 
+        // v2.108.4: 등록 완료 - 플래그 해제
+        setState(() => _isSubmitting = false);
+
         // 다이얼로그 닫기 및 필드 초기화를 약간 지연
         Future.delayed(const Duration(milliseconds: 1500), () {
           if (mounted) {
@@ -495,6 +508,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     } catch (e) {
       AppLogger.error('Failed to upload app', e.toString());
       if (mounted) {
+        // v2.108.4: 등록 실패 - 플래그 해제
+        setState(() => _isSubmitting = false);
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('앱 등록 실패: ${e.toString()}')),
         );
@@ -1310,14 +1326,23 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                   child: SizedBox(
                     height: 48.h,
                     child: ElevatedButton(
-                      onPressed: _uploadApp,
+                      onPressed: _isSubmitting ? null : _uploadApp, // v2.108.4: 중복 클릭 방지
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.providerBluePrimary, // v2.76.0: 색상 통일
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                       ),
-                      child: const Text('등록'),
+                      child: _isSubmitting // v2.108.4: 로딩 표시
+                        ? SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text('등록'),
                     ),
                   ),
                 ),
