@@ -18,6 +18,7 @@ class MissionWorkflowService {
 
   // 1단계: 미션 신청 생성 (자동 providerId 조회 포함)
   /// v2.18.0: totalDays 기본값 14일 → 10일 변경 (권장값)
+  /// v2.112.0: dailyReward 파라미터 제거 (최종 포인트만 사용)
   Future<String> createMissionApplication({
     required String appId,
     required String appName,
@@ -29,7 +30,7 @@ class MissionWorkflowService {
     required String experience,
     required String motivation,
     int totalDays = 10,  // v2.18.0: 14 → 10 (권장 기본값)
-    int dailyReward = 5000,
+    // v2.112.0: dailyReward 제거
   }) async {
     try {
       // Input validation
@@ -96,7 +97,7 @@ class MissionWorkflowService {
         experience: experience,
         motivation: motivation,
         totalDays: totalDays,
-        dailyReward: dailyReward,
+        // v2.112.0: dailyReward 제거
       );
 
       final docRef = await _firestore
@@ -495,30 +496,29 @@ class MissionWorkflowService {
         }
       }
 
-      // 리워드 계산
+      // v2.112.0: 리워드 계산 로직 단순화
       final totalDays = data['totalDays'] ?? 10;
-      final dailyReward = data['dailyReward'] ?? 5000;
-      final earnedReward = (data['totalEarnedReward'] ?? 0) + dailyReward;
-      final paidReward = (data['totalPaidReward'] ?? 0) + dailyReward;
 
       // v2.25.14: completedDays 계산 (승인된 일일 미션 개수)
       final completedDays = interactions.where((i) => i['providerApproved'] == true).length;
 
+      // 최종 완료 여부 확인
+      final isFinalDay = dayNumber >= totalDays;
+
       // v2.25.04: 다음 날 미션 자동 생성 제거 (공급자가 수동으로 생성)
       final updateData = {
         'dailyInteractions': interactions,
-        'currentState': dayNumber >= totalDays
+        'currentState': isFinalDay
             ? MissionWorkflowState.projectCompleted.code
             : MissionWorkflowState.dailyMissionApproved.code,
         'stateUpdatedAt': FieldValue.serverTimestamp(),
         'stateUpdatedBy': providerId,
-        'totalEarnedReward': earnedReward,
-        'totalPaidReward': paidReward,
         'completedDays': completedDays, // v2.25.14
+        // v2.112.0: totalEarnedReward, totalPaidReward 제거
       };
 
       // 마지막 날인 경우에만 완료 처리
-      if (dayNumber >= totalDays) {
+      if (isFinalDay) {
         updateData['completedAt'] = FieldValue.serverTimestamp();
       }
 
@@ -527,27 +527,13 @@ class MissionWorkflowService {
           .doc(workflowId)
           .update(updateData);
 
-      // 테스터에게 포인트 적립
-      final testerId = data['testerId'] as String?;
-      if (testerId != null && testerId.isNotEmpty) {
+      // v2.112.0: 최종 Day인 경우에만 포인트 지급
+      if (isFinalDay) {
         try {
-          final walletRepo = WalletRepositoryImpl();
-          final walletService = WalletService(walletRepo);
-          await walletService.earnPoints(
-            testerId,
-            dailyReward,
-            'Day $dayNumber 미션 완료: ${data['appName'] ?? ''}',
-            metadata: {
-              'workflowId': workflowId,
-              'appId': data['appId'],
-              'appName': data['appName'],
-              'dayNumber': dayNumber,
-              'rewardType': 'daily',
-            },
-          );
-          AppLogger.info('Daily reward $dailyReward paid to tester $testerId', 'MissionWorkflow');
+          await _payFinalReward(workflowId, data);
+          AppLogger.info('✅ Final reward payment completed for workflow $workflowId', 'MissionWorkflow');
         } catch (e) {
-          AppLogger.error('Failed to pay daily reward to tester', 'MissionWorkflow', e);
+          AppLogger.error('❌ Failed to pay final reward', 'MissionWorkflow', e);
           // 포인트 지급 실패해도 미션 승인은 완료
         }
       }
@@ -555,12 +541,14 @@ class MissionWorkflowService {
       // 테스터에게 알림
       await _sendNotificationToTester(
         testerId: data['testerId'] ?? '',
-        title: '일일 미션 승인!',
-        message: '$dayNumber일차 미션이 승인되었습니다. $dailyReward원이 지급되었습니다.',
+        title: isFinalDay ? '미션 최종 완료!' : '일일 미션 승인!',
+        message: isFinalDay
+            ? '$dayNumber일차 미션이 승인되었습니다. 최종 완료 보상이 지급되었습니다!'
+            : '$dayNumber일차 미션이 승인되었습니다. 다음 미션을 진행해주세요.',
         data: {
           'workflowId': workflowId,
           'dayNumber': dayNumber,
-          'reward': dailyReward,
+          'isFinalDay': isFinalDay,
         },
       );
 
@@ -934,6 +922,70 @@ class MissionWorkflowService {
       });
     } catch (e) {
       AppLogger.warning('Failed to send notification to tester', 'MissionWorkflow');
+    }
+  }
+
+  /// v2.112.0: 최종 미션 완료 시 에스크로에서 포인트 지급
+  /// Firebase Function을 호출하여 안전하게 포인트 지급
+  Future<void> _payFinalReward(
+    String workflowId,
+    Map<String, dynamic> workflowData,
+  ) async {
+    try {
+      final appId = workflowData['appId'] as String;
+      final testerId = workflowData['testerId'] as String;
+      final testerName = workflowData['testerName'] as String? ?? '테스터';
+      final appName = workflowData['appName'] as String? ?? '';
+
+      // 1. projects 컬렉션에서 finalCompletionPoints 조회
+      final normalizedAppId = appId.replaceAll('provider_app_', '');
+      final projectDoc = await _firestore
+          .collection('projects')
+          .doc(normalizedAppId)
+          .get();
+
+      if (!projectDoc.exists) {
+        throw Exception('Project not found: $normalizedAppId');
+      }
+
+      final finalPoints = projectDoc.data()?['finalCompletionPoints'] ?? 10000;
+
+      AppLogger.info(
+        '💰 Final reward payment initiated\n'
+        '   ├─ workflowId: $workflowId\n'
+        '   ├─ testerId: $testerId\n'
+        '   ├─ amount: $finalPoints\n'
+        '   └─ appName: $appName',
+        'MissionWorkflow'
+      );
+
+      // 2. Firebase Function 호출: payoutFromEscrow
+      final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
+      final callable = functions.httpsCallable('payoutFromEscrow');
+
+      await callable.call({
+        'appId': appId,
+        'testerId': testerId,
+        'testerName': testerName,
+        'amount': finalPoints,
+        'description': '$appName 미션 최종 완료 보상',
+        'metadata': {
+          'workflowId': workflowId,
+          'rewardType': 'final',
+          'allDaysCompleted': true,
+        },
+      });
+
+      AppLogger.info(
+        '✅ Final reward paid successfully: $finalPoints P',
+        'MissionWorkflow'
+      );
+    } catch (e) {
+      AppLogger.error(
+        '❌ Failed to pay final reward: $e',
+        'MissionWorkflow'
+      );
+      rethrow;
     }
   }
 

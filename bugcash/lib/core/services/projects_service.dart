@@ -2,17 +2,18 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 /// Projects collection 전용 서비스 클래스
-/// dailyMissionPoints 실시간 동기화를 위한 최적화된 서비스
+/// v2.112.0: finalCompletionPoints 조회를 위한 서비스
 class ProjectsService {
   static final _firestore = FirebaseFirestore.instance;
 
-  /// 특정 프로젝트의 dailyMissionPoints 값 조회
-  static Future<int> getDailyMissionPoints(String appId) async {
+  /// v2.112.0: 특정 프로젝트의 finalCompletionPoints 값 조회
+  /// dailyMissionPoints는 Deprecated
+  static Future<int> getFinalCompletionPoints(String appId) async {
     try {
       // appId 정규화 (provider_app_ 접두사 제거)
       final normalizedAppId = appId.replaceAll('provider_app_', '');
 
-      debugPrint('🔍 PROJECTS_SERVICE: getDailyMissionPoints - appId=$normalizedAppId');
+      debugPrint('🔍 PROJECTS_SERVICE: getFinalCompletionPoints - appId=$normalizedAppId');
 
       final doc = await _firestore
           .collection('projects')
@@ -21,67 +22,26 @@ class ProjectsService {
 
       if (doc.exists) {
         final data = doc.data()!;
-        final dailyMissionPoints = _extractDailyMissionPoints(data);
+        final finalPoints = (data['finalCompletionPoints'] as num?)?.toInt() ?? 10000;
 
-        debugPrint('✅ PROJECTS_SERVICE: Found dailyMissionPoints=$dailyMissionPoints for appId=$normalizedAppId');
-        return dailyMissionPoints;
+        debugPrint('✅ PROJECTS_SERVICE: Found finalCompletionPoints=$finalPoints for appId=$normalizedAppId');
+        return finalPoints;
       } else {
         debugPrint('❌ PROJECTS_SERVICE: Project not found for appId=$normalizedAppId');
-        return 5000; // 기본값
+        return 10000; // 기본값
       }
     } catch (e) {
-      debugPrint('🚨 PROJECTS_SERVICE: Error getting dailyMissionPoints - $e');
-      return 5000; // 오류 시 기본값
+      debugPrint('🚨 PROJECTS_SERVICE: Error getting finalCompletionPoints - $e');
+      return 10000; // 오류 시 기본값
     }
   }
 
-  /// 특정 프로젝트의 dailyMissionPoints 실시간 스트림
-  static Stream<int> watchDailyMissionPoints(String appId) {
-    // appId 정규화 (provider_app_ 접두사 제거)
-    final normalizedAppId = appId.replaceAll('provider_app_', '');
-
-    debugPrint('📡 PROJECTS_SERVICE: watchDailyMissionPoints - appId=$normalizedAppId');
-
-    return _firestore
-        .collection('projects')
-        .doc(normalizedAppId)
-        .snapshots()
-        .map((doc) {
-          if (doc.exists) {
-            final data = doc.data()!;
-            final dailyMissionPoints = _extractDailyMissionPoints(data);
-
-            debugPrint('🔄 PROJECTS_SERVICE: Stream update - dailyMissionPoints=$dailyMissionPoints for appId=$normalizedAppId');
-            return dailyMissionPoints;
-          } else {
-            debugPrint('❌ PROJECTS_SERVICE: Stream - Project not found for appId=$normalizedAppId');
-            return 5000; // 기본값
-          }
-        });
-  }
-
-  /// 프로젝트 데이터에서 dailyMissionPoints 추출
-  /// 여러 경로에서 값을 찾아서 반환 (하위 호환성)
-  static int _extractDailyMissionPoints(Map<String, dynamic> data) {
-    // 1순위: 직접 필드
-    if (data['dailyMissionPoints'] != null) {
-      return (data['dailyMissionPoints'] as num).toInt();
-    }
-
-    // 2순위: metadata 내부
-    final metadata = data['metadata'] as Map<String, dynamic>?;
-    if (metadata != null && metadata['dailyMissionPoints'] != null) {
-      return (metadata['dailyMissionPoints'] as num).toInt();
-    }
-
-    // 3순위: rewards 내부
-    final rewards = data['rewards'] as Map<String, dynamic>?;
-    if (rewards != null && rewards['dailyMissionPoints'] != null) {
-      return (rewards['dailyMissionPoints'] as num).toInt();
-    }
-
-    // 기본값
-    return 5000;
+  /// v2.112.0: Deprecated - dailyMissionPoints 사용 안 함
+  /// 하위 호환성을 위해 유지하되 0 반환
+  @Deprecated('Use getFinalCompletionPoints instead')
+  static Future<int> getDailyMissionPoints(String appId) async {
+    debugPrint('⚠️ DEPRECATED: getDailyMissionPoints called, returning 0');
+    return 0;
   }
 
   /// 프로젝트 존재 여부 확인
