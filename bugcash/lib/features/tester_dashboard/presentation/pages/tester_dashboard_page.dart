@@ -1092,12 +1092,15 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         // v2.27.0: MissionWorkflowEntity → DailyMissionModel 변환 및 필터링
         // v2.106.4: approved 상태 추가 (공급자 승인 후 미션 시작 전)
         // v2.24.8: 일일 미션 진행 상태 추가 (제출 후에도 계속 보여야 함)
-        // approved: 공급자가 승인함 (미션 시작 대기) ← v2.106.4: 진행중 탭에 표시!
+        // v2.111.0: 미션 신청 즉시 진행중 탭에 표시되도록 applicationSubmitted 추가
+        // applicationSubmitted: 미션 신청 완료 (승인 대기 중)
+        // approved: 공급자가 승인함 (미션 시작 대기)
         // inProgress: 미션 수행 중
         // dailyMissionCompleted: 일일 미션 제출 후 검토 대기
         // dailyMissionApproved: 일일 미션 승인됨 (다음 날 제출 가능)
         final activeMissionEntities = missions.where((mission) {
-          return mission.status == MissionWorkflowStatus.approved ||
+          return mission.status == MissionWorkflowStatus.applicationSubmitted || // v2.111.0
+              mission.status == MissionWorkflowStatus.approved ||
               mission.status == MissionWorkflowStatus.inProgress ||
               mission.status == MissionWorkflowStatus.dailyMissionCompleted ||
               mission.status == MissionWorkflowStatus.dailyMissionApproved;

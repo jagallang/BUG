@@ -5,13 +5,39 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.110.1-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.111.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.111.0)
+
+### 🎯 미션 신청 즉시 진행 중 탭 표시 (v2.111.0) - **INSTANT MISSION CARD DISPLAY**
+- **🎯 기능 개선**
+  - ✅ **즉시 표시**: 미션 신청 즉시 진행 중 탭에 카드 생성
+  - ✅ **승인 대기 상태**: "승인 대기" 상태로 명확히 표시
+  - ✅ **자연스러운 UX**: 신청 → 승인 → 진행의 전체 과정 추적 가능
+  - ✅ **디버그 코드 제거**: v2.110.2 임시 로깅 코드 정리
+
+- **🔍 변경 사항**
+  - 📁 **tester_dashboard_page.dart** Line 1102: 필터에 `applicationSubmitted` 추가
+  - 📁 **mission_workflow_entity.dart**: v2.110.2 kDebugMode 로그 제거
+  - 📁 **mission_workflow_model.dart**: v2.110.2 디버그 코드 제거
+
+- **📊 사용자 경험 개선**
+  - ✅ **Before**: 미션 신청 → 앱 비활성화 → 승인 후 카드 표시
+  - ✅ **After**: 미션 신청 → 즉시 카드 표시 (승인 대기) → 승인 시 상태 업데이트
+
+- **🎯 상태 전환 플로우**
+  ```
+  신청 (applicationSubmitted: "승인 대기")
+    → 승인 (approved: "승인됨")
+    → 진행 (inProgress: "진행 중")
+    → 완료
+  ```
 
 ## ✨ 주요 기능 (v2.110.1)
 
