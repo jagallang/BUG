@@ -139,51 +139,108 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   Future<void> _loadAppDetails() async {
 
     try {
+      debugPrint('🔍 [_loadAppDetails] 시작');
+      debugPrint('   ├─ appId: $appId');
+      debugPrint('   ├─ missionId: $missionId');
+      debugPrint('   ├─ missionAppName: $missionAppName');
+      debugPrint('   └─ widget.mission.providerId: ${widget.mission.providerId}');
+
       Map<String, dynamic>? appData;
       String? detectedProviderId;
+
+      // 0. missions 컬렉션에서 먼저 providerId 확인 (최우선)
+      if (missionId.isNotEmpty) {
+        debugPrint('   🔍 0. missions 컬렉션 조회 시도: $missionId');
+        final missionDoc = await FirebaseFirestore.instance
+            .collection('missions')
+            .doc(missionId)
+            .get();
+
+        debugPrint('   📊 missions.exists: ${missionDoc.exists}');
+        if (missionDoc.exists) {
+          final missionData = missionDoc.data();
+          detectedProviderId = missionData?['providerId'] ?? missionData?['createdBy'];
+          debugPrint('   ✅ missions에서 providerId 발견: $detectedProviderId');
+
+          // missions 문서에 appId가 있으면 그것도 가져오기
+          if (missionData?['appId'] != null) {
+            final missionAppId = missionData!['appId'] as String;
+            debugPrint('   📱 missions에서 appId도 발견: $missionAppId');
+          }
+        }
+      }
 
       // 1. appId가 있으면 직접 조회 (확장된 컬렉션 검색)
       if (appId != null && appId!.isNotEmpty) {
         AppLogger.info('🔍 앱 조회 시작 - appId: $appId, appName: $missionAppName', 'MissionDetailPage');
 
-        // 1-1. provider_apps 컬렉션에서 조회
-        final appDoc = await FirebaseFirestore.instance
-            .collection('provider_apps')
-            .doc(appId)
-            .get();
-
-        if (appDoc.exists) {
-          appData = appDoc.data();
-          detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
-          AppLogger.info('✅ App details loaded from provider_apps by ID', 'MissionDetailPage');
-        } else {
-          AppLogger.info('❌ provider_apps에서 미발견, apps 컬렉션 시도', 'MissionDetailPage');
-
-          // 1-2. apps 컬렉션에서 조회
-          final fallbackDoc = await FirebaseFirestore.instance
-              .collection('apps')
+        // 1-1. provider_apps 컬렉션에서 조회 (permission-denied 예외 처리)
+        try {
+          debugPrint('   🔍 1-1. provider_apps 조회 시도: $appId');
+          final appDoc = await FirebaseFirestore.instance
+              .collection('provider_apps')
               .doc(appId)
               .get();
 
-          if (fallbackDoc.exists) {
-            appData = fallbackDoc.data();
+          debugPrint('   📊 provider_apps.exists: ${appDoc.exists}');
+          if (appDoc.exists) {
+            appData = appDoc.data();
             detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
-            AppLogger.info('✅ App details loaded from apps collection by ID', 'MissionDetailPage');
-          } else {
-            AppLogger.info('❌ apps에서 미발견, projects 컬렉션 시도', 'MissionDetailPage');
+            debugPrint('   ✅ provider_apps 발견! detectedProviderId: $detectedProviderId');
+            AppLogger.info('✅ App details loaded from provider_apps by ID', 'MissionDetailPage');
+          }
+        } catch (e) {
+          debugPrint('   ⚠️ provider_apps 조회 실패 (권한 없음 또는 오류): $e');
+        }
 
-            // 1-3. projects 컬렉션에서 조회 (새로 추가)
-            final projectDoc = await FirebaseFirestore.instance
-                .collection('projects')
+        // 1-1에서 찾지 못했으면 계속 진행
+        if (appData == null) {
+          AppLogger.info('❌ provider_apps에서 미발견, apps 컬렉션 시도', 'MissionDetailPage');
+
+          // 1-2. apps 컬렉션에서 조회 (permission-denied 예외 처리)
+          try {
+            debugPrint('   🔍 1-2. apps 조회 시도: $appId');
+            final fallbackDoc = await FirebaseFirestore.instance
+                .collection('apps')
                 .doc(appId)
                 .get();
 
-            if (projectDoc.exists) {
-              appData = projectDoc.data();
+            debugPrint('   📊 apps.exists: ${fallbackDoc.exists}');
+            if (fallbackDoc.exists) {
+              appData = fallbackDoc.data();
               detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
-              AppLogger.info('✅ App details loaded from projects collection by ID', 'MissionDetailPage');
-            } else {
-              AppLogger.warning('❌ 모든 컬렉션에서 appId로 미발견: $appId', 'MissionDetailPage');
+              debugPrint('   ✅ apps 발견! detectedProviderId: $detectedProviderId');
+              AppLogger.info('✅ App details loaded from apps collection by ID', 'MissionDetailPage');
+            }
+          } catch (e) {
+            debugPrint('   ⚠️ apps 조회 실패 (권한 없음 또는 오류): $e');
+          }
+
+          // 1-2에서도 찾지 못했으면 projects 시도
+          if (appData == null) {
+            AppLogger.info('❌ apps에서 미발견, projects 컬렉션 시도', 'MissionDetailPage');
+
+            // 1-3. projects 컬렉션에서 조회 (permission-denied 예외 처리)
+            try {
+              debugPrint('   🔍 1-3. projects 조회 시도: $appId');
+              final projectDoc = await FirebaseFirestore.instance
+                  .collection('projects')
+                  .doc(appId)
+                  .get();
+
+              debugPrint('   📊 projects.exists: ${projectDoc.exists}');
+              if (projectDoc.exists) {
+                appData = projectDoc.data();
+                detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
+                debugPrint('   ✅ projects 발견! detectedProviderId: $detectedProviderId');
+                debugPrint('   📦 projectDoc.data keys: ${projectDoc.data()?.keys.toList()}');
+                AppLogger.info('✅ App details loaded from projects collection by ID', 'MissionDetailPage');
+              } else {
+                debugPrint('   ❌ 모든 컬렉션에서 appId로 미발견');
+                AppLogger.warning('❌ 모든 컬렉션에서 appId로 미발견: $appId', 'MissionDetailPage');
+              }
+            } catch (e) {
+              debugPrint('   ⚠️ projects 조회 실패 (권한 없음 또는 오류): $e');
             }
           }
         }
@@ -248,6 +305,11 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
       });
 
       // 결과 로깅 강화
+      debugPrint('🔍 [_loadAppDetails] 결과');
+      debugPrint('   ├─ appData != null: ${appData != null}');
+      debugPrint('   ├─ detectedProviderId: $detectedProviderId');
+      debugPrint('   └─ 최종 providerId getter: ${this.providerId}');
+
       if (appData != null && detectedProviderId != null) {
         AppLogger.info('🎉 providerId 조회 성공: $detectedProviderId', 'MissionDetailPage');
         AppLogger.info('📊 앱 데이터 필드: ${appData.keys.toList()}', 'MissionDetailPage');
@@ -256,7 +318,10 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
       } else {
         AppLogger.warning('⚠️ 앱 데이터는 있지만 providerId 누락 - AppId: $appId', 'MissionDetailPage');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('❌ [_loadAppDetails] 에러 발생!');
+      debugPrint('   에러: $e');
+      debugPrint('   스택: $stackTrace');
       AppLogger.error('Failed to load app details', 'MissionDetailPage', e);
     }
   }
@@ -1395,12 +1460,47 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     try {
       final missionService = MissionService();
 
+      // providerId 검증 및 조회
+      String finalProviderId = providerId;
+      if (finalProviderId.isEmpty) {
+        debugPrint('⚠️ providerId가 비어있음! missions 컬렉션에서 조회 시도');
+
+        // missions 컬렉션에서 providerId 조회
+        try {
+          final missionDoc = await FirebaseFirestore.instance
+              .collection('missions')
+              .doc(missionId)
+              .get();
+
+          if (missionDoc.exists) {
+            final missionData = missionDoc.data();
+            finalProviderId = missionData?['providerId'] ?? missionData?['createdBy'] ?? '';
+            debugPrint('✅ missions에서 providerId 조회 성공: $finalProviderId');
+          }
+        } catch (e) {
+          debugPrint('❌ missions 조회 실패: $e');
+        }
+      }
+
+      // 최종 검증
+      if (finalProviderId.isEmpty) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('공급자 정보를 찾을 수 없습니다. 관리자에게 문의하세요.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
       // 공급자 이름 가져오기
       String providerName = 'Unknown Provider';
       try {
         final providerDoc = await FirebaseFirestore.instance
             .collection('users')
-            .doc(providerId)
+            .doc(finalProviderId)
             .get();
         if (providerDoc.exists) {
           final data = providerDoc.data() as Map<String, dynamic>;
@@ -1413,7 +1513,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
       final applicationData = {
         'missionId': missionId,
         'testerId': authState.user!.uid,
-        'providerId': providerId,
+        'providerId': finalProviderId,  // 검증된 providerId 사용
         'providerName': providerName,
         'testerName': authState.user!.displayName ?? 'Unknown User',
         'testerEmail': authState.user!.email ?? '',
@@ -1435,7 +1535,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
       debugPrint('🎯 UI - 미션 신청 버튼 클릭됨! missionId: $missionId');
       debugPrint('🎯 UI - testerId: ${authState.user!.uid}');
-      debugPrint('🎯 UI - providerId: $providerId');
+      debugPrint('🎯 UI - providerId (검증 후): $finalProviderId');
 
       await missionService.applyToMission(missionId, applicationData);
 
