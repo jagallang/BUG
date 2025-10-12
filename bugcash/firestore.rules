@@ -165,8 +165,10 @@ service cloud.firestore {
                       isAdmin());
 
       // 생성: 테스터만 가능 (본인 신청만)
+      // projectId 또는 missionId 중 하나만 있어도 허용 (레거시 호환성)
       allow create: if isTester() &&
-                    validateRequiredFields(['projectId', 'testerId', 'status']) &&
+                    validateRequiredFields(['testerId', 'status']) &&
+                    (request.resource.data.keys().hasAny(['projectId', 'missionId'])) &&
                     request.resource.data.testerId == request.auth.uid &&
                     request.resource.data.status == 'pending';
 
