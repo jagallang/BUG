@@ -1,9 +1,0 @@
-# Google OAuth Client Secret Files - NEVER COMMIT
-**/client_secret_*.json
-client_secret_*.json
-bugcash_*.json
-
-# Other sensitive files
-*.key
-*.pem
-*_secrets.*

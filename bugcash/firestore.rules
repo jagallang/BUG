@@ -316,9 +316,20 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
-    // earnings 컬렉션
+    // earnings 컬렉션 (수익 데이터) - v2.105.1: 권한 세분화
     match /earnings/{earningId} {
-      allow read, write: if isAuthenticated();
+      // 읽기: 본인 수익 데이터만, 관리자는 모든 수익 조회 가능
+      allow read: if isAuthenticated() &&
+                     (request.auth.uid == resource.data.userId || isAdmin());
+
+      // 생성: 관리자만 (수익 데이터는 서버에서 생성)
+      allow create: if isAdmin();
+
+      // 수정: 관리자만 (수익 데이터 수정은 서버에서만)
+      allow update: if isAdmin();
+
+      // 삭제: 관리자만 가능
+      allow delete: if isAdmin();
     }
 
     // activities 컬렉션
