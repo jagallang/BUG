@@ -5,13 +5,49 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.111.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.111.1-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.111.1)
+
+### 🗑️ 삭제된 앱 미션 자동 필터링 (v2.111.1) - **DELETED APP MISSION FILTER**
+- **🎯 문제 해결**
+  - ✅ **참조 무결성 보장**: projects 컬렉션 기준 필터링
+  - ✅ **자동 필터링**: 삭제된 앱의 미션 자동으로 숨김
+  - ✅ **데이터 보존**: mission_workflows 삭제하지 않고 필터링만
+  - ✅ **안전성**: Repository 레이어에서 일관되게 처리
+
+- **🔍 근본 원인**
+  - **문제**: 관리자/공급자가 앱 삭제 시 `mission_workflows`는 그대로 남음
+  - **결과**: 삭제된 앱의 미션이 테스터 "진행 중" 탭에 계속 표시됨
+  - **영향**: 테스터가 클릭 시 오류 발생, 삭제 불가
+
+- **🛠️ 해결 방법**
+  - 📁 **1개 파일 수정**: `mission_repository_impl.dart` Line 44-91
+  - ✅ **필터링 로직**: `getTesterMissions()`에서 projects 존재 여부 체크
+  - ✅ **appId 정규화**: "provider_app_ABC" → "ABC" 변환 후 조회
+  - ✅ **상세 로깅**: 필터링된 미션 추적 가능
+
+- **📊 효과**
+  - ✅ **Before**: 삭제된 앱 미션도 표시 → 클릭 시 오류
+  - ✅ **After**: 삭제된 앱 미션 자동 필터링 → 유효한 미션만 표시
+
+- **🔄 로직 흐름**
+  ```
+  테스터 대시보드 → Repository.getTesterMissions()
+    → Datasource: testerId로 조회 (모든 워크플로우)
+    → Repository 필터링: FOR EACH mission
+      → appId 정규화 (provider_app_ 제거)
+      → projects/{appId} 존재 체크
+      → EXISTS? → 유효한 미션
+      → NOT EXISTS? → 필터링 (로그만)
+    → 유효한 미션만 반환 → UI 표시
+  ```
 
 ## ✨ 주요 기능 (v2.111.0)
 

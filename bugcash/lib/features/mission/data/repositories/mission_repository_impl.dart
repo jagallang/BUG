@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart'; // v2.111.1
 import '../../domain/entities/mission_workflow_entity.dart';
 import '../../domain/repositories/mission_repository.dart';
 import '../datasources/mission_remote_datasource.dart';
@@ -41,19 +42,52 @@ class MissionRepositoryImpl implements MissionRepository {
 
   @override
   Future<List<MissionWorkflowEntity>> getTesterMissions(String testerId) async {
-    final cacheKey = 'tester_$testerId';
+    // v2.111.1: 캐시 비활성화 (삭제된 앱 필터링 위해 매번 재검증 필요)
 
-    if (_cache.containsKey(cacheKey) && _cache[cacheKey]!.isValid) {
-      AppLogger.info('Cache hit: $cacheKey', 'MissionRepository');
-      return _cache[cacheKey]!.data;
+    // 1. 모든 워크플로우 조회
+    final models = await _remoteDatasource.fetchTesterMissions(testerId);
+    AppLogger.info('📦 Fetched ${models.length} missions for tester: $testerId', 'MissionRepository');
+
+    // v2.111.1: 2. 삭제된 앱의 미션 필터링
+    final validEntities = <MissionWorkflowEntity>[];
+    final firestore = FirebaseFirestore.instance;
+
+    for (final model in models) {
+      // appId 정규화: "provider_app_ABC123" → "ABC123"
+      final normalizedAppId = model.appId.replaceAll('provider_app_', '');
+
+      // projects 컬렉션에서 존재 여부 확인
+      try {
+        final projectDoc = await firestore
+            .collection('projects')
+            .doc(normalizedAppId)
+            .get();
+
+        if (projectDoc.exists) {
+          // 앱이 존재하면 리스트에 추가
+          validEntities.add(model.toEntity());
+        } else {
+          // v2.111.1: 앱이 삭제되었으면 필터링 (로그만 남김)
+          AppLogger.info(
+            '🗑️ Filtered out mission for deleted app: ${model.appName} (projectId: $normalizedAppId)',
+            'MissionRepository'
+          );
+        }
+      } catch (e) {
+        // 조회 에러 발생 시 안전하게 제외
+        AppLogger.warning(
+          'Failed to check project existence for $normalizedAppId, excluding mission: $e',
+          'MissionRepository'
+        );
+      }
     }
 
-    final models = await _remoteDatasource.fetchTesterMissions(testerId);
-    final entities = models.map((m) => m.toEntity()).toList();
+    AppLogger.info(
+      '✅ Valid missions: ${validEntities.length}/${models.length}',
+      'MissionRepository'
+    );
 
-    _cache[cacheKey] = _CachedData(entities);
-
-    return entities;
+    return validEntities;
   }
 
   @override
