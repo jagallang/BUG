@@ -1,5 +1,6 @@
 /// 지갑 관련 커스텀 Exception 클래스들
 /// 프로덕션에서 사용자 친화적인 에러 메시지 제공
+library wallet_exceptions;
 
 /// 지갑을 찾을 수 없음
 class WalletNotFoundException implements Exception {

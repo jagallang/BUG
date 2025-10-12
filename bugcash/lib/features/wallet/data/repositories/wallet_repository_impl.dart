@@ -177,7 +177,7 @@ class WalletRepositoryImpl implements WalletRepository {
 
     return snapshot.docs.fold<int>(
       0,
-      (sum, doc) => sum + ((doc.data()['amount'] as int?) ?? 0),
+      (total, doc) => total + ((doc.data()['amount'] as int?) ?? 0),
     );
   }
 

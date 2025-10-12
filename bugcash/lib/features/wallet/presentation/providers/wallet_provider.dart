@@ -44,7 +44,7 @@ final monthlyChargedProvider = StreamProvider.family<int, String>((ref, userId) 
       .map((snapshot) {
     return snapshot.docs.fold<int>(
       0,
-      (sum, doc) => sum + ((doc.data()['amount'] as int?) ?? 0),
+      (total, doc) => total + ((doc.data()['amount'] as int?) ?? 0),
     );
   });
 });
@@ -64,7 +64,7 @@ final monthlySpentProvider = StreamProvider.family<int, String>((ref, userId) {
       .map((snapshot) {
     return snapshot.docs.fold<int>(
       0,
-      (sum, doc) => sum + ((doc.data()['amount'] as int?) ?? 0),
+      (total, doc) => total + ((doc.data()['amount'] as int?) ?? 0),
     );
   });
 });
@@ -84,7 +84,7 @@ final monthlyEarnedProvider = StreamProvider.family<int, String>((ref, userId) {
       .map((snapshot) {
     return snapshot.docs.fold<int>(
       0,
-      (sum, doc) => sum + ((doc.data()['amount'] as int?) ?? 0),
+      (total, doc) => total + ((doc.data()['amount'] as int?) ?? 0),
     );
   });
 });
