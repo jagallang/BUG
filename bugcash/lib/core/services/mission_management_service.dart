@@ -379,6 +379,8 @@ class MissionManagementService {
         .collection(_dailyMissionsCollection)
         .where('appId', isEqualTo: appId)
         .where('currentState', whereIn: [
+          'approved',                 // 승인됨 (미션 시작 대기)
+          'mission_in_progress',      // 미션 진행중
           'in_progress',              // 미션 진행중
           'testing_completed',        // 테스트 완료 (승인 대기)
           'daily_mission_started',    // 레거시

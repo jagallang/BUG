@@ -563,9 +563,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             return const Center(child: CircularProgressIndicator());
           },
           loaded: (missions, isRefreshing) {
-            // v2.25.04: 진행 중 + 검토 대기 + 승인 완료 필터링
+            // v2.107.0: 진행 중 필터 확장 (approved, inProgress, testingCompleted 포함)
             final inProgressMissions = missions
-                .where((m) => m.status == MissionWorkflowStatus.inProgress)
+                .where((m) =>
+                  m.status == MissionWorkflowStatus.approved ||           // 승인됨 (시작 대기)
+                  m.status == MissionWorkflowStatus.inProgress ||         // 진행중
+                  m.status == MissionWorkflowStatus.testingCompleted      // 10분 완료 (제출 대기)
+                )
                 .toList();
 
             final reviewPendingMissions = missions
@@ -576,11 +580,19 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 .where((m) => m.status == MissionWorkflowStatus.dailyMissionApproved)
                 .toList();
 
+            // v2.107.0: 디버깅용 상세 로깅 추가
             print('✅ [MissionManagementV2] 오늘탭 State: LOADED');
             print('   ├─ 전체 미션: ${missions.length}개');
-            print('   ├─ 진행중: ${inProgressMissions.length}개');
+
+            // 각 미션의 실제 상태 출력
+            for (var mission in missions) {
+              final missionId = mission.id.length > 8 ? mission.id.substring(0, 8) : mission.id;
+              print('   │  Mission $missionId: status=${mission.status.name}');
+            }
+
+            print('   ├─ 진행중: ${inProgressMissions.length}개 (approved + inProgress + testingCompleted)');
             print('   ├─ 검토 대기: ${reviewPendingMissions.length}개');
-            print('   └─ 검토 완료: ${approvedMissions.length}개'); // v2.37.0
+            print('   └─ 검토 완료: ${approvedMissions.length}개');
 
             final totalTodayMissions = inProgressMissions.length + reviewPendingMissions.length + approvedMissions.length;
 
