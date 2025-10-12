@@ -881,6 +881,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
       // 1. 테스터 신청 정보 가져오기 (mission_workflows 에서 진행중 상태)
       // v2.24.7: daily_mission_completed, daily_mission_approved, daily_mission_rejected 추가
+      // v2.106.3: mission_in_progress 추가 (공급자 승인 후 상태)
       final missionWorkflows = await FirebaseFirestore.instance
           .collection('mission_workflows')
           .where('testerId', isEqualTo: testerId)
@@ -888,6 +889,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
             'application_submitted',
             'approved',
             'in_progress',
+            'mission_in_progress',        // v2.106.3: 공급자 승인 후 실제 저장되는 상태
             'daily_mission_completed',    // v2.24.7: 일일 미션 제출 후 검토 대기
             'daily_mission_approved',     // v2.24.7: 일일 미션 승인됨
             'daily_mission_rejected',     // v2.24.7: 일일 미션 거절됨 (재제출 필요)
