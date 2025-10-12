@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.108.2-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.108.3-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,23 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.108.2)
+## ✨ 주요 기능 (v2.108.3)
+
+### 🔧 ApplicationApproved 상태 허용 추가 (v2.108.3) - **APPLICATION_APPROVED STATE FIX**
+- **🎯 문제 해결**
+  - ✅ **Firestore "approved" 상태 허용**: applicationApproved 상태를 허용 목록에 추가
+  - ✅ **Day 1 시작 에러 해결**: "미션 시작 불가: 신청 승인 상태입니다" 에러 제거
+  - ✅ **상태 매핑 정확성**: Firestore "approved" → MissionWorkflowState.applicationApproved 지원
+
+- **📋 수정 내용**
+  - 🔄 **allowedStates 확장**: applicationApproved, missionInProgress, dailyMissionApproved
+  - 📝 **주석 개선**: 각 상태의 Firestore 값과 용도 명시
+  - ✅ **하위 호환성**: 기존 데이터 모두 정상 작동
+
+- **🔧 기술 구현**
+  - 📁 **1개 파일 수정**: mission_workflow_service.dart (Line 624-629)
+  - 🔄 **허용 상태 추가**: MissionWorkflowState.applicationApproved (Firestore "approved")
+  - ✅ **테스트 완료**: v2.108.2 에러 해결 확인
 
 ### 🔧 DailyInteractions 배열 자동 복구 (v2.108.2) - **DAILY INTERACTIONS AUTO-RECOVERY**
 - **🎯 문제 해결**

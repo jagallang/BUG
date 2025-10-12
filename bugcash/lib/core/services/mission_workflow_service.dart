@@ -621,10 +621,11 @@ class MissionWorkflowService {
         );
       }
 
-      // v2.108.1: 초기 승인 상태(missionInProgress) 또는 일일 미션 승인 상태 허용
+      // v2.108.3: 신청 승인 상태 포함 (Firestore "approved" → applicationApproved)
       final allowedStates = [
-        MissionWorkflowState.missionInProgress,     // 신청 승인 직후 (Day 1 시작용)
-        MissionWorkflowState.dailyMissionApproved,  // 일일 미션 승인 후 (Day 2+ 시작용)
+        MissionWorkflowState.applicationApproved,   // Firestore "approved" (Day 1 시작용)
+        MissionWorkflowState.missionInProgress,     // "mission_in_progress" (Day 1 시작용)
+        MissionWorkflowState.dailyMissionApproved,  // "daily_mission_approved" (Day 2+ 시작용)
       ];
 
       if (!allowedStates.contains(workflow.currentState)) {
