@@ -19,7 +19,7 @@ class MissionWorkflowEntity extends Equatable {
   final String experience;
   final String motivation;
   final int totalDays;
-  final int dailyReward;
+  final int? dailyReward; // v2.112.0: Nullable (Deprecated - 하위 호환성 유지)
   final int completedDays;
   final List<DailyMissionInteractionEntity> dailyInteractions; // v2.16.0
 
@@ -40,7 +40,7 @@ class MissionWorkflowEntity extends Equatable {
     required this.experience,
     required this.motivation,
     this.totalDays = 10,  // v2.18.0: 14 → 10 (권장 기본값)
-    this.dailyReward = 5000,
+    this.dailyReward, // v2.112.0: Optional (기존 데이터 호환성)
     this.completedDays = 0,
     this.dailyInteractions = const [], // v2.16.0
   });
@@ -57,8 +57,10 @@ class MissionWorkflowEntity extends Equatable {
   /// 완료율 계산
   double get completionRate => totalDays > 0 ? completedDays / totalDays : 0.0;
 
-  /// 예상 총 보상 계산
-  int get estimatedTotalReward => dailyReward * totalDays;
+  /// v2.112.0: 예상 총 보상 계산 - 최종 포인트는 projects에서 조회 필요
+  /// 일일 보상은 더 이상 사용하지 않음 (하위 호환성만 유지)
+  @Deprecated('Use finalCompletionPoints from projects collection instead')
+  int get estimatedTotalReward => 0; // v2.112.0: 항상 0 반환
 
   /// v2.16.0: 특정 Day가 활성화되었는지 확인 (제출 가능 여부)
   /// Day 1은 항상 활성화, 이후 Day는 이전 Day 승인 시 활성화
@@ -292,9 +294,9 @@ class DailyMissionInteractionEntity extends Equatable {
   final String? providerFeedback;
   final int? providerRating;
 
-  // 리워드
-  final int dailyReward;
-  final bool rewardPaid;
+  // v2.112.0: 리워드 필드 Deprecated (하위 호환성만 유지)
+  final int? dailyReward;
+  final bool? rewardPaid;
   final DateTime? rewardPaidAt;
 
   const DailyMissionInteractionEntity({
@@ -311,8 +313,8 @@ class DailyMissionInteractionEntity extends Equatable {
     this.providerApprovedAt,
     this.providerFeedback,
     this.providerRating,
-    this.dailyReward = 5000,
-    this.rewardPaid = false,
+    this.dailyReward, // v2.112.0: Optional
+    this.rewardPaid, // v2.112.0: Optional
     this.rewardPaidAt,
   });
 

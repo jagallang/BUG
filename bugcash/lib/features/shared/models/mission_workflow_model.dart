@@ -67,9 +67,9 @@ class DailyMissionInteraction {
   final String? providerFeedback;
   final int? providerRating;
 
-  // 리워드
-  final int dailyReward;
-  final bool rewardPaid;
+  // v2.112.0: 리워드 필드 Deprecated (하위 호환성만 유지)
+  final int? dailyReward;
+  final bool? rewardPaid;
   final DateTime? rewardPaidAt;
 
   const DailyMissionInteraction({
@@ -90,8 +90,8 @@ class DailyMissionInteraction {
     this.providerApprovedAt,
     this.providerFeedback,
     this.providerRating,
-    this.dailyReward = 5000,
-    this.rewardPaid = false,
+    this.dailyReward, // v2.112.0: Optional
+    this.rewardPaid, // v2.112.0: Optional
     this.rewardPaidAt,
   });
 
@@ -115,8 +115,8 @@ class DailyMissionInteraction {
       providerApprovedAt: (data['providerApprovedAt'] as Timestamp?)?.toDate(),
       providerFeedback: data['providerFeedback'],
       providerRating: data['providerRating'],
-      dailyReward: data['dailyReward'] ?? 5000,
-      rewardPaid: data['rewardPaid'] ?? false,
+      dailyReward: data['dailyReward'], // v2.112.0: Nullable
+      rewardPaid: data['rewardPaid'], // v2.112.0: Nullable
       rewardPaidAt: (data['rewardPaidAt'] as Timestamp?)?.toDate(),
     );
   }
