@@ -1623,6 +1623,9 @@ exports.depositToEscrow = onCall({
           appName: appName,
           escrowType: "deposit",
           ...breakdown,
+          // v2.112.0: 리워드 시스템 버전 정보 추가
+          rewardSystemVersion: "2.0",
+          dailyRewardsEnabled: false,
         },
         createdAt: FieldValue.serverTimestamp(),
         completedAt: FieldValue.serverTimestamp(),
@@ -1659,7 +1662,12 @@ exports.depositToEscrow = onCall({
         remainingAmount: amount,
         spentAmount: 0,
         status: "active",
-        breakdown: breakdown || {},
+        breakdown: {
+          ...(breakdown || {}),
+          // v2.112.0: 리워드 시스템 버전 정보
+          rewardSystemVersion: "2.0",
+          dailyRewardsEnabled: false,
+        },
         transactions: [
           {
             type: "deposit",
@@ -1742,6 +1750,28 @@ exports.payoutFromEscrow = onCall({
       const holdingDoc = holdingsSnapshot.docs[0];
       const holdingRef = holdingDoc.ref;
       const holding = holdingDoc.data();
+
+      // v2.112.0: 리워드 시스템 버전 체크 - 일일 포인트 지급 차단
+      const rewardSystemVersion = holding.breakdown?.rewardSystemVersion || "1.0";
+      const rewardType = metadata?.rewardType;
+
+      if (rewardSystemVersion === "2.0") {
+        // 신규 시스템: 최종 완료 포인트만 허용
+        if (rewardType !== "final") {
+          throw new HttpsError(
+              "failed-precondition",
+              "v2.112.0: Daily rewards are disabled. Only final completion rewards are allowed.",
+          );
+        }
+
+        // 최종 완료 여부 확인
+        if (!metadata?.allDaysCompleted) {
+          throw new HttpsError(
+              "failed-precondition",
+              "Final reward can only be paid when all days are completed.",
+          );
+        }
+      }
 
       // 2. 에스크로 잔액 확인
       if (holding.remainingAmount < amount) {
