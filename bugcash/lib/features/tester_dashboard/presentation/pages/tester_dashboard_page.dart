@@ -1204,10 +1204,12 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 onDelete: mission.status != DailyMissionStatus.approved
                     ? () => _deleteMissionEnhanced(mission)
                     : null,
-                // v2.24.1: 시작 버튼 (in_progress 상태에서만 시작 가능)
-                // approved 상태에서는 공급자가 "미션만들기"를 해야 함
-                onStart: (mission.currentState == 'in_progress') &&
-                         mission.startedAt == null
+                // v2.106.5: 시작 버튼 (approved, mission_in_progress, in_progress 상태에서 시작 가능)
+                onStart: ((mission.currentState == 'approved' ||
+                          mission.currentState == 'application_approved' ||
+                          mission.currentState == 'mission_in_progress' ||
+                          mission.currentState == 'in_progress') &&
+                         mission.startedAt == null)
                     ? () => _startMission(mission)
                     : null,
                 // v2.8.9: 완료 버튼 (시간 기반 체크 - 10분 경과 여부)

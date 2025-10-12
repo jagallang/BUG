@@ -35,165 +35,172 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: widget.onTap,
-      borderRadius: BorderRadius.circular(16.r),
-      child: Padding(
-        padding: EdgeInsets.all(16.w),
-        child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // v2.10.0: 일련번호 표시 (있는 경우)
-              if (widget.mission.serialNumber != null) ...[
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(6.r),
-                  ),
-                  child: Text(
-                    widget.mission.serialNumber!,
-                    style: TextStyle(
-                      fontSize: 11.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade700,
-                      fontFamily: 'monospace',
+    // v2.106.5: 버튼 클릭 영역 분리 - 정보 영역만 InkWell로 감쌈
+    return Padding(
+      padding: EdgeInsets.all(16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // v2.106.5: 정보 영역 (클릭 시 미션진행상황 페이지로 이동)
+          InkWell(
+            onTap: widget.onTap,
+            borderRadius: BorderRadius.circular(12.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // v2.10.0: 일련번호 표시 (있는 경우)
+                if (widget.mission.serialNumber != null) ...[
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(6.r),
                     ),
-                  ),
-                ),
-                SizedBox(height: 8.h),
-              ],
-
-              // 헤더: 타이틀과 상태 배지
-              Row(
-                children: [
-                  Expanded(
                     child: Text(
-                      widget.mission.missionTitle,
+                      widget.mission.serialNumber!,
                       style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        fontSize: 11.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade700,
+                        fontFamily: 'monospace',
                       ),
                     ),
                   ),
-                  SizedBox(width: 8.w),
-                  MissionStatusBadge(
-                    status: widget.mission.status,
-                    isLarge: true,
-                  ),
+                  SizedBox(height: 8.h),
                 ],
-              ),
 
-              SizedBox(height: 12.h),
-
-              // 미션 설명
-              Text(
-                widget.mission.missionDescription,
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-
-              SizedBox(height: 12.h),
-
-              // 미션 정보
-              Row(
-                children: [
-                  Icon(
-                    Icons.date_range,
-                    size: 16.sp,
-                    color: AppColors.textSecondary,
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    _formatDate(widget.mission.missionDate),
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  SizedBox(width: 16.w),
-                  Icon(
-                    Icons.monetization_on,
-                    size: 16.sp,
-                    color: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
-                  ),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '${widget.mission.baseReward.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
-                    style: TextStyle(
-                      fontSize: 12.sp,
-                      color: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-
-              // 거절 사유 표시 (거절된 경우)
-              if (widget.mission.status == DailyMissionStatus.rejected && widget.mission.reviewNote != null) ...[
-                SizedBox(height: 12.h),
-                Container(
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(
-                      color: Colors.red.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 16.sp,
-                            color: Colors.red,
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            '거절 사유',
-                            style: TextStyle(
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4.h),
-                      Text(
-                        widget.mission.reviewNote!,
+                // 헤더: 타이틀과 상태 배지
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        widget.mission.missionTitle,
                         style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.red[700],
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    SizedBox(width: 8.w),
+                    MissionStatusBadge(
+                      status: widget.mission.status,
+                      isLarge: true,
+                    ),
+                  ],
                 ),
+
+                SizedBox(height: 12.h),
+
+                // 미션 설명
+                Text(
+                  widget.mission.missionDescription,
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+
+                SizedBox(height: 12.h),
+
+                // 미션 정보
+                Row(
+                  children: [
+                    Icon(
+                      Icons.date_range,
+                      size: 16.sp,
+                      color: AppColors.textSecondary,
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      _formatDate(widget.mission.missionDate),
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    SizedBox(width: 16.w),
+                    Icon(
+                      Icons.monetization_on,
+                      size: 16.sp,
+                      color: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
+                    ),
+                    SizedBox(width: 4.w),
+                    Text(
+                      '${widget.mission.baseReward.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        color: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // 거절 사유 표시 (거절된 경우)
+                if (widget.mission.status == DailyMissionStatus.rejected && widget.mission.reviewNote != null) ...[
+                  SizedBox(height: 12.h),
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: Colors.red.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 16.sp,
+                              color: Colors.red,
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              '거절 사유',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 4.h),
+                        Text(
+                          widget.mission.reviewNote!,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Colors.red[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
-
-              SizedBox(height: 16.h),
-
-              // 액션 버튼
-              _buildActionButton(),
-            ],
+            ),
           ),
-        ),
-      ).withUserTypeCard(
-        userType: 'tester',
-        borderRadius: 16.r,
-        withHover: true,
-      );
+
+          SizedBox(height: 16.h),
+
+          // v2.106.5: 액션 버튼 영역 (InkWell 밖에 배치 - 독립적인 클릭 영역)
+          _buildActionButton(),
+        ],
+      ),
+    ).withUserTypeCard(
+      userType: 'tester',
+      borderRadius: 16.r,
+      withHover: true,
+    );
   }
 
   Widget _buildActionButton() {

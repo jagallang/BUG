@@ -285,9 +285,10 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
         }
 
         final workflows = snapshot.data ?? [];
+        // v2.106.5: 진행중 미션 필터링 (applicationApproved 제거, inProgress 추가)
         final activeMissions = workflows.where((w) =>
-          w.currentState == MissionWorkflowState.applicationApproved ||
           w.currentState == MissionWorkflowState.missionInProgress ||
+          w.currentState == MissionWorkflowState.inProgress ||
           w.currentState == MissionWorkflowState.dailyMissionStarted ||
           w.currentState == MissionWorkflowState.dailyMissionCompleted ||
           w.currentState == MissionWorkflowState.dailyMissionApproved
