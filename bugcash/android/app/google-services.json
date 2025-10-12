@@ -1,0 +1,95 @@
+{
+  "project_info": {
+    "project_number": "335851774651",
+    "project_id": "bugcash",
+    "storage_bucket": "bugcash.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:335851774651:android:ac5c384518b6e6830abf9e",
+        "android_client_info": {
+          "package_name": "com.bugcash"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0hLevMSRKZpoMaF4Sb_YgvR7ED1VR6Xo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:335851774651:android:9c485dd2a5f436ef0abf9e",
+        "android_client_info": {
+          "package_name": "com.bugcash.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "810712240857-b6vg07h8benuohkatmue5ec63p81g2ba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bugcash.app",
+            "certificate_hash": "0886ea24e15b7acdb6e1b8a03c8828e0c907ad85"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0hLevMSRKZpoMaF4Sb_YgvR7ED1VR6Xo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "810712240857-1r76sh9fa1rd877esdd4m69t82s8qsmk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:335851774651:android:3e9ba833d14e2f400abf9e",
+        "android_client_info": {
+          "package_name": "com.bugcash.app.debug"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "810712240857-b6vg07h8benuohkatmue5ec63p81g2ba.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.bugcash.app.debug",
+            "certificate_hash": "0886ea24e15b7acdb6e1b8a03c8828e0c907ad85"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA0hLevMSRKZpoMaF4Sb_YgvR7ED1VR6Xo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "810712240857-1r76sh9fa1rd877esdd4m69t82s8qsmk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,84 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Firebase configuration files
+# Note: firebase_options.dart is now managed by FlutterFire CLI and should be committed
+# Only exclude google-services.json and GoogleService-Info.plist if they contain sensitive info
+# android/app/google-services.json
+# ios/Runner/GoogleService-Info.plist
+
+# Environment files - contains sensitive API keys
+.env
+.env.*
+!.env.example
+
+# API Keys and sensitive configuration
+# Uncomment these lines if you have local config files with real API keys
+# lib/config/api_keys.dart
+# android/app/google-services.json
+# ios/Runner/GoogleService-Info.plist
+# web/firebase-config.js
+
+# Firebase tools
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# Security - Never commit these if they contain real keys
+**/secrets/
+**/*_secrets.*
+**/*.key
+**/*.pem
+
+# Firebase Service Account Keys - NEVER COMMIT
+*firebase-adminsdk*.json
+bugcash-firebase-adminsdk.json
+credentials/
+service-account*.json
+
+# Google OAuth Client Secret Files - NEVER COMMIT
+**/client_secret_*.json
+client_secret_*.json

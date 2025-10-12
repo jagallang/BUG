@@ -1,0 +1,321 @@
+[debug] [2025-10-02T02:36:27.704Z] ----------------------------------------------------------------------
+[debug] [2025-10-02T02:36:27.706Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy
+[debug] [2025-10-02T02:36:27.706Z] CLI Version:   14.7.0
+[debug] [2025-10-02T02:36:27.707Z] Platform:      darwin
+[debug] [2025-10-02T02:36:27.707Z] Node Version:  v20.19.2
+[debug] [2025-10-02T02:36:27.707Z] Time:          Thu Oct 02 2025 11:36:27 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-02T02:36:27.707Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-03T00:09:28.950Z] ----------------------------------------------------------------------
+[debug] [2025-10-03T00:09:28.956Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-03T00:09:28.956Z] CLI Version:   14.7.0
+[debug] [2025-10-03T00:09:28.956Z] Platform:      darwin
+[debug] [2025-10-03T00:09:28.956Z] Node Version:  v20.19.2
+[debug] [2025-10-03T00:09:28.957Z] Time:          Fri Oct 03 2025 09:09:28 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-03T00:09:28.957Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-03T00:09:35.201Z] ----------------------------------------------------------------------
+[debug] [2025-10-03T00:09:35.203Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-03T00:09:35.204Z] CLI Version:   14.7.0
+[debug] [2025-10-03T00:09:35.204Z] Platform:      darwin
+[debug] [2025-10-03T00:09:35.204Z] Node Version:  v20.19.2
+[debug] [2025-10-03T00:09:35.204Z] Time:          Fri Oct 03 2025 09:09:35 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-03T00:09:35.205Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-03T07:13:50.434Z] ----------------------------------------------------------------------
+[debug] [2025-10-03T07:13:50.440Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-03T07:13:50.440Z] CLI Version:   14.7.0
+[debug] [2025-10-03T07:13:50.440Z] Platform:      darwin
+[debug] [2025-10-03T07:13:50.440Z] Node Version:  v20.19.2
+[debug] [2025-10-03T07:13:50.440Z] Time:          Fri Oct 03 2025 16:13:50 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-03T07:13:50.441Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-03T09:33:51.589Z] ----------------------------------------------------------------------
+[debug] [2025-10-03T09:33:51.595Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-03T09:33:51.595Z] CLI Version:   14.7.0
+[debug] [2025-10-03T09:33:51.595Z] Platform:      darwin
+[debug] [2025-10-03T09:33:51.595Z] Node Version:  v20.19.2
+[debug] [2025-10-03T09:33:51.595Z] Time:          Fri Oct 03 2025 18:33:51 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-03T09:33:51.595Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-04T05:57:35.634Z] ----------------------------------------------------------------------
+[debug] [2025-10-04T05:57:35.640Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase projects:list
+[debug] [2025-10-04T05:57:35.640Z] CLI Version:   14.7.0
+[debug] [2025-10-04T05:57:35.640Z] Platform:      darwin
+[debug] [2025-10-04T05:57:35.641Z] Node Version:  v20.19.2
+[debug] [2025-10-04T05:57:35.641Z] Time:          Sat Oct 04 2025 14:57:35 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-04T05:57:35.641Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-10-04T05:57:35.644Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-04T05:57:35.645Z] > authorizing via signed-in user (episode0611@gmail.com)
+[debug] [2025-10-04T05:57:35.647Z] Checked if tokens are valid: true, expires at: 1759559958523
+[debug] [2025-10-04T05:57:35.647Z] Checked if tokens are valid: true, expires at: 1759559958523
+[debug] [2025-10-04T05:57:35.648Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-10-04T05:57:36.570Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-10-04T05:57:36.570Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[info] ┌─────────────────────────┬─────────────────────┬────────────────┬──────────────────────┐
+│ Project Display Name    │ Project ID          │ Project Number │ Resource Location ID │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ BOOM                    │ boom-75b38          │ 74977135310    │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ BUGback                 │ bugback-25be0       │ 36679654731    │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ BugCash                 │ bugcash             │ 335851774651   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ CqclLandingPage         │ cqcllandingpage     │ 355226952344   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ LOAC                    │ loac-9ec81          │ 776850127990   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ mybizcard               │ mybizcard-app       │ 755217914071   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ myBizCardWeb            │ mybizcardweb        │ 682684360936   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ NewsChecker AI Platform │ newschecker-ai-2025 │ 243568933391   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ PAK-landing             │ pak-landing         │ 389211134454   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ PET-randing             │ pet-randing         │ 1014640066260  │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ REphoto                 │ rephoto-88741       │ 302804021590   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ smkidsHomePage          │ smkids-38e05        │ 427501805626   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ SmkidsLanding           │ smkidslanding       │ 119623844036   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ writing                 │ writing-c342e       │ 748612622504   │ [Not specified]      │
+└─────────────────────────┴─────────────────────┴────────────────┴──────────────────────┘
+[info] 
+[info] 14 project(s) total.
+[debug] [2025-10-04T12:53:23.827Z] ----------------------------------------------------------------------
+[debug] [2025-10-04T12:53:23.833Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-04T12:53:23.834Z] CLI Version:   14.7.0
+[debug] [2025-10-04T12:53:23.834Z] Platform:      darwin
+[debug] [2025-10-04T12:53:23.834Z] Node Version:  v20.19.2
+[debug] [2025-10-04T12:53:23.834Z] Time:          Sat Oct 04 2025 21:53:23 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-04T12:53:23.834Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-04T16:33:04.470Z] ----------------------------------------------------------------------
+[debug] [2025-10-04T16:33:04.472Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-04T16:33:04.472Z] CLI Version:   14.7.0
+[debug] [2025-10-04T16:33:04.472Z] Platform:      darwin
+[debug] [2025-10-04T16:33:04.472Z] Node Version:  v20.19.2
+[debug] [2025-10-04T16:33:04.472Z] Time:          Sun Oct 05 2025 01:33:04 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-04T16:33:04.472Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-08T12:05:30.669Z] ----------------------------------------------------------------------
+[debug] [2025-10-08T12:05:30.673Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase emulators:start --only functions,firestore,auth
+[debug] [2025-10-08T12:05:30.673Z] CLI Version:   14.7.0
+[debug] [2025-10-08T12:05:30.673Z] Platform:      darwin
+[debug] [2025-10-08T12:05:30.674Z] Node Version:  v20.19.2
+[debug] [2025-10-08T12:05:30.674Z] Time:          Wed Oct 08 2025 21:05:30 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-08T12:05:30.674Z] ----------------------------------------------------------------------
+[debug] 
+[warn] ⚠  functions: The functions emulator is configured but there is no functions source directory. Have you run firebase init functions? {"metadata":{"emulator":{"name":"functions"},"message":"The functions emulator is configured but there is no functions source directory. Have you run firebase init functions?"}}
+[debug] [2025-10-08T12:05:30.705Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-08T12:05:30.705Z] > authorizing via signed-in user (episode0611@gmail.com)
+[warn] ⚠  Could not find config (firebase.json) so using defaults. 
+[debug] [2025-10-08T12:05:30.801Z] openjdk version "17.0.14" 2025-01-21
+
+[debug] [2025-10-08T12:05:30.801Z] OpenJDK Runtime Environment Homebrew (build 17.0.14+0)
+OpenJDK 64-Bit Server VM Homebrew (build 17.0.14+0, mixed mode, sharing)
+
+[debug] [2025-10-08T12:05:30.807Z] Parsed Java major version: 17
+[info] i  emulators: Starting emulators: auth, functions, firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: auth, functions, firestore"}}
+[debug] [2025-10-08T12:05:30.936Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-08T12:05:30.936Z] [auth] Authentication Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-08T12:05:30.936Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-08T12:05:30.936Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2025-10-08T12:05:30.936Z] assigned listening specs for emulators {"user":{"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"auth":[{"address":"127.0.0.1","family":"IPv4","port":9099}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[warn] ⚠  functions: The functions emulator is configured but there is no functions source directory. Have you run firebase init functions? {"metadata":{"emulator":{"name":"functions"},"message":"The functions emulator is configured but there is no functions source directory. Have you run firebase init functions?"}}
+[warn] ⚠  firestore: Did not find a Cloud Firestore rules file specified in a firebase.json config file. {"metadata":{"emulator":{"name":"firestore"},"message":"Did not find a Cloud Firestore rules file specified in a firebase.json config file."}}
+[warn] ⚠  firestore: The emulator will default to allowing all reads and writes. Learn more about this option: https://firebase.google.com/docs/emulator-suite/install_and_configure#security_rules_configuration. {"metadata":{"emulator":{"name":"firestore"},"message":"The emulator will default to allowing all reads and writes. Learn more about this option: https://firebase.google.com/docs/emulator-suite/install_and_configure#security_rules_configuration."}}
+[debug] [2025-10-08T12:05:30.937Z] [firestore] Could not enable single_project_mode: missing projectId.
+[debug] [2025-10-08T12:05:30.939Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-10-08T12:05:30.939Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/Users/isan/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--project_id",""],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/Users/isan/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--project_id\",\"\"],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to firestore-debug.log"}}
+[debug] [2025-10-08T12:05:31.559Z] Oct 08, 2025 9:05:31 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Oct 08, 2025 9:05:31 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://127.0.0.1:9150\n"}}
+[debug] [2025-10-08T12:05:31.571Z] API endpoint: http:// {"metadata":{"emulator":{"name":"firestore"},"message":"API endpoint: http://"}}
+[debug] [2025-10-08T12:05:31.571Z] 127.0.0.1:8080
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"127.0.0.1:8080\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2025-10-08T12:05:31.755Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[info] i  emulators: Shutting down emulators. {"metadata":{"emulator":{"name":"hub"},"message":"Shutting down emulators."}}
+[info] i  firestore: Stopping Firestore Emulator {"metadata":{"emulator":{"name":"firestore"},"message":"Stopping Firestore Emulator"}}
+[debug] [2025-10-08T12:05:31.756Z] *** shutting down gRPC server since JVM is shutting down
+ {"metadata":{"emulator":{"name":"firestore"},"message":"*** shutting down gRPC server since JVM is shutting down\n"}}
+[debug] [2025-10-08T12:05:31.759Z] *** server shut down
+ {"metadata":{"emulator":{"name":"firestore"},"message":"*** server shut down\n"}}
+[debug] [2025-10-08T12:05:32.155Z] Could not find VSCode notification endpoint: FetchError: request to http://localhost:40001/vscode/notify failed, reason: . If you are not running the Firebase Data Connect VSCode extension, this is expected and not an issue.
+[error] 
+[error] Error: Cannot start the Authentication Emulator without a project: run 'firebase init' or provide the --project flag
+[debug] [2025-10-08T16:00:50.534Z] ----------------------------------------------------------------------
+[debug] [2025-10-08T16:00:50.537Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase functions:list
+[debug] [2025-10-08T16:00:50.537Z] CLI Version:   14.7.0
+[debug] [2025-10-08T16:00:50.538Z] Platform:      darwin
+[debug] [2025-10-08T16:00:50.538Z] Node Version:  v20.19.2
+[debug] [2025-10-08T16:00:50.538Z] Time:          Thu Oct 09 2025 01:00:50 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-08T16:00:50.538Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: No currently active project.
+To run this command, you need to specify a project. You have two options:
+- Run this command with --project <alias_or_project_id>.
+- Set an active project by running firebase use --add, then rerun this command.
+To list all the Firebase projects to which you have access, run firebase projects:list.
+To learn about active projects for the CLI, visit https://firebase.google.com/docs/cli#project_aliases
+
+
+[debug] [2025-10-08T16:02:07.592Z] ----------------------------------------------------------------------
+[debug] [2025-10-08T16:02:07.593Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only functions:getPlatformSettings,functions:updatePlatformSettings
+[debug] [2025-10-08T16:02:07.594Z] CLI Version:   14.7.0
+[debug] [2025-10-08T16:02:07.594Z] Platform:      darwin
+[debug] [2025-10-08T16:02:07.594Z] Node Version:  v20.19.2
+[debug] [2025-10-08T16:02:07.594Z] Time:          Thu Oct 09 2025 01:02:07 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-08T16:02:07.594Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-09T02:21:35.756Z] ----------------------------------------------------------------------
+[debug] [2025-10-09T02:21:35.762Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-09T02:21:35.762Z] CLI Version:   14.7.0
+[debug] [2025-10-09T02:21:35.762Z] Platform:      darwin
+[debug] [2025-10-09T02:21:35.762Z] Node Version:  v20.19.2
+[debug] [2025-10-09T02:21:35.762Z] Time:          Thu Oct 09 2025 11:21:35 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-09T02:21:35.762Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-09T02:21:41.715Z] ----------------------------------------------------------------------
+[debug] [2025-10-09T02:21:41.716Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-09T02:21:41.717Z] CLI Version:   14.7.0
+[debug] [2025-10-09T02:21:41.717Z] Platform:      darwin
+[debug] [2025-10-09T02:21:41.717Z] Node Version:  v20.19.2
+[debug] [2025-10-09T02:21:41.717Z] Time:          Thu Oct 09 2025 11:21:41 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-09T02:21:41.717Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-09T03:45:51.793Z] ----------------------------------------------------------------------
+[debug] [2025-10-09T03:45:51.797Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase firestore:indexes
+[debug] [2025-10-09T03:45:51.797Z] CLI Version:   14.7.0
+[debug] [2025-10-09T03:45:51.798Z] Platform:      darwin
+[debug] [2025-10-09T03:45:51.798Z] Node Version:  v20.19.2
+[debug] [2025-10-09T03:45:51.798Z] Time:          Thu Oct 09 2025 12:45:51 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-09T03:45:51.798Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: No currently active project.
+To run this command, you need to specify a project. You have two options:
+- Run this command with --project <alias_or_project_id>.
+- Set an active project by running firebase use --add, then rerun this command.
+To list all the Firebase projects to which you have access, run firebase projects:list.
+To learn about active projects for the CLI, visit https://firebase.google.com/docs/cli#project_aliases
+
+
+[debug] [2025-10-09T04:06:35.592Z] ----------------------------------------------------------------------
+[debug] [2025-10-09T04:06:35.597Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only firestore:indexes
+[debug] [2025-10-09T04:06:35.597Z] CLI Version:   14.7.0
+[debug] [2025-10-09T04:06:35.597Z] Platform:      darwin
+[debug] [2025-10-09T04:06:35.598Z] Node Version:  v20.19.2
+[debug] [2025-10-09T04:06:35.598Z] Time:          Thu Oct 09 2025 13:06:35 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-09T04:06:35.598Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-09T04:29:21.364Z] ----------------------------------------------------------------------
+[debug] [2025-10-09T04:29:21.366Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only firestore:rules
+[debug] [2025-10-09T04:29:21.366Z] CLI Version:   14.7.0
+[debug] [2025-10-09T04:29:21.366Z] Platform:      darwin
+[debug] [2025-10-09T04:29:21.366Z] Node Version:  v20.19.2
+[debug] [2025-10-09T04:29:21.366Z] Time:          Thu Oct 09 2025 13:29:21 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-09T04:29:21.367Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-09T11:43:32.947Z] ----------------------------------------------------------------------
+[debug] [2025-10-09T11:43:32.949Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only firestore:indexes
+[debug] [2025-10-09T11:43:32.950Z] CLI Version:   14.7.0
+[debug] [2025-10-09T11:43:32.950Z] Platform:      darwin
+[debug] [2025-10-09T11:43:32.950Z] Node Version:  v20.19.2
+[debug] [2025-10-09T11:43:32.950Z] Time:          Thu Oct 09 2025 20:43:32 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-09T11:43:32.950Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-11T08:46:58.878Z] ----------------------------------------------------------------------
+[debug] [2025-10-11T08:46:58.884Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy
+[debug] [2025-10-11T08:46:58.884Z] CLI Version:   14.7.0
+[debug] [2025-10-11T08:46:58.884Z] Platform:      darwin
+[debug] [2025-10-11T08:46:58.884Z] Node Version:  v20.19.2
+[debug] [2025-10-11T08:46:58.884Z] Time:          Sat Oct 11 2025 17:46:58 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-11T08:46:58.884Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-11T08:47:05.135Z] ----------------------------------------------------------------------
+[debug] [2025-10-11T08:47:05.138Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy
+[debug] [2025-10-11T08:47:05.138Z] CLI Version:   14.7.0
+[debug] [2025-10-11T08:47:05.138Z] Platform:      darwin
+[debug] [2025-10-11T08:47:05.139Z] Node Version:  v20.19.2
+[debug] [2025-10-11T08:47:05.139Z] Time:          Sat Oct 11 2025 17:47:05 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-11T08:47:05.139Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-12T06:07:45.497Z] ----------------------------------------------------------------------
+[debug] [2025-10-12T06:07:45.502Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only firestore:rules
+[debug] [2025-10-12T06:07:45.503Z] CLI Version:   14.7.0
+[debug] [2025-10-12T06:07:45.503Z] Platform:      darwin
+[debug] [2025-10-12T06:07:45.503Z] Node Version:  v20.19.2
+[debug] [2025-10-12T06:07:45.503Z] Time:          Sun Oct 12 2025 15:07:45 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-12T06:07:45.503Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-12T06:11:24.675Z] ----------------------------------------------------------------------
+[debug] [2025-10-12T06:11:24.680Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy
+[debug] [2025-10-12T06:11:24.680Z] CLI Version:   14.7.0
+[debug] [2025-10-12T06:11:24.680Z] Platform:      darwin
+[debug] [2025-10-12T06:11:24.680Z] Node Version:  v20.19.2
+[debug] [2025-10-12T06:11:24.680Z] Time:          Sun Oct 12 2025 15:11:24 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-12T06:11:24.680Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)
+[debug] [2025-10-12T06:17:35.408Z] ----------------------------------------------------------------------
+[debug] [2025-10-12T06:17:35.412Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase deploy --only hosting
+[debug] [2025-10-12T06:17:35.412Z] CLI Version:   14.7.0
+[debug] [2025-10-12T06:17:35.412Z] Platform:      darwin
+[debug] [2025-10-12T06:17:35.412Z] Node Version:  v20.19.2
+[debug] [2025-10-12T06:17:35.412Z] Time:          Sun Oct 12 2025 15:17:35 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-12T06:17:35.413Z] ----------------------------------------------------------------------
+[debug] 
+[error] 
+[error] Error: Not in a Firebase app directory (could not locate firebase.json)

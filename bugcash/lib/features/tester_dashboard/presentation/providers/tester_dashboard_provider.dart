@@ -287,6 +287,12 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   }
 
   Future<void> _loadTesterProfile(String testerId) async {
+    // v2.105.2: dispose된 경우 즉시 반환하여 Firestore 쿼리 실행 방지
+    if (_isDisposed) {
+      debugPrint('ℹ️ [INFO] Provider disposed 상태 - 프로필 로드 스킵');
+      return;
+    }
+
     try {
       // Get user profile from Firestore
       final userProfile = await CurrentUserService.getUserProfile(testerId);
@@ -370,6 +376,12 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   }
 
   Future<void> _loadMissions(String testerId) async {
+    // v2.105.2: dispose된 경우 즉시 반환하여 Firestore 쿼리 실행 방지
+    if (_isDisposed) {
+      debugPrint('ℹ️ [INFO] Provider disposed 상태 - 미션 로드 스킵');
+      return;
+    }
+
     try {
       // Use real Firestore queries instead of mock data
       final availableMissions = await _getAvailableMissionsFromFirestore();
@@ -428,6 +440,12 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
   /// v2.20.01: 테스터가 신청한 미션의 appId 목록 조회
   Future<Set<String>> _getAppliedMissionAppIds(String testerId) async {
+    // v2.105.2: dispose된 경우 즉시 반환하여 Firestore 쿼리 실행 방지
+    if (_isDisposed) {
+      debugPrint('ℹ️ [INFO] Provider disposed 상태 - 신청 미션 조회 스킵');
+      return <String>{};
+    }
+
     try {
       final appliedWorkflows = await FirebaseFirestore.instance
           .collection('mission_workflows')
@@ -456,9 +474,15 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
 
   Future<void> _loadEarningsData(String testerId) async {
+    // v2.105.2: dispose된 경우 즉시 반환하여 Firestore 쿼리 실행 방지
+    if (_isDisposed) {
+      debugPrint('ℹ️ [INFO] Provider disposed 상태 - earnings 데이터 로드 스킵');
+      return;
+    }
+
     try {
       final userId = CurrentUserService.getCurrentUserIdOrDefault();
-      
+
       // Load earnings from Firestore
       final earningsSnapshot = await FirebaseFirestore.instance
           .collection('earnings')
@@ -675,6 +699,12 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
   // PRD에 따른 새로운 projects 컬렉션 사용
   Future<List<MissionCard>> _getAvailableMissionsFromFirestore() async {
+    // v2.105.2: dispose된 경우 즉시 반환하여 Firestore 쿼리 실행 방지
+    if (_isDisposed) {
+      debugPrint('ℹ️ [INFO] Provider disposed 상태 - 이용 가능 미션 조회 스킵');
+      return <MissionCard>[];
+    }
+
     try {
       AppLogger.debug('🔍 Loading available projects from Firestore...', 'TesterDashboard');
       final missionCards = <MissionCard>[];
@@ -781,6 +811,12 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
 
   Future<List<MissionCard>> _getActiveMissionsFromFirestore(String testerId) async {
+    // v2.105.2: dispose된 경우 즉시 반환하여 Firestore 쿼리 실행 방지
+    if (_isDisposed) {
+      debugPrint('ℹ️ [INFO] Provider disposed 상태 - 활성 미션 조회 스킵');
+      return <MissionCard>[];
+    }
+
     try {
       final activeMissions = <MissionCard>[];
 
@@ -964,6 +1000,12 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   }
 
   Future<List<MissionCard>> _getCompletedMissionsFromFirestore(String testerId) async {
+    // v2.105.2: dispose된 경우 즉시 반환하여 Firestore 쿼리 실행 방지
+    if (_isDisposed) {
+      debugPrint('ℹ️ [INFO] Provider disposed 상태 - 완료 미션 조회 스킵');
+      return <MissionCard>[];
+    }
+
     try {
       debugPrint('');
       debugPrint('========================================');
@@ -1140,6 +1182,12 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   }
 
   Future<List<MissionApplicationStatus>> _getPendingApplications(String testerId) async {
+    // v2.105.2: dispose된 경우 즉시 반환하여 Firestore 쿼리 실행 방지
+    if (_isDisposed) {
+      debugPrint('ℹ️ [INFO] Provider disposed 상태 - 대기 신청 조회 스킵');
+      return <MissionApplicationStatus>[];
+    }
+
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('mission_workflows')
