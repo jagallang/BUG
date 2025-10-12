@@ -558,13 +558,25 @@ class MissionWorkflowService {
     required String providerId,
   }) async {
     try {
-      AppLogger.info('Provider $providerId activating next day mission', 'MissionWorkflow');
-
       final workflow = await getMissionWorkflow(workflowId);
 
-      // 현재 상태 확인: dailyMissionApproved 상태여야 함
-      if (workflow.currentState != MissionWorkflowState.dailyMissionApproved) {
-        throw Exception('다음 날 미션은 이전 미션 승인 후에만 시작 가능합니다 (현재 상태: ${workflow.currentState.displayName})');
+      AppLogger.info(
+        'Provider $providerId activating day ${workflow.currentDay + 1} '
+        '(current state: ${workflow.currentState.code})',
+        'MissionWorkflow'
+      );
+
+      // v2.108.1: 초기 승인 상태(missionInProgress) 또는 일일 미션 승인 상태 허용
+      final allowedStates = [
+        MissionWorkflowState.missionInProgress,     // 신청 승인 직후 (Day 1 시작용)
+        MissionWorkflowState.dailyMissionApproved,  // 일일 미션 승인 후 (Day 2+ 시작용)
+      ];
+
+      if (!allowedStates.contains(workflow.currentState)) {
+        throw Exception(
+          '미션 시작 불가: ${workflow.currentState.displayName} 상태입니다. '
+          '(승인 완료 또는 일일 미션 승인 상태여야 합니다)'
+        );
       }
 
       final nextDayNumber = workflow.currentDay + 1;
