@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.103.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.105.2-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,30 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.103.0)
+## ✨ 주요 기능 (v2.105.2)
+
+### 🔧 Permission-denied 에러 완전 제거 (v2.105.2) - **PERMISSION-DENIED ERROR ELIMINATION**
+- **🎯 문제 해결**
+  - ✅ **로그인 중 3개 FATAL_ERROR 제거**: 디버깅 쿼리 삭제로 Firestore rules 위반 해결
+  - ✅ **로그아웃 후 Uncaught 에러 제거**: StreamSubscription 에러 핸들러 추가
+  - ✅ **4개 → 0개**: 모든 permission-denied 에러 완전 제거
+
+- **📋 Phase 1: 디버깅 쿼리 제거**
+  - 🗑️ **testerId 필터 없는 쿼리 삭제**: mission_workflows 전체 조회 시도 제거
+  - 🔐 **Firestore Rules 준수**: 문서별 권한 체크 위반 해결
+  - 📊 **성능 개선**: 불필요한 쿼리 제거로 Firestore 읽기 비용 절감
+
+- **📋 Phase 2: StreamSubscription 에러 핸들러**
+  - 🎧 **6개 리스너 관리**: projects, applications, enrollments, transactions 등 명시적 관리
+  - 🛡️ **onError 핸들러 추가**: dispose 후 발생하는 permission-denied 에러 우아하게 처리
+  - ⏱️ **Race Condition 해결**: 취소 타이밍 문제로 인한 Uncaught 에러 방지
+  - 🚫 **Early Guard Clauses**: 모든 async 메서드에 _isDisposed 체크 추가
+
+- **🔧 기술 구현**
+  - 📁 **1개 파일 수정**: tester_dashboard_provider.dart (84 insertions, 58 deletions)
+  - 🔄 **dispose() 메서드 강화**: 모든 subscription.cancel()에 catchError() 추가
+  - 📊 **로그 개선**: INFO 레벨로 에러 무시 처리 명시
+  - ✅ **테스트 검증**: 로그인/로그아웃 시나리오에서 0개 에러 확인
 
 ### 🏦 관리자 에스크로 관리 탭 (v2.103.0) - **ADMIN ESCROW MANAGEMENT TAB**
 - **📊 실시간 에스크로 대시보드**
