@@ -5,13 +5,44 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.108.4-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.109.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.109.0)
+
+### 🔐 공급자 앱 삭제 권한 개선 (v2.109.0) - **PROVIDER DELETE PERMISSION FIX**
+- **🎯 문제 해결**
+  - ✅ **공급자 삭제 권한 추가**: draft 상태 프로젝트 삭제 가능
+  - ✅ **데이터 무결성 보장**: 진행 중 프로젝트는 관리자만 삭제 가능
+  - ✅ **워크플로우 정리**: 삭제 시 연관된 워크플로우 자동 정리
+  - ✅ **사용자 피드백 개선**: 상태별 상세 에러 메시지 제공
+
+- **📋 Firestore Rules 개선**
+  - 🔒 **공급자 삭제 조건**: `isProjectProvider(projectId) && resource.data.status == 'draft'`
+  - 🛡️ **관리자 삭제**: 모든 상태의 프로젝트 삭제 가능
+  - ✅ **안전성**: 테스터 참여 전(draft)만 공급자가 취소 가능
+
+- **📋 앱 삭제 로직 강화**
+  - 🚦 **상태 사전 검증**: draft가 아니면 삭제 거부 + 상세 안내
+  - 🔄 **워크플로우 체크**: `mission_workflows` 컬렉션 연관 데이터 확인
+  - 🗑️ **자동 정리**: draft 워크플로우 삭제 (데이터 일관성)
+  - 💡 **명확한 에러**: 권한 에러 시 현재 상태와 해결 방법 안내
+
+- **🔧 기술 구현**
+  - 📁 **2개 파일 수정**: firestore.rules, app_management_page.dart
+  - 🔐 **Rules 수정**: Line 153-158 (공급자 draft 삭제 허용)
+  - 🛠️ **삭제 함수 개선**: 70줄 추가 (상태 체크 + 워크플로우 정리)
+  - 📝 **헬퍼 함수**: `_getStatusDisplayName()` 추가 (상태 한글명 변환)
+
+- **⚠️ 주의사항**
+  - **draft 상태만**: 공급자는 draft 상태 앱만 삭제 가능
+  - **진행 중 프로젝트**: pending/open/closed 상태는 관리자에게 문의
+  - **에스크로 환불**: draft 삭제 시 예치금 환불 처리 필요 (향후 구현)
 
 ## ✨ 주요 기능 (v2.108.4)
 

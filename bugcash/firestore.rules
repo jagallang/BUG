@@ -150,8 +150,12 @@ service cloud.firestore {
                     // 상태 변경 차단 (Cloud Functions에서만 가능)
                     !('status' in request.resource.data.diff(resource.data).affectedKeys());
 
-      // 삭제: 관리자만 가능
-      allow delete: if isAdmin();
+      // v2.109.0: 삭제 권한 개선
+      // - 공급자: 자신의 draft 상태 프로젝트만 삭제 가능 (테스터 참여 전)
+      // - 관리자: 모든 상태의 프로젝트 삭제 가능
+      allow delete: if (isProjectProvider(projectId) &&
+                       resource.data.status == 'draft') ||
+                      isAdmin();
     }
 
     // ==============================================

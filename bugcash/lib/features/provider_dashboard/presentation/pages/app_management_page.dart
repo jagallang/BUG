@@ -1788,13 +1788,57 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     }
   }
 
-  /// 앱 삭제 실행
+  /// v2.109.0: 앱 삭제 실행 (워크플로우 체크 추가)
   Future<void> _deleteApp(ProviderAppModel app) async {
     try {
+      // v2.109.0: draft 상태가 아니면 삭제 불가
+      if (app.status != 'draft') {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '삭제 불가: "${_getStatusDisplayName(app.status)}" 상태\n\n'
+                'draft 상태의 앱만 삭제할 수 있습니다.\n'
+                '진행 중인 프로젝트는 관리자에게 문의하세요.'
+              ),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 5),
+            ),
+          );
+        }
+        return;
+      }
+
+      // v2.109.0: 연관된 워크플로우 확인
+      final workflowQuery = await FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .where('projectId', isEqualTo: app.id)
+          .get();
+
+      // 워크플로우가 있으면 경고 (draft인데 워크플로우가 있는 경우 정리)
+      if (workflowQuery.docs.isNotEmpty) {
+        AppLogger.warning(
+          'Found ${workflowQuery.docs.length} workflows for draft project ${app.id}, will clean up',
+          'AppManagement'
+        );
+      }
+
+      // v2.109.0: 프로젝트 삭제 (Firestore rules에서 draft 체크)
       await FirebaseFirestore.instance
           .collection('projects')
           .doc(app.id)
           .delete();
+
+      // v2.109.0: draft 상태 워크플로우 정리
+      for (var doc in workflowQuery.docs) {
+        try {
+          await doc.reference.delete();
+          AppLogger.info('Deleted workflow ${doc.id} for project ${app.id}', 'AppManagement');
+        } catch (e) {
+          AppLogger.warning('Failed to delete workflow ${doc.id}: $e', 'AppManagement');
+          // 워크플로우 삭제 실패는 무시 (프로젝트는 이미 삭제됨)
+        }
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1810,13 +1854,36 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     } catch (e) {
       AppLogger.error('Failed to delete app', e.toString());
       if (mounted) {
+        String errorMessage = '앱 삭제에 실패했습니다';
+
+        // v2.109.0: Firestore 권한 에러 감지
+        if (e.toString().contains('PERMISSION_DENIED') ||
+            e.toString().contains('permission-denied')) {
+          errorMessage = '삭제 권한이 없습니다\n\n'
+                        'draft 상태의 앱만 삭제할 수 있습니다.\n'
+                        '현재 상태: ${_getStatusDisplayName(app.status)}';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('앱 삭제에 실패했습니다'),
+          SnackBar(
+            content: Text(errorMessage),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
+    }
+  }
+
+  /// v2.109.0: 상태 표시명 반환
+  String _getStatusDisplayName(String status) {
+    switch (status) {
+      case 'draft': return '접수 대기';
+      case 'pending': return '검수 중';
+      case 'open': return '모집 중';
+      case 'closed': return '완료';
+      case 'rejected': return '거부';
+      default: return status;
     }
   }
 
