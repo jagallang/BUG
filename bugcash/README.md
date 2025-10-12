@@ -5,13 +5,36 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.110.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.110.1-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.110.1)
+
+### 🐛 테스터 대시보드 미션 카드 표시 문제 해결 (v2.110.1) - **MISSION CARD FIX**
+- **🎯 문제 해결**
+  - ✅ **상태 매핑 누락 수정**: `'mission_in_progress'` enum 변환 추가
+  - ✅ **진행 중 탭 정상화**: 승인된 미션이 테스터 대시보드에 표시됨
+  - ✅ **데이터 무결성**: 기존 워크플로우 로직 보존
+
+- **🔍 근본 원인**
+  - **문제**: `MissionWorkflowService`는 승인 시 `currentState = 'mission_in_progress'` 설정
+  - **누락**: `MissionWorkflowEntity.fromFirestoreString()`에 해당 케이스 없음
+  - **결과**: default case로 `applicationSubmitted`로 변환 → UI 필터링에서 제외
+
+- **🛠️ 해결 방법**
+  - 📁 **1개 파일 수정**: `mission_workflow_entity.dart` Line 226-227
+  - ✅ **case 추가**: `'mission_in_progress'` → `MissionWorkflowStatus.inProgress`
+  - 🎯 **최소 침습적 수정**: UI/워크플로우 로직 변경 없이 파싱만 수정
+
+- **📊 영향 범위**
+  - ✅ 공급자 미션 승인 후 테스터 대시보드 즉시 반영
+  - ✅ v2.109.0 Day 1 자동 생성 로직 정상 작동
+  - ✅ Clean Architecture Provider 정상 필터링
 
 ## ✨ 주요 기능 (v2.110.0)
 
