@@ -242,7 +242,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 value: _rememberMe,
                                 onChanged: (value) => setState(() => _rememberMe = value ?? false),
                               ),
-                              Flexible(
+                              const Flexible(
                                 child: Text(
                                   '로그인 상태 유지',
                                   overflow: TextOverflow.ellipsis,

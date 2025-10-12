@@ -64,7 +64,7 @@ class WithdrawalDetailDialog extends StatelessWidget {
                       valueColor: Colors.red,
                     ),
                     SizedBox(height: 8.h),
-                    Divider(),
+                    const Divider(),
                     SizedBox(height: 8.h),
                     _buildDetailRow(
                       '실 수령액',

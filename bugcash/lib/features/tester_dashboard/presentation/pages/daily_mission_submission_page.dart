@@ -283,7 +283,7 @@ class _DailyMissionSubmissionPageState
         elevation: 0,
       ),
       body: _isLoadingQuestions
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : Form(
               key: _formKey,
               child: SingleChildScrollView(
@@ -456,7 +456,7 @@ class _DailyMissionSubmissionPageState
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

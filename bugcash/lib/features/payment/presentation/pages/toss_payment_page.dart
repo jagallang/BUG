@@ -138,7 +138,7 @@ class _TossPaymentPageState extends ConsumerState<TossPaymentPage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => PaymentSuccessPage(
+              builder: (context) => const PaymentSuccessPage(
                 payment: null, // TODO: Payment 모델이 필요한 경우 수정
               ),
             ),

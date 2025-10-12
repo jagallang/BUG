@@ -98,7 +98,7 @@ class _RoleSelectionPageState extends ConsumerState<RoleSelectionPage> {
                   padding: const EdgeInsets.only(bottom: 12.0),
                   child: _buildRoleCard(role),
                 );
-              }).toList(),
+              }),
 
               const SizedBox(height: 32),
 

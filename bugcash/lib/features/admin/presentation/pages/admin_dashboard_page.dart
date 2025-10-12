@@ -59,7 +59,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         Navigator.of(context).pushReplacementNamed('/login');
       });
       return const Scaffold(
-        body: const BugCashLoadingWidget(
+        body: BugCashLoadingWidget(
           message: '관리자 대시보드를 불러오는 중...',
         ),
       );
@@ -202,7 +202,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   Widget _buildNavItem(int index, IconData icon, String title, String subtitle) {
     final isSelected = _selectedIndex == index;
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: isSelected ? Colors.deepPurple : null,
         borderRadius: BorderRadius.circular(8),
@@ -241,20 +241,20 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 1. Dashboard Tab - 요약 통계
   Widget _buildDashboardTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
+      padding: const EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Dashboard - 플랫폼 현황',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // 실시간 요약 카드들
           _buildRealTimeSummaryCards(),
 
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // 최근 활동 & 그래프 영역
           Row(
@@ -264,7 +264,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 flex: 2,
                 child: _buildRecentActivityPanel(),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: _buildQuickActions(),
               ),
@@ -278,18 +278,18 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 2. Projects Tab - 프로젝트 검수/관리
   Widget _buildProjectsTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
+      padding: const EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Projects - 프로젝트 검수',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               // v2.89.0: 향상된 필터 UI
               Row(
                 children: [
@@ -298,7 +298,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     icon: Icon(_showProjectFilters ? Icons.filter_list_off : Icons.filter_list),
                     label: Text(_showProjectFilters ? '필터 숨기기' : '필터 표시'),
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   if (_hasActiveProjectFilters()) ...[
                     OutlinedButton.icon(
                       onPressed: _resetProjectFilters,
@@ -308,7 +308,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                         foregroundColor: Colors.orange,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                   ],
                   OutlinedButton.icon(
                     onPressed: () => setState(() {}),
@@ -319,12 +319,12 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               ),
               // v2.89.0: 필터 섹션 (접기/펼치기)
               if (_showProjectFilters) ...[
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 _buildProjectFilterSection(),
               ],
             ],
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // 프로젝트 상태별 탭
           DefaultTabController(
@@ -340,7 +340,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     Tab(text: '전체'),
                   ],
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 SizedBox(
                   height: 600,
                   child: TabBarView(
@@ -473,7 +473,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: AppColors.adminPrimary,
               onPrimary: Colors.white,
             ),
@@ -497,7 +497,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: AppColors.adminPrimary,
               onPrimary: Colors.white,
             ),
@@ -529,7 +529,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ),
         child: Text(
           label,
-          style: TextStyle(fontSize: 11), // v2.90.1: 텍스트 크기 60% 축소
+          style: const TextStyle(fontSize: 11), // v2.90.1: 텍스트 크기 60% 축소
         ),
       ),
     );
@@ -699,20 +699,20 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 3. Users Tab - 사용자 관리
   Widget _buildUsersTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
+      padding: const EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Users - 사용자 관리',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // 실시간 사용자 통계
           _buildRealTimeUserStats(),
 
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // 사용자 목록
           _buildUsersTable(),
@@ -729,20 +729,20 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
+            padding: const EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Finance - 포인트 & 수익 관리',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // v2.69.0: 금융 요약 (실시간 데이터)
                 _buildFinanceSummaryCards(),
 
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // 출금 관리 바로가기 버튼
                 SizedBox(
@@ -754,12 +754,12 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                     ),
                   ),
                 ),
 
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // 서브탭 (전체/충전/지급)
                 TabBar(
@@ -807,13 +807,13 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // v2.68.0: 거래 내역 콘텐츠 (탭별)
   Widget _buildTransactionContent(String tabType) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
+      padding: const EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 필터 UI
           _buildTransactionFilters(tabType),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           // 거래 내역 테이블
           _buildTransactionsTable(tabType),
         ],
@@ -824,7 +824,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // v2.68.0: 거래 내역 필터 UI
   Widget _buildTransactionFilters(String tabType) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -840,11 +840,11 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             '필터',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
 
           // v2.70.0: 빠른 날짜 필터 버튼
           Wrap(
@@ -859,7 +859,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               _buildQuickFilterChip('전체', 'all'),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -869,9 +869,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 width: 120,
                 child: DropdownButtonFormField<String>(
                   value: _transactionsFilterStatus,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: '상태',
-                    border: const OutlineInputBorder(),
+                    border: OutlineInputBorder(),
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                     isDense: true,
                   ),
@@ -890,7 +890,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   },
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               // 날짜 범위 - 더 컴팩트하게
               InkWell(
                 onTap: () async {
@@ -908,7 +908,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   }
                 },
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey[400]!),
                     borderRadius: BorderRadius.circular(4),
@@ -917,17 +917,17 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.calendar_today, size: 16, color: Colors.grey[700]),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         '${_transactionsStartDate.year}-${_transactionsStartDate.month.toString().padLeft(2, '0')}-${_transactionsStartDate.day.toString().padLeft(2, '0')}',
-                        style: TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 13),
                       ),
                     ],
                   ),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: Text('~', style: TextStyle(fontSize: 14, color: Colors.grey[600])),
               ),
               InkWell(
@@ -946,7 +946,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   }
                 },
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey[400]!),
                     borderRadius: BorderRadius.circular(4),
@@ -955,16 +955,16 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.calendar_today, size: 16, color: Colors.grey[700]),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Text(
                         '${_transactionsEndDate.year}-${_transactionsEndDate.month.toString().padLeft(2, '0')}-${_transactionsEndDate.day.toString().padLeft(2, '0')}',
-                        style: TextStyle(fontSize: 13),
+                        style: const TextStyle(fontSize: 13),
                       ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               // 필터 초기화 버튼 - 아이콘만
               IconButton(
                 onPressed: () {
@@ -991,28 +991,28 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 5. Reports Tab - 신고 처리
   Widget _buildReportsTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
+      padding: const EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Reports - 신고 처리',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // 신고 요약
           Row(
             children: [
               Expanded(child: _buildReportStatsCard('대기중', '12건', Colors.orange)),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildReportStatsCard('처리완료', '156건', Colors.green)),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildReportStatsCard('이번 달', '23건', Colors.blue)),
             ],
           ),
 
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // 신고 목록
           _buildReportsTable(),
@@ -1024,19 +1024,19 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 6. Settings Tab - 플랫폼 설정
   Widget _buildSettingsTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
+      padding: const EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Settings - 플랫폼 설정',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // 플랫폼 설정 관리 버튼
           Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [Colors.deepPurple, Colors.purple.shade400],
@@ -1056,19 +1056,19 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             child: Row(
               children: [
                 Container(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.tune, color: Colors.white, size: 32),
+                  child: const Icon(Icons.tune, color: Colors.white, size: 32),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         '플랫폼 설정 관리',
                         style: TextStyle(
                           fontSize: 18,
@@ -1076,7 +1076,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                           color: Colors.white,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         '보상, 출금, 수수료, 어뷰징 방지 등 모든 설정을 관리합니다',
                         style: TextStyle(
@@ -1087,7 +1087,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     ],
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Flexible(
                   child: ElevatedButton.icon(
                     onPressed: () {
@@ -1103,7 +1103,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.deepPurple,
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 12,
                       ),
@@ -1117,7 +1117,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             ),
           ),
 
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           // 설정 카테고리들
           _buildSettingsSection('수수료 설정', [
@@ -1126,14 +1126,14 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             _buildSettingItem('최대 충전 금액', '₩1,000,000', _editMaxCharge),
           ]),
 
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           _buildSettingsSection('앱 카테고리 관리', [
             _buildSettingItem('카테고리 수', '32개', _manageCategories),
             _buildSettingItem('신규 카테고리 요청', '3건', _reviewCategoryRequests),
           ]),
 
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
 
           _buildSettingsSection('시스템 설정', [
             _buildSettingItem('미션 기본 기간', '14일', _editDefaultPeriod),
@@ -1148,7 +1148,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 헬퍼 위젯들
   Widget _buildSummaryCard(String title, String value, Color color, IconData icon) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1167,7 +1167,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
@@ -1175,13 +1175,13 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 child: Icon(icon, color: color, size: 24),
               ),
               const Spacer(),
-              Icon(Icons.trending_up, color: Colors.green, size: 16),
+              const Icon(Icons.trending_up, color: Colors.green, size: 16),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -1225,7 +1225,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.folder_open, size: 64, color: Colors.grey[400]),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   '프로젝트가 없습니다',
                   style: TextStyle(
@@ -1276,7 +1276,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             if (_projectStartDate != null && createdAt.isBefore(_projectStartDate!)) {
               return false;
             }
-            if (_projectEndDate != null && createdAt.isAfter(_projectEndDate!.add(Duration(days: 1)))) {
+            if (_projectEndDate != null && createdAt.isAfter(_projectEndDate!.add(const Duration(days: 1)))) {
               return false;
             }
           }
@@ -1291,7 +1291,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   '검색 결과가 없습니다',
                   style: TextStyle(
@@ -1300,7 +1300,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   '필터 조건을 변경해보세요',
                   style: TextStyle(
@@ -1385,9 +1385,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     }
 
     return Card(
-      margin: EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1399,12 +1399,12 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     children: [
                       Text(
                         appName,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         '공급자: $providerId',
                         style: TextStyle(
@@ -1412,7 +1412,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                           color: Colors.grey[600],
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         '등록일: ${DateFormat('yyyy.MM.dd').format(createdAt)}',
                         style: TextStyle(
@@ -1427,7 +1427,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
@@ -1436,7 +1436,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(statusIcon, size: 16, color: statusColor),
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
                           Text(
                             _getStatusText(status),
                             style: TextStyle(
@@ -1448,7 +1448,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                         ],
                       ),
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     Text(
                       '₩${NumberFormat('#,###').format(totalReward)}',
                       style: TextStyle(
@@ -1462,7 +1462,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               ],
             ),
             if (description.isNotEmpty) ...[
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Text(
                 description,
                 style: TextStyle(
@@ -1473,11 +1473,11 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 overflow: TextOverflow.ellipsis,
               ),
             ],
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Icon(Icons.people, size: 16, color: Colors.grey[600]),
-                SizedBox(width: 4),
+                const SizedBox(width: 4),
                 Text(
                   '최대 테스터: $maxTesters명',
                   style: TextStyle(
@@ -1570,7 +1570,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // 실제 데이터와 연동된 최근 활동 패널
   Widget _buildRecentActivityPanel() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1586,11 +1586,11 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             '최근 활동',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           SizedBox(
             height: 300,
             child: StreamBuilder<QuerySnapshot>(
@@ -1615,7 +1615,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 return ListView.separated(
                   shrinkWrap: true,
                   itemCount: snapshot.data!.docs.length,
-                  separatorBuilder: (context, index) => Divider(height: 16),
+                  separatorBuilder: (context, index) => const Divider(height: 16),
                   itemBuilder: (context, index) {
                     final doc = snapshot.data!.docs[index];
                     final data = doc.data() as Map<String, dynamic>;
@@ -1631,14 +1631,14 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                           size: 16,
                           color: _getStatusColor(data['status'] ?? 'pending'),
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 data['appName'] ?? '프로젝트',
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -1725,7 +1725,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   Widget _buildQuickActions() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1738,7 +1738,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           ),
         ],
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -1746,7 +1746,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16),
-          const Text('빠른 작업 버튼들이 여기에 표시됩니다.'),
+          Text('빠른 작업 버튼들이 여기에 표시됩니다.'),
         ],
       ),
     );
@@ -1754,7 +1754,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   Widget _buildUserStatsCard(String title, String value, Color color) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1804,14 +1804,14 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
+        padding: const EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   '사용자 목록',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
@@ -1822,7 +1822,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('users')
@@ -1870,7 +1870,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                           DataCell(Text(data['email'] ?? 'N/A')),
                           DataCell(
                             Container(
-                              padding: EdgeInsets.symmetric(
+                              padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 4,
                               ),
@@ -1891,8 +1891,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                           DataCell(Text(dateString)),
                           DataCell(
                             isSuspended
-                                ? Icon(Icons.block, color: Colors.red, size: 16)
-                                : Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                ? const Icon(Icons.block, color: Colors.red, size: 16)
+                                : const Icon(Icons.check_circle, color: Colors.green, size: 16),
                           ),
                           DataCell(
                             Row(
@@ -1959,7 +1959,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   Widget _buildFinanceCard(String title, String value, Color color, IconData icon) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1975,10 +1975,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       child: Column(
         children: [
           Icon(icon, size: 32, color: color),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
@@ -2003,10 +2003,10 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       builder: (context, snapshot) {
         // 로딩 상태
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
+          return const Center(
             child: Padding(
               padding: EdgeInsets.all(40),
-              child: const CircularProgressIndicator(),
+              child: CircularProgressIndicator(),
             ),
           );
         }
@@ -2014,23 +2014,23 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         // 에러 상태
         if (snapshot.hasError) {
           return Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.red),
-                SizedBox(height: 16),
-                Text(
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 16),
+                const Text(
                   '데이터를 불러오는 중 오류가 발생했습니다',
                   style: TextStyle(fontSize: 16, color: Colors.red),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   '${snapshot.error}',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -2040,7 +2040,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         // 데이터가 없는 경우
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Container(
-            padding: EdgeInsets.all(40),
+            padding: const EdgeInsets.all(40),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
@@ -2048,7 +2048,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             child: Column(
               children: [
                 Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   '거래 내역이 없습니다',
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
@@ -2063,7 +2063,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
         if (filteredDocs.isEmpty) {
           return Container(
-            padding: EdgeInsets.all(40),
+            padding: const EdgeInsets.all(40),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
@@ -2071,7 +2071,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             child: Column(
               children: [
                 Icon(Icons.filter_list_off, size: 64, color: Colors.grey[400]),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   '필터 조건에 맞는 거래 내역이 없습니다',
                   style: TextStyle(fontSize: 16, color: Colors.grey[600]),
@@ -2099,7 +2099,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             scrollDirection: Axis.horizontal,
             child: DataTable(
               headingRowColor: WidgetStateProperty.all(Colors.grey[100]),
-              columns: [
+              columns: const [
                 DataColumn(label: Text('날짜/시간', style: TextStyle(fontWeight: FontWeight.bold))),
                 DataColumn(label: Text('사용자', style: TextStyle(fontWeight: FontWeight.bold))),
                 DataColumn(label: Text('유형', style: TextStyle(fontWeight: FontWeight.bold))),
@@ -2126,7 +2126,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     )),
                     DataCell(Text(userId.length > 20 ? '${userId.substring(0, 20)}...' : userId)),
                     DataCell(Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: _getTransactionTypeColor(type).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
@@ -2147,7 +2147,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                       ),
                     )),
                     DataCell(Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: _getTransactionStatusColor(status).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
@@ -2169,7 +2169,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     )),
                     DataCell(
                       IconButton(
-                        icon: Icon(Icons.info_outline, size: 20),
+                        icon: const Icon(Icons.info_outline, size: 20),
                         onPressed: () => _showTransactionDetailDialog(doc.id, data),
                       ),
                     ),
@@ -2306,8 +2306,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               _buildDetailRow('생성일', (data['createdAt'] as Timestamp?)?.toDate().toString() ?? '-'),
               if (data['metadata'] != null) ...[
                 const Divider(),
-                Text('메타데이터', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                SizedBox(height: 8),
+                const Text('메타데이터', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const SizedBox(height: 8),
                 Text(data['metadata'].toString()),
               ],
             ],
@@ -2325,7 +2325,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2333,13 +2333,13 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             width: 80,
             child: Text(
               '$label:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14),
             ),
           ),
         ],
@@ -2349,7 +2349,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   Widget _buildReportStatsCard(String title, String value, Color color) {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -2394,9 +2394,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           return Row(
             children: [
               Expanded(child: _buildSkeletonCard()),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildSkeletonCard()),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildSkeletonCard()),
             ],
           );
@@ -2407,9 +2407,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           return Row(
             children: [
               Expanded(child: _buildFinanceCard('이번 달 충전', '₩-', Colors.blue, Icons.add_circle)),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildFinanceCard('이번 달 지급', '₩-', Colors.red, Icons.remove_circle)),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildFinanceCard('수수료 수익', '₩-', Colors.green, Icons.monetization_on)),
             ],
           );
@@ -2428,7 +2428,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 Icons.add_circle,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildFinanceCard(
                 '이번 달 지급',
@@ -2437,7 +2437,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 Icons.remove_circle,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildFinanceCard(
                 '수수료 수익',
@@ -2498,7 +2498,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   // v2.69.0: 로딩 중 스켈레톤 카드
   Widget _buildSkeletonCard() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey[200],
         borderRadius: BorderRadius.circular(12),
@@ -2513,7 +2513,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               borderRadius: BorderRadius.circular(4),
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Container(
             width: 60,
             height: 14,
@@ -2597,7 +2597,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           ),
         ],
       ),
-      child: Padding(
+      child: const Padding(
         padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2607,7 +2607,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            const Text('신고 목록이 여기에 표시됩니다.'),
+            Text('신고 목록이 여기에 표시됩니다.'),
           ],
         ),
       ),
@@ -2629,15 +2629,15 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         ],
       ),
       child: Padding(
-        padding: EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
+        padding: const EdgeInsets.all(24), // 관리자 대시보드 전용 패딩
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             ...items,
           ],
         ),
@@ -2784,7 +2784,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text('거부 이유를 입력해주세요:'),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             TextField(
               controller: controller,
               maxLines: 3,
@@ -2935,7 +2935,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 Icons.folder_open,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildSummaryCard(
                 '총 신청',
@@ -2944,7 +2944,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 Icons.assignment,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildSummaryCard(
                 '활성 사용자',
@@ -2953,7 +2953,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 Icons.people,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: _buildSummaryCard(
                 '이번 달 신규',
@@ -2972,11 +2972,11 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     return Row(
       children: [
         Expanded(child: _buildSummaryCard('총 프로젝트', '로딩...', Colors.blue, Icons.folder_open)),
-        SizedBox(width: 16),
+        const SizedBox(width: 16),
         Expanded(child: _buildSummaryCard('총 신청', '로딩...', Colors.green, Icons.assignment)),
-        SizedBox(width: 16),
+        const SizedBox(width: 16),
         Expanded(child: _buildSummaryCard('활성 사용자', '로딩...', Colors.purple, Icons.people)),
-        SizedBox(width: 16),
+        const SizedBox(width: 16),
         Expanded(child: _buildSummaryCard('이번 달 신규', '로딩...', Colors.orange, Icons.person_add)),
       ],
     );
@@ -2995,9 +2995,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           return Row(
             children: [
               Expanded(child: _buildUserStatsCard('전체 사용자', '로딩...', Colors.blue)),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildUserStatsCard('테스터', '로딩...', Colors.green)),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildUserStatsCard('공급자', '로딩...', Colors.orange)),
             ],
           );
@@ -3007,9 +3007,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           return Row(
             children: [
               Expanded(child: _buildUserStatsCard('전체 사용자', '0명', Colors.blue)),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildUserStatsCard('테스터', '0명', Colors.green)),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(child: _buildUserStatsCard('공급자', '0명', Colors.orange)),
             ],
           );
@@ -3022,9 +3022,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         return Row(
           children: [
             Expanded(child: _buildUserStatsCard('전체 사용자', '${allUsers.docs.length}명', Colors.blue)),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(child: _buildUserStatsCard('테스터', '${testers.docs.length}명', Colors.green)),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(child: _buildUserStatsCard('공급자', '${providers.docs.length}명', Colors.orange)),
           ],
         );

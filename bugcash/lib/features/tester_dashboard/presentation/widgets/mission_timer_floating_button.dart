@@ -24,12 +24,12 @@ class MissionTimerFloatingButton extends StatefulWidget {
   final Duration duration;
 
   const MissionTimerFloatingButton({
-    Key? key,
+    super.key,
     required this.startedAt,
     required this.onScreenshot,
     required this.onComplete,
     this.duration = const Duration(minutes: 10),
-  }) : super(key: key);
+  });
 
   @override
   State<MissionTimerFloatingButton> createState() => _MissionTimerFloatingButtonState();
@@ -83,7 +83,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
       _isCompleted = false;
 
       // 5분 알림 (한 번만)
-      if (_elapsed >= Duration(minutes: 5) && !_has5MinuteNotified) {
+      if (_elapsed >= const Duration(minutes: 5) && !_has5MinuteNotified) {
         _has5MinuteNotified = true;
         _showTimeNotification('5분 경과', '벌써 5분이 지났습니다! 계속 테스트해주세요.', Colors.blue);
       }
@@ -98,7 +98,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
       SnackBar(
         content: Row(
           children: [
-            Icon(Icons.timer, color: Colors.white),
+            const Icon(Icons.timer, color: Colors.white),
             SizedBox(width: 12.w),
             Expanded(
               child: Column(
@@ -127,7 +127,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
           ],
         ),
         backgroundColor: color,
-        duration: Duration(seconds: 4),
+        duration: const Duration(seconds: 4),
         behavior: SnackBarBehavior.floating,
         margin: EdgeInsets.all(16.w),
       ),
@@ -142,8 +142,8 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
 
   Color _getTimerColor() {
     if (_isCompleted) return Colors.green;
-    if (_elapsed >= Duration(minutes: 7)) return Colors.orange;
-    if (_elapsed >= Duration(minutes: 5)) return Colors.blue;
+    if (_elapsed >= const Duration(minutes: 7)) return Colors.orange;
+    if (_elapsed >= const Duration(minutes: 5)) return Colors.blue;
     return Colors.grey[700]!;
   }
 
@@ -199,7 +199,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text('취소'),
+            child: const Text('취소'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(dialogContext, true),
@@ -207,7 +207,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
-            child: Text('완료'),
+            child: const Text('완료'),
           ),
         ],
       ),
@@ -304,7 +304,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
                 },
                 icon: Icon(Icons.close, size: 16.sp),
                 padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
+                constraints: const BoxConstraints(),
               ),
             ],
           ),
@@ -346,7 +346,7 @@ class _MissionTimerFloatingButtonState extends State<MissionTimerFloatingButton>
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 8.h),
-                    side: BorderSide(color: Colors.blue),
+                    side: const BorderSide(color: Colors.blue),
                   ),
                 ),
               ),
@@ -390,10 +390,10 @@ class MissionStartTimerOverlay extends StatefulWidget {
   final VoidCallback onComplete;
 
   const MissionStartTimerOverlay({
-    Key? key,
+    super.key,
     this.displayDuration = const Duration(seconds: 3),
     required this.onComplete,
-  }) : super(key: key);
+  });
 
   @override
   State<MissionStartTimerOverlay> createState() => _MissionStartTimerOverlayState();
@@ -424,7 +424,7 @@ class _MissionStartTimerOverlayState extends State<MissionStartTimerOverlay>
     _opacityAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Interval(0.7, 1.0, curve: Curves.easeOut),
+        curve: const Interval(0.7, 1.0, curve: Curves.easeOut),
       ),
     );
 
@@ -456,7 +456,7 @@ class _MissionStartTimerOverlayState extends State<MissionStartTimerOverlay>
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20.r),
-                    boxShadow: [
+                    boxShadow: const [
                       BoxShadow(
                         color: Colors.black26,
                         blurRadius: 20,

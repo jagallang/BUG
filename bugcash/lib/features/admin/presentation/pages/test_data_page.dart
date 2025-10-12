@@ -232,9 +232,9 @@ class _TestDataPageState extends State<TestDataPage> {
               children: [
                 Text('총 프로젝트: ${projectsSnapshot.docs.length}개'),
                 SizedBox(height: 8.h),
-                Text('승인 대기: ${pendingCount}개'),
+                Text('승인 대기: $pendingCount개'),
                 SizedBox(height: 8.h),
-                Text('승인됨: ${openCount}개'),
+                Text('승인됨: $openCount개'),
               ],
             ),
             actions: [

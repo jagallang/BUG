@@ -127,7 +127,7 @@ class _MockPaymentPageState extends ConsumerState<MockPaymentPage> {
 
     try {
       // 같은 orderId로 2번 충전 시도
-      final mockOrderId = 'duplicate_order_123';
+      const mockOrderId = 'duplicate_order_123';
       final walletService = ref.read(walletServiceProvider);
 
       // 첫 번째 충전

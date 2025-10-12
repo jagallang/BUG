@@ -326,7 +326,7 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${_selectedChargeAmount}원 결제 기능은 곧 추가됩니다!'),
+                          content: Text('$_selectedChargeAmount원 결제 기능은 곧 추가됩니다!'),
                           backgroundColor: Colors.indigo[700],
                         ),
                       );

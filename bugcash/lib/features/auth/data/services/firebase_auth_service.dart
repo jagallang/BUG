@@ -359,7 +359,7 @@ class FirebaseAuthService {
       }
 
       return userCredential;
-    } catch (e, stackTrace) {
+    } catch (e) {
       AppLogger.error('Error during Google sign in', 'FirebaseAuthService', e);
       rethrow;
     }

@@ -529,7 +529,7 @@ class _EscrowManagementTabState extends State<EscrowManagementTab> {
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(Colors.grey[100]),
+              headingRowColor: WidgetStateProperty.all(Colors.grey[100]),
               columns: const [
                 DataColumn(label: Text('앱 이름', style: TextStyle(fontWeight: FontWeight.bold))),
                 DataColumn(label: Text('공급자', style: TextStyle(fontWeight: FontWeight.bold))),

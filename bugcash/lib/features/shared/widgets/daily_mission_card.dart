@@ -482,7 +482,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                 _deleteConfirmMode = false; // 취소 시 회색으로 복귀
               });
             },
-            child: Text('취소'),
+            child: const Text('취소'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -492,7 +492,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: Text('삭제'),
+            child: const Text('삭제'),
           ),
         ],
       ),

@@ -55,8 +55,4 @@ class UserModel extends UserEntity {
     );
   }
 
-  @override
-  Map<String, dynamic> toFirestore() {
-    return super.toFirestore(); // UserEntity의 toFirestore 사용
-  }
 }

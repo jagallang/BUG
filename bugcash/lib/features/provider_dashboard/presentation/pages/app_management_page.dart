@@ -12,8 +12,6 @@ import '../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/image_upload_widget.dart';
 import 'app_detail_page.dart';
 import 'mission_management_page_v2.dart';
-import '../../../wallet/domain/usecases/wallet_service.dart';
-import '../../../wallet/data/repositories/wallet_repository_impl.dart';
 import '../../../wallet/presentation/providers/wallet_provider.dart';
 
 // Provider for managing apps (using optimized projects collection)
@@ -664,7 +662,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                 width: 56.w,
                 height: 56.h,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
+                  gradient: const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [AppColors.providerBluePrimary, AppColors.providerBlueDark],
@@ -1914,7 +1912,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           }
         },
         style: OutlinedButton.styleFrom(
-          side: BorderSide(color: AppColors.providerBluePrimary, width: 1.5),
+          side: const BorderSide(color: AppColors.providerBluePrimary, width: 1.5),
           backgroundColor: AppColors.providerBlueLight.withValues(alpha: 0.2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.r),

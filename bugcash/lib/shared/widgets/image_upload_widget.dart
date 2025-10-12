@@ -67,7 +67,7 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
 
       if (images.length > remainingSlots) {
         debugPrint('⚠️ [ImageUploadWidget] Limiting to $remainingSlots files');
-        _showMessage('${remainingSlots}장만 추가됩니다.');
+        _showMessage('$remainingSlots장만 추가됩니다.');
       }
 
       // v2.9.0: XFile을 그대로 사용 (웹/모바일 모두 호환)
@@ -242,7 +242,7 @@ class _ImageUploadWidgetState extends State<ImageUploadWidget> {
               ),
               child: snapshot.hasData
                   ? null
-                  : Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                  : const Center(child: CircularProgressIndicator(strokeWidth: 2)),
             ),
 
             // 삭제 버튼

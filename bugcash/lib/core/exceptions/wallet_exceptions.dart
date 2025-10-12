@@ -63,10 +63,10 @@ class InvalidAmountException implements Exception {
   @override
   String toString() {
     if (minAmount != null && amount < minAmount!) {
-      return '최소 ${minAmount}원 이상 충전해주세요';
+      return '최소 $minAmount원 이상 충전해주세요';
     }
     if (maxAmount != null && amount > maxAmount!) {
-      return '최대 ${maxAmount}원까지 충전 가능합니다';
+      return '최대 $maxAmount원까지 충전 가능합니다';
     }
     return message;
   }

@@ -62,7 +62,7 @@ class PaymentEntity extends Equatable {
       status: PaymentStatus.ready,
       userId: userId,
       requestedAt: DateTime.now(),
-      metadata: {},
+      metadata: const {},
     );
   }
 

@@ -38,15 +38,15 @@ class TesterWalletCard extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                const Row(
                   children: [
                     Icon(
                       Icons.account_balance_wallet,
                       color: AppColors.testerOrangePrimary,
                       size: 28,
                     ),
-                    const SizedBox(width: 12),
-                    const Text(
+                    SizedBox(width: 12),
+                    Text(
                       '내 지갑',
                       style: TextStyle(
                         fontSize: 20,
@@ -182,7 +182,7 @@ class TesterWalletCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
             AppColors.testerOrangePrimary,
             AppColors.testerOrangeLight,

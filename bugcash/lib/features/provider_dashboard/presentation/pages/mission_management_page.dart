@@ -1438,7 +1438,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
           children: [
             Icon(Icons.warning_amber_rounded, color: Colors.red, size: 24.sp),
             SizedBox(width: 8.w),
-            Text('삭제 확인', style: TextStyle(color: Colors.red)),
+            const Text('삭제 확인', style: TextStyle(color: Colors.red)),
           ],
         ),
         content: Column(
@@ -1483,12 +1483,12 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('취소'),
+            child: const Text('취소'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('삭제', style: TextStyle(color: Colors.white)),
+            child: const Text('삭제', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -1503,7 +1503,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('✅ 미션이 영구 삭제되었습니다'),
               backgroundColor: Colors.green,
             ),

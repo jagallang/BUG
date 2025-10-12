@@ -452,7 +452,7 @@ class _AdminWithdrawalPageState extends ConsumerState<AdminWithdrawalPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('거부 사유를 입력해주세요'),
+              const Text('거부 사유를 입력해주세요'),
               SizedBox(height: 12.h),
               TextField(
                 controller: controller,

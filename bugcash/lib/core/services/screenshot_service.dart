@@ -17,7 +17,7 @@ class ScreenshotService {
     await showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Row(
+        title: const Row(
           children: [
             Icon(Icons.camera_alt, color: Colors.blue, size: 24),
             SizedBox(width: 8),
@@ -35,11 +35,11 @@ class ScreenshotService {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 '브라우저 개발자 도구를 사용하여 스크린샷을 촬영할 수 있습니다.',
                 style: TextStyle(fontSize: 14),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               _buildPlatformInstructions(),
             ],
           ),
@@ -47,7 +47,7 @@ class ScreenshotService {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: Text('확인'),
+            child: const Text('확인'),
           ),
         ],
       ),
@@ -69,7 +69,7 @@ class ScreenshotService {
             '4. "Capture full size screenshot" 선택',
           ],
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         // Firefox 안내
         _buildInstructionItem(
           icon: Icons.web,
@@ -79,7 +79,7 @@ class ScreenshotService {
             '2. ":screenshot --fullpage" 입력',
           ],
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         // 시스템 스크린샷 안내
         _buildInstructionItem(
           icon: Icons.computer,
@@ -99,7 +99,7 @@ class ScreenshotService {
     required List<String> steps,
   }) {
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.grey[100],
         borderRadius: BorderRadius.circular(8),
@@ -111,7 +111,7 @@ class ScreenshotService {
           Row(
             children: [
               Icon(icon, size: 18, color: Colors.blue),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
@@ -122,9 +122,9 @@ class ScreenshotService {
               ),
             ],
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           ...steps.map((step) => Padding(
-                padding: EdgeInsets.only(left: 26, top: 4),
+                padding: const EdgeInsets.only(left: 26, top: 4),
                 child: Text(
                   step,
                   style: TextStyle(
@@ -140,7 +140,7 @@ class ScreenshotService {
 
   void _showMobileGuide(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('기기의 스크린샷 기능을 사용해주세요 (전원 + 볼륨 다운)'),
         duration: Duration(seconds: 3),
         backgroundColor: Colors.blue,

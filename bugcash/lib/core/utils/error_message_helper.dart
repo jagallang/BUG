@@ -1,4 +1,5 @@
 /// 에러를 사용자 친화적인 메시지로 변환하는 헬퍼 클래스
+library;
 import '../exceptions/wallet_exceptions.dart';
 
 class ErrorMessageHelper {

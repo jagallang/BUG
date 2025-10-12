@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -29,7 +28,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   Map<String, dynamic>? _appDetails;
 
   String get missionId => widget.mission.id ?? '';
-  String get missionTitle => widget.mission.title ?? '미션 ${missionId}';
+  String get missionTitle => widget.mission.title ?? '미션 $missionId';
   String get missionAppName => widget.mission.appName ?? '앱 테스트';
   String get missionDescription => widget.mission.description ?? '새로운 테스트 미션에 참여해보세요!';
   int get missionReward => widget.mission.rewardPoints ?? widget.mission.reward ?? 0;
@@ -203,7 +202,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
         if (querySnapshot.docs.isNotEmpty) {
           appData = querySnapshot.docs.first.data();
-          detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
+          detectedProviderId = appData['providerId'] ?? appData['createdBy'];
           AppLogger.info('✅ App details loaded from provider_apps by name', 'MissionDetailPage');
         } else {
           AppLogger.info('❌ provider_apps에서 미발견, apps 컬렉션 시도', 'MissionDetailPage');
@@ -217,7 +216,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
           if (fallbackQuery.docs.isNotEmpty) {
             appData = fallbackQuery.docs.first.data();
-            detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
+            detectedProviderId = appData['providerId'] ?? appData['createdBy'];
             AppLogger.info('✅ App details loaded from apps collection by name', 'MissionDetailPage');
           } else {
             AppLogger.info('❌ apps에서 미발견, projects 컬렉션 시도', 'MissionDetailPage');
@@ -231,7 +230,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
 
             if (projectQuery.docs.isNotEmpty) {
               appData = projectQuery.docs.first.data();
-              detectedProviderId = appData?['providerId'] ?? appData?['createdBy'];
+              detectedProviderId = appData['providerId'] ?? appData['createdBy'];
               AppLogger.info('✅ App details loaded from projects collection by name', 'MissionDetailPage');
             } else {
               AppLogger.warning('❌ 모든 컬렉션에서 appName으로 미발견: $missionAppName', 'MissionDetailPage');
@@ -323,7 +322,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
       if (mission?.appId != null) {
         final appBasedQuery = await FirebaseFirestore.instance
             .collection('mission_workflows')
-            .where('appId', isEqualTo: mission!.appId!)
+            .where('appId', isEqualTo: mission!.appId)
             .where('testerId', isEqualTo: testerId)
             .limit(1)
             .get();
@@ -594,7 +593,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               Expanded(
                 child: _buildInfoItem(
                   '예상 시간',
-                  '${estimatedMinutes}분',
+                  '$estimatedMinutes분',
                   Icons.timer,
                 ),
               ),
@@ -990,7 +989,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
             dailyMissionPoints * estimatedDays,
             Icons.calendar_today,
             Colors.blue,
-            '일일 ${NumberFormat('#,###').format(dailyMissionPoints)}P × ${estimatedDays}일',
+            '일일 ${NumberFormat('#,###').format(dailyMissionPoints)}P × $estimatedDays일',
           ),
 
         if (finalCompletionPoints > 0 || bonusPoints > 0)

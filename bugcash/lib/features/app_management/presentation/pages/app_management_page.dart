@@ -287,10 +287,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             onPressed: () {
               setState(() {});
             },
-            child: Text(
-              '다시 시도',
-              style: TextStyle(fontSize: 14.sp),
-            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -301,6 +297,10 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8.r),
               ),
+            ),
+            child: Text(
+              '다시 시도',
+              style: TextStyle(fontSize: 14.sp),
             ),
           ),
         ],

@@ -208,7 +208,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 children: [
                   Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
                   SizedBox(height: 16.h),
-                  Text('오류가 발생했습니다'),
+                  const Text('오류가 발생했습니다'),
                   SizedBox(height: 8.h),
                   Text(message, style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
                   SizedBox(height: 16.h),
@@ -722,7 +722,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 children: [
                   Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
                   SizedBox(height: 16.h),
-                  Text('오류가 발생했습니다'),
+                  const Text('오류가 발생했습니다'),
                   SizedBox(height: 8.h),
                   Text(message, style: TextStyle(fontSize: 12.sp, color: Colors.grey)),
                 ],
@@ -894,7 +894,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 Row(
                   children: [
                     Icon(Icons.assignment, size: 16, color: Colors.grey[600]),
-                    SizedBox(width: 4),
+                    const SizedBox(width: 4),
                     Text(
                       'Day $latestDayNumber 제출됨',
                       style: TextStyle(fontSize: 14, color: Colors.grey[700]),
@@ -922,13 +922,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    minimumSize: Size(100, 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    minimumSize: const Size(100, 40),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: Text(
+                  child: const Text(
                     '상세보기',
                     style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
@@ -1305,7 +1305,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                           ],
                         ),
                       );
-                    }).toList(),
+                    }),
                   ],
                 ),
               ),

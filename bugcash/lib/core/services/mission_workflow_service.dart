@@ -415,7 +415,7 @@ class MissionWorkflowService {
       await _sendNotificationToProvider(
         providerId: providerId,
         title: '일일 미션 완료',
-        message: '$testerName님이 ${dayNumber}일차 미션을 완료했습니다.',
+        message: '$testerName님이 $dayNumber일차 미션을 완료했습니다.',
         data: {
           'workflowId': workflowId,
           'dayNumber': dayNumber,
@@ -534,7 +534,7 @@ class MissionWorkflowService {
       await _sendNotificationToTester(
         testerId: data['testerId'] ?? '',
         title: '일일 미션 승인!',
-        message: '${dayNumber}일차 미션이 승인되었습니다. ${dailyReward}원이 지급되었습니다.',
+        message: '$dayNumber일차 미션이 승인되었습니다. $dailyReward원이 지급되었습니다.',
         data: {
           'workflowId': workflowId,
           'dayNumber': dayNumber,
@@ -641,7 +641,7 @@ class MissionWorkflowService {
       await _sendNotificationToTester(
         testerId: workflow.testerId,
         title: '일일 미션 거절됨',
-        message: '${dayNumber}일차 미션이 거절되었습니다. 사유: $rejectionReason',
+        message: '$dayNumber일차 미션이 거절되었습니다. 사유: $rejectionReason',
         data: {
           'workflowId': workflowId,
           'dayNumber': dayNumber,

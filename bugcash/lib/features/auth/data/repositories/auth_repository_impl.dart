@@ -47,7 +47,7 @@ class AuthRepository {
           email: user.email ?? '',
           displayName: user.displayName ?? 'User',
           photoUrl: user.photoURL,
-          roles: [UserType.tester],
+          roles: const [UserType.tester],
           primaryRole: UserType.tester,
           country: 'KR',
           timezone: 'Asia/Seoul',

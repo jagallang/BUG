@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -14,7 +13,6 @@ import '../../../../core/constants/app_colors.dart';
 // import '../widgets/expandable_mission_card.dart';
 // import '../widgets/active_test_session_card.dart';
 import '../providers/tester_dashboard_provider.dart';
-import '../../../provider_dashboard/presentation/pages/provider_dashboard_page.dart';
 // 채팅 기능 제거됨
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../mission/presentation/providers/mission_providers.dart';
@@ -27,7 +25,6 @@ import '../../../../core/services/mission_workflow_service.dart';
 import '../../../shared/widgets/daily_mission_card.dart';
 import '../../../shared/models/mission_management_model.dart';
 import '../../../../core/services/screenshot_service.dart';
-import '../../../mission/presentation/providers/mission_providers.dart';
 import '../../../mission/domain/entities/mission_workflow_entity.dart';
 import '../../../../core/utils/logger.dart';
 // v2.52.0: 지갑 기능 추가
@@ -752,7 +749,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           ),
           Container(
             height: 50.h + MediaQuery.of(context).padding.bottom, // v2.75.1: 높이 감소 (60→50)
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
             ),
             child: Padding(
@@ -812,7 +809,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   },
                   decoration: InputDecoration(
                     hintText: '앱 이름 또는 키워드로 검색...',
-                    prefixIcon: Icon(Icons.search, color: AppColors.testerOrangePrimary),
+                    prefixIcon: const Icon(Icons.search, color: AppColors.testerOrangePrimary),
                     filled: true,
                     fillColor: Colors.grey[50],
                     border: OutlineInputBorder(
@@ -821,7 +818,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12.r),
-                      borderSide: BorderSide(color: AppColors.testerOrangePrimary, width: 2),
+                      borderSide: const BorderSide(color: AppColors.testerOrangePrimary, width: 2),
                     ),
                     contentPadding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
                   ),
@@ -920,7 +917,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           color: isSelected ? Colors.white : AppColors.testerOrangePrimary,
           fontWeight: FontWeight.w600,
         ),
-        side: BorderSide(
+        side: const BorderSide(
           color: AppColors.testerOrangePrimary,
           width: 1.5,
         ),
@@ -1308,7 +1305,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           children: [
             Icon(Icons.security, color: Colors.red, size: 24.sp),
             SizedBox(width: 8.w),
-            Text('미션 삭제', style: TextStyle(color: Colors.red)),
+            const Text('미션 삭제', style: TextStyle(color: Colors.red)),
           ],
         ),
         content: Column(
@@ -1323,7 +1320,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: '비밀번호',
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.lock),
@@ -1342,14 +1339,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               passwordController.dispose();
               Navigator.pop(context, false);
             },
-            child: Text('취소'),
+            child: const Text('취소'),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context, true);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('삭제', style: TextStyle(color: Colors.white)),
+            child: const Text('삭제', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -1381,7 +1378,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('✅ 미션이 삭제되었습니다'),
               backgroundColor: Colors.green,
             ),
@@ -1475,7 +1472,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               TextField(
                 controller: passwordController,
                 obscureText: true,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: '비밀번호',
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.lock),
@@ -1491,7 +1488,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 controller: reasonController,
                 maxLines: 3,
                 maxLength: 200,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: '삭제 사유 (최소 10자)',
                   border: OutlineInputBorder(),
                   hintText: '미션을 삭제하는 이유를 구체적으로 작성해주세요',
@@ -1530,21 +1527,21 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               reasonController.dispose();
               Navigator.pop(context, false);
             },
-            child: Text('취소'),
+            child: const Text('취소'),
           ),
           ElevatedButton(
             onPressed: () {
               // 삭제 사유 최소 길이 검증
               if (reasonController.text.trim().length < 10) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('❌ 삭제 사유는 최소 10자 이상 입력해주세요')),
+                  const SnackBar(content: Text('❌ 삭제 사유는 최소 10자 이상 입력해주세요')),
                 );
                 return;
               }
               Navigator.pop(context, true);
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('삭제 요청', style: TextStyle(color: Colors.white)),
+            child: const Text('삭제 요청', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -1617,7 +1614,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('✅ 삭제 요청이 공급자에게 전송되었습니다'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 3),
@@ -1689,7 +1686,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
             ),
-            child: Text('확인'),
+            child: const Text('확인'),
           ),
         ],
       ),
@@ -1804,7 +1801,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     if (mission.attachments.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('❌ 스크린샷이 업로드되지 않았습니다. 미션 완료 버튼을 먼저 눌러주세요.'),
             backgroundColor: Colors.red,
           ),
@@ -1817,17 +1814,17 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('미션 제출'),
-        content: Text('미션을 제출하시겠습니까?\n제출 후에는 수정할 수 없습니다.'),
+        title: const Text('미션 제출'),
+        content: const Text('미션을 제출하시겠습니까?\n제출 후에는 수정할 수 없습니다.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('취소'),
+            child: const Text('취소'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-            child: Text('제출', style: TextStyle(color: Colors.white)),
+            child: const Text('제출', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -1843,7 +1840,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('✅ 미션이 제출되었습니다! 공급자 검토를 기다려주세요.'),
               backgroundColor: Colors.green,
               duration: Duration(seconds: 3),
@@ -2651,11 +2648,11 @@ class TimerDialog extends StatefulWidget {
   final WidgetRef providerRef;
 
   const TimerDialog({
-    Key? key,
+    super.key,
     required this.workflowId,
     required this.testerId,
     required this.providerRef,
-  }) : super(key: key);
+  });
 
   @override
   State<TimerDialog> createState() => _TimerDialogState();
@@ -2672,7 +2669,7 @@ class _TimerDialogState extends State<TimerDialog> {
     _startTime = DateTime.now();
 
     // v2.8.9: 타이머는 UI 표시 전용 (자동완료 로직 제거)
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
@@ -2698,12 +2695,12 @@ class _TimerDialogState extends State<TimerDialog> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('테스트 중지'),
-        content: Text('테스트를 중지하시겠습니까?'),
+        title: const Text('테스트 중지'),
+        content: const Text('테스트를 중지하시겠습니까?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('취소'),
+            child: const Text('취소'),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
@@ -2711,7 +2708,7 @@ class _TimerDialogState extends State<TimerDialog> {
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
-            child: Text('중지'),
+            child: const Text('중지'),
           ),
         ],
       ),
@@ -2733,9 +2730,9 @@ class _TimerDialogState extends State<TimerDialog> {
       child: AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.timer, color: Colors.green),
+            const Icon(Icons.timer, color: Colors.green),
             SizedBox(width: 8.w),
-            Text('앱 테스트 중입니다'),
+            const Text('앱 테스트 중입니다'),
           ],
         ),
         content: Column(
@@ -2775,7 +2772,7 @@ class _TimerDialogState extends State<TimerDialog> {
         actions: [
           TextButton(
             onPressed: _manualStop,
-            child: Text('중지', style: TextStyle(color: Colors.orange)),
+            child: const Text('중지', style: TextStyle(color: Colors.orange)),
           ),
         ],
       ),

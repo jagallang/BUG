@@ -359,7 +359,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
 
               // v2.88.0: 로컬 상태 OR Firestore 상태로 숨김 (즉시 반응)
               if (termsAccepted || _termsAcceptedLocally) {
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               }
 
               return Container(
@@ -386,7 +386,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                         TextButton.icon(
                           onPressed: () => _showTermsDialog(context),
                           icon: Icon(Icons.article, size: 18.sp),
-                          label: Text('자세히 보기'),
+                          label: const Text('자세히 보기'),
                           style: TextButton.styleFrom(
                             foregroundColor: AppColors.primary,
                           ),
@@ -419,7 +419,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                                 SizedBox(
                                   width: 20.sp,
                                   height: 20.sp,
-                                  child: CircularProgressIndicator(
+                                  child: const CircularProgressIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                                   ),
@@ -813,7 +813,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('${_selectedChargeAmount}원 결제 기능은 곧 추가됩니다!'),
+                          content: Text('$_selectedChargeAmount원 결제 기능은 곧 추가됩니다!'),
                           backgroundColor: AppColors.providerBluePrimary, // v2.76.0: 색상 통일
                         ),
                       );
@@ -868,7 +868,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             ),
             child: Padding(
               padding: EdgeInsets.all(20.w),
-              child: Center(
+              child: const Center(
                 child: CircularProgressIndicator(),
               ),
             ),

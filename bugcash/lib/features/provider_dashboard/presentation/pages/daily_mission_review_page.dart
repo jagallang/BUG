@@ -477,7 +477,7 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         ),
       ),
