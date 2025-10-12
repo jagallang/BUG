@@ -563,10 +563,9 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             return const Center(child: CircularProgressIndicator());
           },
           loaded: (missions, isRefreshing) {
-            // v2.107.0: 진행 중 필터 확장 (approved, inProgress, testingCompleted 포함)
+            // v2.108.0: 섹션 필터 재배치 (approved → approvedMissions)
             final inProgressMissions = missions
                 .where((m) =>
-                  m.status == MissionWorkflowStatus.approved ||           // 승인됨 (시작 대기)
                   m.status == MissionWorkflowStatus.inProgress ||         // 진행중
                   m.status == MissionWorkflowStatus.testingCompleted      // 10분 완료 (제출 대기)
                 )
@@ -577,10 +576,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 .toList();
 
             final approvedMissions = missions
-                .where((m) => m.status == MissionWorkflowStatus.dailyMissionApproved)
+                .where((m) =>
+                  m.status == MissionWorkflowStatus.approved ||           // Day 1 시작 버튼
+                  m.status == MissionWorkflowStatus.dailyMissionApproved  // Day X+1 시작 버튼
+                )
                 .toList();
 
-            // v2.107.0: 디버깅용 상세 로깅 추가
+            // v2.108.0: 섹션별 필터 로깅
             print('✅ [MissionManagementV2] 오늘탭 State: LOADED');
             print('   ├─ 전체 미션: ${missions.length}개');
 
@@ -590,9 +592,9 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
               print('   │  Mission $missionId: status=${mission.status.name}');
             }
 
-            print('   ├─ 진행중: ${inProgressMissions.length}개 (approved + inProgress + testingCompleted)');
-            print('   ├─ 검토 대기: ${reviewPendingMissions.length}개');
-            print('   └─ 검토 완료: ${approvedMissions.length}개');
+            print('   ├─ 진행중: ${inProgressMissions.length}개 (inProgress + testingCompleted)');
+            print('   ├─ 검토 대기: ${reviewPendingMissions.length}개 (dailyMissionCompleted)');
+            print('   └─ 미션 시작 대기: ${approvedMissions.length}개 (approved + dailyMissionApproved)');
 
             final totalTodayMissions = inProgressMissions.length + reviewPendingMissions.length + approvedMissions.length;
 
@@ -666,7 +668,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                                 Icon(Icons.check_circle, size: 20.sp, color: Colors.green),
                                 SizedBox(width: 8.w),
                                 Text(
-                                  '검토 완료 (${approvedMissions.length}건)', // v2.37.0
+                                  '미션 시작 대기 (${approvedMissions.length}건)', // v2.108.0
                                   style: TextStyle(
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.bold,
