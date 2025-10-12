@@ -241,6 +241,10 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   Timer? _refreshTimer;
   StreamSubscription? _missionsSubscription;
   StreamSubscription? _profileSubscription;
+  StreamSubscription? _projectsSubscription; // v2.105.2: projects 실시간 리스너
+  StreamSubscription? _applicationsSubscription; // v2.105.2: applications 실시간 리스너
+  StreamSubscription? _enrollmentsSubscription; // v2.105.2: enrollments 실시간 리스너
+  StreamSubscription? _transactionsSubscription; // v2.105.2: transactions 실시간 리스너
   bool _isDisposed = false; // v2.105.2: dispose 상태 플래그
 
   TesterDashboardNotifier(this._ref) : super(TesterDashboardState.initial());
@@ -249,8 +253,27 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
   void dispose() {
     _isDisposed = true; // v2.105.2: dispose 플래그 설정
     _refreshTimer?.cancel();
-    _missionsSubscription?.cancel();
-    _profileSubscription?.cancel();
+
+    // v2.105.2: 모든 StreamSubscription 취소 시 에러 무시
+    _missionsSubscription?.cancel().catchError((e) {
+      debugPrint('ℹ️ [INFO] Mission subscription 취소 중 에러 무시: $e');
+    });
+    _profileSubscription?.cancel().catchError((e) {
+      debugPrint('ℹ️ [INFO] Profile subscription 취소 중 에러 무시: $e');
+    });
+    _projectsSubscription?.cancel().catchError((e) {
+      debugPrint('ℹ️ [INFO] Projects subscription 취소 중 에러 무시: $e');
+    });
+    _applicationsSubscription?.cancel().catchError((e) {
+      debugPrint('ℹ️ [INFO] Applications subscription 취소 중 에러 무시: $e');
+    });
+    _enrollmentsSubscription?.cancel().catchError((e) {
+      debugPrint('ℹ️ [INFO] Enrollments subscription 취소 중 에러 무시: $e');
+    });
+    _transactionsSubscription?.cancel().catchError((e) {
+      debugPrint('ℹ️ [INFO] Transactions subscription 취소 중 에러 무시: $e');
+    });
+
     super.dispose();
   }
 
@@ -587,41 +610,77 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
 
     final userId = CurrentUserService.getCurrentUserIdOrDefault();
 
-    // Projects stream (status='open')
-    FirebaseFirestore.instance
+    // v2.105.2: Projects stream (status='open') - onError 핸들러 추가
+    _projectsSubscription = FirebaseFirestore.instance
         .collection('projects')
         .where('status', isEqualTo: 'open')
         .snapshots()
-        .listen((snapshot) {
-      _loadMissions(testerId);
-    });
+        .listen(
+      (snapshot) {
+        if (!_isDisposed) _loadMissions(testerId);
+      },
+      onError: (error) {
+        if (_isDisposed) {
+          debugPrint('ℹ️ [INFO] Disposed 상태에서 projects listener 에러 무시: $error');
+          return;
+        }
+        debugPrint('❌ Projects subscription 에러: $error');
+      },
+    );
 
-    // User's applications stream
-    FirebaseFirestore.instance
+    // v2.105.2: User's applications stream - onError 핸들러 추가
+    _applicationsSubscription = FirebaseFirestore.instance
         .collection('applications')
         .where('testerId', isEqualTo: userId)
         .snapshots()
-        .listen((snapshot) {
-      _loadMissions(testerId);
-    });
+        .listen(
+      (snapshot) {
+        if (!_isDisposed) _loadMissions(testerId);
+      },
+      onError: (error) {
+        if (_isDisposed) {
+          debugPrint('ℹ️ [INFO] Disposed 상태에서 applications listener 에러 무시: $error');
+          return;
+        }
+        debugPrint('❌ Applications subscription 에러: $error');
+      },
+    );
 
-    // User's enrollments stream
-    FirebaseFirestore.instance
+    // v2.105.2: User's enrollments stream - onError 핸들러 추가
+    _enrollmentsSubscription = FirebaseFirestore.instance
         .collection('enrollments')
         .where('testerId', isEqualTo: userId)
         .snapshots()
-        .listen((snapshot) {
-      _loadMissions(testerId);
-    });
+        .listen(
+      (snapshot) {
+        if (!_isDisposed) _loadMissions(testerId);
+      },
+      onError: (error) {
+        if (_isDisposed) {
+          debugPrint('ℹ️ [INFO] Disposed 상태에서 enrollments listener 에러 무시: $error');
+          return;
+        }
+        debugPrint('❌ Enrollments subscription 에러: $error');
+      },
+    );
 
-    // Points transactions updates (PRD 기준)
-    FirebaseFirestore.instance
+    // v2.105.2: Points transactions updates - onError 핸들러 추가
+    _transactionsSubscription = FirebaseFirestore.instance
         .collection('points_transactions')
         .where('userId', isEqualTo: userId)
         .snapshots()
-        .listen((snapshot) {
-      _loadEarningsData(testerId);
-    });
+        .listen(
+      (snapshot) {
+        if (!_isDisposed) _loadEarningsData(testerId);
+      },
+      onError: (error) {
+        if (_isDisposed) {
+          debugPrint('ℹ️ [INFO] Disposed 상태에서 transactions listener 에러 무시: $error');
+          return;
+        }
+        debugPrint('❌ Transactions subscription 에러: $error');
+      },
+    );
   }
 
   Future<void> joinMission(String missionId) async {
@@ -1029,43 +1088,10 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
       debugPrint('');
       debugPrint('✅ [QUERY_RESULT] 총 ${completedWorkflows.docs.length}개 문서 조회됨');
 
+      // v2.105.2: 완료된 미션이 없으면 빈 리스트 반환 (디버깅 쿼리 제거)
       if (completedWorkflows.docs.isEmpty) {
-        debugPrint('⚠️ [WARNING] 완료된 미션 없음!');
-        debugPrint('   💡 디버깅: 모든 workflow 조회 시도...');
-
-        // 디버깅: 조건 없이 모든 workflows 조회 (최대 10개)
-        final allWorkflows = await FirebaseFirestore.instance
-            .collection('mission_workflows')
-            .limit(10)
-            .get();
-
-        debugPrint('');
-        debugPrint('🔍 [DEBUG] mission_workflows 컬렉션 전체 조회 (최대 10개)');
-        debugPrint('   📊 총 ${allWorkflows.docs.length}개 문서 발견');
-        debugPrint('');
-
-        if (allWorkflows.docs.isNotEmpty) {
-          for (var i = 0; i < allWorkflows.docs.length; i++) {
-            final doc = allWorkflows.docs[i];
-            final data = doc.data();
-            debugPrint('   📄 문서 ${i + 1}/${allWorkflows.docs.length}: ${doc.id}');
-            debugPrint('      ├─ 모든 필드:');
-            data.forEach((key, value) {
-              debugPrint('      │  • $key: $value');
-            });
-            debugPrint('');
-          }
-        } else {
-          debugPrint('   ❌ mission_workflows 컬렉션이 완전히 비어있음!');
-        }
-
-        // 추가: testerId로 필터링 시도
-        final filteredWorkflows = await FirebaseFirestore.instance
-            .collection('mission_workflows')
-            .where('testerId', isEqualTo: testerId)
-            .get();
-
-        debugPrint('   🔎 testerId = "$testerId"로 필터링: ${filteredWorkflows.docs.length}개');
+        debugPrint('ℹ️ [INFO] 완료된 미션 없음 (정상)');
+        return <MissionCard>[];
       }
 
       debugPrint('');
