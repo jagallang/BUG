@@ -161,6 +161,12 @@ class MissionWorkflowService {
 
         // v2.25.18: totalDays 만큼 모든 일일 미션 미리 생성
         final workflow = await getMissionWorkflow(workflowId);
+
+        AppLogger.info(
+          '📝 Generating dailyInteractions: workflowId=$workflowId, totalDays=${workflow.totalDays}, dailyReward=${workflow.dailyReward}',
+          'MissionWorkflow'
+        );
+
         final startDate = DateTime.now();
         final allDayMissions = List.generate(workflow.totalDays, (index) {
           return {
@@ -184,25 +190,41 @@ class MissionWorkflowService {
         updateData['metadata.approvalFeedback'] = feedback;
       }
 
+      // v2.108.2: Firestore 업데이트 전 로깅
+      AppLogger.info(
+        '💾 Updating Firestore: workflowId=$workflowId, updateData keys=${updateData.keys.join(", ")}',
+        'MissionWorkflow'
+      );
+
       await _firestore
           .collection('mission_workflows')
           .doc(workflowId)
           .update(updateData);
 
+      // v2.108.2: 업데이트 후 검증
+      final updatedWorkflow = await getMissionWorkflow(workflowId);
+      AppLogger.info(
+        '✅ Firestore updated successfully: dailyInteractions count=${updatedWorkflow.dailyInteractions.length}, currentState=${updatedWorkflow.currentState.code}',
+        'MissionWorkflow'
+      );
+
       // 테스터에게 알림 전송
-      final workflow = await getMissionWorkflow(workflowId);
       await _sendNotificationToTester(
-        testerId: workflow.testerId,
+        testerId: updatedWorkflow.testerId,
         title: approved ? '신청이 승인되었습니다!' : '신청이 거부되었습니다',
         message: approved
-            ? '${workflow.appName} 테스트를 시작할 수 있습니다.'
-            : '${workflow.appName} 테스트 신청이 거부되었습니다.',
+            ? '${updatedWorkflow.appName} 테스트를 시작할 수 있습니다.'
+            : '${updatedWorkflow.appName} 테스트 신청이 거부되었습니다.',
         data: {'workflowId': workflowId},
       );
 
       AppLogger.info('Mission application processed successfully', 'MissionWorkflow');
-    } catch (e) {
-      AppLogger.error('Failed to process mission application', e.toString());
+    } catch (e, stackTrace) {
+      // v2.108.2: 에러 발생 시 스택 트레이스 포함
+      AppLogger.error(
+        'Failed to process mission application: $e\nStack trace: $stackTrace',
+        e.toString()
+      );
       rethrow;
     }
   }
@@ -562,9 +584,42 @@ class MissionWorkflowService {
 
       AppLogger.info(
         'Provider $providerId activating day ${workflow.currentDay + 1} '
-        '(current state: ${workflow.currentState.code})',
+        '(current state: ${workflow.currentState.code}, dailyInteractions count: ${workflow.dailyInteractions.length})',
         'MissionWorkflow'
       );
+
+      // v2.108.2: dailyInteractions 배열이 비어있으면 자동 생성 (v2.25.18 이전 승인 미션 복구)
+      if (workflow.dailyInteractions.isEmpty) {
+        AppLogger.warning(
+          '⚠️ dailyInteractions is empty for workflow $workflowId. Auto-generating ${workflow.totalDays} daily missions...',
+          'MissionWorkflow'
+        );
+
+        final startDate = DateTime.now();
+        final allDayMissions = List.generate(workflow.totalDays, (index) {
+          return {
+            'dayNumber': index + 1,
+            'date': startDate.add(Duration(days: index)),
+            'testerStarted': false,
+            'testerCompleted': false,
+            'testerScreenshots': [],
+            'testerData': {},
+            'providerApproved': false,
+            'dailyReward': workflow.dailyReward,
+            'rewardPaid': false,
+          };
+        });
+
+        await _firestore
+            .collection('mission_workflows')
+            .doc(workflowId)
+            .update({'dailyInteractions': allDayMissions});
+
+        AppLogger.info(
+          '✅ Auto-generated ${allDayMissions.length} daily missions successfully',
+          'MissionWorkflow'
+        );
+      }
 
       // v2.108.1: 초기 승인 상태(missionInProgress) 또는 일일 미션 승인 상태 허용
       final allowedStates = [
