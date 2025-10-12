@@ -1717,8 +1717,31 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     }
   }
 
-  /// 앱 삭제 확인 다이얼로그
+  /// v2.110.0: 앱 삭제 확인 다이얼로그 (에스크로 환불 정보 표시)
   Future<void> _showDeleteConfirmation(ProviderAppModel app) async {
+    // v2.110.0: 에스크로 홀딩 조회
+    int refundAmount = 0;
+    bool isLoadingEscrow = true;
+
+    try {
+      final holdingsQuery = await FirebaseFirestore.instance
+          .collection('escrow_holdings')
+          .where('appId', isEqualTo: app.id)
+          .where('status', isEqualTo: 'active')
+          .get();
+
+      for (var doc in holdingsQuery.docs) {
+        final data = doc.data();
+        refundAmount += (data['remainingAmount'] as int?) ?? (data['totalAmount'] as int?) ?? 0;
+      }
+      isLoadingEscrow = false;
+    } catch (e) {
+      AppLogger.warning('Failed to fetch escrow holdings: $e', 'AppManagement');
+      isLoadingEscrow = false;
+    }
+
+    if (!mounted) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
@@ -1735,27 +1758,99 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('정말로 이 앱을 삭제하시겠습니까?'),
-              SizedBox(height: 8.h),
+              SizedBox(height: 12.h),
+
+              // 앱 정보
+              Container(
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '📱 ${app.appName}',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15.sp),
+                    ),
+                    Text(
+                      '📂 ${app.category}',
+                      style: TextStyle(fontSize: 13.sp, color: Colors.grey[700]),
+                    ),
+                  ],
+                ),
+              ),
+
+              // v2.110.0: 환불 정보 표시
+              if (refundAmount > 0) ...[
+                SizedBox(height: 12.h),
+                Container(
+                  padding: EdgeInsets.all(12.w),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(8.r),
+                    border: Border.all(color: Colors.green[300]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.account_balance_wallet, color: Colors.green[700], size: 18.sp),
+                          SizedBox(width: 6.w),
+                          Text(
+                            '에스크로 환불',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.green[800],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 6.h),
+                      Text(
+                        '💰 ${_formatAmount(refundAmount)}P',
+                        style: TextStyle(
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green[900],
+                        ),
+                      ),
+                      SizedBox(height: 4.h),
+                      Text(
+                        '→ 지갑으로 자동 환불됩니다',
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              SizedBox(height: 12.h),
+
+              // 경고 메시지
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
                   color: Colors.red[50],
                   borderRadius: BorderRadius.circular(8.r),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
                   children: [
-                    Text(
-                      '앱 이름: ${app.appName}',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    Text('카테고리: ${app.category}'),
-                    SizedBox(height: 8.h),
-                    Text(
-                      '⚠️ 이 작업은 되돌릴 수 없습니다.',
-                      style: TextStyle(
-                        color: Colors.red[700],
-                        fontWeight: FontWeight.w600,
+                    Icon(Icons.warning_amber, color: Colors.red[700], size: 18.sp),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        '⚠️ 이 작업은 되돌릴 수 없습니다.',
+                        style: TextStyle(
+                          color: Colors.red[700],
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -1785,6 +1880,32 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
     if (confirmed == true) {
       await _deleteApp(app);
+
+      // v2.110.0: 환불 완료 안내 (2초 후 표시 - Function 실행 시간 고려)
+      if (mounted && refundAmount > 0) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    Icon(Icons.check_circle, color: Colors.white, size: 20.sp),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Text(
+                        '💰 ${_formatAmount(refundAmount)}P 환불 처리 중...\n잠시 후 지갑을 확인하세요',
+                        style: TextStyle(fontSize: 13.sp),
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+        });
+      }
     }
   }
 

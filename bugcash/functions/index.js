@@ -1,5 +1,5 @@
 const {onCall, HttpsError} = require("firebase-functions/v2/https");
-const {onDocumentUpdated} = require("firebase-functions/v2/firestore");
+const {onDocumentUpdated, onDocumentDeleted} = require("firebase-functions/v2/firestore");
 const {initializeApp} = require("firebase-admin/app");
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
 
@@ -2063,6 +2063,174 @@ exports.getEscrowBalance = onCall({
       throw error;
     }
     throw new HttpsError("internal", error.message);
+  }
+});
+
+// ============================================================================
+// v2.110.0: Project Deletion & Escrow Refund
+// ============================================================================
+
+/**
+ * refundOnProjectDelete - 프로젝트 삭제 시 에스크로 자동 환불
+ * Trigger: projects 문서 삭제 시 자동 실행
+ *
+ * 처리 흐름:
+ * 1. 삭제된 프로젝트의 escrow_holdings 조회 (status='active')
+ * 2. 트랜잭션으로 일괄 처리:
+ *    - 공급자 지갑 잔액 복구
+ *    - 에스크로 지갑 차감
+ *    - escrow_holdings 상태 업데이트 (active → refunded)
+ *    - transactions 기록 생성
+ */
+exports.refundOnProjectDelete = onDocumentDeleted({
+  document: "projects/{projectId}",
+  region: "asia-northeast1",
+}, async (event) => {
+  const projectId = event.params.projectId;
+  const deletedProject = event.data.data(); // 삭제된 프로젝트 데이터
+  const appName = deletedProject?.appName || deletedProject?.title || "Deleted App";
+
+  console.log(`🔄 [Refund] Project deleted: ${projectId} (${appName})`);
+
+  try {
+    // 1. 에스크로 홀딩 조회 (status='active')
+    const holdingsSnapshot = await getFirestore()
+        .collection("escrow_holdings")
+        .where("appId", "==", projectId)
+        .where("status", "==", "active")
+        .get();
+
+    if (holdingsSnapshot.empty) {
+      console.log(`ℹ️  [Refund] No active escrow holding for project ${projectId}`);
+      return null;
+    }
+
+    console.log(`📦 [Refund] Found ${holdingsSnapshot.size} active holding(s) for project ${projectId}`);
+
+    // 2. 트랜잭션으로 환불 처리
+    return await getFirestore().runTransaction(async (transaction) => {
+      let totalRefunded = 0;
+      const refundResults = [];
+
+      for (const holdingDoc of holdingsSnapshot.docs) {
+        const holding = holdingDoc.data();
+        const amount = holding.remainingAmount || holding.totalAmount || 0;
+        const providerId = holding.providerId;
+        const providerName = holding.providerName || "Unknown Provider";
+
+        if (amount <= 0) {
+          console.log(`⚠️  [Refund] Holding ${holdingDoc.id} has no remaining amount, skipping`);
+          continue;
+        }
+
+        console.log(`💰 [Refund] Processing holding ${holdingDoc.id}: ${amount}P to provider ${providerId}`);
+
+        // 2.1 공급자 지갑 조회 및 복구
+        const providerWalletRef = getFirestore()
+            .collection("wallets")
+            .doc(providerId);
+        const providerWallet = await transaction.get(providerWalletRef);
+
+        if (providerWallet.exists) {
+          transaction.update(providerWalletRef, {
+            balance: FieldValue.increment(amount),
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+          console.log(`✅ [Refund] Provider wallet ${providerId} +${amount}P`);
+        } else {
+          console.warn(`⚠️  [Refund] Provider wallet ${providerId} not found, skipping wallet update`);
+        }
+
+        // 2.2 에스크로 지갑 차감
+        const escrowWalletRef = getFirestore()
+            .collection("wallets")
+            .doc(ESCROW_ACCOUNT_ID);
+        const escrowWallet = await transaction.get(escrowWalletRef);
+
+        if (escrowWallet.exists) {
+          transaction.update(escrowWalletRef, {
+            balance: FieldValue.increment(-amount),
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+          console.log(`✅ [Refund] Escrow wallet -${amount}P`);
+        }
+
+        // 2.3 escrow_holdings 상태 업데이트
+        transaction.update(holdingDoc.ref, {
+          status: "refunded",
+          refundedAt: FieldValue.serverTimestamp(),
+          refundReason: "project_deleted",
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        // 2.4 트랜잭션 기록 생성 (공급자)
+        const providerTxRef = getFirestore().collection("transactions").doc();
+        transaction.set(providerTxRef, {
+          userId: providerId,
+          type: "earn",
+          amount: amount,
+          status: "completed",
+          description: `에스크로 환불: ${appName}`,
+          metadata: {
+            appId: projectId,
+            appName: appName,
+            originalHoldingId: holdingDoc.id,
+            refundReason: "project_deleted",
+            refundType: "escrow_refund",
+          },
+          createdAt: FieldValue.serverTimestamp(),
+          completedAt: FieldValue.serverTimestamp(),
+        });
+        console.log(`✅ [Refund] Transaction record created for provider ${providerId}`);
+
+        // 2.5 트랜잭션 기록 생성 (에스크로)
+        const escrowTxRef = getFirestore().collection("transactions").doc();
+        transaction.set(escrowTxRef, {
+          userId: ESCROW_ACCOUNT_ID,
+          type: "spend",
+          amount: amount,
+          status: "completed",
+          description: `에스크로 환불: ${appName} (공급자: ${providerName})`,
+          metadata: {
+            appId: projectId,
+            appName: appName,
+            providerId: providerId,
+            providerName: providerName,
+            originalHoldingId: holdingDoc.id,
+            refundReason: "project_deleted",
+            refundType: "escrow_refund",
+          },
+          createdAt: FieldValue.serverTimestamp(),
+          completedAt: FieldValue.serverTimestamp(),
+        });
+
+        totalRefunded += amount;
+        refundResults.push({
+          holdingId: holdingDoc.id,
+          providerId: providerId,
+          amount: amount,
+        });
+      }
+
+      console.log(`✅ [Refund] Transaction completed - Total refunded: ${totalRefunded}P for ${refundResults.length} holding(s)`);
+
+      return {
+        success: true,
+        projectId: projectId,
+        appName: appName,
+        totalRefunded: totalRefunded,
+        holdingsCount: refundResults.length,
+        refundResults: refundResults,
+      };
+    });
+  } catch (error) {
+    console.error(`❌ [Refund] Failed for project ${projectId}:`, error);
+    // Firestore trigger는 에러를 throw해도 재시도하므로, 로그만 남김
+    return {
+      success: false,
+      error: error.message,
+      projectId: projectId,
+    };
   }
 });
 

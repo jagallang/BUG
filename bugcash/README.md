@@ -5,13 +5,51 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.109.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.110.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.110.0)
+
+### 💰 에스크로 자동 환불 시스템 (v2.110.0) - **AUTO ESCROW REFUND**
+- **🎯 문제 해결**
+  - ✅ **자동 환불**: draft 앱 삭제 시 예치금 자동 환불
+  - ✅ **트랜잭션 무결성**: Firestore Transaction으로 원자적 처리
+  - ✅ **사용자 피드백**: 환불 금액 사전 표시 및 처리 안내
+  - ✅ **데이터 정합성**: escrow_holdings 상태 자동 업데이트
+
+- **📋 Cloud Function 구현**
+  - 🔄 **refundOnProjectDelete**: projects 문서 삭제 트리거
+  - 💾 **escrow_holdings 조회**: status='active' 필터링
+  - 💰 **자동 환불 처리**:
+    - 공급자 wallet balance +환불액
+    - 에스크로 wallet balance -환불액
+    - escrow_holdings status: active → refunded
+    - transactions 기록 생성 (type: 'earn')
+  - 📊 **상세 로깅**: 환불 프로세스 전 과정 추적
+
+- **📋 Flutter UI 개선**
+  - 💡 **삭제 확인 다이얼로그**: 환불 금액 사전 표시
+  - 🎨 **시각적 피드백**: 녹색 박스로 환불 정보 강조
+  - ⏱️ **비동기 안내**: 2초 후 환불 처리 중 메시지
+  - 📱 **반응형 디자인**: 모바일/웹 최적화
+
+- **🔧 기술 구현**
+  - 📁 **2개 파일 수정**:
+    - functions/index.js: Line 2069-2235 (167줄 추가)
+    - app_management_page.dart: Line 1720-1910 (191줄 수정)
+  - 🔐 **Firestore Transaction**: 원자성 보장
+  - 🎯 **onDocumentDeleted**: 삭제 이벤트 자동 감지
+  - ✅ **에러 핸들링**: 부분 실패 시에도 로그 기록
+
+- **💡 사용자 경험**
+  - 삭제 전: "💰 10,000P 환불" 표시
+  - 삭제 중: "앱이 성공적으로 삭제되었습니다"
+  - 삭제 후: "💰 10,000P 환불 처리 중... 잠시 후 지갑을 확인하세요"
 
 ## ✨ 주요 기능 (v2.109.0)
 
