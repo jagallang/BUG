@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/exceptions/wallet_exceptions.dart';
@@ -9,10 +8,8 @@ import '../entities/transaction_entity.dart';
 /// Repository를 통해 포인트 충전/사용/적립/출금 처리
 class WalletService {
   final WalletRepository _repository;
-  final FirebaseFirestore _firestore;
 
-  WalletService(this._repository, {FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  WalletService(this._repository);
 
   /// 포인트 충전 (공급자)
   /// Cloud Function을 통한 서버 검증
