@@ -367,8 +367,10 @@ class MissionManagementService {
         });
   }
 
-  /// 오늘 미션 조회 (앱 기반)
+  /// 오늘 미션 조회 (앱 기반) - v2.106.6: mission_workflows 구조에 맞게 수정
   Stream<List<DailyMissionModel>> watchTodayMissions(String appId) {
+    AppLogger.info('📋 [watchTodayMissions] 조회 시작 - appId=$appId', 'MissionManagement');
+
     final today = DateTime.now();
     final startOfDay = DateTime(today.year, today.month, today.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
@@ -376,13 +378,66 @@ class MissionManagementService {
     return _firestore
         .collection(_dailyMissionsCollection)
         .where('appId', isEqualTo: appId)
-        .where('missionDate', isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
-        .where('missionDate', isLessThan: Timestamp.fromDate(endOfDay))
-        .orderBy('missionDate')
+        .where('currentState', whereIn: [
+          'in_progress',              // 미션 진행중
+          'testing_completed',        // 테스트 완료 (승인 대기)
+          'daily_mission_started',    // 레거시
+          'daily_mission_completed'   // 레거시 (승인 대기)
+        ])
         .snapshots()
-        .map((snapshot) => snapshot.docs
-            .map((doc) => DailyMissionModel.fromFirestore(doc))
-            .toList());
+        .map((snapshot) {
+          AppLogger.info('📋 [watchTodayMissions] ${snapshot.docs.length}개 미션 조회됨', 'MissionManagement');
+
+          final missions = snapshot.docs
+              .map((doc) {
+                try {
+                  final workflowData = MissionWorkflowModel.fromFirestore(doc);
+
+                  // 오늘 날짜 필터링 (startedAt 기준, 없으면 appliedAt)
+                  final referenceDate = workflowData.startedAt ?? workflowData.appliedAt;
+                  if (referenceDate.isBefore(startOfDay) || referenceDate.isAfter(endOfDay)) {
+                    return null; // 오늘이 아닌 미션 제외
+                  }
+
+                  AppLogger.info(
+                    '  - ${doc.id}: ${workflowData.currentState.code}, startedAt=${workflowData.startedAt}',
+                    'MissionManagement'
+                  );
+
+                  return DailyMissionModel(
+                    id: workflowData.id,
+                    appId: workflowData.appId,
+                    testerId: workflowData.testerId,
+                    missionDate: referenceDate,
+                    status: _convertWorkflowStateToDailyMissionStatus(workflowData.currentState),
+                    missionTitle: workflowData.appName.isNotEmpty
+                        ? '${workflowData.appName} 테스트'
+                        : '일일 테스트 미션',
+                    missionDescription: workflowData.appName.isNotEmpty
+                        ? '${workflowData.appName} 앱의 주요 기능들을 테스트하고 발견된 이슈를 리포트해주세요.'
+                        : '앱의 주요 기능들을 테스트하고 발견된 이슈를 리포트해주세요.',
+                    baseReward: workflowData.dailyReward > 0
+                        ? workflowData.dailyReward
+                        : 5000,
+                    workflowId: workflowData.id,
+                    currentState: workflowData.currentState.code,
+                    startedAt: workflowData.startedAt,
+                    completedAt: workflowData.completedAt,
+                  );
+                } catch (e) {
+                  AppLogger.error('Failed to convert mission workflow', 'MissionManagement', e);
+                  return null;
+                }
+              })
+              .whereType<DailyMissionModel>()
+              .toList();
+
+          // 시작 시간 기준 정렬
+          missions.sort((a, b) => (b.startedAt ?? b.missionDate).compareTo(a.startedAt ?? a.missionDate));
+
+          AppLogger.info('✅ [watchTodayMissions] 오늘 미션 ${missions.length}개 반환', 'MissionManagement');
+          return missions;
+        });
   }
 
   /// 테스터 오늘 미션 조회 (테스터 기반) - mission_workflows 컬렉션 사용
