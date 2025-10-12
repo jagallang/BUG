@@ -374,13 +374,13 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
             ),
           ),
         if (widget.onDelete != null) SizedBox(width: 6.w),
-        // 상태 확인 중 버튼
+        // v2.111.2: 일일 미션 제출 안내 버튼
         Expanded(
           flex: 2,
           child: ElevatedButton.icon(
             onPressed: null,
-            icon: Icon(Icons.help_outline, size: 14.sp),
-            label: Text('상태 확인 중', style: TextStyle(fontSize: 13.sp)),
+            icon: Icon(Icons.assignment_outlined, size: 14.sp),
+            label: Text('일일 미션을 제출하세요', style: TextStyle(fontSize: 13.sp)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
               disabledBackgroundColor: Colors.grey.withValues(alpha: 0.5),

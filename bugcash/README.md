@@ -5,13 +5,26 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.111.1-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.111.2-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.111.2)
+
+### 📝 미션 카드 버튼 텍스트 개선 (v2.111.2) - **MISSION CARD UX IMPROVEMENT**
+- **🎯 UI 개선**
+  - ✅ **명확한 안내**: "상태 확인 중" → "일일 미션을 제출하세요"
+  - ✅ **아이콘 변경**: `help_outline` → `assignment_outlined`
+  - ✅ **사용자 경험**: 더 직관적인 버튼 텍스트
+
+- **🔍 변경 내용**
+  - 📁 **1개 파일 수정**: `daily_mission_card.dart` Line 377-383
+  - ✅ **버튼 텍스트**: 일일 미션 제출 안내로 변경
+  - ✅ **아이콘**: 과제 제출 아이콘으로 교체
 
 ## ✨ 주요 기능 (v2.111.1)
 
