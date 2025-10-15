@@ -387,7 +387,7 @@ class MissionService {
         experience: applicationData['testerInfo']?['experience'] ?? 'beginner',
         motivation: applicationData['testerInfo']?['motivation'] ?? applicationData['message'] ?? '미션에 참여하고 싶습니다.',
         totalDays: applicationData['totalDays'] ?? FirestoreConstants.defaultTotalDays,
-        dailyReward: applicationData['dailyReward'] ?? FirestoreConstants.defaultDailyReward,
+        // v2.112.0: dailyReward 파라미터 제거 (nullable field)
       );
 
       AppLogger.info('워크플로우 생성 완료', 'WorkflowID: $workflowId');

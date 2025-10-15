@@ -202,8 +202,8 @@ class DailyMissionInteractionModel {
   final DateTime? providerApprovedAt;
   final String? providerFeedback;
   final int? providerRating;
-  final int dailyReward;
-  final bool rewardPaid;
+  final int? dailyReward; // v2.112.0: Nullable (deprecated)
+  final bool? rewardPaid; // v2.112.0: Nullable (deprecated)
   final DateTime? rewardPaidAt;
 
   const DailyMissionInteractionModel({
@@ -220,8 +220,8 @@ class DailyMissionInteractionModel {
     this.providerApprovedAt,
     this.providerFeedback,
     this.providerRating,
-    this.dailyReward = 5000,
-    this.rewardPaid = false,
+    this.dailyReward, // v2.112.0: No default (nullable)
+    this.rewardPaid, // v2.112.0: No default (nullable)
     this.rewardPaidAt,
   });
 

@@ -121,7 +121,7 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
                   Icon(Icons.attach_money, color: Colors.green, size: 24.sp),
                   SizedBox(width: 4.w),
                   Text(
-                    '${widget.mission.dailyReward.toStringAsFixed(0)}원',
+                    '${widget.mission.dailyReward?.toStringAsFixed(0) ?? '0'}원', // v2.112.0: Nullable handling
                     style: TextStyle(
                       fontSize: 24.sp,
                       fontWeight: FontWeight.bold,
