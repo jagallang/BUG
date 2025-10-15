@@ -20,7 +20,7 @@ class MissionWorkflowModel {
   final String experience;
   final String motivation;
   final int totalDays;
-  final int dailyReward;
+  final int? dailyReward; // v2.112.0: Nullable (deprecated)
   final int completedDays;
   final List<DailyMissionInteractionModel> dailyInteractions; // v2.16.0
 
@@ -41,7 +41,7 @@ class MissionWorkflowModel {
     required this.experience,
     required this.motivation,
     this.totalDays = 10,  // v2.18.0: 14 → 10 (권장 기본값)
-    this.dailyReward = 5000,
+    this.dailyReward, // v2.112.0: No default (nullable)
     this.completedDays = 0,
     this.dailyInteractions = const [], // v2.16.0
   });
