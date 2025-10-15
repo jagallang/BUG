@@ -139,7 +139,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   // v2.98.0: 숫자 입력 필드 컨트롤러
   final _maxTestersController = TextEditingController();
   final _testPeriodDaysController = TextEditingController();
-  final _dailyMissionPointsController = TextEditingController();
+  // v2.112.0: _dailyMissionPointsController 제거 (MVP 간소화)
   final _finalCompletionPointsController = TextEditingController();
 
   // Advanced options
@@ -148,7 +148,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   List<String> _selectedPlatforms = ['android'];
   int _maxTesters = 10;
   int _testPeriodDays = 14;
-  int _dailyMissionPoints = 100;
+  // v2.112.0: _dailyMissionPoints 제거 (MVP 간소화 - 최종 완료 포인트만 사용)
   int _finalCompletionPoints = 1000;
 
   // v2.97.0: 앱 스크린샷 (최대 3장)
@@ -193,7 +193,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     // v2.98.0: 숫자 입력 필드 초기화
     _maxTestersController.text = _maxTesters.toString();
     _testPeriodDaysController.text = _testPeriodDays.toString();
-    _dailyMissionPointsController.text = _dailyMissionPoints.toString();
+    // v2.112.0: _dailyMissionPointsController 초기화 제거
     _finalCompletionPointsController.text = _finalCompletionPoints.toString();
   }
 
@@ -208,19 +208,15 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     // v2.98.0: 숫자 입력 필드 컨트롤러 dispose
     _maxTestersController.dispose();
     _testPeriodDaysController.dispose();
-    _dailyMissionPointsController.dispose();
+    // v2.112.0: _dailyMissionPointsController dispose 제거
     _finalCompletionPointsController.dispose();
     super.dispose();
   }
 
-  /// 앱 등록에 필요한 총 포인트 계산
+  /// v2.112.0: 앱 등록에 필요한 총 포인트 계산 (최종 완료 포인트만)
   int _calculateRequiredPoints() {
-    // 일일 미션 포인트 × 테스트 기간 × 최대 테스터 수
-    final dailyTotal = _dailyMissionPoints * _testPeriodDays * _maxTesters;
     // 최종 완료 포인트 × 최대 테스터 수
-    final finalTotal = _finalCompletionPoints * _maxTesters;
-
-    return dailyTotal + finalTotal;
+    return _finalCompletionPoints * _maxTesters;
   }
 
   Future<void> _uploadApp() async {
@@ -303,7 +299,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       }
     }
 
-    // 포인트 차감 확인 (검증 활성화 시 잔액 정보 포함, 비활성화 시 기본 확인만)
+    // v2.112.0: 포인트 차감 확인 (일일 미션 포인트 표시 제거)
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -316,12 +312,10 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               '차감 후 잔액: ${_formatAmount(walletBalance - requiredPoints)}P\n\n'
               '• 테스터 수: $_maxTesters명\n'
               '• 테스트 기간: $_testPeriodDays일\n'
-              '• 일일 미션: ${_formatAmount(_dailyMissionPoints)}P\n'
               '• 최종 완료: ${_formatAmount(_finalCompletionPoints)}P'
             : '앱을 등록하시겠습니까?\n\n'
               '• 테스터 수: $_maxTesters명\n'
               '• 테스트 기간: $_testPeriodDays일\n'
-              '• 일일 미션: ${_formatAmount(_dailyMissionPoints)}P\n'
               '• 최종 완료: ${_formatAmount(_finalCompletionPoints)}P\n\n'
               '⚠️ 포인트 검증이 비활성화되어 있습니다.',
         ),
@@ -392,9 +386,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         // v2.97.0: App screenshots
         'screenshots': screenshotUrls,
 
-        // 고급 보상 시스템 (3단계)
+        // v2.112.0: 보상 시스템 간소화 (최종 완료 포인트만)
         'rewards': {
-          'dailyMissionPoints': _dailyMissionPoints,
           'finalCompletionPoints': _finalCompletionPoints,
           'currency': 'KRW',
         },
@@ -441,6 +434,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         final depositFunction = FirebaseFunctions.instanceFor(region: 'asia-northeast1')
             .httpsCallable('depositToEscrow');
 
+        // v2.112.0: 에스크로 breakdown 간소화 (일일 미션 포인트 제거)
         final result = await depositFunction.call({
           'appId': docRef.id,
           'appName': _appNameController.text,
@@ -450,9 +444,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           'breakdown': {
             'maxTesters': _maxTesters,
             'testPeriodDays': _testPeriodDays,
-            'dailyMissionPoints': _dailyMissionPoints,
             'finalCompletionPoints': _finalCompletionPoints,
-            'dailyTotal': _dailyMissionPoints * _testPeriodDays * _maxTesters,
             'finalTotal': _finalCompletionPoints * _maxTesters,
           },
         });
@@ -499,7 +491,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               _selectedPlatforms = ['android'];
               _maxTesters = 10;
               _testPeriodDays = 14;
-              _dailyMissionPoints = 100;
+              // v2.112.0: _dailyMissionPoints 재설정 제거
               _finalCompletionPoints = 1000;
             });
           }
@@ -1134,68 +1126,10 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             ),
             SizedBox(height: 20.h),
 
-            // 고급 보상 시스템 (3단계)
-            _buildSectionHeader('고급 보상 설정'),
+            // v2.112.0: 보상 설정 간소화 (최종 완료 포인트만)
+            _buildSectionHeader('보상 설정'),
             SizedBox(height: 12.h),
-            // 일일 미션 포인트 (v2.98.1: 레이아웃 수정)
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _dailyMissionPointsController,
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) {
-                      _dailyMissionPoints = int.tryParse(value) ?? 100;
-                    },
-                    decoration: InputDecoration(
-                      labelText: '일일 미션 포인트',
-                      hintText: '매일 완료 시 지급되는 포인트',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 4.w),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(
-                      width: 32.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.add, size: 16.sp),
-                        onPressed: () {
-                          setState(() {
-                            _dailyMissionPoints += 10;
-                            _dailyMissionPointsController.text = _dailyMissionPoints.toString();
-                          });
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 32.w,
-                      height: 28.h,
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
-                        icon: Icon(Icons.remove, size: 16.sp),
-                        onPressed: () {
-                          setState(() {
-                            if (_dailyMissionPoints > 10) {
-                              _dailyMissionPoints -= 10;
-                              _dailyMissionPointsController.text = _dailyMissionPoints.toString();
-                            }
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            SizedBox(height: 12.h),
-            // 최종 완료 포인트 (v2.98.1: 레이아웃 수정)
+            // 최종 완료 포인트
             Row(
               children: [
                 Expanded(

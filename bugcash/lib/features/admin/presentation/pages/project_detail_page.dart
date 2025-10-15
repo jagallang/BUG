@@ -24,12 +24,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     return widget.projectData['rewards'] as Map<String, dynamic>? ?? {};
   }
 
-  // 3단계 고급보상시스템 개별 포인트 접근 함수들
-
-  int get dailyMissionPoints {
-    final rewards = _advancedRewardData;
-    return (rewards['dailyMissionPoints'] as num?)?.toInt() ?? 0;
-  }
+  // v2.112.0: Simplified reward system - removed dailyMissionPoints
 
   int get finalCompletionPoints {
     final rewards = _advancedRewardData;
@@ -46,21 +41,19 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     return (rewards['estimatedMinutes'] as num?)?.toInt() ?? 60;
   }
 
-  // 3단계 고급보상시스템 총 예상 포인트 계산
+  // v2.112.0: Simplified reward calculation - removed daily points
   int get totalAdvancedReward {
     if (!hasAdvancedRewardSystem) {
-      return 0; // 3단계 보상 데이터가 없으면 0
+      return 0;
     }
-    final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30);
-    final progressReward = dailyMissionPoints * estimatedDays;
-    final completionReward = finalCompletionPoints + bonusPoints;
-    return progressReward + completionReward;
+    // v2.112.0: Only finalCompletionPoints + bonusPoints
+    return finalCompletionPoints + bonusPoints;
   }
 
+  // v2.112.0: Simplified reward system check
   bool get hasAdvancedRewardSystem {
     final rewards = _advancedRewardData;
-    return rewards.containsKey('dailyMissionPoints') ||
-           rewards.containsKey('finalCompletionPoints') ||
+    return rewards.containsKey('finalCompletionPoints') ||
            rewards.containsKey('bonusPoints');
   }
 
@@ -201,13 +194,7 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
                   SizedBox(height: 12.h),
                   Divider(color: Colors.green[300]),
                   SizedBox(height: 8.h),
-                  if (dailyMissionPoints > 0) ...[
-                    _buildRewardRow('일일미션리워드', dailyMissionPoints, isDaily: true),
-                    Text(
-                      '  └ 예상 ${(estimatedMinutes / (24 * 60)).ceil().clamp(1, 30)}일 × ₩${NumberFormat('#,###').format(dailyMissionPoints)}',
-                      style: TextStyle(fontSize: 12.sp, color: Colors.grey[600]),
-                    ),
-                  ],
+                  // v2.112.0: Removed daily mission rewards, only showing final completion
                   if (finalCompletionPoints > 0) _buildRewardRow('최종완료리워드', finalCompletionPoints),
                   if (bonusPoints > 0) _buildRewardRow('추가보너스리워드', bonusPoints),
                 ],

@@ -40,10 +40,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   }
 
 
-  int get dailyMissionPoints {
-    final rewards = _advancedRewardData;
-    return (rewards['dailyMissionPoints'] as num?)?.toInt() ?? 0;
-  }
+  // v2.112.0: dailyMissionPoints removed (reward system simplification)
 
   int get finalCompletionPoints {
     final rewards = _advancedRewardData;
@@ -55,28 +52,21 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     return (rewards['bonusPoints'] as num?)?.toInt() ?? 0;
   }
 
-  // 고급보상시스템 총 포인트 계산 (심플화된 3단계 보상)
+  // v2.112.0: Simplified reward calculation - removed daily points calculation
   int get totalAdvancedReward {
     // 고급보상 데이터가 없으면 기존 방식 사용
     if (_advancedRewardData.isEmpty) {
       return missionReward;
     }
 
-    // 진행 중 보상 (예상 테스트 일수 기반)
-    final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30); // 최소 1일, 최대 30일
-    final progressReward = dailyMissionPoints * estimatedDays;
-
-    // 완료 시 추가 보상
-    final completionReward = finalCompletionPoints + bonusPoints;
-
-    return progressReward + completionReward;
+    // v2.112.0: Only finalCompletionPoints + bonusPoints
+    return finalCompletionPoints + bonusPoints;
   }
 
-  // 3단계 고급보상시스템 활성화 여부 확인
+  // v2.112.0: Simplified reward system check - removed dailyMissionPoints
   bool get hasAdvancedRewardSystem {
     final rewards = _advancedRewardData;
-    return rewards.containsKey('dailyMissionPoints') ||
-           rewards.containsKey('finalCompletionPoints') ||
+    return rewards.containsKey('finalCompletionPoints') ||
            rewards.containsKey('bonusPoints');
   }
 
@@ -1041,22 +1031,11 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     );
   }
 
-  // 고급보상시스템 상세 정보 위젯
+  // v2.112.0: Simplified reward details - removed daily mission rewards
   Widget _buildAdvancedRewardDetails() {
-    final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30);
-
     return Column(
       children: [
-
-        if (dailyMissionPoints > 0)
-          _buildRewardRow(
-            '진행 리워드',
-            dailyMissionPoints * estimatedDays,
-            Icons.calendar_today,
-            Colors.blue,
-            '일일 ${NumberFormat('#,###').format(dailyMissionPoints)}P × $estimatedDays일',
-          ),
-
+        // v2.112.0: Only showing final completion reward (no daily rewards)
         if (finalCompletionPoints > 0 || bonusPoints > 0)
           _buildRewardRow(
             '완료 리워드',

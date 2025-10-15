@@ -1336,11 +1336,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     final createdAt = (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now();
     final description = data['description'] ?? '';
     final maxTesters = data['maxTesters'] ?? 0;
-    // 보상 정보 읽기 - metadata 우선, rewards 폴백
+    // v2.112.0: Simplified reward system - removed dailyMissionPoints
     final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
     final rewards = data['rewards'] as Map<String, dynamic>? ?? {};
-    final dailyMissionPoints = metadata['dailyMissionPoints'] ??
-                              rewards['dailyMissionPoints'] ?? 0;
     final finalCompletionPoints = metadata['finalCompletionPoints'] ??
                                  rewards['finalCompletionPoints'] ?? 0;
     final bonusPoints = metadata['bonusPoints'] ??
@@ -1348,9 +1346,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     final estimatedMinutes = metadata['estimatedMinutes'] ??
                             rewards['estimatedMinutes'] ?? 60;
 
-    // 총보상 계산 (심플화된 3단계 보상)
+    // v2.112.0: Simplified reward calculation - removed dailyMissionPoints parameter
     final totalReward = _calculateTotalReward(
-      dailyMissionPoints: dailyMissionPoints,
       finalCompletionPoints: finalCompletionPoints,
       bonusPoints: bonusPoints,
       estimatedMinutes: estimatedMinutes,
@@ -3231,19 +3228,14 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     );
   }
 
-  // 총보상 계산 헬퍼 메서드 (심플화된 3단계 보상)
+  // v2.112.0: Simplified reward calculation - removed dailyMissionPoints
   int _calculateTotalReward({
-    required int dailyMissionPoints,
     required int finalCompletionPoints,
     required int bonusPoints,
     required int estimatedMinutes,
   }) {
-    // 심플화된 계산 로직: 진행 중 보상 + 완료 시 보상
-    final estimatedDays = (estimatedMinutes / (24 * 60)).ceil().clamp(1, 30);
-    final progressReward = dailyMissionPoints * estimatedDays;
-    final completionReward = finalCompletionPoints + bonusPoints;
-
-    return progressReward + completionReward;
+    // v2.112.0: Only completion rewards (no daily calculation)
+    return finalCompletionPoints + bonusPoints;
   }
 
   // 오류 다이얼로그 표시

@@ -789,13 +789,11 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           final platform = data['platform'] ?? 'android';
           final category = data['category'] ?? 'general';
 
-          // v2.19.0: 리워드 계산 (PRD 기준) - metadata 우선, rewards 폴백
+          // v2.112.0: Simplified reward calculation - only finalCompletionPoints
           final metadata = data['metadata'] as Map<String, dynamic>? ?? {};
           final rewards = data['rewards'] as Map<String, dynamic>? ?? {};
 
-          // 일일 리워드 계산
-          final dailyMissionPoints = _getIntValue(metadata['dailyMissionPoints']) ??
-                                    _getIntValue(rewards['dailyMissionPoints']) ?? 100;
+          // v2.112.0: Removed dailyMissionPoints, only using finalCompletionPoints
           final finalCompletionPoints = _getIntValue(metadata['finalCompletionPoints']) ??
                                         _getIntValue(rewards['finalCompletionPoints']) ?? 1000;
           final bonusPoints = _getIntValue(metadata['bonusPoints']) ??
@@ -805,8 +803,8 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           final testPeriod = _getIntValue(metadata['testPeriod']) ??
                             _getIntValue(data['testPeriodDays']) ?? 10;
 
-          // 총 리워드 = (일일 × 기간) + 완료 보너스 + 추가 보너스
-          final totalReward = (dailyMissionPoints * testPeriod) + finalCompletionPoints + bonusPoints;
+          // v2.112.0: Total reward = finalCompletionPoints + bonusPoints (no daily calculation)
+          final totalReward = finalCompletionPoints + bonusPoints;
 
           // v2.19.0: 테스터 수 계산
           final maxTestersValue = _getIntValue(metadata['maxTesters']) ??

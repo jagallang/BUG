@@ -34,7 +34,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
   late TextEditingController _testingGuidelinesController;
   late TextEditingController _minOSVersionController;
   late TextEditingController _appStoreUrlController;
-  late TextEditingController _dailyMissionPointsController;
+  // v2.112.0: dailyMissionPoints controller removed (reward system simplification)
   late TextEditingController _finalCompletionPointsController;
   late TextEditingController _bonusPointsController;
 
@@ -157,8 +157,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _appStoreUrlController =
         TextEditingController(text: metadata['appStoreUrl'] ?? '');
 
+    // v2.112.0: Reward system simplification - Only finalCompletionPoints remains
     // 보상 시스템 필드들 - rewards 객체 우선, metadata 폴백
-    // 새로 등록된 앱은 rewards 객체에, 기존 앱은 metadata에 저장됨
     final rewards = metadata['rewards'] as Map<String, dynamic>?;
     final legacyPrice = metadata['price'] as int?;
 
@@ -168,9 +168,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     debugPrint('🎁 rewards: $rewards');
     debugPrint('💰 legacyPrice: $legacyPrice');
 
-    final dailyMissionPoints = rewards?['dailyMissionPoints'] as int? ??
-        metadata['dailyMissionPoints'] as int? ??
-        (legacyPrice != null ? (legacyPrice * 0.1).round() : 100);
+    // v2.112.0: dailyMissionPoints removed, only finalCompletionPoints used
     final finalCompletionPoints = rewards?['finalCompletionPoints'] as int? ??
         metadata['finalCompletionPoints'] as int? ??
         (legacyPrice != null ? (legacyPrice * 0.6).round() : 1000);
@@ -179,13 +177,10 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         (legacyPrice != null ? (legacyPrice * 0.3).round() : 500);
 
     // 최종 계산된 값들 로그
-    debugPrint('📊 최종 보상 값 계산됨:');
-    debugPrint('   dailyMissionPoints: $dailyMissionPoints');
+    debugPrint('📊 최종 보상 값 계산됨 (v2.112.0):');
     debugPrint('   finalCompletionPoints: $finalCompletionPoints');
     debugPrint('   bonusPoints: $bonusPoints');
 
-    _dailyMissionPointsController =
-        TextEditingController(text: dailyMissionPoints.toString());
     _finalCompletionPointsController =
         TextEditingController(text: finalCompletionPoints.toString());
     _bonusPointsController =
@@ -209,7 +204,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _testingGuidelinesController.dispose();
     _minOSVersionController.dispose();
     _appStoreUrlController.dispose();
-    _dailyMissionPointsController.dispose();
+    // v2.112.0: dailyMissionPointsController removed
     _finalCompletionPointsController.dispose();
     _bonusPointsController.dispose();
 
@@ -254,16 +249,11 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         throw Exception('테스트 시간은 1분 이상이어야 합니다');
       }
 
-      // 포인트 시스템 검증
-      final dailyMissionPoints =
-          int.tryParse(_dailyMissionPointsController.text);
+      // v2.112.0: Simplified reward system validation - only finalCompletionPoints
       final finalCompletionPoints =
           int.tryParse(_finalCompletionPointsController.text);
       final bonusPoints = int.tryParse(_bonusPointsController.text);
 
-      if (dailyMissionPoints == null || dailyMissionPoints < 0) {
-        throw Exception('올바른 일일 미션 포인트를 입력해주세요');
-      }
       if (finalCompletionPoints == null || finalCompletionPoints < 0) {
         throw Exception('올바른 최종 완료 포인트를 입력해주세요');
       }
@@ -303,8 +293,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           'minOSVersion': _minOSVersionController.text,
           'appStoreUrl': _appStoreUrlController.text,
 
-          // 보상 시스템 (심플화된 3단계 보상)
-          'dailyMissionPoints': dailyMissionPoints,
+          // v2.112.0: Simplified reward system - removed dailyMissionPoints
           'finalCompletionPoints': finalCompletionPoints,
           'bonusPoints': bonusPoints,
 
@@ -312,9 +301,8 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
           'maxTesters': participantCount,
         },
 
-        // 테스터/관리자 모드와의 호환성을 위한 rewards 객체 (심플화된 3단계 보상)
+        // v2.112.0: Simplified rewards object - removed dailyMissionPoints
         'rewards': {
-          'dailyMissionPoints': dailyMissionPoints,
           'finalCompletionPoints': finalCompletionPoints,
           'bonusPoints': bonusPoints,
         },
@@ -518,65 +506,9 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
               ),
             ),
             SizedBox(height: 16.h),
-            // v2.43.5: 2개 필드만 유지 (버그 포인트 제거)
+            // v2.112.0: Only finalCompletionPoints field (dailyMissionPoints removed)
             Row(
               children: [
-                // 일일 미션 포인트
-                Expanded(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _dailyMissionPointsController,
-                          keyboardType: TextInputType.number,
-                          readOnly: true,
-                          decoration: InputDecoration(
-                            labelText: '일일미션지급',
-                            suffix: Text('P', style: TextStyle(color: Colors.orange[700])),
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8.r)),
-                            prefixIcon: const Icon(Icons.today),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 4.w),
-                      Column(
-                        children: [
-                          SizedBox(
-                            width: 32.w,
-                            height: 24.h,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.arrow_drop_up, size: 24.sp),
-                              onPressed: () {
-                                int current = int.tryParse(_dailyMissionPointsController.text) ?? 0;
-                                setState(() {
-                                  _dailyMissionPointsController.text = (current + 10).toString();
-                                });
-                              },
-                            ),
-                          ),
-                          SizedBox(
-                            width: 32.w,
-                            height: 24.h,
-                            child: IconButton(
-                              padding: EdgeInsets.zero,
-                              icon: Icon(Icons.arrow_drop_down, size: 24.sp),
-                              onPressed: () {
-                                int current = int.tryParse(_dailyMissionPointsController.text) ?? 0;
-                                if (current > 0) {
-                                  setState(() {
-                                    _dailyMissionPointsController.text = (current - 10).toString();
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 12.w),
                 // 프로젝트 종료 포인트
                 Expanded(
                   child: Row(
