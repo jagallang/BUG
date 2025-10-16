@@ -128,6 +128,12 @@ class AppManagementPage extends ConsumerStatefulWidget {
 class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   bool _showUploadDialog = false;
   bool _isSubmitting = false; // v2.108.4: 중복 클릭 방지
+
+  // v2.114.0: 스크린샷 업로드 진행상황 추적
+  String _uploadStatus = ''; // 업로드 상태 메시지
+  int _uploadedCount = 0; // 업로드 완료된 스크린샷 수
+  int _totalCount = 0; // 전체 스크린샷 수
+
   // Basic info controllers
   final _appNameController = TextEditingController();
   final _appUrlController = TextEditingController();
@@ -338,25 +344,58 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     setState(() => _isSubmitting = true);
 
     try {
-      // v2.97.0: 스크린샷 업로드 (있을 경우)
+      // v2.114.0: 스크린샷 업로드 (진행상황 피드백 포함)
       List<String> screenshotUrls = [];
       if (_appScreenshots.isNotEmpty) {
         final storageService = StorageService();
         final tempAppId = 'temp_${DateTime.now().millisecondsSinceEpoch}';
 
+        // 진행상황 초기화
+        setState(() {
+          _totalCount = _appScreenshots.length;
+          _uploadedCount = 0;
+          _uploadStatus = '스크린샷 업로드 중... (0/$_totalCount)';
+        });
+
         for (int i = 0; i < _appScreenshots.length; i++) {
           try {
+            // 현재 업로드 중인 스크린샷 표시
+            setState(() {
+              _uploadStatus = '스크린샷 업로드 중... (${i + 1}/$_totalCount)';
+            });
+
             final url = await storageService.uploadAppScreenshot(
               appId: tempAppId,
               file: _appScreenshots[i],
               index: i,
             );
             screenshotUrls.add(url);
+
+            // 업로드 성공
+            setState(() {
+              _uploadedCount++;
+              _uploadStatus = '스크린샷 업로드 완료 ($_uploadedCount/$_totalCount)';
+            });
+
             AppLogger.info('Screenshot $i uploaded: $url', 'AppManagement');
           } catch (e) {
             AppLogger.error('Screenshot $i upload failed: $e', 'AppManagement');
-            // 스크린샷 업로드 실패 시 계속 진행 (선택사항이므로)
+
+            // 업로드 실패 - 사용자에게 알림
+            setState(() {
+              _uploadStatus = '스크린샷 ${i + 1} 업로드 실패 (계속 진행)';
+            });
+
+            // 짧은 대기 후 다음 파일로 진행
+            await Future.delayed(const Duration(milliseconds: 500));
           }
+        }
+
+        // 업로드 완료 메시지
+        if (mounted) {
+          setState(() {
+            _uploadStatus = '스크린샷 업로드 완료 ($_uploadedCount/$_totalCount)';
+          });
         }
       }
 
@@ -493,6 +532,10 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               _testPeriodDays = 14;
               // v2.112.0: _dailyMissionPoints 재설정 제거
               _finalCompletionPoints = 1000;
+              // v2.114.0: 업로드 상태 초기화
+              _uploadStatus = '';
+              _uploadedCount = 0;
+              _totalCount = 0;
             });
           }
         });
@@ -500,8 +543,13 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     } catch (e) {
       AppLogger.error('Failed to upload app', e.toString());
       if (mounted) {
-        // v2.108.4: 등록 실패 - 플래그 해제
-        setState(() => _isSubmitting = false);
+        // v2.114.0: 등록 실패 - 플래그 및 업로드 상태 초기화
+        setState(() {
+          _isSubmitting = false;
+          _uploadStatus = '';
+          _uploadedCount = 0;
+          _totalCount = 0;
+        });
 
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('앱 등록 실패: ${e.toString()}')),
@@ -1273,6 +1321,10 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                             setState(() {
                               _isSubmitting = false;
                               _showUploadDialog = false;
+                              // v2.114.0: 업로드 상태 초기화
+                              _uploadStatus = '';
+                              _uploadedCount = 0;
+                              _totalCount = 0;
                             });
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -1308,14 +1360,30 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                       ),
-                      child: _isSubmitting // v2.108.4: 로딩 표시
-                        ? SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
+                      child: _isSubmitting // v2.114.0: 로딩 및 업로드 상태 표시
+                        ? Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              ),
+                              if (_uploadStatus.isNotEmpty) ...[
+                                SizedBox(width: 8.w),
+                                Flexible(
+                                  child: Text(
+                                    _uploadStatus,
+                                    style: TextStyle(fontSize: 12.sp, color: Colors.white),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ],
                           )
                         : const Text('등록'),
                     ),
