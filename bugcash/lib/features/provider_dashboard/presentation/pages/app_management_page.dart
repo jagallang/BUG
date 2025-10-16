@@ -1241,10 +1241,51 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                   child: SizedBox(
                     height: 48.h,
                     child: OutlinedButton(
-                      onPressed: () {
-                        setState(() {
-                          _showUploadDialog = false;
-                        });
+                      onPressed: () async {
+                        // v2.113.0: 취소 확인 모달 추가
+                        final confirmCancel = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('앱 등록 취소'),
+                            content: Text(
+                              _isSubmitting
+                                  ? '앱 등록을 취소하시겠습니까?\n\n진행 중인 작업이 중단됩니다.'
+                                  : '앱 등록을 취소하시겠습니까?\n\n입력한 내용이 저장되지 않습니다.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('계속 작성'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                ),
+                                child: const Text('취소'),
+                              ),
+                            ],
+                          ),
+                        );
+
+                        if (confirmCancel == true && mounted) {
+                          if (_isSubmitting) {
+                            setState(() {
+                              _isSubmitting = false;
+                              _showUploadDialog = false;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('앱 등록이 취소되었습니다'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                          } else {
+                            setState(() {
+                              _showUploadDialog = false;
+                            });
+                          }
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         shape: RoundedRectangleBorder(
