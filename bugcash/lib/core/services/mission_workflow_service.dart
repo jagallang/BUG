@@ -2,8 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/shared/models/mission_workflow_model.dart';
-import '../../features/wallet/domain/usecases/wallet_service.dart';
-import '../../features/wallet/data/repositories/wallet_repository_impl.dart';
 import '../utils/logger.dart';
 
 /// MissionWorkflowService Provider
@@ -164,7 +162,7 @@ class MissionWorkflowService {
         final workflow = await getMissionWorkflow(workflowId);
 
         AppLogger.info(
-          '📝 Generating dailyInteractions: workflowId=$workflowId, totalDays=${workflow.totalDays}, dailyReward=${workflow.dailyReward}',
+          '📝 Generating dailyInteractions: workflowId=$workflowId, totalDays=${workflow.totalDays}',
           'MissionWorkflow'
         );
 
@@ -178,8 +176,7 @@ class MissionWorkflowService {
             'testerScreenshots': [],
             'testerData': {},
             'providerApproved': false,
-            'dailyReward': workflow.dailyReward,
-            'rewardPaid': false,
+            // v2.117.0: dailyReward/rewardPaid 필드 제거 (최종 완료 시에만 포인트 지급)
           };
         });
         updateData['dailyInteractions'] = allDayMissions;
@@ -490,8 +487,7 @@ class MissionWorkflowService {
           if (rating != null) {
             interactions[i]['providerRating'] = rating;
           }
-          interactions[i]['rewardPaid'] = true;
-          interactions[i]['rewardPaidAt'] = now;
+          // v2.117.0: rewardPaid/rewardPaidAt 제거 (일일 포인트 지급 없음, 최종 완료 시에만 포인트 지급)
           break;
         }
       }

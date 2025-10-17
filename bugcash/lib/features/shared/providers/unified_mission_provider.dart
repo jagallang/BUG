@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/unified_mission_model.dart';
 import '../../../core/services/mission_workflow_service.dart';
-import '../../../core/services/projects_service.dart';
 
 // 🎯 중앙 집중식 통합 미션 관리 Provider
 // 모든 미션 관련 상태를 단일 Provider에서 관리하여 실시간 동기화 보장
@@ -227,10 +226,10 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         experience: experience,
         motivation: motivation,
         totalDays: 14, // 기본 14일
-        dailyReward: 0, // v2.112.0: dailyReward deprecated, set to 0
+        // v2.117.0: dailyReward 파라미터 제거 (최종 완료 시에만 포인트 지급)
       );
 
-      debugPrint('✅ UNIFIED_PROVIDER: 워크플로우 생성 성공 - ID: $workflowId (v2.112.0: dailyReward=0)');
+      debugPrint('✅ UNIFIED_PROVIDER: 워크플로우 생성 성공 - ID: $workflowId (v2.117.0: 최종 포인트만 지급)');
 
       // 이미 MissionWorkflowService에서 mission_workflows에 저장했으므로 추가 저장 불필요
       debugPrint('✅ UNIFIED_PROVIDER: 워크플로우 ID $workflowId로 mission_workflows에 저장 완료');

@@ -49,7 +49,7 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
     _currentUserId = providerId;
     _isProvider = true;
 
-    print('🔵 [MissionNotifier] Polling started for provider: $providerId');
+    AppLogger.info('Polling started for provider: $providerId', 'MissionNotifier');
 
     // 초기 로드
     refreshMissions();
