@@ -5,13 +5,47 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.111.2-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.117.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.117.0)
+
+### 🔧 일일 미션 포인트 지급 로직 제거 (v2.117.0) - **DAILY REWARD REMOVAL**
+- **🎯 문제 해결**
+  - ✅ **데이터 정합성**: v2.112.0 이후 잔존 일일 포인트 로직 완전 제거
+  - ✅ **로직 명확화**: 최종 완료 시에만 포인트 지급하는 구조 확립
+  - ✅ **하위 호환성**: 기존 데이터 읽기 정상 지원
+
+- **🔍 수정 내용**
+  - 📁 **mission_workflow_service.dart** (3곳)
+    - ❌ `approveDailyMission()`: rewardPaid/rewardPaidAt 필드 제거
+    - ❌ `processMissionApplication()`: dailyReward/rewardPaid 필드 생성 제거
+    - ✅ 로그 메시지 정리 (dailyReward 언급 제거)
+
+  - 📁 **unified_mission_provider.dart** (2곳)
+    - ❌ dailyReward 파라미터 제거
+    - ❌ 미사용 import 정리
+
+- **📊 동작 변경**
+  - ✅ **Before**: 일일 승인마다 rewardPaid: true (실제 지급 없음)
+  - ✅ **After**: 일일 승인은 상태만 업데이트
+  - ✅ **최종 완료**: `_payFinalReward()` → Firebase Function → 에스크로 포인트 지급
+
+- **🎯 포인트 지급 플로우**
+  ```
+  일일 미션 1~9: 승인만 (포인트 없음)
+    ↓
+  일일 미션 10 (최종): 승인 + _payFinalReward()
+    ↓
+  Firebase Function: payoutFromEscrow
+    ↓
+  Escrow Wallet → Tester Wallet (finalCompletionPoints)
+  ```
 
 ## ✨ 주요 기능 (v2.111.2)
 
