@@ -87,90 +87,34 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
   }
 
   /// 승인 처리
+  /// v2.118.0: 일일 포인트 지급 안내 제거, 최종 Day에만 포인트 안내 표시
   Future<void> _approveMission() async {
-    // 1단계: 일일 리워드 지급 안내
-    final firstConfirmed = await showDialog<bool>(
+    // v2.118.0: 최종 Day 여부 확인
+    final isFinalDay = widget.dayNumber >= widget.mission.totalDays;
+
+    // 승인 확인 다이얼로그 (1단계로 단순화)
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.info_outline, color: Colors.orange, size: 28.sp),
+            Icon(
+              isFinalDay ? Icons.celebration : Icons.check_circle_outline,
+              color: isFinalDay ? Colors.orange : Colors.green,
+              size: 28.sp
+            ),
             SizedBox(width: 8.w),
-            Text('리워드 지급 안내', style: TextStyle(fontSize: 18.sp)),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
             Text(
-              'Day ${widget.dayNumber} 미션을 승인하면',
-              style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.w600),
+              isFinalDay ? '최종 미션 승인' : '미션 승인 확인',
+              style: TextStyle(fontSize: 18.sp)
             ),
-            SizedBox(height: 12.h),
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
-                border: Border.all(color: Colors.green, width: 2),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.attach_money, color: Colors.green, size: 24.sp),
-                  SizedBox(width: 4.w),
-                  Text(
-                    '${widget.mission.dailyReward?.toStringAsFixed(0) ?? '0'}원', // v2.112.0: Nullable handling
-                    style: TextStyle(
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              '의 일일 리워드가 테스터에게 지급됩니다.',
-              style: TextStyle(fontSize: 14.sp, color: Colors.grey[700]),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text('취소', style: TextStyle(fontSize: 15.sp)),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-            ),
-            child: Text('계속', style: TextStyle(fontSize: 15.sp)),
-          ),
-        ],
-      ),
-    );
-
-    if (firstConfirmed != true) return;
-
-    // 2단계: 최종 승인 확인
-    if (!mounted) return;
-    final finalConfirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.check_circle_outline, color: Colors.green, size: 28.sp),
-            SizedBox(width: 8.w),
-            Text('최종 승인 확인', style: TextStyle(fontSize: 18.sp)),
           ],
         ),
         content: Text(
-          'Day ${widget.dayNumber} 미션을 최종 승인하시겠습니까?\n\n'
+          'Day ${widget.dayNumber} 미션을 승인하시겠습니까?\n\n'
+          '${isFinalDay
+            ? "⚠️ 마지막 미션입니다!\n승인 시 에스크로에서 최종 완료 포인트가 지급됩니다.\n\n"
+            : ""}'
           '승인 후에는 취소할 수 없습니다.',
           style: TextStyle(fontSize: 15.sp, height: 1.5),
         ),
@@ -182,16 +126,19 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green,
+              backgroundColor: isFinalDay ? Colors.orange : Colors.green,
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
             ),
-            child: Text('최종 승인', style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold)),
+            child: Text(
+              isFinalDay ? '최종 승인' : '승인',
+              style: TextStyle(fontSize: 15.sp, fontWeight: FontWeight.bold)
+            ),
           ),
         ],
       ),
     );
 
-    if (finalConfirmed != true) return;
+    if (confirmed != true) return;
 
     setState(() => _isSubmitting = true);
 
