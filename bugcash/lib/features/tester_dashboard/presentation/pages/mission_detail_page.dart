@@ -73,7 +73,12 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   String get missionCategory => widget.mission.type?.toString().split('.').last ?? '기능 테스트';
   int get currentParticipants => widget.mission.currentParticipants ?? widget.mission.testers ?? 0;
   int get maxParticipants => widget.mission.maxParticipants ?? widget.mission.maxTesters ?? 10;
-  int get estimatedMinutes => widget.mission.estimatedMinutes ?? widget.mission.duration ?? 30;
+  // v2.122.2: 공급자가 입력한 테스트 시간 우선 사용
+  int get estimatedMinutes =>
+      _appDetails?['testTimeMinutes'] ??
+      widget.mission.estimatedMinutes ??
+      widget.mission.duration ??
+      30;
   List<String> get requiredSkills => widget.mission.requiredSkills ?? <String>[];
   String get providerId {
     // 1. 앱 디테일에서 조회된 providerId 우선 사용
