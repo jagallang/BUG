@@ -141,7 +141,23 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.128.0 (Latest) - Firebase Storage 버킷 명시적 지정
+### v2.129.0 (Latest) - 테스터 UI 보상 정보 제거
+*Released: 2025-10-18*
+
+**🎨 UI 간소화:**
+- **보상 정보 제거**: 테스터 미션 진행 현황 페이지에서 "획득 보상" 및 "일당" 표시 영역 제거
+- 초기 운영 단계에서는 보상 기능 미사용으로 UI 단순화
+
+**📁 주요 수정 파일:**
+- `lib/features/tester_dashboard/presentation/pages/mission_tracking_page.dart`: 보상 정보 Container 제거 (Line 168-211)
+
+**✅ 결과:**
+- 진행률 표시 후 바로 일일 미션 타임라인으로 연결
+- 더 간결하고 집중된 UI
+
+---
+
+### v2.128.0 - Firebase Storage 버킷 명시적 지정
 *Released: 2025-10-18*
 
 **🔧 Firebase Storage 업로드 에러 해결:**

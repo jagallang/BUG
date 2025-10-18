@@ -165,50 +165,6 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
                 ),
               ],
             ),
-            SizedBox(height: 16.h),
-
-            // 보상 정보
-            Container(
-              padding: EdgeInsets.all(12.w),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.monetization_on, color: Colors.orange, size: 24.w),
-                  SizedBox(width: 12.w),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '획득 보상',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      Text(
-                        '${NumberFormat('#,###').format(workflow.totalEarnedReward)}원',
-                        style: TextStyle(
-                          fontSize: 20.sp,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    '일당 ${NumberFormat('#,###').format(workflow.dailyReward)}원',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
