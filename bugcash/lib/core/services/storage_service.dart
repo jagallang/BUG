@@ -5,7 +5,8 @@ import '../utils/logger.dart';
 /// v2.9.0: Firebase Storage 서비스 (웹/모바일 통합)
 /// 미션 스크린샷 업로드 관리 - XFile 기반
 class StorageService {
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  // v2.128.0: 명시적 버킷 지정으로 "No object exists" 에러 방지
+  final FirebaseStorage _storage = FirebaseStorage.instanceFor(bucket: 'gs://bugcash');
 
   /// v2.115.0: 미션 스크린샷 업로드 (XFile 지원 + 재시도 로직)
   ///

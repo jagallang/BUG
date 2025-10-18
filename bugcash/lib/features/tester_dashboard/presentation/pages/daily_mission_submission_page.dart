@@ -285,7 +285,7 @@ class _DailyMissionSubmissionPageState
           : Form(
               key: _formKey,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 100.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -361,14 +361,27 @@ class _DailyMissionSubmissionPageState
 
                     // 스크린샷 업로드
                     _buildScreenshotSection(),
-                    const SizedBox(height: 24),
-
-                    // 제출 버튼
-                    _buildSubmitButton(),
                   ],
                 ),
               ),
             ),
+      // v2.127.0: 제출 버튼을 하단 고정 영역으로 이동
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                offset: const Offset(0, -2),
+                blurRadius: 4,
+              ),
+            ],
+          ),
+          child: _buildSubmitButton(),
+        ),
+      ),
     );
   }
 

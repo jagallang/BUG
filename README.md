@@ -141,7 +141,29 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.126.0 (Latest) - 코드 품질 개선 완료
+### v2.128.0 (Latest) - Firebase Storage 버킷 명시적 지정
+*Released: 2025-10-18*
+
+**🔧 Firebase Storage 업로드 에러 해결:**
+- **"No object exists" 에러 수정**: `FirebaseStorage.instanceFor(bucket: 'gs://bugcash')` 명시적 버킷 지정
+- **UI 개선**: 미션 제출 버튼을 `SafeArea` + `bottomNavigationBar`로 이동하여 시스템 네비게이션바 겹침 방지
+- **컴파일 에러 수정**: Phase 5 코드 정리 후 누락된 `debugPrint` import 추가
+
+**📁 주요 수정 파일:**
+- `lib/core/services/storage_service.dart`: Storage 버킷 명시적 지정
+- `lib/services/firebase_service.dart`: Storage 버킷 명시적 지정
+- `lib/features/tester_dashboard/presentation/pages/daily_mission_submission_page.dart`: 제출 버튼 UI 개선
+- `lib/features/mission/presentation/providers/mission_state_notifier.dart`: debugPrint import 추가
+- `lib/features/shared/models/mission_workflow_model.dart`: debugPrint import 추가
+
+**✅ 결과:**
+- 미션 스크린샷 업로드 정상 작동
+- 제출 버튼 시스템 UI 겹침 해결
+- 전체 컴파일 에러 0개
+
+---
+
+### v2.126.0 - 코드 품질 개선 완료
 *Released: 2025-10-18*
 
 **📊 코드 품질 대폭 개선:**

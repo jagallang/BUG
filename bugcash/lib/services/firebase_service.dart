@@ -9,7 +9,8 @@ class FirebaseService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   // ignore: unused_field
   static final FirebaseAuth _auth = FirebaseAuth.instance;
-  static final FirebaseStorage _storage = FirebaseStorage.instance;
+  // v2.128.0: 명시적 버킷 지정으로 "No object exists" 에러 방지
+  static final FirebaseStorage _storage = FirebaseStorage.instanceFor(bucket: 'gs://bugcash');
 
   // Collections
   static const String missionsCollection = 'missions';
