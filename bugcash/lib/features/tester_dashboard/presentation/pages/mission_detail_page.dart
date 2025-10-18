@@ -1318,8 +1318,15 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           ),
           SizedBox(height: 16.h),
           _buildDetailRow('참여 인원', '${metadata['participantCount'] ?? 1}명'),
-          _buildDetailRow('테스트 기간', '${metadata['testPeriod'] ?? 14}일'),
-          _buildDetailRow('예상 소요시간', '${metadata['testTime'] ?? 30}분'),
+          // v2.122.2: 공급자가 입력한 테스트 기간과 시간 표시
+          _buildDetailRow(
+            '테스트 기간',
+            '${_appDetails?['testPeriodDays'] ?? metadata['testPeriod'] ?? 14}일'
+          ),
+          _buildDetailRow(
+            '예상 소요시간',
+            '${_appDetails?['testTimeMinutes'] ?? metadata['testTime'] ?? 30}분'
+          ),
           if (metadata['requirements'] != null && metadata['requirements'].toString().isNotEmpty) ...[
             SizedBox(height: 16.h),
             Text(
