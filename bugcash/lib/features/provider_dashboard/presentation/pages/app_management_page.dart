@@ -147,6 +147,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   final _testPeriodDaysController = TextEditingController();
   // v2.112.0: _dailyMissionPointsController 제거 (MVP 간소화)
   final _finalCompletionPointsController = TextEditingController();
+  // v2.122.0: 테스트 시간 컨트롤러
+  final _testTimeMinutesController = TextEditingController();
 
   // Advanced options
   String _selectedCategory = 'Productivity';
@@ -156,6 +158,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   int _testPeriodDays = 14;
   // v2.112.0: _dailyMissionPoints 제거 (MVP 간소화 - 최종 완료 포인트만 사용)
   int _finalCompletionPoints = 1000;
+  // v2.122.0: 테스트 시간 (분 단위)
+  int _testTimeMinutes = 30;
 
   // v2.97.0: 앱 스크린샷 (최대 3장)
   List<XFile> _appScreenshots = [];
@@ -201,6 +205,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     _testPeriodDaysController.text = _testPeriodDays.toString();
     // v2.112.0: _dailyMissionPointsController 초기화 제거
     _finalCompletionPointsController.text = _finalCompletionPoints.toString();
+    // v2.122.0: 테스트 시간 초기화
+    _testTimeMinutesController.text = _testTimeMinutes.toString();
   }
 
   @override
@@ -216,6 +222,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     _testPeriodDaysController.dispose();
     // v2.112.0: _dailyMissionPointsController dispose 제거
     _finalCompletionPointsController.dispose();
+    // v2.122.0: 테스트 시간 컨트롤러 dispose
+    _testTimeMinutesController.dispose();
     super.dispose();
   }
 
@@ -413,6 +421,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         // Extended fields matching database indexes
         'maxTesters': _maxTesters,
         'testPeriodDays': _testPeriodDays,
+        'testTimeMinutes': _testTimeMinutes, // v2.122.0: 테스트 시간
         'rewardPoints': _finalCompletionPoints, // For backward compatibility
         'totalTesters': 0,
         // v2.43.0: activeTesters, totalBugs, resolvedBugs, progressPercentage 초기값 제거
@@ -436,6 +445,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           'platforms': _selectedPlatforms,
           'maxParticipants': _maxTesters,
           'testDuration': _testPeriodDays,
+          'testTimeMinutes': _testTimeMinutes, // v2.122.0: 테스트 시간
         },
 
         // Timestamps
@@ -530,8 +540,14 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
               _selectedPlatforms = ['android'];
               _maxTesters = 10;
               _testPeriodDays = 14;
+              _testTimeMinutes = 30; // v2.122.0: 테스트 시간 초기화
               // v2.112.0: _dailyMissionPoints 재설정 제거
               _finalCompletionPoints = 1000;
+              // v2.122.0: 컨트롤러 초기화
+              _maxTestersController.text = _maxTesters.toString();
+              _testPeriodDaysController.text = _testPeriodDays.toString();
+              _testTimeMinutesController.text = _testTimeMinutes.toString();
+              _finalCompletionPointsController.text = _finalCompletionPoints.toString();
               // v2.114.0: 업로드 상태 초기화
               _uploadStatus = '';
               _uploadedCount = 0;
@@ -1163,6 +1179,65 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                             if (_testPeriodDays > 1) {
                               _testPeriodDays--;
                               _testPeriodDaysController.text = _testPeriodDays.toString();
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+
+            // v2.122.0: 테스트 시간 설정
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _testTimeMinutesController,
+                    keyboardType: TextInputType.number,
+                    onChanged: (value) {
+                      _testTimeMinutes = int.tryParse(value) ?? 30;
+                    },
+                    decoration: InputDecoration(
+                      labelText: '테스트 시간 (분)',
+                      hintText: '테스터가 앱을 사용할 시간',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 32.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.add, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            _testTimeMinutes += 5;
+                            _testTimeMinutesController.text = _testTimeMinutes.toString();
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 32.w,
+                      height: 28.h,
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        icon: Icon(Icons.remove, size: 16.sp),
+                        onPressed: () {
+                          setState(() {
+                            if (_testTimeMinutes > 5) {
+                              _testTimeMinutes -= 5;
+                              _testTimeMinutesController.text = _testTimeMinutes.toString();
                             }
                           });
                         },
