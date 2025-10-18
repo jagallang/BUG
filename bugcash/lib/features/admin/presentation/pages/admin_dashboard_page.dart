@@ -27,6 +27,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
   // v2.68.0: Finance 탭 - 거래 내역 필터 상태
   String _transactionsFilterStatus = 'all'; // all, pending, completed, failed
+  int _transactionsTabIndex = 0;
+  String _transactionsFilterType = 'all';
 
   // v2.70.0: 빠른 날짜 필터
   String _quickDateFilter = 'thisMonth'; // today, thisWeek, thisMonth, lastMonth, last3Months, all

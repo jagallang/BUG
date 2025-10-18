@@ -2737,8 +2737,8 @@ class _TimerDialogState extends State<TimerDialog> {
     final minutes = _elapsedSeconds ~/ 60;
     final seconds = _elapsedSeconds % 60;
 
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+      canPop: false,
       child: AlertDialog(
         title: Row(
           children: [
