@@ -2271,7 +2271,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       child: ElevatedButton(
         onPressed: canUse ? () {
           // v2.14.6: 프로덕션에서도 로그 출력을 위해 print 사용
-          print('🔵 [AppManagement] 미션 버튼 클릭\n'
+          debugPrint('🔵 [AppManagement] 미션 버튼 클릭\n'
                 '   ├─ 앱: ${app.appName}\n'
                 '   ├─ appId: ${app.id}\n'
                 '   ├─ providerId: ${app.providerId}\n'

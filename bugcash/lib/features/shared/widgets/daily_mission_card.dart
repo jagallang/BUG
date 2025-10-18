@@ -205,11 +205,11 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
 
   Widget _buildActionButton() {
     // 디버그 로그
-    print('🔍 [DailyMissionCard] _buildActionButton()');
-    print('   ├─ currentState: ${widget.mission.currentState}');
-    print('   ├─ startedAt: ${widget.mission.startedAt}');
-    print('   ├─ completedAt: ${widget.mission.completedAt}');
-    print('   └─ status: ${widget.mission.status}');
+    debugPrint('🔍 [DailyMissionCard] _buildActionButton()');
+    debugPrint('   ├─ currentState: ${widget.mission.currentState}');
+    debugPrint('   ├─ startedAt: ${widget.mission.startedAt}');
+    debugPrint('   ├─ completedAt: ${widget.mission.completedAt}');
+    debugPrint('   └─ status: ${widget.mission.status}');
 
     // 1. 공급자 승인 대기 중 (application_submitted)
     if (widget.mission.currentState == 'application_submitted') {

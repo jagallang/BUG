@@ -35,10 +35,10 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     _tabController = TabController(length: 3, vsync: this); // v2.36.0: 5개 → 3개 탭으로 축소
 
     // v2.14.7: 프로덕션 디버깅을 위한 print 로그
-    print('📱 [MissionManagementV2] 페이지 초기화');
-    print('   ├─ appId: ${widget.app.id}');
-    print('   ├─ appName: ${widget.app.appName}');
-    print('   └─ providerId: ${widget.app.providerId}');
+    debugPrint('📱 [MissionManagementV2] 페이지 초기화');
+    debugPrint('   ├─ appId: ${widget.app.id}');
+    debugPrint('   ├─ appName: ${widget.app.appName}');
+    debugPrint('   └─ providerId: ${widget.app.providerId}');
 
     FeatureFlagUtils.logFeatureUsage('mission_management_page_v2', widget.app.providerId);
 
@@ -47,16 +47,16 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
       // v2.14.4: dispose 후 ref 사용 방지
       if (mounted) {
         try {
-          print('🔄 [MissionManagementV2] 앱별 폴링 시작 시도...');
-          print('   ├─ appId: ${widget.app.id}');
-          print('   └─ providerId: ${widget.app.providerId}');
+          debugPrint('🔄 [MissionManagementV2] 앱별 폴링 시작 시도...');
+          debugPrint('   ├─ appId: ${widget.app.id}');
+          debugPrint('   └─ providerId: ${widget.app.providerId}');
 
           ref.read(cleanArchAppMissionProvider((appId: widget.app.id, providerId: widget.app.providerId)).notifier)
             .startPollingForApp(widget.app.id, widget.app.providerId);
 
-          print('✅ [MissionManagementV2] 폴링 시작 완료');
+          debugPrint('✅ [MissionManagementV2] 폴링 시작 완료');
         } catch (e) {
-          print('❌ [MissionManagementV2] 폴링 시작 실패: $e');
+          debugPrint('❌ [MissionManagementV2] 폴링 시작 실패: $e');
         }
       }
     });
@@ -152,11 +152,11 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
         return missionsState.when(
           initial: () {
-            print('⏳ [MissionManagementV2] 테스터탭 State: INITIAL');
+            debugPrint('⏳ [MissionManagementV2] 테스터탭 State: INITIAL');
             return const Center(child: Text('초기화 중...'));
           },
           loading: () {
-            print('🔄 [MissionManagementV2] 테스터탭 State: LOADING');
+            debugPrint('🔄 [MissionManagementV2] 테스터탭 State: LOADING');
             return const Center(child: CircularProgressIndicator());
           },
           loaded: (missions, isRefreshing) {
@@ -177,10 +177,10 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                     m.status == MissionWorkflowStatus.dailyMissionApproved)
                 .toList();
 
-            print('✅ [MissionManagementV2] 테스터탭 State: LOADED');
-            print('   ├─ 전체 미션: ${missions.length}개');
-            print('   ├─ 신청 대기: ${pendingApplications.length}개');
-            print('   └─ 진행 중인 테스터: ${activeTesters.length}개');
+            debugPrint('✅ [MissionManagementV2] 테스터탭 State: LOADED');
+            debugPrint('   ├─ 전체 미션: ${missions.length}개');
+            debugPrint('   ├─ 신청 대기: ${pendingApplications.length}개');
+            debugPrint('   └─ 진행 중인 테스터: ${activeTesters.length}개');
 
             return SingleChildScrollView(
               child: Column(
@@ -200,8 +200,8 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             );
           },
           error: (message, exception) {
-            print('❌ [MissionManagementV2] 테스터탭 State: ERROR');
-            print('   └─ 메시지: $message');
+            debugPrint('❌ [MissionManagementV2] 테스터탭 State: ERROR');
+            debugPrint('   └─ 메시지: $message');
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -555,11 +555,11 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
 
         return missionsState.when(
           initial: () {
-            print('⏳ [MissionManagementV2] 오늘탭 State: INITIAL');
+            debugPrint('⏳ [MissionManagementV2] 오늘탭 State: INITIAL');
             return const Center(child: Text('초기화 중...'));
           },
           loading: () {
-            print('🔄 [MissionManagementV2] 오늘탭 State: LOADING');
+            debugPrint('🔄 [MissionManagementV2] 오늘탭 State: LOADING');
             return const Center(child: CircularProgressIndicator());
           },
           loaded: (missions, isRefreshing) {
@@ -583,18 +583,18 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 .toList();
 
             // v2.108.0: 섹션별 필터 로깅
-            print('✅ [MissionManagementV2] 오늘탭 State: LOADED');
-            print('   ├─ 전체 미션: ${missions.length}개');
+            debugPrint('✅ [MissionManagementV2] 오늘탭 State: LOADED');
+            debugPrint('   ├─ 전체 미션: ${missions.length}개');
 
             // 각 미션의 실제 상태 출력
             for (var mission in missions) {
               final missionId = mission.id.length > 8 ? mission.id.substring(0, 8) : mission.id;
-              print('   │  Mission $missionId: status=${mission.status.name}');
+              debugPrint('   │  Mission $missionId: status=${mission.status.name}');
             }
 
-            print('   ├─ 진행중: ${inProgressMissions.length}개 (inProgress + testingCompleted)');
-            print('   ├─ 검토 대기: ${reviewPendingMissions.length}개 (dailyMissionCompleted)');
-            print('   └─ 미션 시작 대기: ${approvedMissions.length}개 (approved + dailyMissionApproved)');
+            debugPrint('   ├─ 진행중: ${inProgressMissions.length}개 (inProgress + testingCompleted)');
+            debugPrint('   ├─ 검토 대기: ${reviewPendingMissions.length}개 (dailyMissionCompleted)');
+            debugPrint('   └─ 미션 시작 대기: ${approvedMissions.length}개 (approved + dailyMissionApproved)');
 
             final totalTodayMissions = inProgressMissions.length + reviewPendingMissions.length + approvedMissions.length;
 
@@ -651,7 +651,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                             padding: EdgeInsets.symmetric(horizontal: 16.w),
                             itemCount: reviewPendingMissions.length,
                             itemBuilder: (context, index) {
-                              print('📝 [오늘탭-검토대기] Building card ${index + 1}/${reviewPendingMissions.length}');
+                              debugPrint('📝 [오늘탭-검토대기] Building card ${index + 1}/${reviewPendingMissions.length}');
                               final mission = reviewPendingMissions[index];
                               return _buildReviewPendingMissionCard(mission);
                             },
@@ -728,8 +728,8 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
             );
           },
           error: (message, exception) {
-            print('❌ [MissionManagementV2] 오늘탭 State: ERROR');
-            print('   └─ 메시지: $message');
+            debugPrint('❌ [MissionManagementV2] 오늘탭 State: ERROR');
+            debugPrint('   └─ 메시지: $message');
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -823,9 +823,9 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
   /// v2.22.0: 검토 대기중인 미션 카드
   Widget _buildReviewPendingMissionCard(MissionWorkflowEntity mission) {
     // v2.24.5: Debug - 카드 렌더링 확인
-    print('🔍 [ReviewPendingCard] Rendering for mission: ${mission.id}');
-    print('   ├─ testerName: ${mission.testerName}');
-    print('   ├─ dailyInteractions.length: ${mission.dailyInteractions.length}');
+    debugPrint('🔍 [ReviewPendingCard] Rendering for mission: ${mission.id}');
+    debugPrint('   ├─ testerName: ${mission.testerName}');
+    debugPrint('   ├─ dailyInteractions.length: ${mission.dailyInteractions.length}');
 
     // 가장 최근 제출된 일일 미션 찾기
     final submittedInteractions = mission.dailyInteractions
@@ -833,14 +833,14 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         .toList()
       ..sort((a, b) => b.dayNumber.compareTo(a.dayNumber));
 
-    print('   ├─ submittedInteractions.length: ${submittedInteractions.length}');
+    debugPrint('   ├─ submittedInteractions.length: ${submittedInteractions.length}');
 
     // v2.24.4: dailyMissionCompleted 상태면 최소한 Day 1은 제출되었다고 가정
     final latestDayNumber = submittedInteractions.isNotEmpty
         ? submittedInteractions.first.dayNumber
         : 1; // 0 대신 1 사용
 
-    print('   └─ latestDayNumber: $latestDayNumber');
+    debugPrint('   └─ latestDayNumber: $latestDayNumber');
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),

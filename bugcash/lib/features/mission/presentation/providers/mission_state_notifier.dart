@@ -84,7 +84,7 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
     _currentAppId = appId;  // v2.20.0: appId 저장하여 필터링에 사용
     _isProvider = true;
 
-    print('🔵 [MissionNotifier] Polling started for app: $appId (provider: $providerId)');
+    debugPrint('🔵 [MissionNotifier] Polling started for app: $appId (provider: $providerId)');
 
     // 초기 로드
     refreshMissions();
@@ -110,28 +110,28 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
   Future<void> refreshMissions() async {
     // v2.27.1: disposed 체크
     if (!mounted) {
-      print('⚠️ [MissionNotifier] Cannot refresh: already disposed');
+      debugPrint('⚠️ [MissionNotifier] Cannot refresh: already disposed');
       return;
     }
 
     if (_currentUserId == null) {
-      print('⚠️ [MissionNotifier] Cannot refresh: userId is null');
+      debugPrint('⚠️ [MissionNotifier] Cannot refresh: userId is null');
       return;
     }
 
     try {
-      print('🔄 [MissionNotifier] Refreshing missions...');
-      print('   ├─ userId: $_currentUserId');
-      print('   ├─ appId: $_currentAppId');
-      print('   └─ isProvider: $_isProvider');
+      debugPrint('🔄 [MissionNotifier] Refreshing missions...');
+      debugPrint('   ├─ userId: $_currentUserId');
+      debugPrint('   ├─ appId: $_currentAppId');
+      debugPrint('   └─ isProvider: $_isProvider');
 
       // v2.24.6: 캐시 무효화 (항상 최신 데이터 로드)
       if (_isProvider) {
         _getMissionsUseCase.invalidateProviderCache(_currentUserId!);
-        print('   └─ 🗑️ Provider cache invalidated');
+        debugPrint('   └─ 🗑️ Provider cache invalidated');
       } else {
         _getMissionsUseCase.invalidateTesterCache(_currentUserId!);
-        print('   └─ 🗑️ Tester cache invalidated');
+        debugPrint('   └─ 🗑️ Tester cache invalidated');
       }
 
       // v2.27.1: mounted 재확인 (Timer에서 호출되므로)
@@ -161,11 +161,11 @@ class MissionStateNotifier extends StateNotifier<MissionState> {
 
       state = MissionState.loaded(missions: filteredMissions);
 
-      print('✅ [MissionNotifier] Missions refreshed');
-      print('   ├─ Total loaded: ${missions.length} items');
-      print('   └─ Filtered for appId: ${filteredMissions.length} items');
+      debugPrint('✅ [MissionNotifier] Missions refreshed');
+      debugPrint('   ├─ Total loaded: ${missions.length} items');
+      debugPrint('   └─ Filtered for appId: ${filteredMissions.length} items');
     } catch (e) {
-      print('❌ [MissionNotifier] Failed to refresh missions: $e');
+      debugPrint('❌ [MissionNotifier] Failed to refresh missions: $e');
 
       // v2.28.0: 에러 처리 시에도 mounted 체크
       if (!mounted) return;
