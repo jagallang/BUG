@@ -1693,8 +1693,8 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         'testerId': authState.user!.uid,
         'providerId': finalProviderId,  // 검증된 providerId 사용
         'providerName': providerName,
-        'testerName': authState.user!.displayName ?? 'Unknown User',
-        'testerEmail': authState.user!.email ?? '',
+        'testerName': authState.user!.displayName,
+        'testerEmail': authState.user!.email,
         'missionName': missionAppName,
         'status': 'pending',
         'message': '미션에 참여하고 싶습니다.',
@@ -1705,8 +1705,8 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         'testerInfo': {
           'userType': authState.user!.primaryRole.toString(),
           'experience': 'beginner',
-          'name': authState.user!.displayName ?? 'Unknown User',
-          'email': authState.user!.email ?? '',
+          'name': authState.user!.displayName,
+          'email': authState.user!.email,
           'motivation': '새로운 앱을 테스트하며 버그를 찾는 것에 관심이 있습니다.',
         },
       };

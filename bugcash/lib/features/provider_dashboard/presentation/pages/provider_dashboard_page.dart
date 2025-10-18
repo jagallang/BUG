@@ -409,7 +409,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                         ? Container(
                             padding: EdgeInsets.all(16.w),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
+                              color: AppColors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8.r),
                               border: Border.all(color: AppColors.primary, width: 2),
                             ),
@@ -543,7 +543,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             width: 50.w,
             height: 50.w,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -594,7 +594,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.05),
+                color: color.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Column(
