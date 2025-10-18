@@ -908,9 +908,9 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               ),
             ],
           ),
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h),
           SizedBox(
-            height: 200.h,
+            height: 140.h,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: screenshots.length,
@@ -919,22 +919,23 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                   onTap: () => _showFullscreenImage(screenshots, index),
                   child: Container(
                     margin: EdgeInsets.only(
-                      right: index < screenshots.length - 1 ? 12.w : 0,
+                      right: index < screenshots.length - 1 ? 8.w : 0,
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(8.r),
                       child: Image.network(
                         screenshots[index],
-                        height: 200.h,
+                        height: 140.h,
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, loadingProgress) {
                           if (loadingProgress == null) return child;
                           return Container(
-                            width: 120.w,
-                            height: 200.h,
+                            width: 80.w,
+                            height: 140.h,
                             color: Colors.grey[200],
                             child: Center(
                               child: CircularProgressIndicator(
+                                strokeWidth: 2,
                                 value: loadingProgress.expectedTotalBytes != null
                                     ? loadingProgress.cumulativeBytesLoaded /
                                         loadingProgress.expectedTotalBytes!
@@ -945,20 +946,20 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                         },
                         errorBuilder: (context, error, stackTrace) {
                           return Container(
-                            width: 120.w,
-                            height: 200.h,
+                            width: 80.w,
+                            height: 140.h,
                             color: Colors.grey[200],
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(Icons.broken_image,
                                      color: Colors.grey[400],
-                                     size: 40.w),
-                                SizedBox(height: 8.h),
+                                     size: 30.w),
+                                SizedBox(height: 4.h),
                                 Text(
-                                  '이미지 로드 실패',
+                                  '로드 실패',
                                   style: TextStyle(
-                                    fontSize: 12.sp,
+                                    fontSize: 10.sp,
                                     color: Colors.grey[600],
                                   ),
                                 ),

@@ -77,6 +77,13 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             _buildBasicInfoSection(),
             SizedBox(height: 24.h),
 
+            // v2.122.0: 앱 스크린샷 갤러리
+            if (widget.projectData['screenshots'] != null &&
+                (widget.projectData['screenshots'] as List).isNotEmpty) ...[
+              _buildAppScreenshotsSection(),
+              SizedBox(height: 24.h),
+            ],
+
             // 고급보상시스템 정보
             _buildAdvancedRewardSection(),
             SizedBox(height: 24.h),
@@ -341,6 +348,186 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  // v2.122.0: 앱 스크린샷 갤러리
+  Widget _buildAppScreenshotsSection() {
+    final screenshots = (widget.projectData['screenshots'] as List?)?.cast<String>() ?? [];
+
+    if (screenshots.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: EdgeInsets.all(20.w),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12.r),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withValues(alpha: 0.1),
+            spreadRadius: 0,
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.photo_library, color: Colors.deepPurple[600], size: 20.w),
+              SizedBox(width: 8.w),
+              Text(
+                '📸 앱 스크린샷',
+                style: TextStyle(
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 16.h),
+          SizedBox(
+            height: 140.h,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: screenshots.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => _showFullscreenImage(screenshots, index),
+                  child: Container(
+                    margin: EdgeInsets.only(
+                      right: index < screenshots.length - 1 ? 8.w : 0,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8.r),
+                      child: Image.network(
+                        screenshots[index],
+                        height: 140.h,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            width: 80.w,
+                            height: 140.h,
+                            color: Colors.grey[200],
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                value: loadingProgress.expectedTotalBytes != null
+                                    ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                    : null,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 80.w,
+                            height: 140.h,
+                            color: Colors.grey[200],
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.broken_image,
+                                     color: Colors.grey[400],
+                                     size: 30.w),
+                                SizedBox(height: 4.h),
+                                Text(
+                                  '로드 실패',
+                                  style: TextStyle(
+                                    fontSize: 10.sp,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // v2.122.0: 전체 화면 이미지 뷰어
+  void _showFullscreenImage(List<String> screenshots, int initialIndex) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            PageView.builder(
+              itemCount: screenshots.length,
+              controller: PageController(initialPage: initialIndex),
+              itemBuilder: (context, index) {
+                return InteractiveViewer(
+                  minScale: 0.5,
+                  maxScale: 4.0,
+                  child: Center(
+                    child: Image.network(
+                      screenshots[index],
+                      fit: BoxFit.contain,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                    loadingProgress.expectedTotalBytes!
+                                : null,
+                            color: Colors.white,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.broken_image,
+                                   color: Colors.white54,
+                                   size: 60.w),
+                              SizedBox(height: 16.h),
+                              Text(
+                                '이미지 로드 실패',
+                                style: TextStyle(
+                                  fontSize: 16.sp,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              top: 40.h,
+              right: 20.w,
+              child: IconButton(
+                icon: Icon(Icons.close, color: Colors.white, size: 30.w),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
