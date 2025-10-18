@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.120.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.136.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,28 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.120.0)
+## ✨ 주요 기능 (v2.136.0)
+
+### 📸 공급자 스크린샷 확대/다운로드 기능 (v2.136.0) - **PROVIDER SCREENSHOT VIEWER**
+- **🖼️ 스크린샷 확대 보기**
+  - ✅ **전체화면 다이얼로그**: 제출된 스크린샷 클릭 시 전체화면 표시
+  - ✅ **InteractiveViewer**: 핀치 줌으로 확대/축소 (0.5배~4배)
+  - ✅ **이미지 번호 표시**: 현재 보고 있는 이미지 위치 표시 (예: "1 / 3")
+
+- **💾 스크린샷 다운로드**
+  - ✅ **다운로드 버튼**: 전체화면에서 다운로드 버튼 제공
+  - ✅ **Dio 패키지**: HTTP 클라이언트로 이미지 다운로드
+  - ✅ **path_provider**: 디바이스 저장 경로 자동 관리
+  - ✅ **진행상황 피드백**: SnackBar로 다운로드 상태 표시
+
+- **🎨 테스터 미션 카드 UI 간소화**
+  - ✅ **Day별 인디케이터 제거**: D1, D2, D3... 칩 제거
+  - ✅ **미션 설명 제거**: 불필요한 텍스트 제거로 카드 높이 축소
+  - ✅ **현재 Day 상태만 표시**: "Day 2 - 검토 대기" 형식으로 간결하게 표시
+
+- **📦 새로운 패키지**
+  - ✅ **dio ^5.4.0**: HTTP 클라이언트 및 파일 다운로드
+  - ✅ **path_provider ^2.1.1**: 플랫폼별 저장 경로 관리
 
 ### 🔧 Firebase Storage 리전 불일치 해결 (v2.120.0) - **STORAGE REGION FIX**
 - **🚨 문제 발생**
