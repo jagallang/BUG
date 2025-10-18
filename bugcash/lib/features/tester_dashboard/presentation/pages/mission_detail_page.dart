@@ -545,13 +545,13 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                 decoration: BoxDecoration(
-                  color: Colors.blue[100],
+                  color: Colors.orange[100],
                   borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Text(
                   missionCategory,
                   style: TextStyle(
-                    color: Colors.blue[700],
+                    color: Colors.orange[800],
                     fontSize: 12.sp,
                     fontWeight: FontWeight.w500,
                   ),
@@ -618,7 +618,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline, color: Colors.blue[600], size: 20.w),
+              Icon(Icons.info_outline, color: Colors.orange[700], size: 20.w),
               SizedBox(width: 8.w),
               Text(
                 '미션 정보',
@@ -673,7 +673,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
   Widget _buildInfoItem(String label, String value, IconData icon) {
     return Column(
       children: [
-        Icon(icon, color: Colors.blue[600], size: 20.w),
+        Icon(icon, color: Colors.orange[600], size: 20.w),
         SizedBox(height: 4.h),
         Text(
           value,
@@ -738,7 +738,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                     height: 6.w,
                     margin: EdgeInsets.only(top: 6.h, right: 8.w),
                     decoration: BoxDecoration(
-                      color: Colors.blue[600],
+                      color: Colors.orange[600],
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -776,7 +776,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
             height: 6.w,
             margin: EdgeInsets.only(top: 6.h, right: 8.w),
             decoration: BoxDecoration(
-              color: Colors.blue[600],
+              color: Colors.orange[600],
               shape: BoxShape.circle,
             ),
           ),
@@ -901,7 +901,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.photo_library, color: Colors.blue[600], size: 20.w),
+              Icon(Icons.photo_library, color: Colors.orange[700], size: 20.w),
               SizedBox(width: 8.w),
               Text(
                 '앱 스크린샷',
@@ -1078,7 +1078,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         children: [
           Row(
             children: [
-              Icon(Icons.apps, color: Colors.blue[600], size: 20.w),
+              Icon(Icons.apps, color: Colors.orange[700], size: 20.w),
               SizedBox(width: 8.w),
               Text(
                 '앱 기본정보',
@@ -1212,7 +1212,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                   style: TextStyle(
                     fontSize: 20.sp,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green[700],
+                    color: Colors.orange[700],
                   ),
                 ),
               ],
@@ -1551,18 +1551,18 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     if (_hasAlreadyApplied) {
       switch (_applicationStatus) {
         case 'pending':
-          return Colors.orange[600]!;
+          return Colors.amber[700]!;
         case 'approved':
         case 'active':
           return Colors.green[600]!;
         case 'rejected':
           return Colors.red[600]!;
         default:
-          return Colors.blue[600]!;
+          return Colors.orange[600]!;
       }
     }
 
-    return Colors.blue[600]!;
+    return Colors.orange[600]!;
   }
 
   // 버튼 텍스트 결정
