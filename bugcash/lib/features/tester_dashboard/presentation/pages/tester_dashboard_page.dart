@@ -1027,7 +1027,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
           child: filteredMissions.isEmpty
               ? _buildEmptyState(hasFilters: hasFilters)
               : ListView.builder(
-                  padding: ResponsiveWrapper.getResponsivePadding(context),
+                  padding: ResponsiveWrapper.getResponsivePadding(context).copyWith(
+                    top: 16.h,
+                    bottom: 16.h,
+                  ),
                   itemCount: filteredMissions.length,
                   itemBuilder: (context, index) {
                     final mission = filteredMissions[index];
@@ -1114,7 +1117,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
             testerId: entity.testerId,
             missionDate: entity.appliedAt,  // Use appliedAt as missionDate
             missionTitle: entity.appName,
-            missionDescription: '${entity.totalDays}일 일일 미션 테스트',
+            missionDescription: '',
             baseReward: entity.dailyReward ?? 0, // v2.112.0: Nullable handling
             status: _mapWorkflowStatusToDailyMissionStatus(entity.status),
             currentState: entity.status.name.toString(),
@@ -1179,7 +1182,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         }
 
         return ListView.builder(
-          padding: ResponsiveWrapper.getResponsivePadding(context),
+          padding: ResponsiveWrapper.getResponsivePadding(context).copyWith(
+            top: 16.h,
+            bottom: 16.h,
+          ),
           itemCount: dailyMissions.length,
           itemBuilder: (context, index) {
             final mission = dailyMissions[index];
@@ -2125,7 +2131,10 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     }
 
     return ListView.builder(
-      padding: ResponsiveWrapper.getResponsivePadding(context),
+      padding: ResponsiveWrapper.getResponsivePadding(context).copyWith(
+        top: 16.h,
+        bottom: 16.h,
+      ),
       itemCount: dashboardState.completedMissions.length,
       itemBuilder: (context, index) {
         final mission = dashboardState.completedMissions[index];

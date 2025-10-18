@@ -523,23 +523,23 @@ class MissionWorkflowService {
           .doc(workflowId)
           .update(updateData);
 
-      // v2.112.0: 최종 Day인 경우에만 포인트 지급
-      if (isFinalDay) {
-        try {
-          await _payFinalReward(workflowId, data);
-          AppLogger.info('✅ Final reward payment completed for workflow $workflowId', 'MissionWorkflow');
-        } catch (e) {
-          AppLogger.error('❌ Failed to pay final reward', 'MissionWorkflow', e);
-          // 포인트 지급 실패해도 미션 승인은 완료
-        }
-      }
+      // v2.131.0: 자동 포인트 지급 제거 (UI에서 명시적으로 호출)
+      // 포인트 지급은 payFinalRewardOnly() 함수를 통해 UI에서 별도로 실행
+      // if (isFinalDay) {
+      //   try {
+      //     await _payFinalReward(workflowId, data);
+      //     AppLogger.info('✅ Final reward payment completed for workflow $workflowId', 'MissionWorkflow');
+      //   } catch (e) {
+      //     AppLogger.error('❌ Failed to pay final reward', 'MissionWorkflow', e);
+      //   }
+      // }
 
       // 테스터에게 알림
       await _sendNotificationToTester(
         testerId: data['testerId'] ?? '',
-        title: isFinalDay ? '미션 최종 완료!' : '일일 미션 승인!',
+        title: isFinalDay ? '미션 최종 승인!' : '일일 미션 승인!',
         message: isFinalDay
-            ? '$dayNumber일차 미션이 승인되었습니다. 최종 완료 보상이 지급되었습니다!'
+            ? '$dayNumber일차 미션이 승인되었습니다. 공급자가 포인트 지급을 진행합니다.'
             : '$dayNumber일차 미션이 승인되었습니다. 다음 미션을 진행해주세요.',
         data: {
           'workflowId': workflowId,
@@ -933,7 +933,7 @@ class MissionWorkflowService {
       final testerName = workflowData['testerName'] as String? ?? '테스터';
       final appName = workflowData['appName'] as String? ?? '';
 
-      // 1. projects 컬렉션에서 finalCompletionPoints 조회
+      // 1. projects 컬렉션에서 finalCompletionPoints 조회 (rewards/metadata에서)
       final normalizedAppId = appId.replaceAll('provider_app_', '');
       final projectDoc = await _firestore
           .collection('projects')
@@ -944,7 +944,14 @@ class MissionWorkflowService {
         throw Exception('Project not found: $normalizedAppId');
       }
 
-      final finalPoints = projectDoc.data()?['finalCompletionPoints'] ?? 10000;
+      final projectData = projectDoc.data()!;
+      final rewards = projectData['rewards'] as Map<String, dynamic>?;
+      final metadata = projectData['metadata'] as Map<String, dynamic>?;
+
+      // rewards.finalCompletionPoints 우선, metadata.finalCompletionPoints 폴백
+      final finalPoints = rewards?['finalCompletionPoints'] as int? ??
+                         metadata?['finalCompletionPoints'] as int? ??
+                         10000;
 
       AppLogger.info(
         '💰 Final reward payment initiated\n'
@@ -983,6 +990,16 @@ class MissionWorkflowService {
       );
       rethrow;
     }
+  }
+
+  /// v2.131.0: UI에서 명시적으로 호출 - 에스크로 포인트 지급만 수행
+  Future<void> payFinalRewardOnly({required String workflowId}) async {
+    final doc = await _firestore.collection('mission_workflows').doc(workflowId).get();
+    if (!doc.exists) {
+      throw Exception('Workflow not found: $workflowId');
+    }
+    final data = doc.data()!;
+    await _payFinalReward(workflowId, data);
   }
 
   // v2.25.09: Timestamp를 DateTime으로 변환하는 헬퍼 메서드

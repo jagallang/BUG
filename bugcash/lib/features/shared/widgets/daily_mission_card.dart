@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../models/mission_management_model.dart';
+import '../models/mission_workflow_model.dart';
 import 'mission_status_badge.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../shared/extensions/responsive_extensions.dart';
+import '../../../core/services/mission_workflow_service.dart';
 
 /// 일일 미션 카드 위젯
-class DailyMissionCard extends StatefulWidget {
+class DailyMissionCard extends ConsumerStatefulWidget {
   final DailyMissionModel mission;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
@@ -27,17 +30,17 @@ class DailyMissionCard extends StatefulWidget {
   });
 
   @override
-  State<DailyMissionCard> createState() => _DailyMissionCardState();
+  ConsumerState<DailyMissionCard> createState() => _DailyMissionCardState();
 }
 
-class _DailyMissionCardState extends State<DailyMissionCard> {
+class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
   bool _deleteConfirmMode = false;
 
   @override
   Widget build(BuildContext context) {
     // v2.106.5: 버튼 클릭 영역 분리 - 정보 영역만 InkWell로 감쌈
     return Padding(
-      padding: EdgeInsets.all(16.w),
+      padding: EdgeInsets.all(12.w), // v2.134.0: 카드 패딩 축소 (16→12)
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -66,7 +69,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 8.h),
+                  SizedBox(height: 6.h), // v2.134.0: 간격 축소 (8→6)
                 ],
 
                 // 헤더: 타이틀과 상태 배지
@@ -83,28 +86,18 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                       ),
                     ),
                     SizedBox(width: 8.w),
-                    MissionStatusBadge(
-                      status: widget.mission.status,
-                      isLarge: true,
-                    ),
+                    // v2.135.0: workflowId가 있으면 현재 Day 상태 표시
+                    if (widget.mission.workflowId != null)
+                      _buildCurrentDayStatusBadge()
+                    else
+                      MissionStatusBadge(
+                        status: widget.mission.status,
+                        isLarge: true,
+                      ),
                   ],
                 ),
 
-                SizedBox(height: 12.h),
-
-                // 미션 설명
-                Text(
-                  widget.mission.missionDescription,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-
-                SizedBox(height: 12.h),
+                SizedBox(height: 8.h), // v2.134.0: 간격 축소 (12→8)
 
                 // 미션 정보
                 Row(
@@ -142,7 +135,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
 
                 // 거절 사유 표시 (거절된 경우)
                 if (widget.mission.status == DailyMissionStatus.rejected && widget.mission.reviewNote != null) ...[
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 8.h), // v2.134.0: 간격 축소 (12→8)
                   Container(
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
@@ -190,7 +183,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
             ),
           ),
 
-          SizedBox(height: 16.h),
+          SizedBox(height: 12.h), // v2.134.0: 간격 축소 (16→12)
 
           // v2.106.5: 액션 버튼 영역 (InkWell 밖에 배치 - 독립적인 클릭 영역)
           _buildActionButton(),
@@ -225,12 +218,12 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _deleteConfirmMode ? Colors.red : Colors.grey,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  padding: EdgeInsets.symmetric(vertical: 10.h), // v2.134.0: 패딩 축소 (12→10)
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                 ),
               ),
             ),
-          if (widget.onDelete != null) SizedBox(width: 6.w),
+          if (widget.onDelete != null) SizedBox(width: 4.w), // v2.134.0: 간격 축소 (6→4)
           // 승인 대기 버튼
           Expanded(
             flex: 2,
@@ -292,12 +285,12 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _deleteConfirmMode ? Colors.red : Colors.grey,
                   foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(vertical: 12.h),
+                  padding: EdgeInsets.symmetric(vertical: 10.h), // v2.134.0: 패딩 축소 (12→10)
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
                 ),
               ),
             ),
-          if (widget.onDelete != null) SizedBox(width: 6.w),
+          if (widget.onDelete != null) SizedBox(width: 4.w), // v2.134.0: 간격 축소 (6→4)
           // 검토 대기 버튼
           Expanded(
             flex: 2,
@@ -415,7 +408,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                 onPressed: canDelete ? _handleDeleteClick : null,
               ),
             ),
-            SizedBox(width: 6.w),
+            SizedBox(width: 4.w), // v2.134.0: 간격 축소 (6→4)
             // [시작] 버튼
             Expanded(
               child: _buildRowButton(
@@ -426,7 +419,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
                 onPressed: canStart ? widget.onStart : null,
               ),
             ),
-            SizedBox(width: 6.w),
+            SizedBox(width: 4.w), // v2.134.0: 간격 축소 (6→4)
             // [완료] 버튼
             Expanded(
               child: _buildRowButton(
@@ -532,7 +525,7 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
         foregroundColor: Colors.white,
         disabledBackgroundColor: Colors.grey.withValues(alpha: 0.5),
         disabledForegroundColor: Colors.white.withValues(alpha: 0.6),
-        padding: EdgeInsets.symmetric(vertical: 10.h),
+        padding: EdgeInsets.symmetric(vertical: 8.h), // v2.134.0: 패딩 축소 (10→8)
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
         elevation: enabled ? 2 : 0,
       ),
@@ -555,5 +548,188 @@ class _DailyMissionCardState extends State<DailyMissionCard> {
 
   String _formatDate(DateTime date) {
     return '${date.year}.${date.month.toString().padLeft(2, '0')}.${date.day.toString().padLeft(2, '0')}';
+  }
+
+  /// v2.135.0: Day별 상태 인디케이터
+  Widget _buildDayStatusIndicators() {
+    return StreamBuilder<MissionWorkflowModel>(
+      stream: ref.read(missionWorkflowServiceProvider)
+          .watchMissionWorkflow(widget.mission.workflowId!),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const SizedBox.shrink();
+        }
+
+        final workflow = snapshot.data!;
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: List.generate(workflow.totalDays, (index) {
+              final dayNumber = index + 1;
+              final dayStatus = workflow.getDayStatus(dayNumber);
+
+              return Padding(
+                padding: EdgeInsets.only(right: 6.w),
+                child: _buildDayChip(dayNumber, dayStatus),
+              );
+            }),
+          ),
+        );
+      },
+    );
+  }
+
+  /// v2.135.0: 현재 Day 상태 배지 (미션 카드 상단)
+  Widget _buildCurrentDayStatusBadge() {
+    return StreamBuilder<MissionWorkflowModel>(
+      stream: ref.read(missionWorkflowServiceProvider)
+          .watchMissionWorkflow(widget.mission.workflowId!),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return MissionStatusBadge(
+            status: widget.mission.status,
+            isLarge: true,
+          );
+        }
+
+        final workflow = snapshot.data!;
+
+        // 현재 진행 중인 Day 찾기
+        int currentDayNumber = 1;
+        DayStatus currentStatus = DayStatus.locked;
+
+        // 1. submitted 상태인 Day 찾기 (검토 대기 중) - 최우선
+        for (int i = 1; i <= workflow.totalDays; i++) {
+          final status = workflow.getDayStatus(i);
+          if (status == DayStatus.submitted) {
+            currentDayNumber = i;
+            currentStatus = status;
+            break;
+          }
+        }
+
+        // 2. submitted가 없으면 unlocked 찾기 (제출 가능)
+        if (currentStatus != DayStatus.submitted) {
+          for (int i = 1; i <= workflow.totalDays; i++) {
+            final status = workflow.getDayStatus(i);
+            if (status == DayStatus.unlocked) {
+              currentDayNumber = i;
+              currentStatus = status;
+              break;
+            }
+          }
+        }
+
+        // 3. 그래도 없으면 currentDay 사용
+        if (currentStatus == DayStatus.locked && workflow.currentDay > 0) {
+          currentDayNumber = workflow.currentDay;
+          currentStatus = workflow.getDayStatus(currentDayNumber);
+        }
+
+        return _buildDayStatusBadge(currentDayNumber, currentStatus);
+      },
+    );
+  }
+
+  /// v2.135.0: Day 상태 배지 (큰 사이즈 - 카드 상단용)
+  Widget _buildDayStatusBadge(int dayNumber, DayStatus status) {
+    Color bgColor;
+    Color textColor;
+    String statusText;
+
+    switch (status) {
+      case DayStatus.approved:
+        bgColor = Colors.green.shade100;
+        textColor = Colors.green.shade800;
+        statusText = '승인완료';
+        break;
+      case DayStatus.submitted:
+        bgColor = Colors.orange.shade100;
+        textColor = Colors.orange.shade800;
+        statusText = '검토 대기';
+        break;
+      case DayStatus.unlocked:
+        bgColor = Colors.blue.shade100;
+        textColor = Colors.blue.shade800;
+        statusText = '제출 가능';
+        break;
+      case DayStatus.locked:
+        bgColor = Colors.grey.shade200;
+        textColor = Colors.grey.shade600;
+        statusText = '잠김';
+        break;
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(16.r),
+      ),
+      child: Text(
+        'Day $dayNumber - $statusText',
+        style: TextStyle(
+          fontSize: 12.sp,
+          fontWeight: FontWeight.w600,
+          color: textColor,
+        ),
+      ),
+    );
+  }
+
+  /// v2.135.0: Day 상태 칩
+  Widget _buildDayChip(int dayNumber, DayStatus status) {
+    Color bgColor;
+    Color textColor;
+    IconData? icon;
+
+    switch (status) {
+      case DayStatus.approved:
+        bgColor = Colors.green.shade100;
+        textColor = Colors.green.shade800;
+        icon = Icons.check_circle;
+        break;
+      case DayStatus.submitted:
+        bgColor = Colors.orange.shade100;
+        textColor = Colors.orange.shade800;
+        icon = Icons.pending;
+        break;
+      case DayStatus.unlocked:
+        bgColor = Colors.blue.shade100;
+        textColor = Colors.blue.shade800;
+        icon = Icons.play_circle_outline;
+        break;
+      case DayStatus.locked:
+        bgColor = Colors.grey.shade200;
+        textColor = Colors.grey.shade600;
+        icon = Icons.lock_outline;
+        break;
+    }
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12.r),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 12.sp, color: textColor),
+            SizedBox(width: 4.w),
+          ],
+          Text(
+            'D$dayNumber',
+            style: TextStyle(
+              fontSize: 11.sp,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -313,7 +313,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       }
     }
 
-    // v2.112.0: 포인트 차감 확인 (일일 미션 포인트 표시 제거)
+    // v2.134.0: 1단계 - 앱 등록 확인
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -340,13 +340,106 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('등록'),
+            child: const Text('다음'),
           ),
         ],
       ),
     );
 
     if (confirm != true || !mounted) return;
+
+    // v2.134.0: 2단계 - 포인트 차감 및 에스크로 보관 확인
+    if (enablePointValidation) {
+      final escrowConfirm = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.account_balance_wallet, color: Colors.orange[700], size: 28),
+              const SizedBox(width: 8),
+              const Text('포인트 차감 확인'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '앱 등록 시 포인트가 차감되어\n에스크로 계좌에 보관됩니다.',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange[200]!),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '💰 차감 포인트: ${_formatAmount(requiredPoints)}P',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange[900],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '잔액: ${_formatAmount(walletBalance!)}P → ${_formatAmount(walletBalance - requiredPoints)}P',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                '📌 에스크로 보관 안내',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '• 포인트는 에스크로 계좌에 안전하게 보관됩니다.\n'
+                '• 테스터가 최종 미션을 완료하면 자동으로 지급됩니다.\n'
+                '• 중도 취소 시 에스크로 포인트가 반환됩니다.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey[700],
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('취소'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[700],
+              ),
+              child: const Text('확인 및 차감'),
+            ),
+          ],
+        ),
+      );
+
+      if (escrowConfirm != true || !mounted) return;
+    }
 
     // v2.108.4: 등록 시작 - 플래그 설정
     setState(() => _isSubmitting = true);
@@ -723,38 +816,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Status Description (moved to top for better visibility)
-          _buildStatusDescription(app.status),
-          SizedBox(height: 16.h),
+          // v2.132.0: Status Description 제거 (UI 간소화)
 
-          // App Header
+          // App Header (v2.133.0: 아이콘 제거, UI 간소화)
           Row(
             children: [
-              Container(
-                width: 56.w,
-                height: 56.h,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.providerBluePrimary, AppColors.providerBlueDark],
-                  ),
-                  borderRadius: BorderRadius.circular(12.r),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.providerBluePrimary.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Icon(
-                  Icons.apps_rounded,
-                  color: Colors.white,
-                  size: 28.sp,
-                ),
-              ),
-              SizedBox(width: 12.w),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -979,64 +1045,58 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             SizedBox(height: 12.h),
 
 
-            // Install Type and Category Row
-            Row(
+            // v2.134.0: Install Type and Category Column (세로 배치)
+            Column(
               children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedInstallType,
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'play_store',
-                        child: Text('구글 플레이 스토어'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'apk_upload',
-                        child: Text('APK 파일 업로드'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'testflight',
-                        child: Text('TestFlight (iOS)'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'enterprise',
-                        child: Text('기업용 배포'),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedInstallType = value!;
-                        _appUrlController.clear();
-                      });
-                    },
-                    decoration: InputDecoration(
-                      labelText: '설치 방식',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
+                // 설치 방식 (구글 플레이 스토어로 고정)
+                DropdownButtonFormField<String>(
+                  value: _selectedInstallType,
+                  items: const [
+                    DropdownMenuItem(
+                      value: 'play_store',
+                      child: Text('구글 플레이 스토어'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'apk_upload',
+                      child: Text('APK 파일 업로드'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'testflight',
+                      child: Text('TestFlight (iOS)'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'enterprise',
+                      child: Text('기업용 배포'),
+                    ),
+                  ],
+                  onChanged: null, // v2.134.0: 구글 플레이 스토어로 고정 (비활성화)
+                  disabledHint: const Text('구글 플레이 스토어'),
+                  decoration: InputDecoration(
+                    labelText: '설치 방식',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
                   ),
                 ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    items: _categories.map((category) {
-                      return DropdownMenuItem(
-                        value: category,
-                        child: Text(category),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedCategory = value!;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      labelText: '카테고리',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
+                SizedBox(height: 12.h),
+                // 카테고리
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  items: _categories.map((category) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedCategory = value!;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: '카테고리',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.r),
                     ),
                   ),
                 ),
@@ -1312,11 +1372,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             SizedBox(height: 20.h),
 
             // Additional Info Section
-            _buildSectionHeader('추가 정보'),
+            _buildSectionHeader('앱테스트 방법'),
             SizedBox(height: 12.h),
             TextField(
               controller: _testingGuidelinesController,
-              maxLines: 3,
+              maxLines: 5,
               decoration: InputDecoration(
                 labelText: '테스팅 가이드라인',
                 hintText: '테스터가 따라야 할 구체적인 테스팅 지침을 작성하세요',
@@ -1324,36 +1384,6 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                   borderRadius: BorderRadius.circular(8.r),
                 ),
               ),
-            ),
-            SizedBox(height: 12.h),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _minOSVersionController,
-                    decoration: InputDecoration(
-                      labelText: '최소 OS 버전',
-                      hintText: 'Android 8.0+, iOS 13.0+',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Expanded(
-                  child: TextField(
-                    controller: _appStoreUrlController,
-                    decoration: InputDecoration(
-                      labelText: '앱스토어 URL (선택)',
-                      hintText: '이미 출시된 앱의 스토어 링크',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
             SizedBox(height: 30.h),
 
@@ -2164,25 +2194,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             items: [
               DropdownMenuItem<String>(
                 value: 'published',
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.visibility, color: Colors.green, size: 12.sp),
-                    SizedBox(width: 2.w),
-                    Text('게시', style: TextStyle(fontSize: 11.sp)),
-                  ],
-                ),
+                child: Icon(Icons.visibility, color: Colors.green, size: 16.sp), // v2.132.0: 텍스트 제거, 아이콘만 표시
               ),
               DropdownMenuItem<String>(
                 value: 'hidden',
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.visibility_off, color: Colors.grey, size: 12.sp),
-                    SizedBox(width: 2.w),
-                    Text('숨김', style: TextStyle(fontSize: 11.sp)),
-                  ],
-                ),
+                child: Icon(Icons.visibility_off, color: Colors.grey, size: 16.sp), // v2.132.0: 텍스트 제거, 아이콘만 표시
               ),
             ],
           ),
@@ -2250,13 +2266,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
           padding: EdgeInsets.symmetric(horizontal: 8.w),
         ),
-        child: Text(
-          '수정',
-          style: TextStyle(
-            color: AppColors.providerBluePrimary,
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w600,
-          ),
+        // v2.132.0: 텍스트 제거, 아이콘만 표시
+        child: Icon(
+          Icons.edit,
+          color: AppColors.providerBluePrimary,
+          size: 16.sp,
         ),
       ),
     );
