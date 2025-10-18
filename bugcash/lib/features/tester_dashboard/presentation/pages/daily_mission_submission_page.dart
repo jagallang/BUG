@@ -139,7 +139,7 @@ class _DailyMissionSubmissionPageState
     }
   }
 
-  /// v2.116.0: 미션 제출 처리 (스크린샷 업로드 실패 대응)
+  /// v2.120.0: 미션 제출 처리 (정상 업로드 플로우)
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -156,16 +156,15 @@ class _DailyMissionSubmissionPageState
       _isUploading = true;
     });
 
-    final uploadedUrls = <String>[];
-
     try {
       // 1. 이미지 업로드
       AppLogger.info(
-        '📤 [v2.116.0] 스크린샷 업로드 시작 (${_selectedImages.length}장)',
+        '📤 [v2.120.0] 스크린샷 업로드 시작 (${_selectedImages.length}장)',
         'DailyMissionSubmission',
       );
 
       final storageService = StorageService();
+      final uploadedUrls = <String>[];
 
       for (int i = 0; i < _selectedImages.length; i++) {
         setState(() {
@@ -188,43 +187,9 @@ class _DailyMissionSubmissionPageState
       setState(() => _isUploading = false);
 
       AppLogger.info(
-        '✅ [v2.116.0] 스크린샷 업로드 완료 (${uploadedUrls.length}장)',
+        '✅ [v2.120.0] 스크린샷 업로드 완료 (${uploadedUrls.length}장)',
         'DailyMissionSubmission',
       );
-    } catch (uploadError, uploadStackTrace) {
-      // v2.116.0: 업로드 실패 시 사용자에게 확인
-      setState(() => _isUploading = false);
-
-      AppLogger.error(
-        '❌ [v2.116.0] 스크린샷 업로드 실패\n'
-        '   ├─ Error: $uploadError\n'
-        '   ├─ StackTrace: ${uploadStackTrace.toString().split('\n').take(3).join('\n   │  ')}\n'
-        '   └─ 업로드 진행률: ${(_uploadProgress * 100).toInt()}%',
-        'DailyMissionSubmission',
-        uploadError
-      );
-
-      // 사용자에게 선택권 제공
-      final shouldContinueWithoutScreenshots = await _showUploadFailureDialog(uploadError);
-
-      if (!shouldContinueWithoutScreenshots) {
-        // 사용자가 취소 선택 → 제출 중단
-        if (mounted) {
-          setState(() => _isSubmitting = false);
-        }
-        return;
-      }
-
-      // 사용자가 확인 선택 → 빈 배열로 진행
-      uploadedUrls.clear();
-      AppLogger.warning(
-        '⚠️ [v2.116.0] 사용자가 스크린샷 없이 제출 선택\n'
-        '   └─ Firebase Storage 장애로 인한 임시 조치',
-        'DailyMissionSubmission'
-      );
-    }
-
-    try {
 
       // 2. v2.9.0: 공급자 질문 답변 맵 생성
       final questionAnswers = <String, String>{};
@@ -235,7 +200,7 @@ class _DailyMissionSubmissionPageState
 
       // 3. Firestore에 제출 데이터 저장
       AppLogger.info(
-        '💾 [v2.116.0] Firestore 제출 시작\n'
+        '💾 [v2.120.0] Firestore 제출 시작\n'
         '   ├─ workflowId: ${widget.workflowId}\n'
         '   ├─ dayNumber: ${widget.dayNumber}\n'
         '   ├─ screenshots: ${uploadedUrls.length}개\n'
@@ -249,17 +214,17 @@ class _DailyMissionSubmissionPageState
         workflowId: widget.workflowId,
         dayNumber: widget.dayNumber,
         feedback: _feedbackController.text.trim(),
-        screenshots: uploadedUrls, // v2.116.0: 빈 배열 가능 (업로드 실패 시)
-        bugReport: _bugReportController.text.trim(), // v2.9.0
-        questionAnswers: questionAnswers, // v2.9.0
+        screenshots: uploadedUrls,
+        bugReport: _bugReportController.text.trim(),
+        questionAnswers: questionAnswers,
       );
 
       if (mounted) {
         AppLogger.info(
-          '✅ [v2.116.0] Daily mission submitted successfully\n'
+          '✅ [v2.120.0] Daily mission submitted successfully\n'
           '   ├─ workflow: ${widget.workflowId}\n'
           '   ├─ day: ${widget.dayNumber}\n'
-          '   └─ screenshots: ${uploadedUrls.length}개 ${uploadedUrls.isEmpty ? "(업로드 실패)" : ""}',
+          '   └─ screenshots: ${uploadedUrls.length}개',
           'DailyMissionSubmission',
         );
 
@@ -270,128 +235,31 @@ class _DailyMissionSubmissionPageState
         await Future.delayed(const Duration(seconds: 1));
 
         if (mounted && Navigator.canPop(context)) {
-          Navigator.of(context).pop(true); // true를 반환하여 새로고침 트리거
+          Navigator.of(context).pop(true);
         } else {
           AppLogger.warning('⚠️ Navigator cannot pop', 'DailyMissionSubmission');
         }
       }
     } catch (e, stackTrace) {
-      // v2.116.0: Firestore 제출 실패 에러 로깅
+      // v2.120.0: 업로드 또는 제출 실패 에러
       AppLogger.error(
-        '❌ [v2.116.0] Firestore 미션 제출 실패\n'
+        '❌ [v2.120.0] 미션 제출 실패\n'
         '   ├─ Error: $e\n'
-        '   ├─ StackTrace: ${stackTrace.toString().split('\n').take(5).join('\n   │  ')}\n'
-        '   └─ Screenshots count: ${uploadedUrls.length}',
+        '   └─ StackTrace: ${stackTrace.toString().split('\n').take(5).join('\n   │  ')}',
         'DailyMissionSubmission',
         e
       );
       if (mounted) {
-        _showMessage('Firebase 저장 실패: $e');
+        _showMessage('미션 제출 실패: $e');
       }
     } finally {
       if (mounted) {
-        setState(() => _isSubmitting = false);
+        setState(() {
+          _isSubmitting = false;
+          _isUploading = false;
+        });
       }
     }
-  }
-
-  /// v2.116.0: 스크린샷 업로드 실패 시 확인 대화상자
-  Future<bool> _showUploadFailureDialog(dynamic error) async {
-    return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.warning_amber, color: Colors.orange.shade700, size: 28),
-            const SizedBox(width: 12),
-            const Expanded(
-              child: Text(
-                '스크린샷 업로드 실패',
-                style: TextStyle(fontSize: 18),
-              ),
-            ),
-          ],
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Firebase Storage 서비스 장애로 스크린샷 업로드에 실패했습니다.',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '에러 정보:',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey.shade700,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      error.toString(),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey.shade600,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                '스크린샷 없이 미션을 제출하시겠습니까?',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '※ Firebase Storage가 복구되면 다시 스크린샷을 업로드할 수 있습니다.',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              '취소',
-              style: TextStyle(fontSize: 14),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.orange,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text(
-              '스크린샷 없이 제출',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    ) ?? false;
   }
 
   void _showMessage(String message) {
@@ -658,52 +526,18 @@ class _DailyMissionSubmissionPageState
     );
   }
 
-  /// v2.116.0: 스크린샷 섹션 (임시 안내 배너 포함)
+  /// v2.120.0: 스크린샷 섹션
   Widget _buildScreenshotSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // v2.116.0: 임시 안내 배너
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.orange.shade50,
-            border: Border.all(color: Colors.orange.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.info_outline, color: Colors.orange.shade700, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '⚠️ 임시 조치: Firebase Storage 장애로 업로드 실패 시 스크린샷 없이 제출 가능합니다.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.orange.shade900,
-                    height: 1.4,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // 기존 ImageUploadWidget
-        ImageUploadWidget(
-          selectedImages: _selectedImages,
-          onImagesChanged: (images) {
-            setState(() {
-              _selectedImages.clear();
-              _selectedImages.addAll(images);
-            });
-          },
-          maxImages: 5,
-          emptyStateText: '미션 수행 스크린샷을 업로드해주세요 (최소 3장, 최대 5장)',
-        ),
-      ],
+    return ImageUploadWidget(
+      selectedImages: _selectedImages,
+      onImagesChanged: (images) {
+        setState(() {
+          _selectedImages.clear();
+          _selectedImages.addAll(images);
+        });
+      },
+      maxImages: 5,
+      emptyStateText: '미션 수행 스크린샷을 업로드해주세요 (최소 3장, 최대 5장)',
     );
   }
 

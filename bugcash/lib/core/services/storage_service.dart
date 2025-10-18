@@ -60,20 +60,24 @@ class StorageService {
           await Future.delayed(Duration(seconds: delaySeconds));
         }
 
-        // 4. v2.115.0: XFile 업로드 (웹/모바일 통합) + 30초 타임아웃
+        // 4. v2.120.0: XFile 업로드 (웹/모바일 통합) + 60초 타임아웃
         final ref = _storage.ref().child(path);
         final bytes = await file.readAsBytes();
 
-        // v2.115.0: 30초 타임아웃 추가 (503 에러 무한 재시도 방지)
-        final uploadTask = await ref.putData(bytes).timeout(
-          const Duration(seconds: 30),
+        // v2.120.0: UploadTask 생성 및 대기 (타임아웃 수정)
+        final uploadTask = ref.putData(bytes);
+
+        // 타임아웃 적용 (60초)
+        final snapshot = await uploadTask.timeout(
+          const Duration(seconds: 60),
           onTimeout: () {
-            throw Exception('업로드 시간 초과 (30초). Firebase Storage 서비스가 응답하지 않습니다.');
+            uploadTask.cancel();
+            throw Exception('업로드 시간 초과 (60초). Firebase Storage 서비스가 응답하지 않습니다.');
           },
         );
 
         // 5. 다운로드 URL 획득
-        final downloadUrl = await uploadTask.ref.getDownloadURL();
+        final downloadUrl = await snapshot.ref.getDownloadURL();
 
         AppLogger.info('✅ Screenshot uploaded successfully (attempt $attempt): $downloadUrl', 'StorageService');
         return downloadUrl;
@@ -189,20 +193,24 @@ class StorageService {
           await Future.delayed(Duration(seconds: delaySeconds));
         }
 
-        // 4. v2.115.0: XFile 업로드 (웹/모바일 통합) + 30초 타임아웃
+        // 4. v2.120.0: XFile 업로드 (웹/모바일 통합) + 60초 타임아웃
         final ref = _storage.ref().child(path);
         final bytes = await file.readAsBytes();
 
-        // v2.115.0: 30초 타임아웃 추가 (503 에러 무한 재시도 방지)
-        final uploadTask = await ref.putData(bytes).timeout(
-          const Duration(seconds: 30),
+        // v2.120.0: UploadTask 생성 및 대기 (타임아웃 수정)
+        final uploadTask = ref.putData(bytes);
+
+        // 타임아웃 적용 (60초)
+        final snapshot = await uploadTask.timeout(
+          const Duration(seconds: 60),
           onTimeout: () {
-            throw Exception('업로드 시간 초과 (30초). Firebase Storage 서비스가 응답하지 않습니다.');
+            uploadTask.cancel();
+            throw Exception('업로드 시간 초과 (60초). Firebase Storage 서비스가 응답하지 않습니다.');
           },
         );
 
         // 5. 다운로드 URL 획득
-        final downloadUrl = await uploadTask.ref.getDownloadURL();
+        final downloadUrl = await snapshot.ref.getDownloadURL();
 
         AppLogger.info('✅ App screenshot uploaded successfully (attempt $attempt): $downloadUrl', 'StorageService');
         return downloadUrl;
