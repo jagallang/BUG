@@ -5,13 +5,60 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.118.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.120.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.120.0)
+
+### 🔧 Firebase Storage 리전 불일치 해결 (v2.120.0) - **STORAGE REGION FIX**
+- **🚨 문제 발생**
+  - ✅ **503 Service Unavailable**: Firebase Storage 업로드 실패
+  - ✅ **리전 불일치**: Firestore(asia-northeast3) ≠ Storage(us-central1)
+  - ✅ **버킷 연결 끊김**: 버킷 삭제/재생성 후 Firebase 서비스 인식 실패
+
+- **🔍 근본 원인**
+  - Firebase 프로젝트 기본 리소스 위치: `asia-northeast3` (서울)
+  - 기존 Storage 버킷 위치: `us-central1` (미국)
+  - Cloud Storage 버킷이 Firebase Storage 서비스와 연결되지 않음
+
+- **✅ 해결 방법**
+  - 📦 **버킷 재생성**: `gs://bugcash` in `asia-northeast3`
+  - 🔗 **Firebase 등록**: Firebase Storage API로 버킷 등록
+  - 🏷️ **레이블 설정**: `firebase-storage-bucket:default`
+  - 🔐 **IAM 권한**: Firebase 서비스 계정 권한 추가
+  - 🌐 **CORS 설정**: POST/PUT/DELETE 메서드 허용
+
+- **📝 변경 파일**
+  - `firebase_options.dart`: storageBucket → `'bugcash'`
+  - `.firebaserc`: storage target 업데이트
+  - `cors.json`: CORS 메서드 추가
+  - `storage.rules`: 인증된 사용자 업로드 허용
+
+- **⚙️ 설정 명령어**
+  ```bash
+  # 버킷 생성 (asia-northeast3)
+  gcloud storage buckets create gs://bugcash --location=asia-northeast3
+
+  # Firebase 레이블 추가
+  gsutil label ch -l firebase-storage-bucket:default gs://bugcash
+
+  # Firebase Storage 등록
+  curl -X POST "https://firebasestorage.googleapis.com/v1beta/projects/bugcash/buckets/bugcash:addFirebase"
+
+  # IAM 권한 설정
+  gsutil iam ch serviceAccount:firebase-adminsdk-fbsvc@bugcash.iam.gserviceaccount.com:objectAdmin gs://bugcash
+  ```
+
+- **🎯 주요 교훈**
+  - ⚠️ Firebase 프로젝트는 **기본 리소스 위치를 한 번만 설정** 가능
+  - ⚠️ **모든 Firebase 서비스는 동일한 리전**에 배치해야 함
+  - ⚠️ Cloud Storage 버킷을 직접 만들면 **Firebase Storage와 연결되지 않음**
+  - ✅ Firebase Console UI에서 Storage 초기화 권장
 
 ## ✨ 주요 기능 (v2.118.0)
 
