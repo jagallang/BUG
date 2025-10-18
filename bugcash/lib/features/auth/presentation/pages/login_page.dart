@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_consent.dart';
@@ -48,15 +49,33 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   Future<void> _signInWithGoogle() async {
     try {
+      if (kDebugMode) {
+        debugPrint('🟢 [LoginPage] _signInWithGoogle() - Google 로그인 버튼 클릭');
+      }
+
       // 1단계: Google 로그인 시도
       await ref.read(authProvider.notifier).signInWithGoogle();
 
-      if (!mounted) return;
+      if (!mounted) {
+        if (kDebugMode) {
+          debugPrint('⚠️ [LoginPage] _signInWithGoogle() - Widget unmounted, 중단');
+        }
+        return;
+      }
 
       // signInWithGoogle이 null을 반환하면 신규 사용자 (약관 동의 필요)
       final authState = ref.read(authProvider);
+
+      if (kDebugMode) {
+        debugPrint('🟢 [LoginPage] _signInWithGoogle() - AuthState 확인: user=${authState.user != null ? "있음" : "null"}, error=${authState.errorMessage ?? "없음"}');
+      }
+
       if (authState.user == null && authState.errorMessage == null) {
         // 2단계: 신규 사용자 - 약관 동의 페이지 표시
+        if (kDebugMode) {
+          debugPrint('🟢 [LoginPage] 신규 사용자 - 약관 동의 페이지로 이동');
+        }
+
         final consent = await Navigator.push<UserConsent>(
           context,
           MaterialPageRoute(
@@ -66,6 +85,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
         if (consent == null) {
           // 사용자가 약관 동의를 취소함
+          if (kDebugMode) {
+            debugPrint('⚠️ [LoginPage] 사용자가 약관 동의 취소');
+          }
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -78,6 +100,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         }
 
         // 3단계: 약관 동의 완료 후 회원가입 완료
+        if (kDebugMode) {
+          debugPrint('🟢 [LoginPage] 약관 동의 완료 - completeGoogleSignUp() 호출');
+        }
+
         await ref.read(authProvider.notifier).completeGoogleSignUp(consent: consent);
 
         if (mounted) {
@@ -89,9 +115,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           );
         }
+      } else if (authState.user != null) {
+        // 기존 사용자 로그인 성공
+        if (kDebugMode) {
+          debugPrint('✅ [LoginPage] 기존 사용자 로그인 성공: ${authState.user!.email}');
+        }
       }
       // 기존 사용자인 경우는 signInWithGoogle에서 자동으로 처리됨
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [LoginPage] _signInWithGoogle() - 오류: $e');
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

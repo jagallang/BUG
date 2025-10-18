@@ -321,12 +321,29 @@ class FirebaseAuthService {
 
   Future<UserCredential?> signInWithGoogle() async {
     try {
+      if (kDebugMode) {
+        debugPrint('🔵 [GoogleSignIn] 1/7 - Google Sign-In 시작');
+      }
+
       // Trigger the authentication flow
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      if (googleUser == null) return null;
+      if (googleUser == null) {
+        if (kDebugMode) {
+          debugPrint('⚠️ [GoogleSignIn] 사용자가 Google 로그인 취소');
+        }
+        return null;
+      }
+
+      if (kDebugMode) {
+        debugPrint('🔵 [GoogleSignIn] 2/7 - Google 계정 선택 완료: ${googleUser.email}');
+      }
 
       // Obtain the auth details from the request
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      if (kDebugMode) {
+        debugPrint('🔵 [GoogleSignIn] 3/7 - Google 인증 토큰 획득 완료');
+      }
 
       // Create a new credential
       final credential = GoogleAuthProvider.credential(
@@ -334,8 +351,16 @@ class FirebaseAuthService {
         idToken: googleAuth.idToken,
       );
 
+      if (kDebugMode) {
+        debugPrint('🔵 [GoogleSignIn] 4/7 - Firebase 자격 증명 생성 완료');
+      }
+
       // Sign in to Firebase with the Google credential
       final userCredential = await _auth.signInWithCredential(credential);
+
+      if (kDebugMode) {
+        debugPrint('🔵 [GoogleSignIn] 5/7 - Firebase 로그인 완료: uid=${userCredential.user?.uid}');
+      }
 
       // Check if user exists in Firestore
       if (userCredential.user != null) {
@@ -344,23 +369,39 @@ class FirebaseAuthService {
             .doc(userCredential.user!.uid)
             .get();
 
+        if (kDebugMode) {
+          debugPrint('🔵 [GoogleSignIn] 6/7 - Firestore 사용자 문서 확인: exists=${userDoc.exists}');
+        }
+
         if (!userDoc.exists) {
           // 신규 사용자 - 약관 동의가 필요하므로 사용자를 로그아웃하고 null 반환
           // UI에서 약관 동의 후 completeGoogleSignUp 메서드로 재시도
+          if (kDebugMode) {
+            debugPrint('⚠️ [GoogleSignIn] 신규 사용자 - 로그아웃 후 약관 동의 화면으로 이동');
+          }
           await _auth.signOut();
           await _googleSignIn.signOut();
           return null;
         } else {
           // Update last login time
+          if (kDebugMode) {
+            debugPrint('🔵 [GoogleSignIn] 7/7 - 기존 사용자 - lastLoginAt 업데이트 중...');
+          }
           await _firestore.collection('users').doc(userCredential.user!.uid).update({
             'lastLoginAt': FieldValue.serverTimestamp(),
           });
+          if (kDebugMode) {
+            debugPrint('✅ [GoogleSignIn] Google 로그인 완료! UserCredential 반환');
+          }
         }
       }
 
       return userCredential;
     } catch (e) {
-      AppLogger.error('Error during Google sign in', 'FirebaseAuthService', e);
+      AppLogger.error('❌ [GoogleSignIn] Error during Google sign in: $e', 'FirebaseAuthService', e);
+      if (kDebugMode) {
+        debugPrint('❌ [GoogleSignIn] 오류 발생: $e');
+      }
       rethrow;
     }
   }

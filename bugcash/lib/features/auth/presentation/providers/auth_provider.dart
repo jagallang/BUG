@@ -219,18 +219,35 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> signInWithGoogle() async {
+    if (kDebugMode) {
+      debugPrint('🟦 [AuthProvider] signInWithGoogle() - 시작');
+    }
+
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {
       final userCredential = await _authService.signInWithGoogle();
 
+      if (kDebugMode) {
+        debugPrint('🟦 [AuthProvider] signInWithGoogle() - Service 호출 완료: userCredential=${userCredential != null ? "있음" : "null"}');
+      }
+
       if (userCredential?.user != null) {
         // Auth stream listener가 자동으로 사용자 데이터를 로드할 것이므로 여기서는 loading 상태만 해제
+        if (kDebugMode) {
+          debugPrint('🟦 [AuthProvider] signInWithGoogle() - UserCredential 있음, Auth stream이 사용자 로드 중...');
+        }
         state = state.copyWith(isLoading: false);
       } else {
+        if (kDebugMode) {
+          debugPrint('🟦 [AuthProvider] signInWithGoogle() - UserCredential null (신규 사용자 또는 취소)');
+        }
         state = state.copyWith(isLoading: false);
       }
     } catch (e) {
+      if (kDebugMode) {
+        debugPrint('❌ [AuthProvider] signInWithGoogle() - 오류 발생: $e');
+      }
       state = state.copyWith(
         isLoading: false,
         errorMessage: e.toString(),

@@ -1,5 +1,16 @@
 {
   "projects": {
     "default": "bugcash"
-  }
+  },
+  "targets": {
+    "bugcash": {
+      "storage": {
+        "main": [
+          "bugcash",
+          "bugcash-storage"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

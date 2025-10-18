@@ -80,7 +80,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '335851774651',
     projectId: 'bugcash',
     authDomain: 'bugcash.firebaseapp.com',
-    storageBucket: 'bugcash.firebasestorage.app',
+    storageBucket: 'bugcash',
     measurementId: 'G-M1DT15JR9G',
   );
 
@@ -89,7 +89,7 @@ class DefaultFirebaseOptions {
     appId: '1:335851774651:android:9c485dd2a5f436ef0abf9e',
     messagingSenderId: '335851774651',
     projectId: 'bugcash',
-    storageBucket: 'bugcash.firebasestorage.app',
+    storageBucket: 'bugcash',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
@@ -97,7 +97,7 @@ class DefaultFirebaseOptions {
     appId: '1:335851774651:ios:abcdef123456789',
     messagingSenderId: '335851774651',
     projectId: 'bugcash',
-    storageBucket: 'bugcash.appspot.com',
+    storageBucket: 'bugcash',
     iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
     iosBundleId: 'com.bugcash.app',
   );
@@ -107,7 +107,7 @@ class DefaultFirebaseOptions {
     appId: '1:335851774651:macos:abcdef123456789',
     messagingSenderId: '335851774651',
     projectId: 'bugcash',
-    storageBucket: 'bugcash.appspot.com',
+    storageBucket: 'bugcash',
     iosClientId: 'YOUR_MACOS_CLIENT_ID.apps.googleusercontent.com',
     iosBundleId: 'com.bugcash.app',
   );
@@ -123,7 +123,7 @@ class DefaultFirebaseOptions {
       messagingSenderId: messagingSenderId,
       projectId: projectId,
       authDomain: '$projectId.firebaseapp.com',
-      storageBucket: '$projectId.firebasestorage.app',
+      storageBucket: 'bugcash',
       measurementId: measurementId,
     );
   }
@@ -137,7 +137,7 @@ class DefaultFirebaseOptions {
       appId: '1:335851774651:android:9c485dd2a5f436ef0abf9e',
       messagingSenderId: messagingSenderId,
       projectId: projectId,
-      storageBucket: '$projectId.firebasestorage.app',
+      storageBucket: 'bugcash',
     );
   }
 
@@ -147,7 +147,7 @@ class DefaultFirebaseOptions {
       appId: '1:335851774651:ios:abcdef123456789',
       messagingSenderId: '335851774651',
       projectId: 'bugcash',
-      storageBucket: 'bugcash.appspot.com',
+      storageBucket: 'bugcash',
       iosClientId: 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com',
       iosBundleId: 'com.bugcash.app',
     );
@@ -159,7 +159,7 @@ class DefaultFirebaseOptions {
       appId: '1:335851774651:macos:abcdef123456789',
       messagingSenderId: '335851774651',
       projectId: 'bugcash',
-      storageBucket: 'bugcash.appspot.com',
+      storageBucket: 'bugcash',
       iosClientId: 'YOUR_MACOS_CLIENT_ID.apps.googleusercontent.com',
       iosBundleId: 'com.bugcash.app',
     );

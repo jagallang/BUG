@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Firebase Storage Test</title>
+</head>
+<body>
+  <h1>Firebase Storage Upload Test</h1>
+  <input type="file" id="fileInput" accept="image/*">
+  <button id="uploadBtn">Upload to Firebase Storage</button>
+  <div id="status"></div>
+  <div id="result"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getStorage, ref, uploadBytesResumable } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAeMQcgKwJR5smPY6t6tnDtNdqaPoCamk0",
+      authDomain: "bugcash.firebaseapp.com",
+      projectId: "bugcash",
+      storageBucket: "bugcash.firebasestorage.app",
+      messagingSenderId: "335851774651",
+      appId: "1:335851774651:web:f7efbf71fdfd36690abf9e",
+      measurementId: "G-M1DT15JR9G"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const storage = getStorage(app);
+
+    const status = document.getElementById('status');
+    const result = document.getElementById('result');
+
+    document.getElementById('uploadBtn').addEventListener('click', async () => {
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) {
+        status.textContent = 'Please select a file first';
+        return;
+      }
+
+      status.textContent = 'Starting upload without authentication...';
+
+      const storageRef = ref(storage, `test_uploads/${Date.now()}_${file.name}`);
+
+      try {
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            status.textContent = `Upload is ${progress.toFixed(0)}% done`;
+          },
+          (error) => {
+            status.textContent = 'Upload failed!';
+            result.textContent = `Error: ${error.code} - ${error.message}`;
+            console.error('Upload error:', error);
+          },
+          () => {
+            status.textContent = 'Upload completed successfully!';
+            result.textContent = `File uploaded to: ${storageRef.fullPath}`;
+          }
+        );
+      } catch (error) {
+        status.textContent = 'Upload failed!';
+        result.textContent = `Error: ${error.message}`;
+        console.error('Upload error:', error);
+      }
+    });
+  </script>
+</body>
+</html>
