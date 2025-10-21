@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart'; // v2.139.0: 등록번호 날짜 포맷팅
 import '../../../../models/mission_model.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/utils/logger.dart';
@@ -146,6 +147,9 @@ class MissionCard {
   // v2.20.01: 신청 여부 표시
   final bool isApplied;          // 테스터가 이미 신청했는지 여부
 
+  // v2.139.0: 앱 등록번호 (YYMMDD-XXXX)
+  final String registrationNumber;
+
   MissionCard({
     required this.id,
     required this.title,
@@ -174,6 +178,8 @@ class MissionCard {
     this.participantsText = '대기 중',
     // v2.20.01: 신청 여부 기본값
     this.isApplied = false,
+    // v2.139.0: 등록번호 기본값
+    this.registrationNumber = '------',
   });
 }
 
@@ -443,6 +449,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           deadlineText: mission.deadlineText,
           participantsText: mission.participantsText,
           isApplied: isApplied,  // v2.20.01: 신청 여부 설정
+          registrationNumber: mission.registrationNumber, // v2.139.0: 등록번호 유지
         );
       }).toList();
 
@@ -816,6 +823,10 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
           final deadlineText = currentTestersValue >= maxTestersValue ? '모집 마감' : '바로 진행';
           final participantsText = '$currentTestersValue/$maxTestersValue';
 
+          // v2.139.0: 등록번호 생성
+          final createdAtTimestamp = data['createdAt'] as Timestamp?;
+          final registrationNumber = _formatRegistrationNumber(doc.id, createdAtTimestamp);
+
           final missionCard = MissionCard(
             id: doc.id,
             title: '$appName 테스팅 프로젝트',
@@ -838,6 +849,8 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
             testPeriodDays: testPeriod,
             deadlineText: deadlineText,
             participantsText: participantsText,
+            // v2.139.0: 등록번호 추가
+            registrationNumber: registrationNumber,
             originalAppData: {
               'projectId': doc.id,
               'providerId': data['providerId'],
@@ -848,6 +861,7 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
               'testingGuidelines': data['testingGuidelines'],
               'requirements': data['requirements'],
               'specializations': data['requirements']?['specializations'],
+              'createdAt': createdAtTimestamp, // v2.139.0: createdAt 추가
             },
           );
 
@@ -1406,6 +1420,38 @@ class TesterDashboardNotifier extends StateNotifier<TesterDashboardState> {
     if (totalDays == 0) return 0.0;
     return (currentDay / totalDays * 100).clamp(0.0, 100.0);
   }
+
+  /// v2.141.0: 테스터가 받은 모든 별점 조회
+  Future<List<double>> getTesterRatings(String testerId) async {
+    try {
+      final workflows = await FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .where('testerId', isEqualTo: testerId)
+          .get();
+
+      List<double> ratings = [];
+      for (var doc in workflows.docs) {
+        final data = doc.data();
+        final interactions = data['interactions'] as List?;
+
+        if (interactions != null) {
+          for (var interaction in interactions) {
+            if (interaction is Map<String, dynamic>) {
+              final rating = interaction['providerRating'];
+              if (rating != null) {
+                ratings.add((rating is int) ? rating.toDouble() : rating as double);
+              }
+            }
+          }
+        }
+      }
+
+      return ratings;
+    } catch (e) {
+      debugPrint('별점 조회 실패: $e');
+      return [];
+    }
+  }
 }
 
 // Mission Application Status Model
@@ -1438,4 +1484,25 @@ enum ApplicationStatus {
   accepted,
   rejected,
   cancelled,
+}
+
+/// v2.139.0: 앱 등록번호 생성 헬퍼 함수 (YYMMDD-XXXX 형식)
+String _formatRegistrationNumber(String projectId, Timestamp? createdAt) {
+  try {
+    // createdAt이 없으면 현재 날짜 사용
+    final createdDate = createdAt?.toDate() ?? DateTime.now();
+
+    // YYMMDD 형식 (6자리)
+    final dateStr = DateFormat('yyMMdd').format(createdDate);
+
+    // ID의 마지막 4자리 (대문자 변환)
+    final idSuffix = projectId.length >= 4
+        ? projectId.substring(projectId.length - 4).toUpperCase()
+        : projectId.padLeft(4, '0').toUpperCase();
+
+    return '$dateStr-$idSuffix';
+  } catch (e) {
+    debugPrint('앱 등록번호 생성 실패: $e');
+    return '------';
+  }
 }

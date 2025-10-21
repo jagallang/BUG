@@ -441,11 +441,17 @@ class FirebaseAuthService {
       }
 
       // users 컬렉션 문서 생성
+      // v2.165.0: Google 회원가입에도 신규 형식 필드 추가 (roles, primaryRole, isAdmin)
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
         'uid': userCredential.user!.uid,
         'email': userCredential.user!.email,
         'displayName': userCredential.user!.displayName ?? 'User',
         'photoUrl': userCredential.user!.photoURL,
+        // 신규 형식 필드 (Firestore rules 검증 통과용)
+        'roles': ['tester'],
+        'primaryRole': 'tester',
+        'isAdmin': false,
+        // 기존 형식 필드 (하위 호환성)
         'role': 'tester',
         'userType': 'tester',
         'country': 'South Korea',

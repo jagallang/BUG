@@ -46,7 +46,7 @@ class AppCardWidget extends StatelessWidget {
                   width: 48.w,
                   height: 48.h,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
+                    color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Icon(

@@ -139,10 +139,10 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
                   Container(
                     padding: EdgeInsets.all(12.w),
                     decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.1),
+                      color: Colors.red.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(
-                        color: Colors.red.withValues(alpha: 0.3),
+                        color: Colors.red.withOpacity(0.3),
                         width: 1,
                       ),
                     ),
@@ -233,8 +233,8 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
               label: Text('공급자 승인 대기 중', style: TextStyle(fontSize: 13.sp)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.testerOrangePrimary, // v2.77.0: 오렌지 테마
-                disabledBackgroundColor: AppColors.testerOrangePrimary.withValues(alpha: 0.6),
-                disabledForegroundColor: Colors.white.withValues(alpha: 0.8),
+                disabledBackgroundColor: AppColors.testerOrangePrimary.withOpacity(0.6),
+                disabledForegroundColor: Colors.white.withOpacity(0.8),
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
               ),
@@ -300,7 +300,7 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
               label: Text('검토 대기 중', style: TextStyle(fontSize: 13.sp)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey,
-                disabledBackgroundColor: Colors.grey.withValues(alpha: 0.7),
+                disabledBackgroundColor: Colors.grey.withOpacity(0.7),
                 disabledForegroundColor: Colors.white,
                 padding: EdgeInsets.symmetric(vertical: 12.h),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
@@ -321,7 +321,7 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
           label: Text('승인 완료', style: TextStyle(fontSize: 13.sp)),
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.green,
-            disabledBackgroundColor: Colors.green.withValues(alpha: 0.7),
+            disabledBackgroundColor: Colors.green.withOpacity(0.7),
             disabledForegroundColor: Colors.white,
             padding: EdgeInsets.symmetric(vertical: 12.h),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
@@ -376,7 +376,7 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
             label: Text('일일 미션을 제출하세요', style: TextStyle(fontSize: 13.sp)),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey,
-              disabledBackgroundColor: Colors.grey.withValues(alpha: 0.5),
+              disabledBackgroundColor: Colors.grey.withOpacity(0.5),
               disabledForegroundColor: Colors.white,
               padding: EdgeInsets.symmetric(vertical: 12.h),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
@@ -523,8 +523,8 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
       style: ElevatedButton.styleFrom(
         backgroundColor: enabled ? color : Colors.grey,
         foregroundColor: Colors.white,
-        disabledBackgroundColor: Colors.grey.withValues(alpha: 0.5),
-        disabledForegroundColor: Colors.white.withValues(alpha: 0.6),
+        disabledBackgroundColor: Colors.grey.withOpacity(0.5),
+        disabledForegroundColor: Colors.white.withOpacity(0.6),
         padding: EdgeInsets.symmetric(vertical: 8.h), // v2.134.0: 패딩 축소 (10→8)
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
         elevation: enabled ? 2 : 0,

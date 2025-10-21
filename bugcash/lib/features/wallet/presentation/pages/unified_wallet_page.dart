@@ -8,17 +8,15 @@ import '../widgets/withdrawal_dialog.dart';
 import 'transaction_history_page.dart';
 import '../../../../shared/widgets/responsive_wrapper.dart';
 
-/// 통합 지갑 페이지
-/// - 테스터: 잔액, 이번 달 적립, 총 적립, 출금 버튼, 거래 내역
-/// - 공급자: 잔액, 이번 달 충전/사용, 총 충전, 포인트 충전 버튼, 거래 내역
+/// v2.147.0: 완전 통합 지갑 페이지
+/// - 모든 사용자: 잔액, 포인트 충전, 출금, 거래 내역
+/// - 역할 구분 없이 동일한 UI 제공
 class UnifiedWalletPage extends ConsumerStatefulWidget {
   final String userId;
-  final String userType; // 'tester' or 'provider'
 
   const UnifiedWalletPage({
     super.key,
     required this.userId,
-    required this.userType,
   });
 
   @override
@@ -30,14 +28,27 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('🟦 [UnifiedWalletPage] build() - userId: ${widget.userId}');
     final walletAsync = ref.watch(walletProvider(widget.userId));
+
+    // v2.155.0: 상세 디버깅 로그
+    print('🔍 [v2.155.0] walletAsync = $walletAsync');
+    print('🔍 [v2.155.0] walletAsync.isLoading = ${walletAsync.isLoading}');
+    print('🔍 [v2.155.0] walletAsync.hasValue = ${walletAsync.hasValue}');
+    print('🔍 [v2.155.0] walletAsync.hasError = ${walletAsync.hasError}');
+    if (walletAsync.hasValue) {
+      print('🔍 [v2.155.0] walletAsync.value.balance = ${walletAsync.value?.balance}');
+    }
+    if (walletAsync.hasError) {
+      print('🔍 [v2.155.0] walletAsync.error = ${walletAsync.error}');
+    }
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(
-          widget.userType == 'tester' ? '내 지갑' : '포인트 지갑',
-          style: const TextStyle(
+        title: const Text(
+          '내 지갑', // v2.147.0: 역할 구분 없이 통일
+          style: TextStyle(
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -51,7 +62,7 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                 MaterialPageRoute(
                   builder: (context) => TransactionHistoryPage(
                     userId: widget.userId,
-                    userType: widget.userType,
+                    userType: 'unified', // v2.147.0: 통합 모드
                   ),
                 ),
               );
@@ -61,42 +72,53 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
         ],
       ),
       body: walletAsync.when(
-        data: (wallet) => _buildContent(context, wallet),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.error_outline,
-                size: 64.w,
-                color: Colors.red[400],
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                '지갑 정보를 불러올 수 없습니다',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.red[600],
+        data: (wallet) {
+          print('✅ [v2.155.0] DATA 콜백 실행 - balance: ${wallet.balance}');
+          return _buildContent(context, wallet);
+        },
+        loading: () {
+          print('⏳ [v2.155.0] LOADING 콜백 실행');
+          return const Center(child: CircularProgressIndicator());
+        },
+        error: (error, stack) {
+          print('❌ [v2.155.0] ERROR 콜백 실행: $error');
+          print('❌ [v2.155.0] Stack: $stack');
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64.w,
+                  color: Colors.red[400],
                 ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                '오류: ${error.toString()}',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  color: Colors.red[500],
+                SizedBox(height: 16.h),
+                Text(
+                  '지갑 정보를 불러올 수 없습니다',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.red[600],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
+                SizedBox(height: 8.h),
+                Text(
+                  '오류: ${error.toString()}',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.red[500],
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
 
   Widget _buildContent(BuildContext context, WalletEntity wallet) {
+    // v2.154.0: 디버그 로그와 try-catch 제거, 원래 빌드 방식으로 복원
     return SingleChildScrollView(
       padding: ResponsiveWrapper.getResponsivePadding(context),
       child: Column(
@@ -109,11 +131,8 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
 
           SizedBox(height: 16.h),
 
-          // 2. 빠른 작업 버튼 (역할별)
-          if (widget.userType == 'tester')
-            _buildWithdrawalButton(context, wallet)
-          else
-            _buildChargeSection(),
+          // v2.147.0: 통합 작업 버튼 (출금 + 충전)
+          _buildUnifiedActionsSection(wallet),
 
           SizedBox(height: 24.h),
 
@@ -126,12 +145,8 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
     );
   }
 
-  /// 잔액 카드 (공통)
+  /// v2.147.0: 잔액 카드 (통합)
   Widget _buildBalanceCard(BuildContext context, WalletEntity wallet) {
-    final color = widget.userType == 'tester'
-        ? Colors.green
-        : Colors.indigo;
-
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -142,8 +157,8 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              color.shade700,
-              color.shade500,
+              Colors.blue.shade700, // v2.147.0: 통일된 테마 색상
+              Colors.blue.shade500,
             ],
           ),
           borderRadius: BorderRadius.circular(16.r),
@@ -160,7 +175,7 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                 ),
                 SizedBox(width: 12.w),
                 Text(
-                  widget.userType == 'tester' ? '내 포인트' : '보유 포인트',
+                  '보유 포인트', // v2.147.0: 통일된 레이블
                   style: TextStyle(
                     color: Colors.white70,
                     fontSize: 16.sp,
@@ -184,8 +199,10 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
     );
   }
 
-  /// 출금 버튼 (테스터)
-  Widget _buildWithdrawalButton(BuildContext context, WalletEntity wallet) {
+  /// v2.147.0: 통합 작업 섹션 (출금 + 충전)
+  Widget _buildUnifiedActionsSection(WalletEntity wallet) {
+    final List<int> chargeOptions = [10000, 30000, 50000, 100000];
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -196,6 +213,92 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 포인트 충전 섹션
+            Row(
+              children: [
+                Icon(Icons.add_card, color: Colors.blue[700], size: 24.sp),
+                SizedBox(width: 8.w),
+                Text(
+                  '포인트 충전',
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 16.h),
+
+            // v2.155.0: BoxConstraints 에러 수정 - Column으로 변경
+            // 충전 금액 선택 드롭다운
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 16.w),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[300]!),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<int>(
+                  value: _selectedChargeAmount,
+                  isExpanded: true,
+                  items: chargeOptions.map((amount) {
+                    return DropdownMenuItem<int>(
+                      value: amount,
+                      child: Text(
+                        '${_formatAmount(amount)}',
+                        style: TextStyle(fontSize: 16.sp),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() {
+                        _selectedChargeAmount = value;
+                      });
+                    }
+                  },
+                ),
+              ),
+            ),
+            SizedBox(height: 12.h),
+            // 결제 버튼
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${_formatAmount(_selectedChargeAmount)} 결제 기능은 곧 추가됩니다!'),
+                      backgroundColor: Colors.blue[700],
+                    ),
+                  );
+                },
+                icon: Icon(Icons.payment, size: 20.sp),
+                label: Text(
+                  '결제하기',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue[700],
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                ),
+              ),
+            ),
+
+            SizedBox(height: 24.h),
+            Divider(height: 1, color: Colors.grey[300]),
+            SizedBox(height: 24.h),
+
+            // 출금 섹션
             Row(
               children: [
                 Icon(Icons.arrow_circle_up, color: Colors.green[700], size: 24.sp),
@@ -252,120 +355,6 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
     );
   }
 
-  /// 포인트 충전 섹션 (공급자)
-  Widget _buildChargeSection() {
-    final List<int> chargeOptions = [10000, 30000, 50000, 100000];
-
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.r),
-      ),
-      child: Padding(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(Icons.add_card, color: Colors.indigo[700], size: 24.sp),
-                SizedBox(width: 8.w),
-                Text(
-                  '포인트 충전',
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20.h),
-
-            // 충전 금액 선택 (드롭다운 + 결제 버튼)
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 16.w),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey[300]!),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<int>(
-                        value: _selectedChargeAmount,
-                        isExpanded: true,
-                        items: chargeOptions.map((amount) {
-                          return DropdownMenuItem<int>(
-                            value: amount,
-                            child: Flexible(
-                              child: Text(
-                                '${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}원 (${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} P)',
-                                style: TextStyle(fontSize: 16.sp),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() {
-                              _selectedChargeAmount = value;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 12.w),
-                Flexible(
-                  fit: FlexFit.loose,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('$_selectedChargeAmount원 결제 기능은 곧 추가됩니다!'),
-                          backgroundColor: Colors.indigo[700],
-                        ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.indigo[700],
-                      padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 16.h),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.payment, color: Colors.white, size: 20.sp),
-                        SizedBox(width: 8.w),
-                        Flexible(
-                          child: Text(
-                            '결제하기',
-                            style: TextStyle(
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// 최근 거래 내역 미리보기
   Widget _buildRecentTransactions(BuildContext context) {
     final transactionsAsync = ref.watch(transactionsProvider(widget.userId));
@@ -403,7 +392,7 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                       MaterialPageRoute(
                         builder: (context) => TransactionHistoryPage(
                           userId: widget.userId,
-                          userType: widget.userType,
+                          userType: 'unified', // v2.147.0: 통합 지갑 모드
                         ),
                       ),
                     );
@@ -454,7 +443,7 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
-                        backgroundColor: color.withValues(alpha: 0.1),
+                        backgroundColor: color.withOpacity(0.1), // v2.150.0: withValues → withOpacity (호환성)
                         child: Icon(icon, color: color, size: 20.sp),
                       ),
                       title: Text(

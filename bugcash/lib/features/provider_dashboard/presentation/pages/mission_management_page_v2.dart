@@ -77,7 +77,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
       appBar: AppBar(
         backgroundColor: AppColors.providerBluePrimary,
         elevation: 2,
-        shadowColor: AppColors.providerBluePrimary.withValues(alpha: 0.3),
+        shadowColor: AppColors.providerBluePrimary.withOpacity(0.3),
         foregroundColor: Colors.white,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,7 +95,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
               widget.app.appName,
               style: TextStyle(
                 fontSize: 14.sp,
-                color: AppColors.providerBlueLight.withValues(alpha: 0.8),
+                color: AppColors.providerBlueLight.withOpacity(0.8),
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -116,7 +116,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
           indicatorColor: Colors.white,
           indicatorWeight: 3,
           labelColor: Colors.white,
-          unselectedLabelColor: AppColors.providerBlueLight.withValues(alpha: 0.7),
+          unselectedLabelColor: AppColors.providerBlueLight.withOpacity(0.7),
           labelStyle: TextStyle(
             fontSize: 14.sp,
             fontWeight: FontWeight.w700,
@@ -336,13 +336,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+          colors: [AppColors.providerBlueLight.withOpacity(0.3), Colors.white],
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            color: AppColors.providerBluePrimary.withOpacity(0.15),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -354,7 +354,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
           children: [
             CircleAvatar(
               radius: 20.r,
-              backgroundColor: Colors.blue.withValues(alpha: 0.1),
+              backgroundColor: Colors.blue.withOpacity(0.1),
               child: Icon(
                 Icons.person,
                 color: Colors.blue,
@@ -398,13 +398,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+          colors: [AppColors.providerBlueLight.withOpacity(0.3), Colors.white],
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            color: AppColors.providerBluePrimary.withOpacity(0.15),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -456,7 +456,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
@@ -533,7 +533,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Text(
@@ -848,13 +848,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+          colors: [AppColors.providerBlueLight.withOpacity(0.3), Colors.white],
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            color: AppColors.providerBluePrimary.withOpacity(0.15),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -881,7 +881,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withValues(alpha: 0.1),
+                    color: Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
@@ -963,13 +963,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+          colors: [AppColors.providerBlueLight.withOpacity(0.3), Colors.white],
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            color: AppColors.providerBluePrimary.withOpacity(0.15),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -996,7 +996,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
@@ -1126,13 +1126,13 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
+          colors: [AppColors.providerBlueLight.withOpacity(0.3), Colors.white],
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
+            color: AppColors.providerBluePrimary.withOpacity(0.15),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1159,7 +1159,7 @@ class _MissionManagementPageV2State extends ConsumerState<MissionManagementPageV
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.1),
+                    color: Colors.blue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(

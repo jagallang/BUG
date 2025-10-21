@@ -348,14 +348,21 @@ class HybridAuthService {
   }
 
   /// Firestore에 사용자 프로필 생성
+  /// v2.165.0: 테스트 계정 생성에도 신규 형식 필드 추가
   static Future<void> _createUserProfile(User user, TestAccount testAccount) async {
     final now = FieldValue.serverTimestamp();
+    final roleValue = testAccount.userType.toString().split('.').last;
 
     final userData = {
       'uid': user.uid,
       'email': user.email,
       'displayName': testAccount.displayName,
-      'userType': testAccount.userType.toString().split('.').last,
+      // 신규 형식 필드 (Firestore rules 검증 통과용)
+      'roles': [roleValue],
+      'primaryRole': roleValue,
+      'isAdmin': roleValue == 'admin',
+      // 기존 형식 필드 (하위 호환성)
+      'userType': roleValue,
       'createdAt': now,
       'lastLoginAt': now,
       'isTestAccount': true, // 테스트 계정임을 표시
@@ -502,11 +509,19 @@ class HybridAuthService {
       await credential.user?.updateDisplayName(displayName);
 
       // Firestore에 사용자 데이터 저장
+      // v2.165.0: HybridAuthService 이메일 회원가입에도 신규 형식 필드 추가
       if (credential.user != null) {
+        final roleValue = userType == UserType.tester ? 'tester' : 'provider';
         await _firestore.collection('users').doc(credential.user!.uid).set({
+          'uid': credential.user!.uid,
           'email': email,
           'displayName': displayName,
-          'userType': userType == UserType.tester ? 'tester' : 'provider',
+          // 신규 형식 필드 (Firestore rules 검증 통과용)
+          'roles': [roleValue],
+          'primaryRole': roleValue,
+          'isAdmin': false,
+          // 기존 형식 필드 (하위 호환성)
+          'userType': roleValue,
           'country': country,
           'phoneNumber': phoneNumber,
           'timezone': 'Asia/Seoul',

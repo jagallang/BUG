@@ -30,7 +30,7 @@ class TransactionListItem extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: _getTypeColor().withValues(alpha: 0.1),
+            color: _getTypeColor().withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Center(
@@ -153,9 +153,9 @@ class TransactionListItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: chipColor.withValues(alpha: 0.1),
+        color: chipColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: chipColor.withValues(alpha: 0.3)),
+        border: Border.all(color: chipColor.withOpacity(0.3)),
       ),
       child: Text(
         statusText,

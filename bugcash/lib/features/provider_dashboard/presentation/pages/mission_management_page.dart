@@ -525,7 +525,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
               children: [
                 CircleAvatar(
                   radius: 20.r,
-                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  backgroundColor: AppColors.primary.withOpacity(0.1),
                   child: Text(
                     application.testerName.isNotEmpty
                       ? application.testerName[0].toUpperCase()
@@ -610,7 +610,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
               children: [
                 CircleAvatar(
                   radius: 20.r,
-                  backgroundColor: Colors.green.withValues(alpha: 0.1),
+                  backgroundColor: Colors.green.withOpacity(0.1),
                   child: Icon(
                     Icons.check_circle,
                     color: Colors.green,
@@ -642,7 +642,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.1),
+                    color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
@@ -899,7 +899,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                   decoration: BoxDecoration(
-                    color: settlement.isPaid ? Colors.green.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
+                    color: settlement.isPaid ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Text(
@@ -928,7 +928,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
               width: double.infinity,
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
+                color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
@@ -980,7 +980,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Text(
@@ -1029,7 +1029,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8.r),
       ),
       child: Text(
@@ -1288,7 +1288,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                         Container(
                           padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                           decoration: BoxDecoration(
-                            color: Colors.red.withValues(alpha: 0.1),
+                            color: Colors.red.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(4.r),
                           ),
                           child: Text(
@@ -1367,9 +1367,9 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
                       width: double.infinity,
                       padding: EdgeInsets.all(12.w),
                       decoration: BoxDecoration(
-                        color: Colors.orange.withValues(alpha: 0.05),
+                        color: Colors.orange.withOpacity(0.05),
                         borderRadius: BorderRadius.circular(8.r),
-                        border: Border.all(color: Colors.orange.withValues(alpha: 0.2)),
+                        border: Border.all(color: Colors.orange.withOpacity(0.2)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1462,7 +1462,7 @@ class _MissionManagementPageState extends ConsumerState<MissionManagementPage>
             Container(
               padding: EdgeInsets.all(8.w),
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: Colors.red.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(6.r),
               ),
               child: Row(

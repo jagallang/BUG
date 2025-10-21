@@ -73,7 +73,7 @@ class MissionsTabSimple extends StatelessWidget {
           width: 48.w,
           height: 48.w,
           decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.1),
+            color: statusColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Icon(Icons.assignment, color: statusColor, size: 24.sp),
@@ -110,10 +110,10 @@ class MissionsTabSimple extends StatelessWidget {
         trailing: Container(
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
           decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.1),
+            color: statusColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12.r),
             border: Border.all(
-              color: statusColor.withValues(alpha: 0.3),
+              color: statusColor.withOpacity(0.3),
               width: 1,
             ),
           ),

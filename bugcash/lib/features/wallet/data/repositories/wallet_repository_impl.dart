@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../../../../core/exceptions/wallet_exceptions.dart';
@@ -15,12 +17,50 @@ class WalletRepositoryImpl implements WalletRepository {
 
   @override
   Stream<WalletEntity> getWallet(String userId) {
-    return _firestore.collection('wallets').doc(userId).snapshots().map((doc) {
-      if (!doc.exists) {
-        return WalletEntity.empty(userId);
-      }
-      return WalletEntity.fromFirestore(userId, doc.data()!);
-    });
+    debugPrint('🟦 [WalletRepository] getWallet called - userId: $userId');
+
+    // v2.149.2: handleError() 제거, StreamTransformer로 에러를 empty wallet으로 변환
+    return _firestore.collection('wallets').doc(userId).snapshots()
+        .transform(StreamTransformer<DocumentSnapshot<Map<String, dynamic>>, WalletEntity>.fromHandlers(
+          handleData: (doc, sink) {
+            debugPrint('🟦 [WalletRepository] Snapshot received - exists: ${doc.exists}');
+
+            if (!doc.exists) {
+              debugPrint('⚠️ [WalletRepository] Wallet document not found, auto-creating and returning empty wallet');
+              _createWalletIfNeeded(userId);
+              sink.add(WalletEntity.empty(userId));
+              return;
+            }
+
+            final data = doc.data();
+            if (data == null) {
+              debugPrint('⚠️ [WalletRepository] Wallet document exists but data is null');
+              sink.add(WalletEntity.empty(userId));
+              return;
+            }
+
+            debugPrint('✅ [WalletRepository] Wallet loaded - balance: ${data['balance']}');
+            sink.add(WalletEntity.fromFirestore(userId, data));
+          },
+          handleError: (error, stack, sink) {
+            debugPrint('❌ [WalletRepository] Stream error: $error');
+            debugPrint('❌ [WalletRepository] Stack trace: $stack');
+            // v2.149.2: 에러 발생 시에도 empty wallet을 emit하여 UI가 로딩 상태에 멈추지 않도록 함
+            sink.add(WalletEntity.empty(userId));
+          },
+        ));
+  }
+
+  /// v2.147.1: 지갑 문서 자동 생성 (권한 문제 대응)
+  Future<void> _createWalletIfNeeded(String userId) async {
+    try {
+      debugPrint('🔧 [WalletRepository] Attempting to auto-create wallet for userId: $userId');
+      await createWallet(userId);
+      debugPrint('✅ [WalletRepository] Wallet auto-created successfully');
+    } catch (e) {
+      debugPrint('❌ [WalletRepository] Failed to auto-create wallet: $e');
+      // 권한 오류 등으로 생성 실패해도 무시 (읽기 전용 모드로 동작)
+    }
   }
 
   @override

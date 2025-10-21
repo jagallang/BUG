@@ -117,7 +117,7 @@ class _TransactionHistoryPageState
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withOpacity(0.05),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -159,7 +159,7 @@ class _TransactionHistoryPageState
           _selectedFilter = selected ? type : null;
         });
       },
-      selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+      selectedColor: Theme.of(context).primaryColor.withOpacity(0.2),
       checkmarkColor: Theme.of(context).primaryColor,
       labelStyle: TextStyle(
         color: isSelected ? Theme.of(context).primaryColor : Colors.grey[700],

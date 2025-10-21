@@ -28,7 +28,7 @@ class MissionStatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(isLarge ? 20.r : 16.r),
         boxShadow: [
           BoxShadow(
-            color: badgeData.color.withValues(alpha: 0.3),
+            color: badgeData.color.withOpacity(0.3),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

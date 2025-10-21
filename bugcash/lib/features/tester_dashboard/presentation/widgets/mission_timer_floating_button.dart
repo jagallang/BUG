@@ -445,7 +445,7 @@ class _MissionStartTimerOverlayState extends State<MissionStartTimerOverlay>
       animation: _controller,
       builder: (context, child) {
         return Container(
-          color: Colors.black.withValues(alpha: 0.7 * (1 - _opacityAnimation.value)),
+          color: Colors.black.withOpacity(0.7 * (1 - _opacityAnimation.value)), // v2.150.0: withValues → withOpacity
           child: Center(
             child: Transform.scale(
               scale: _scaleAnimation.value,
@@ -493,7 +493,7 @@ class _MissionStartTimerOverlayState extends State<MissionStartTimerOverlay>
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withValues(alpha: 0.1),
+                          color: Colors.blue.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Row(

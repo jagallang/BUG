@@ -267,7 +267,7 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
                 Expanded(
                   child: Container(
                     width: 2.w,
-                    color: statusColor.withValues(alpha: 0.3),
+                    color: statusColor.withOpacity(0.3),
                   ),
                 ),
             ],
@@ -301,7 +301,7 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
                               vertical: 4.h,
                             ),
                             decoration: BoxDecoration(
-                              color: statusColor.withValues(alpha: 0.1),
+                              color: statusColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12.r),
                             ),
                             child: Text(
@@ -383,7 +383,7 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
                         Container(
                           padding: EdgeInsets.all(12.w),
                           decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.1),
+                            color: Colors.green.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8.r),
                           ),
                           child: Row(

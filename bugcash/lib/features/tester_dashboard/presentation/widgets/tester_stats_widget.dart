@@ -16,7 +16,7 @@ class TesterStatsWidget extends StatelessWidget {
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
@@ -66,7 +66,7 @@ class TesterStatsWidget extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: Colors.white.withOpacity(0.8),
             fontSize: 10.sp,
           ),
         ),
@@ -78,7 +78,7 @@ class TesterStatsWidget extends StatelessWidget {
     return Container(
       width: 1.w,
       height: 40.h,
-      color: Colors.white.withValues(alpha: 0.3),
+      color: Colors.white.withOpacity(0.3),
     );
   }
 }

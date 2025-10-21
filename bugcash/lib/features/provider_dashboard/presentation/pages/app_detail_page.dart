@@ -348,7 +348,7 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         backgroundColor: AppColors.providerBluePrimary,
         foregroundColor: Colors.white,
         elevation: 2,
-        shadowColor: AppColors.providerBluePrimary.withValues(alpha: 0.3),
+        shadowColor: AppColors.providerBluePrimary.withOpacity(0.3),
         title: Text(
           '앱 게시 관리',
           style: TextStyle(
