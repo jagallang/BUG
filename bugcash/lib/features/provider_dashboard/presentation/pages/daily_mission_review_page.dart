@@ -318,10 +318,27 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
               );
             }
           } catch (e) {
+            // v2.166.0: 에러 메시지 상세화
             if (mounted) {
               setState(() => _isSubmitting = false);
+
+              String errorMessage = '포인트 지급 실패';
+              if (e.toString().contains('No active escrow holding found')) {
+                errorMessage = '에스크로 예치금을 찾을 수 없습니다.\n앱 등록 시 에스크로 입금이 완료되었는지 확인해주세요.';
+              } else if (e.toString().contains('SYSTEM_ESCROW wallet not found')) {
+                errorMessage = '시스템 에스크로 지갑이 초기화되지 않았습니다.\n관리자에게 문의해주세요.';
+              } else if (e.toString().contains('Insufficient escrow balance')) {
+                errorMessage = '에스크로 잔액이 부족합니다.';
+              } else {
+                errorMessage = '포인트 지급 실패: $e';
+              }
+
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('포인트 지급 실패: $e'), backgroundColor: Colors.red),
+                SnackBar(
+                  content: Text(errorMessage),
+                  backgroundColor: Colors.red,
+                  duration: const Duration(seconds: 5),
+                ),
               );
             }
           }

@@ -562,20 +562,20 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       // Update the document with its ID as appId
       await docRef.update({'appId': docRef.id});
 
-      // v2.102.1: 에스크로 시스템 통합 (Cloud Function 호출)
-      if (enablePointValidation) {
-        // Get user document for providerName
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(widget.providerId)
-            .get();
+      // v2.167.0: 에스크로 예치는 필수 (포인트 검증과 무관하게 항상 실행)
+      // Get user document for providerName
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.providerId)
+          .get();
 
-        final providerName = userDoc.data()?['displayName'] ?? '공급자';
+      final providerName = userDoc.data()?['displayName'] ?? '공급자';
 
-        // Call depositToEscrow Cloud Function
-        final depositFunction = FirebaseFunctions.instanceFor(region: 'asia-northeast1')
-            .httpsCallable('depositToEscrow');
+      // Call depositToEscrow Cloud Function
+      final depositFunction = FirebaseFunctions.instanceFor(region: 'asia-northeast1')
+          .httpsCallable('depositToEscrow');
 
+      try {
         // v2.112.0: 에스크로 breakdown 간소화 (일일 미션 포인트 제거)
         final result = await depositFunction.call({
           'appId': docRef.id,
@@ -591,7 +591,19 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           },
         });
 
-        AppLogger.info('Escrow deposit successful: ${result.data}', 'AppManagement');
+        AppLogger.info('✅ Escrow deposit successful: ${result.data}', 'AppManagement');
+      } catch (escrowError) {
+        // v2.167.0: 에스크로 예치 실패 시 앱 등록 롤백
+        AppLogger.error('❌ Escrow deposit failed, rolling back app registration', escrowError.toString());
+
+        try {
+          await docRef.delete();
+          AppLogger.info('App registration rolled back successfully', 'AppManagement');
+        } catch (rollbackError) {
+          AppLogger.error('Failed to rollback app registration', rollbackError.toString());
+        }
+
+        throw Exception('에스크로 예치 실패: 앱 등록이 취소되었습니다.\n$escrowError');
       }
 
       if (mounted) {

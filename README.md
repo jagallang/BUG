@@ -141,7 +141,62 @@ For technical support or questions, please create an issue in the GitHub reposit
 
 ## 📋 Version History
 
-### v2.129.0 (Latest) - 테스터 UI 보상 정보 제거
+### v2.167.0 (Latest) - 에스크로 예치 필수화 (포인트 검증과 분리)
+*Released: 2025-10-22*
+
+**🔧 버그 수정:**
+- **에스크로 예치 누락 문제 해결**: 앱 등록 시 포인트 검증이 비활성화되면 에스크로 예치도 스킵되던 버그 수정
+- **최종 지급 실패 방지**: 모든 앱이 에스크로 예치를 가지도록 보장하여 최종 미션 완료 시 지급 실패 방지
+- **데이터 일관성 보장**: 에스크로 예치 실패 시 앱 등록 자동 롤백 로직 추가
+
+**📝 개선사항:**
+- **에러 메시지 상세화** (v2.166.0): Firebase Functions 및 Flutter에서 에스크로 관련 에러 메시지 개선
+- **로깅 강화**: appId 및 에스크로 관련 로깅 추가로 디버깅 용이성 향상
+- **SYSTEM_ESCROW 지갑 체크**: 시스템 지갑 존재 여부 확인 로직 추가
+
+**🛠️ 수정된 파일:**
+- `lib/features/provider_dashboard/presentation/pages/app_management_page.dart` (Line 565-607)
+- `lib/features/provider_dashboard/presentation/pages/daily_mission_review_page.dart` (Line 321-344)
+- `lib/core/services/mission_workflow_service.dart` (Line 956-973)
+- `functions/index.js` (Line 1746-1798)
+
+---
+
+### Functions v2.0.0 - Firebase Functions 업그레이드
+*Released: 2025-10-21*
+
+**🔥 Node.js 20 런타임 업그레이드:**
+- **Node.js 18 → 20**: 2025-10-30 지원 종료 대응 완료
+- **firebase-functions v4.3.1 → v6.1.0**: 최신 안정화 버전 적용
+- **firebase-admin v12.7.0 → v13.0.0**: 관리 SDK 업그레이드
+
+**🚀 2세대 Cloud Functions API 마이그레이션:**
+- **v1 → v2 API 완전 전환**: migration.js의 모든 함수 업그레이드 완료
+- **Firestore 트리거**: `functions.firestore.document().onWrite()` → `onDocumentWritten()`
+- **HTTP 함수**: `functions.https.onRequest()` → `onRequest()`
+- **이벤트 구조 업데이트**: v2 API 패턴 준수 (event.params, event.data)
+
+**⚙️ 마이그레이션 세부사항:**
+- **1세대 함수 삭제**: bulkMigrateUsers, checkMigrationStatus, validateMigratedUsers, migrateUserOnWrite
+- **2세대 재배포**: 24개 함수 모두 Node.js 20 + v2 API로 정상 배포
+- **안정성 검증**: 0 vulnerabilities, 배포 성공 확인
+
+**📁 주요 수정 파일:**
+- `bugcash/functions/package.json`: 런타임 및 의존성 버전 업그레이드
+- `bugcash/functions/migration.js`: v1 API를 v2 API로 전면 수정
+  - Line 1-2: `onDocumentWritten`, `onRequest` import
+  - Line 16-18: event 구조 변경 (event.params.userId, event.data)
+  - Line 90-95: onRequest 옵션 구조 변경 (region, timeoutSeconds, memory)
+
+**✅ 결과:**
+- **Before**: Node.js 18 (deprecated 2025-10-30), firebase-functions v4.3.1
+- **After**: Node.js 20 (장기 지원), firebase-functions v6.1.0
+- **성능**: 빌드 시간 단축, 최신 JavaScript 기능 지원
+- **안정성**: 프로덕션 환경 장기 운영 가능
+
+---
+
+### v2.129.0 - 테스터 UI 보상 정보 제거
 *Released: 2025-10-18*
 
 **🎨 UI 간소화:**
