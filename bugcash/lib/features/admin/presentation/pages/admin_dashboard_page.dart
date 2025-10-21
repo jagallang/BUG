@@ -25,6 +25,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   int _selectedIndex = 0;
   final PageController _pageController = PageController();
 
+  // v2.163.0: 사이드바 접기/펼치기 상태
+  bool _isSidebarExpanded = true;
+
   // v2.68.0: Finance 탭 - 거래 내역 필터 상태
   String _transactionsFilterStatus = 'all'; // all, pending, completed, failed
   int _transactionsTabIndex = 0;
@@ -162,19 +165,40 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       ),
       body: Row(
         children: [
-          // 사이드바 네비게이션
-          Container(
-            width: 240, // 고정 사이드바 너비
+          // v2.163.0: 접이식 사이드바 네비게이션
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            width: _isSidebarExpanded ? 240 : 56, // 확장: 240px, 접힘: 56px
             color: Colors.grey[100],
             child: Column(
               children: [
-                _buildNavItem(0, Icons.dashboard, 'Dashboard', '요약'),
-                _buildNavItem(1, Icons.folder_open, 'Projects', '프로젝트 검수'),
-                _buildNavItem(2, Icons.people, 'Users', '사용자 관리'),
-                _buildNavItem(3, Icons.account_balance_wallet, 'Finance', '포인트/수익'),
-                _buildNavItem(4, Icons.account_balance, 'Escrow', '에스크로 관리'),
-                _buildNavItem(5, Icons.report_problem, 'Reports', '신고 처리'),
-                _buildNavItem(6, Icons.settings, 'Settings', '플랫폼 설정'),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      _buildNavItem(0, Icons.dashboard, 'Dashboard', '요약'),
+                      _buildNavItem(1, Icons.folder_open, 'Projects', '프로젝트 검수'),
+                      _buildNavItem(2, Icons.people, 'Users', '사용자 관리'),
+                      _buildNavItem(3, Icons.account_balance_wallet, 'Finance', '포인트/수익'),
+                      _buildNavItem(4, Icons.account_balance, 'Escrow', '에스크로 관리'),
+                      _buildNavItem(5, Icons.report_problem, 'Reports', '신고 처리'),
+                      _buildNavItem(6, Icons.settings, 'Settings', '플랫폼 설정'),
+                    ],
+                  ),
+                ),
+                // v2.163.0: 사이드바 토글 버튼
+                Divider(height: 1, color: Colors.grey[300]),
+                InkWell(
+                  onTap: () => setState(() => _isSidebarExpanded = !_isSidebarExpanded),
+                  child: Container(
+                    height: 48,
+                    alignment: Alignment.center,
+                    child: Icon(
+                      _isSidebarExpanded ? Icons.chevron_left : Icons.chevron_right,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -199,41 +223,65 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     );
   }
 
+  // v2.163.0: 접이식 네비게이션 아이템
   Widget _buildNavItem(int index, IconData icon, String title, String subtitle) {
     final isSelected = _selectedIndex == index;
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.deepPurple : null,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          color: isSelected ? Colors.white : Colors.grey[600],
+
+    return Tooltip(
+      message: _isSidebarExpanded ? '' : '$title - $subtitle',
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.deepPurple : null,
+          borderRadius: BorderRadius.circular(8),
         ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black87,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            color: isSelected ? Colors.white70 : Colors.grey[600],
-            fontSize: 12,
-          ),
-        ),
-        onTap: () {
-          setState(() => _selectedIndex = index);
-          _pageController.animateToPage(
-            index,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        },
+        child: _isSidebarExpanded
+            ? ListTile(
+                leading: Icon(
+                  icon,
+                  color: isSelected ? Colors.white : Colors.grey[600],
+                ),
+                title: Text(
+                  title,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.black87,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                subtitle: Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white70 : Colors.grey[600],
+                    fontSize: 12,
+                  ),
+                ),
+                onTap: () {
+                  setState(() => _selectedIndex = index);
+                  _pageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+              )
+            : InkWell(
+                onTap: () {
+                  setState(() => _selectedIndex = index);
+                  _pageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: Container(
+                  height: 56,
+                  alignment: Alignment.center,
+                  child: Icon(
+                    icon,
+                    color: isSelected ? Colors.white : Colors.grey[600],
+                  ),
+                ),
+              ),
       ),
     );
   }
@@ -367,7 +415,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       decoration: BoxDecoration(
         color: Colors.purple[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.adminPrimary.withValues(alpha: 0.3)),
+        border: Border.all(color: AppColors.adminPrimary.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -830,7 +878,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1046,7 +1094,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.deepPurple.withValues(alpha: 0.3),
+                  color: Colors.deepPurple.withOpacity(0.3),
                   spreadRadius: 0,
                   blurRadius: 10,
                   offset: const Offset(0, 4),
@@ -1058,7 +1106,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.tune, color: Colors.white, size: 32),
@@ -1081,7 +1129,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                         '보상, 출금, 수수료, 어뷰징 방지 등 모든 설정을 관리합니다',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.9),
+                          color: Colors.white.withOpacity(0.9),
                         ),
                       ),
                     ],
@@ -1154,7 +1202,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1169,7 +1217,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.1),
+                  color: color.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 24),
@@ -1426,7 +1474,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
+                        color: statusColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -1573,7 +1621,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1728,7 +1776,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1757,7 +1805,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1793,7 +1841,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1962,7 +2010,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -2085,7 +2133,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withValues(alpha: 0.1),
+                color: Colors.grey.withOpacity(0.1),
                 spreadRadius: 0,
                 blurRadius: 10,
                 offset: const Offset(0, 2),
@@ -2125,7 +2173,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     DataCell(Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _getTransactionTypeColor(type).withValues(alpha: 0.1),
+                        color: _getTransactionTypeColor(type).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -2146,7 +2194,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     DataCell(Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _getTransactionStatusColor(status).withValues(alpha: 0.1),
+                        color: _getTransactionStatusColor(status).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -2352,7 +2400,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -2587,7 +2635,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -2618,7 +2666,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withValues(alpha: 0.1),
+            color: Colors.grey.withOpacity(0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart'; // v2.162.0: kIsWeb
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,6 +21,8 @@ import '../../../wallet/presentation/pages/unified_wallet_page.dart';
 // import '../widgets/payment_management_tab.dart';
 // v2.80.0: 역할 전환 다이얼로그
 import '../../../shared/widgets/role_switch_dialog.dart';
+// v2.140.0: 통합 프로필 페이지
+import '../../../shared/presentation/pages/user_profile_page.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -147,7 +150,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                 shadows: [
                   Shadow(
                     blurRadius: 2,
-                    color: Colors.black.withValues(alpha: 0.3),
+                    color: Colors.black.withOpacity(0.3),
                     offset: const Offset(1, 1),
                   ),
                 ],
@@ -163,19 +166,17 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             onPressed: () => _showRoleSwitchDialog(context),
           ),
           // v2.73.0: 4개 아이콘 배치
-          // 1. 프로필 아이콘
+          // v2.162.0: 1. 프로필 아이콘 - 웹에서만 활성화
           IconButton(
-            icon: const Icon(Icons.account_circle, color: Colors.white),
-            tooltip: '프로필',
-            onPressed: () => _navigateToProfile(context),
+            icon: Icon(
+              Icons.account_circle,
+              color: kIsWeb ? Colors.white : Colors.white.withOpacity(0.5),
+            ),
+            tooltip: kIsWeb ? '프로필' : '프로필 (준비 중)',
+            onPressed: kIsWeb ? () => _navigateToProfile(context) : null,
           ),
-          // 2. 지갑 아이콘 (공급자 전용: 포인트 충전)
-          IconButton(
-            icon: const Icon(Icons.wallet, color: Colors.white),
-            tooltip: '포인트 충전',
-            onPressed: () => _navigateToChargePoints(context),
-          ),
-          // 3. 알림 아이콘
+          // v2.161.0: 지갑 아이콘 제거 (프로필 페이지에서 접근 가능)
+          // 2. 알림 아이콘
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
             tooltip: '알림',
@@ -229,7 +230,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.providerBluePrimary, // v2.78.0: 파스텔 블루 테마
         selectedItemColor: Colors.white,
-        unselectedItemColor: AppColors.providerBlueLight.withValues(alpha: 0.7), // v2.78.0
+        unselectedItemColor: AppColors.providerBlueLight.withOpacity(0.7), // v2.78.0
         currentIndex: _selectedIndex,
         onTap: (index) {
           debugPrint('BottomNavigationBar tapped: $index');
@@ -409,7 +410,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                         ? Container(
                             padding: EdgeInsets.all(16.w),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withValues(alpha: 0.1),
+                              color: AppColors.primary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8.r),
                               border: Border.all(color: AppColors.primary, width: 2),
                             ),
@@ -543,7 +544,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             width: 50.w,
             height: 50.w,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -594,7 +595,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.05),
+                color: color.withOpacity(0.05),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Column(
@@ -723,7 +724,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: Colors.white.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
@@ -1057,7 +1058,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             width: 40.w,
             height: 40.w,
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(
@@ -1644,22 +1645,23 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   // v2.73.0: 프로필 페이지로 이동
+  // v2.140.0: 통합 프로필 페이지로 변경
   void _navigateToProfile(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('프로필 페이지 (개발 중)'),
-        duration: Duration(seconds: 2),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const UserProfilePage(),
       ),
     );
   }
 
   // v2.74.0: 통합 지갑 페이지로 이동 (공급자 전용)
+  // v2.147.0: 통합 지갑 페이지로 이동
   void _navigateToChargePoints(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => UnifiedWalletPage(
-          userId: widget.providerId,
-          userType: 'provider',
+          userId: widget.providerId, // v2.147.0: userType 제거
         ),
       ),
     );

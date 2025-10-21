@@ -20,6 +20,7 @@ import '../../../auth/presentation/widgets/auth_wrapper.dart';
 import '../../../settings/presentation/pages/settings_page.dart';
 import 'mission_detail_page.dart';
 import 'mission_tracking_page.dart';
+import '../../../shared/presentation/pages/user_profile_page.dart'; // v2.140.0: 통합 프로필 페이지
 import '../../../../core/services/mission_management_service.dart';
 import '../../../../core/services/mission_workflow_service.dart';
 import '../../../shared/widgets/daily_mission_card.dart';
@@ -176,22 +177,22 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   // v2.73.0: 프로필 페이지로 이동
+  // v2.140.0: 통합 프로필 페이지로 변경
   void _navigateToProfile(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('프로필 페이지 (개발 중)'),
-        duration: Duration(seconds: 2),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const UserProfilePage(),
       ),
     );
   }
 
-  // v2.74.0: 통합 지갑 페이지로 이동
+  // v2.147.0: 통합 지갑 페이지로 이동
   void _navigateToWallet(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => UnifiedWalletPage(
-          userId: widget.testerId,
-          userType: 'tester',
+          userId: widget.testerId, // v2.147.0: userType 제거
         ),
       ),
     );
@@ -365,7 +366,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                         shadows: [
                           Shadow(
                             blurRadius: 2,
-                            color: Colors.black.withValues(alpha: 0.3),
+                            color: Colors.black.withOpacity(0.3),
                             offset: const Offset(1, 1),
                           ),
                         ],
@@ -380,19 +381,17 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     tooltip: '역할 전환',
                     onPressed: () => _showRoleSwitchDialog(context),
                   ),
-                  // 1. 프로필 아이콘
+                  // v2.162.0: 1. 프로필 아이콘 - 웹에서만 활성화
                   IconButton(
-                    icon: const Icon(Icons.account_circle, color: Colors.white),
-                    tooltip: '프로필',
-                    onPressed: () => _navigateToProfile(context),
+                    icon: Icon(
+                      Icons.account_circle,
+                      color: kIsWeb ? Colors.white : Colors.white.withOpacity(0.5),
+                    ),
+                    tooltip: kIsWeb ? '프로필' : '프로필 (준비 중)',
+                    onPressed: kIsWeb ? () => _navigateToProfile(context) : null,
                   ),
-                  // 2. 지갑 아이콘
-                  IconButton(
-                    icon: const Icon(Icons.wallet, color: Colors.white),
-                    tooltip: '거래 내역',
-                    onPressed: () => _navigateToWallet(context),
-                  ),
-                  // 3. 알림 아이콘 (Badge 포함)
+                  // v2.161.0: 지갑 아이콘 제거 (프로필 페이지에서 접근 가능)
+                  // 2. 알림 아이콘 (Badge 포함)
                   IconButton(
                     icon: Badge(
                       label: Text('${dashboardState.unreadNotifications}'),
@@ -531,7 +530,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
+        color: Colors.white.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
@@ -581,7 +580,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.8),
+            color: Colors.white.withOpacity(0.8),
             fontSize: 10.sp,
           ),
         ),
@@ -593,7 +592,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     return Container(
       width: 1.w,
       height: 40.h,
-      color: Colors.white.withValues(alpha: 0.3),
+      color: Colors.white.withOpacity(0.3),
     );
   }
 
@@ -767,7 +766,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 indicatorWeight: 3,
                 indicatorPadding: EdgeInsets.symmetric(horizontal: 8.w),
                 splashFactory: InkRipple.splashFactory,
-                overlayColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.1)),
+                overlayColor: WidgetStateProperty.all(Colors.white.withOpacity(0.1)),
                 labelStyle: TextStyle(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w600,
@@ -836,9 +835,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w),
                 decoration: BoxDecoration(
-                  color: AppColors.testerOrangePrimary.withValues(alpha: 0.1),
+                  color: AppColors.testerOrangePrimary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.testerOrangePrimary.withValues(alpha: 0.3)),
+                  border: Border.all(color: AppColors.testerOrangePrimary.withOpacity(0.3)),
                 ),
                 child: DropdownButton<String>(
                   value: _sortOrder,
@@ -936,16 +935,22 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   /// v2.87.0: 미션 필터링 및 정렬 로직
+  /// v2.138.0: 앱 등록번호 검색 추가
+  /// v2.139.0: 등록번호 성능 최적화 (모델에서 직접 사용)
   List<MissionCard> _filterAndSortMissions(List<MissionCard> missions) {
     List<MissionCard> filtered = missions;
 
-    // 1. 키워드 필터링 (앱 이름, 제목, 설명)
+    // 1. 키워드 필터링 (앱 이름, 제목, 설명, 등록번호)
     if (_searchKeyword.isNotEmpty) {
       final keyword = _searchKeyword.toLowerCase();
       filtered = filtered.where((mission) {
+        // v2.139.0: 등록번호를 모델에서 직접 사용 (성능 최적화)
+        final registrationNumber = mission.registrationNumber.toLowerCase();
+
         return mission.appName.toLowerCase().contains(keyword) ||
                mission.title.toLowerCase().contains(keyword) ||
-               mission.description.toLowerCase().contains(keyword);
+               mission.description.toLowerCase().contains(keyword) ||
+               registrationNumber.contains(keyword);
       }).toList();
     }
 
@@ -1457,9 +1462,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.1),
+                  color: Colors.orange.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1519,7 +1524,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
+                  color: Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Row(
@@ -1893,7 +1898,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.1),
+                  color: Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Column(
@@ -2044,9 +2049,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: Colors.green.withValues(alpha: 0.15),
+                          color: Colors.green.withOpacity(0.15),
                           borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -2112,6 +2117,18 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
+                    const Spacer(),  // v2.137.0: 앱 등록번호를 우측 정렬하기 위한 공간
+                    // v2.137.0: 앱 등록번호 표시
+                    // v2.139.0: 등록번호를 모델에서 직접 사용 (성능 최적화)
+                    Text(
+                      mission.registrationNumber,
+                      style: TextStyle(
+                        fontSize: 11.sp,
+                        color: Colors.grey[500],
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -2121,7 +2138,6 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
       ),
     );
   }
-
 
   Widget _buildCompletedMissionsTab() {
     final dashboardState = ref.watch(testerDashboardProvider);
@@ -2763,7 +2779,7 @@ class _TimerDialogState extends State<TimerDialog> {
             Container(
               padding: EdgeInsets.all(24.w),
               decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.1),
+                color: Colors.green.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Text(
