@@ -234,12 +234,19 @@ class FirebaseAuthService {
             debugPrint('🔵 회원가입 - Firestore 문서 생성 시작: ${credential.user!.uid}');
           }
 
+          // v2.164.0: 신규 형식 필드 추가 (roles, primaryRole, isAdmin)
+          final roleValue = userType == UserType.provider ? 'provider' : 'tester';
           await _firestore.collection('users').doc(credential.user!.uid).set({
             'uid': credential.user!.uid,
             'email': email,
             'displayName': displayName,
-            'role': userType == UserType.provider ? 'provider' : 'tester',
-            'userType': userType == UserType.provider ? 'provider' : 'tester',
+            // 신규 형식 필드 (Firestore rules 검증 통과용)
+            'roles': [roleValue],
+            'primaryRole': roleValue,
+            'isAdmin': false,
+            // 기존 형식 필드 (하위 호환성)
+            'role': roleValue,
+            'userType': roleValue,
             'country': country,
             'timezone': 'UTC',
             'phoneNumber': phoneNumber,
