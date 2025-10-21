@@ -1,4 +1,5 @@
-const functions = require('firebase-functions');
+const {onDocumentWritten} = require('firebase-functions/v2/firestore');
+const {onRequest} = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 
 // Firebase Admin 초기화
@@ -12,10 +13,9 @@ const db = admin.firestore();
  * 점진적 사용자 마이그레이션 Cloud Function
  * 새 사용자 생성/업데이트 시 자동으로 새 스키마 적용
  */
-exports.migrateUserOnWrite = functions.firestore
-  .document('users/{userId}')
-  .onWrite(async (change, context) => {
-    const userId = context.params.userId;
+exports.migrateUserOnWrite = onDocumentWritten('users/{userId}', async (event) => {
+    const userId = event.params.userId;
+    const change = event.data;
 
     // 삭제된 문서는 처리하지 않음
     if (!change.after.exists) {
@@ -87,13 +87,10 @@ exports.migrateUserOnWrite = functions.firestore
  * 대량 마이그레이션 HTTP 함수
  * 관리자가 수동으로 호출하여 기존 사용자들을 일괄 마이그레이션
  */
-exports.bulkMigrateUsers = functions
-  .region('asia-northeast1')
-  .runWith({
+exports.bulkMigrateUsers = onRequest({
+    region: 'asia-northeast1',
     timeoutSeconds: 540,
-    memory: '2GB'
-  })
-  .https.onRequest({
+    memory: '2GiB',
     cors: true
   }, async (req, res) => {
     try {
@@ -225,9 +222,9 @@ exports.bulkMigrateUsers = functions
 /**
  * 마이그레이션 상태 확인 함수
  */
-exports.checkMigrationStatus = functions
-  .region('asia-northeast1')
-  .https.onRequest(async (req, res) => {
+exports.checkMigrationStatus = onRequest({
+    region: 'asia-northeast1'
+  }, async (req, res) => {
     try {
       // CORS 헤더 설정
       res.set('Access-Control-Allow-Origin', '*');
@@ -283,9 +280,9 @@ exports.checkMigrationStatus = functions
 /**
  * 사용자 검증 함수
  */
-exports.validateMigratedUsers = functions
-  .region('asia-northeast1')
-  .https.onRequest(async (req, res) => {
+exports.validateMigratedUsers = onRequest({
+    region: 'asia-northeast1'
+  }, async (req, res) => {
     try {
       res.set('Access-Control-Allow-Origin', '*');
       res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
