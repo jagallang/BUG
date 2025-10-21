@@ -953,9 +953,11 @@ class MissionWorkflowService {
                          metadata?['finalCompletionPoints'] as int? ??
                          10000;
 
+      // v2.166.0: appId 로깅 강화
       AppLogger.info(
         '💰 Final reward payment initiated\n'
         '   ├─ workflowId: $workflowId\n'
+        '   ├─ appId: $appId (normalized: $normalizedAppId)\n'
         '   ├─ testerId: $testerId\n'
         '   ├─ amount: $finalPoints\n'
         '   └─ appName: $appName',
@@ -965,6 +967,11 @@ class MissionWorkflowService {
       // 2. Firebase Function 호출: payoutFromEscrow
       final functions = FirebaseFunctions.instanceFor(region: 'asia-northeast1');
       final callable = functions.httpsCallable('payoutFromEscrow');
+
+      AppLogger.info(
+        '📤 Calling payoutFromEscrow with appId: $appId',
+        'MissionWorkflow'
+      );
 
       await callable.call({
         'appId': appId,

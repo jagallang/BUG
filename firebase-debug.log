@@ -565,3 +565,53 @@ To learn about active projects for the CLI, visit https://firebase.google.com/do
 └─────────────────────────┴─────────────────────┴────────────────┴──────────────────────┘
 [info] 
 [info] 15 project(s) total.
+[debug] [2025-10-18T12:42:44.958Z] ----------------------------------------------------------------------
+[debug] [2025-10-18T12:42:44.962Z] Command:       /Users/isan/.nvm/versions/node/v20.19.2/bin/node /Users/isan/.nvm/versions/node/v20.19.2/bin/firebase projects:list
+[debug] [2025-10-18T12:42:44.962Z] CLI Version:   14.7.0
+[debug] [2025-10-18T12:42:44.962Z] Platform:      darwin
+[debug] [2025-10-18T12:42:44.963Z] Node Version:  v20.19.2
+[debug] [2025-10-18T12:42:44.963Z] Time:          Sat Oct 18 2025 21:42:44 GMT+0900 (Korean Standard Time)
+[debug] [2025-10-18T12:42:44.963Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-10-18T12:42:44.965Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-18T12:42:44.966Z] > authorizing via signed-in user (episode0611@gmail.com)
+[debug] [2025-10-18T12:42:44.967Z] Checked if tokens are valid: true, expires at: 1760794312635
+[debug] [2025-10-18T12:42:44.968Z] Checked if tokens are valid: true, expires at: 1760794312635
+[debug] [2025-10-18T12:42:44.969Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-10-18T12:42:45.696Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-10-18T12:42:45.696Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[info] ┌─────────────────────────┬─────────────────────┬────────────────┬──────────────────────┐
+│ Project Display Name    │ Project ID          │ Project Number │ Resource Location ID │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ BOOM                    │ boom-75b38          │ 74977135310    │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ BUGback                 │ bugback-25be0       │ 36679654731    │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ BugCash                 │ bugcash             │ 335851774651   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ CqclLandingPage         │ cqcllandingpage     │ 355226952344   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ LOAC                    │ loac-9ec81          │ 776850127990   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ mybizcard               │ mybizcard-app       │ 755217914071   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ myBizCardWeb            │ mybizcardweb        │ 682684360936   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ NewsChecker AI Platform │ newschecker-ai-2025 │ 243568933391   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ PAK-landing             │ pak-landing         │ 389211134454   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ PET-randing             │ pet-randing         │ 1014640066260  │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ Pojol                   │ pojol-4947f         │ 576870812733   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ REphoto                 │ rephoto-88741       │ 302804021590   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ smkidsHomePage          │ smkids-38e05        │ 427501805626   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ SmkidsLanding           │ smkidslanding       │ 119623844036   │ [Not specified]      │
+├─────────────────────────┼─────────────────────┼────────────────┼──────────────────────┤
+│ writing                 │ writing-c342e       │ 748612622504   │ [Not specified]      │
+└─────────────────────────┴─────────────────────┴────────────────┴──────────────────────┘
+[info] 
+[info] 15 project(s) total.

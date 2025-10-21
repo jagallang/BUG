@@ -1743,8 +1743,14 @@ exports.payoutFromEscrow = onCall({
           .limit(1)
           .get();
 
+      // v2.166.0: 에러 메시지 상세화
       if (holdingsSnapshot.empty) {
-        throw new HttpsError("not-found", "Active escrow holding not found for this app");
+        console.error(`❌ No active escrow holding found - appId: ${appId}`);
+        throw new HttpsError(
+            "not-found",
+            `No active escrow holding found for appId: ${appId}. ` +
+            `Please ensure the app is registered with escrow deposit.`,
+        );
       }
 
       const holdingDoc = holdingsSnapshot.docs[0];
@@ -1781,6 +1787,16 @@ exports.payoutFromEscrow = onCall({
       // 3. 에스크로 지갑 조회
       const escrowWalletRef = getFirestore().collection("wallets").doc(ESCROW_ACCOUNT_ID);
       const escrowWallet = await transaction.get(escrowWalletRef);
+
+      // v2.166.0: SYSTEM_ESCROW 지갑 존재 여부 체크
+      if (!escrowWallet.exists) {
+        console.error(`❌ SYSTEM_ESCROW wallet not found - walletId: ${ESCROW_ACCOUNT_ID}`);
+        throw new HttpsError(
+            "not-found",
+            `SYSTEM_ESCROW wallet not found. Please initialize the escrow wallet.`,
+        );
+      }
+
       const escrowBalance = escrowWallet.data().balance || 0;
 
       // 4. 테스터 지갑 조회
