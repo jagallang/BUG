@@ -1675,7 +1675,7 @@ exports.depositToEscrow = onCall({
             from: providerId,
             to: ESCROW_ACCOUNT_ID,
             description: "앱 등록 에스크로 예치",
-            createdAt: FieldValue.serverTimestamp(),
+            createdAt: new Date().toISOString(),
           },
         ],
         depositedAt: FieldValue.serverTimestamp(),
@@ -1831,7 +1831,7 @@ exports.payoutFromEscrow = onCall({
         from: ESCROW_ACCOUNT_ID,
         to: testerId,
         description: description || "미션 완료 보상",
-        createdAt: FieldValue.serverTimestamp(),
+        createdAt: new Date().toISOString(),
       });
 
       transaction.update(holdingRef, {
@@ -1991,7 +1991,7 @@ exports.refundEscrow = onCall({
         from: ESCROW_ACCOUNT_ID,
         to: holding.providerId,
         description: "앱 종료로 인한 에스크로 환불",
-        createdAt: FieldValue.serverTimestamp(),
+        createdAt: new Date().toISOString(),
       });
 
       transaction.update(holdingRef, {

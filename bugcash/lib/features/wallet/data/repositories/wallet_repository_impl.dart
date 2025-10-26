@@ -19,6 +19,12 @@ class WalletRepositoryImpl implements WalletRepository {
   Stream<WalletEntity> getWallet(String userId) {
     debugPrint('🟦 [WalletRepository] getWallet called - userId: $userId');
 
+    // v2.168.0: 로그아웃 상태 처리 (anonymous_user는 Firestore 접근 불가)
+    if (userId == 'anonymous_user') {
+      debugPrint('⚠️ [WalletRepository] User is logged out (anonymous_user), returning empty wallet');
+      return Stream.value(WalletEntity.empty(userId));
+    }
+
     // v2.149.2: handleError() 제거, StreamTransformer로 에러를 empty wallet으로 변환
     return _firestore.collection('wallets').doc(userId).snapshots()
         .transform(StreamTransformer<DocumentSnapshot<Map<String, dynamic>>, WalletEntity>.fromHandlers(

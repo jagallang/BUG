@@ -249,89 +249,65 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       return;
     }
 
-    // v2.100.0: Firebase 설정에서 포인트 검증 활성화 여부 읽기
-    bool enablePointValidation = true; // 기본값
-    try {
-      final settingsDoc = await FirebaseFirestore.instance
-          .collection('platform_settings')
-          .doc('platform')
-          .get();
-
-      if (settingsDoc.exists) {
-        final pointValidation = settingsDoc.data()?['pointValidation'] as Map<String, dynamic>?;
-        enablePointValidation = pointValidation?['enabled'] ?? true;
-      }
-    } catch (e) {
-      AppLogger.warning('포인트 검증 설정 읽기 실패, 기본값(true) 사용: $e', 'AppManagement');
-    }
-
-    // v2.99.0: 조건부 포인트 검증
+    // v2.169.0: 잔액 검증 필수화 (우회 불가)
     final requiredPoints = _calculateRequiredPoints();
-    int? walletBalance;
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    if (enablePointValidation) {
-      // BuildContext 저장
-      final scaffoldMessenger = ScaffoldMessenger.of(context);
+    // 현재 잔액 확인 - walletProvider는 StreamProvider이므로 watch 사용
+    final walletAsync = ref.watch(walletProvider(widget.providerId));
 
-      // 현재 잔액 확인 - walletProvider는 StreamProvider이므로 watch 사용
-      final walletAsync = ref.watch(walletProvider(widget.providerId));
-
-      // 로딩 중이거나 에러 상태 처리
-      if (walletAsync.isLoading) {
-        scaffoldMessenger.showSnackBar(
-          const SnackBar(content: Text('잔액 정보를 불러오는 중...')),
-        );
-        return;
-      }
-
-      if (walletAsync.hasError) {
-        scaffoldMessenger.showSnackBar(
-          SnackBar(content: Text('잔액 정보 불러오기 실패: ${walletAsync.error}')),
-        );
-        return;
-      }
-
-      final wallet = walletAsync.value!;
-      walletBalance = wallet.balance;
-      final balanceDeficit = requiredPoints - wallet.balance;
-
-      if (wallet.balance < requiredPoints) {
-        if (!mounted) return;
-        scaffoldMessenger.showSnackBar(
-          SnackBar(
-            content: Text(
-              '포인트가 부족합니다\n'
-              '필요: ${_formatAmount(requiredPoints)}P\n'
-              '보유: ${_formatAmount(wallet.balance)}P\n'
-              '부족: ${_formatAmount(balanceDeficit)}P'
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-          ),
-        );
-        return;
-      }
+    // 로딩 중이거나 에러 상태 처리
+    if (walletAsync.isLoading) {
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(content: Text('잔액 정보를 불러오는 중...')),
+      );
+      return;
     }
 
-    // v2.134.0: 1단계 - 앱 등록 확인
+    if (walletAsync.hasError) {
+      scaffoldMessenger.showSnackBar(
+        SnackBar(content: Text('잔액 정보 불러오기 실패: ${walletAsync.error}')),
+      );
+      return;
+    }
+
+    final wallet = walletAsync.value!;
+    final walletBalance = wallet.balance;
+    final balanceDeficit = requiredPoints - wallet.balance;
+
+    if (wallet.balance < requiredPoints) {
+      if (!mounted) return;
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            '포인트가 부족합니다\n'
+            '필요: ${_formatAmount(requiredPoints)}P\n'
+            '보유: ${_formatAmount(wallet.balance)}P\n'
+            '부족: ${_formatAmount(balanceDeficit)}P'
+          ),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+      return;
+    }
+
+    // v2.169.0: 1단계 - 앱 등록 확인 (상세 정보 표시)
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('앱 등록 확인'),
         content: Text(
-          enablePointValidation
-            ? '앱을 등록하시겠습니까?\n\n'
-              '필요 포인트: ${_formatAmount(requiredPoints)}P\n'
-              '현재 잔액: ${_formatAmount(walletBalance!)}P\n'
-              '차감 후 잔액: ${_formatAmount(walletBalance - requiredPoints)}P\n\n'
-              '• 테스터 수: $_maxTesters명\n'
-              '• 테스트 기간: $_testPeriodDays일\n'
-              '• 최종 완료: ${_formatAmount(_finalCompletionPoints)}P'
-            : '앱을 등록하시겠습니까?\n\n'
-              '• 테스터 수: $_maxTesters명\n'
-              '• 테스트 기간: $_testPeriodDays일\n'
-              '• 최종 완료: ${_formatAmount(_finalCompletionPoints)}P\n\n'
-              '⚠️ 포인트 검증이 비활성화되어 있습니다.',
+          '앱을 등록하시겠습니까?\n\n'
+          '📊 프로젝트 포인트 계산:\n'
+          '${_formatAmount(_finalCompletionPoints)}P/인 × $_maxTesters명 = ${_formatAmount(requiredPoints)}P\n\n'
+          '💰 잔액 확인:\n'
+          '현재 잔액: ${_formatAmount(walletBalance)}P\n'
+          '차감 후 잔액: ${_formatAmount(walletBalance - requiredPoints)}P\n\n'
+          '📋 앱 정보:\n'
+          '• 미션 포인트: ${_formatAmount(_finalCompletionPoints)}P/인\n'
+          '• 테스터 수: $_maxTesters명\n'
+          '• 테스트 기간: $_testPeriodDays일',
         ),
         actions: [
           TextButton(
@@ -348,98 +324,104 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
     if (confirm != true || !mounted) return;
 
-    // v2.134.0: 2단계 - 포인트 차감 및 에스크로 보관 확인
-    if (enablePointValidation) {
-      final escrowConfirm = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.account_balance_wallet, color: Colors.orange[700], size: 28),
-              const SizedBox(width: 8),
-              const Text('포인트 차감 확인'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '앱 등록 시 포인트가 차감되어\n에스크로 계좌에 보관됩니다.',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+    // v2.169.0: 2단계 - 포인트 차감 및 에스크로 보관 확인 (항상 실행)
+    final escrowConfirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.account_balance_wallet, color: Colors.orange[700], size: 28),
+            const SizedBox(width: 8),
+            const Text('포인트 차감 확인'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '앱 등록 시 포인트가 차감되어\n에스크로 계좌에 보관됩니다.',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.orange[50],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.orange[200]!),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '💰 차감 포인트: ${_formatAmount(requiredPoints)}P',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange[900],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '잔액: ${_formatAmount(walletBalance!)}P → ${_formatAmount(walletBalance - requiredPoints)}P',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[700],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                '📌 에스크로 보관 안내',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '• 포인트는 에스크로 계좌에 안전하게 보관됩니다.\n'
-                '• 테스터가 최종 미션을 완료하면 자동으로 지급됩니다.\n'
-                '• 중도 취소 시 에스크로 포인트가 반환됩니다.',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[700],
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('취소'),
             ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[700],
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange[50],
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange[200]!),
               ),
-              child: const Text('확인 및 차감'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '💰 프로젝트 포인트: ${_formatAmount(requiredPoints)}P',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange[900],
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '(미션 포인트 ${_formatAmount(_finalCompletionPoints)}P/인 × $_maxTesters명)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '잔액: ${_formatAmount(walletBalance)}P → ${_formatAmount(walletBalance - requiredPoints)}P',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              '📌 에스크로 보관 안내',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '• 포인트는 에스크로 계좌에 안전하게 보관됩니다.\n'
+              '• 테스터가 최종 미션을 완료하면 자동으로 지급됩니다.\n'
+              '• 중도 취소 시 에스크로 포인트가 반환됩니다.',
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.grey[700],
+                height: 1.5,
+              ),
             ),
           ],
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange[700],
+            ),
+            child: const Text('확인 및 차감'),
+          ),
+        ],
+      ),
+    );
 
-      if (escrowConfirm != true || !mounted) return;
-    }
+    if (escrowConfirm != true || !mounted) return;
 
     // v2.108.4: 등록 시작 - 플래그 설정
     setState(() => _isSubmitting = true);
@@ -586,8 +568,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           'breakdown': {
             'maxTesters': _maxTesters,
             'testPeriodDays': _testPeriodDays,
-            'finalCompletionPoints': _finalCompletionPoints,
-            'finalTotal': _finalCompletionPoints * _maxTesters,
+            'missionPoints': _finalCompletionPoints,
+            'projectPoints': requiredPoints,
           },
         });
 
@@ -1335,8 +1317,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                       _finalCompletionPoints = int.tryParse(value) ?? 1000;
                     },
                     decoration: InputDecoration(
-                      labelText: '최종 완료 포인트',
-                      hintText: '전체 미션 완료 시 지급되는 포인트',
+                      labelText: '미션 포인트 (1명당)',
+                      hintText: '테스터 1명이 최종 완료 시 받는 포인트',
+                      suffixText: 'P/인',
+                      helperText: '프로젝트 포인트 = ${_formatAmount(_calculateRequiredPoints())}P (총 $_maxTesters명)',
+                      helperMaxLines: 2,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
@@ -1380,6 +1365,53 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                   ],
                 ),
               ],
+            ),
+            SizedBox(height: 20.h),
+
+            // v2.169.0: 프로젝트 포인트 계산 표시
+            Container(
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.blue.shade200, width: 1),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.calculate, size: 18.sp, color: Colors.blue.shade700),
+                      SizedBox(width: 6.w),
+                      Text(
+                        '프로젝트 포인트 계산',
+                        style: TextStyle(
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue.shade900,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    '${_formatAmount(_finalCompletionPoints)}P/인 × $_maxTesters명 = ${_formatAmount(_calculateRequiredPoints())}P',
+                    style: TextStyle(
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade800,
+                    ),
+                  ),
+                  SizedBox(height: 4.h),
+                  Text(
+                    '앱 등록 시 ${_formatAmount(_calculateRequiredPoints())}P가 에스크로에 예치됩니다',
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
             ),
             SizedBox(height: 20.h),
 
