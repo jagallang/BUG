@@ -137,19 +137,19 @@ extension ResponsiveWidgetExtension on Widget {
     if (context.isDesktop) {
       return Card(
         elevation: 8,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withValues(alpha: 0.1),
         child: this,
       );
     } else if (context.isTablet) {
       return Card(
         elevation: 4,
-        shadowColor: Colors.black.withOpacity(0.08),
+        shadowColor: Colors.black.withValues(alpha: 0.08),
         child: this,
       );
     } else {
       return Card(
         elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.06),
+        shadowColor: Colors.black.withValues(alpha: 0.06),
         child: this,
       );
     }
@@ -244,7 +244,7 @@ extension ResponsiveWidgetExtension on Widget {
               end: Alignment.bottomRight,
               colors: [
                 AppColors.glassBackground,
-                AppColors.glassBackground.withOpacity(0.1),
+                AppColors.glassBackground.withValues(alpha: 0.1),
               ],
             ),
             borderRadius: BorderRadius.circular(borderRadius),
@@ -364,10 +364,10 @@ extension ResponsiveWidgetExtension on Widget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: primaryColor.withOpacity(0.1),
+        color: primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: primaryColor.withOpacity(0.3),
+          color: primaryColor.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -393,18 +393,18 @@ extension ResponsiveWidgetExtension on Widget {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                primaryColor.withOpacity(0.15),
-                primaryColor.withOpacity(0.05),
+                primaryColor.withValues(alpha: 0.15),
+                primaryColor.withValues(alpha: 0.05),
               ],
             ),
             borderRadius: BorderRadius.circular(borderRadius),
             border: Border.all(
-              color: primaryColor.withOpacity(0.2),
+              color: primaryColor.withValues(alpha: 0.2),
               width: 1.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: primaryColor.withOpacity(0.1),
+                color: primaryColor.withValues(alpha: 0.1),
                 blurRadius: 40,
                 offset: const Offset(0, 8),
               ),

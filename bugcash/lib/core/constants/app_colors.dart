@@ -42,20 +42,20 @@ class AppColors {
   static const Color cashGreen = Color(0xFF00BFA5);
   
   // Enhanced Shadow Colors for Material Design 3
-  static Color shadowLight = Colors.black.withOpacity(0.05);
-  static Color shadowMedium = Colors.black.withOpacity(0.1);
-  static Color shadowDark = Colors.black.withOpacity(0.15);
-  static Color shadowElevated = Colors.black.withOpacity(0.2);
+  static Color shadowLight = Colors.black.withValues(alpha: 0.05);
+  static Color shadowMedium = Colors.black.withValues(alpha: 0.1);
+  static Color shadowDark = Colors.black.withValues(alpha: 0.15);
+  static Color shadowElevated = Colors.black.withValues(alpha: 0.2);
 
   // Card Specific Shadows (더 입체적인 효과)
   static List<BoxShadow> cardShadowLight = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.06),
+      color: Colors.black.withValues(alpha: 0.06),
       blurRadius: 8,
       offset: const Offset(0, 2),
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.04),
+      color: Colors.black.withValues(alpha: 0.04),
       blurRadius: 16,
       offset: const Offset(0, 4),
     ),
@@ -63,12 +63,12 @@ class AppColors {
 
   static List<BoxShadow> cardShadowMedium = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.06),
+      color: Colors.black.withValues(alpha: 0.06),
       blurRadius: 24,
       offset: const Offset(0, 8),
     ),
@@ -76,23 +76,23 @@ class AppColors {
 
   static List<BoxShadow> cardShadowElevated = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.12),
+      color: Colors.black.withValues(alpha: 0.12),
       blurRadius: 16,
       offset: const Offset(0, 6),
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 32,
       offset: const Offset(0, 12),
     ),
   ];
-  
+
   // Overlay Colors
-  static Color overlayLight = Colors.white.withOpacity(0.2);
-  static Color overlayMedium = Colors.white.withOpacity(0.5);
-  
+  static Color overlayLight = Colors.white.withValues(alpha: 0.2);
+  static Color overlayMedium = Colors.white.withValues(alpha: 0.5);
+
   // Progress Colors
-  static Color progressBackground = Colors.white.withOpacity(0.5);
+  static Color progressBackground = Colors.white.withValues(alpha: 0.5);
   
   // Badge Colors
   static const Color goldBadge = Color(0xFFFFD700);
@@ -132,10 +132,10 @@ class AppColors {
   // ============================================
 
   // Glassmorphism Colors
-  static Color glassBackground = Colors.white.withOpacity(0.25);
-  static Color glassBackgroundDark = Colors.black.withOpacity(0.15);
-  static Color glassBorder = Colors.white.withOpacity(0.3);
-  static Color glassBorderDark = Colors.white.withOpacity(0.1);
+  static Color glassBackground = Colors.white.withValues(alpha: 0.25);
+  static Color glassBackgroundDark = Colors.black.withValues(alpha: 0.15);
+  static Color glassBorder = Colors.white.withValues(alpha: 0.3);
+  static Color glassBorderDark = Colors.white.withValues(alpha: 0.1);
 
   // Neumorphism Colors
   static const Color neuLight = Color(0xFFF0F0F3);
@@ -177,12 +177,12 @@ class AppColors {
   // Glass Effect Shadows
   static List<BoxShadow> glassShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.1),
+      color: Colors.black.withValues(alpha: 0.1),
       blurRadius: 40,
       offset: const Offset(0, 8),
     ),
     BoxShadow(
-      color: Colors.white.withOpacity(0.05),
+      color: Colors.white.withValues(alpha: 0.05),
       blurRadius: 1,
       offset: const Offset(0, 1),
       blurStyle: BlurStyle.inner,
@@ -192,7 +192,7 @@ class AppColors {
   // Neumorphism Shadows
   static List<BoxShadow> neuShadowConvex = [
     BoxShadow(
-      color: neuShadow.withOpacity(0.5),
+      color: neuShadow.withValues(alpha: 0.5),
       blurRadius: 15,
       offset: const Offset(5, 5),
     ),
@@ -210,7 +210,7 @@ class AppColors {
       offset: Offset(5, 5),
     ),
     BoxShadow(
-      color: neuShadow.withOpacity(0.5),
+      color: neuShadow.withValues(alpha: 0.5),
       blurRadius: 15,
       offset: const Offset(-5, -5),
     ),
@@ -239,12 +239,12 @@ class AppColors {
   ];
   static List<BoxShadow> testerCardShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.06),
+      color: Colors.black.withValues(alpha: 0.06),
       blurRadius: 24,
       offset: const Offset(0, 8),
     ),
@@ -262,12 +262,12 @@ class AppColors {
   ];
   static List<BoxShadow> providerCardShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.06),
+      color: Colors.black.withValues(alpha: 0.06),
       blurRadius: 24,
       offset: const Offset(0, 8),
     ),
@@ -283,12 +283,12 @@ class AppColors {
   ];
   static List<BoxShadow> adminCardShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 12,
       offset: const Offset(0, 4),
     ),
     BoxShadow(
-      color: Colors.black.withOpacity(0.06),
+      color: Colors.black.withValues(alpha: 0.06),
       blurRadius: 24,
       offset: const Offset(0, 8),
     ),

@@ -81,10 +81,10 @@ class _AppDeletionDialogState extends State<AppDeletionDialog> {
             width: double.infinity,
             padding: EdgeInsets.all(12.w),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
+              color: Colors.red.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
               border: Border.all(
-                color: Colors.red.withOpacity(0.3),
+                color: Colors.red.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),

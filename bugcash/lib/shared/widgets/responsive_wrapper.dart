@@ -40,7 +40,7 @@ class ResponsiveWrapper extends StatelessWidget {
                   color: Theme.of(context).scaffoldBackgroundColor,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       spreadRadius: 0,
                       offset: const Offset(0, 0),
