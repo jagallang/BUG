@@ -739,158 +739,136 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title, Filter and Add button
+                // v2.174.0: 필터와 버튼을 함께 배치
+                // v2.175.0: 검색 기능 추가
+                // v2.186.10: '앱 관리' 텍스트 제거 (오버플로우 최종 해결)
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      '앱 관리',
-                      style: TextStyle(
-                        fontSize: 24.sp,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                    // v2.175.0: 검색 TextField
+                    // v2.186.11: 150.w → 135.w (최종 오버플로우 해결)
+                    Container(
+                      width: 135.w,
+                      height: 36.h,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8.r),
+                        color: Colors.white,
+                      ),
+                      child: TextField(
+                        controller: _searchController,
+                        onChanged: (value) {
+                          setState(() {
+                            _searchKeyword = value;
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: '검색...', // v2.186.9: 힌트 텍스트 축소
+                          hintStyle: TextStyle(
+                            fontSize: 13.sp,
+                            color: Colors.grey[400],
+                          ),
+                          prefixIcon: Icon(
+                            Icons.search,
+                            size: 18.sp,
+                            color: Colors.grey[600],
+                          ),
+                          suffixIcon: _searchKeyword.isNotEmpty
+                              ? IconButton(
+                                  icon: Icon(
+                                    Icons.clear,
+                                    size: 18.sp,
+                                    color: Colors.grey[600],
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _searchController.clear();
+                                      _searchKeyword = '';
+                                    });
+                                  },
+                                )
+                              : null,
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 8.w,
+                            vertical: 8.h,
+                          ),
+                        ),
+                        style: TextStyle(fontSize: 14.sp),
                       ),
                     ),
-                    // v2.174.0: 필터와 버튼을 함께 배치
-                    // v2.175.0: 검색 기능 추가
-                    // v2.186.7: 반응형 레이아웃 적용 (오버플로우 수정)
-                    Row(
-                      children: [
-                        // v2.175.0: 검색 TextField
-                        // v2.186.7: Expanded로 변경 (flex: 3 = 약 40%)
-                        Expanded(
-                          flex: 3,
-                          child: Container(
-                            height: 36.h,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8.r),
-                              color: Colors.white,
-                            ),
-                            child: TextField(
-                              controller: _searchController,
-                              onChanged: (value) {
-                                setState(() {
-                                  _searchKeyword = value;
-                                });
-                              },
-                              decoration: InputDecoration(
-                                hintText: '앱 이름, 설명, 카테고리 검색...', // v2.177.0: 미션 고유번호는 표시만 (검색 제외)
-                                hintStyle: TextStyle(
-                                  fontSize: 13.sp,
-                                  color: Colors.grey[400],
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  size: 18.sp,
-                                  color: Colors.grey[600],
-                                ),
-                                suffixIcon: _searchKeyword.isNotEmpty
-                                    ? IconButton(
-                                        icon: Icon(
-                                          Icons.clear,
-                                          size: 18.sp,
-                                          color: Colors.grey[600],
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _searchController.clear();
-                                            _searchKeyword = '';
-                                          });
-                                        },
-                                      )
-                                    : null,
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 8.w,
-                                  vertical: 8.h,
+                    SizedBox(width: 6.w),
+                    // 상태 필터 드롭다운
+                    // v2.186.11: 간격 8.w → 6.w
+                    Container(
+                      height: 36.h,
+                      padding: EdgeInsets.symmetric(horizontal: 8.w),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey[300]!),
+                        borderRadius: BorderRadius.circular(8.r),
+                        color: Colors.white,
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String?>(
+                          value: _selectedStatusFilter,
+                          icon: Icon(Icons.filter_list, size: 18.sp, color: Colors.grey[600]),
+                          hint: Row(
+                            children: [
+                              Icon(Icons.filter_list, size: 18.sp, color: Colors.grey[600]),
+                              SizedBox(width: 6.w),
+                              Text(
+                                '전체',
+                                style: TextStyle(
+                                  fontSize: 14.sp,
+                                  color: Colors.black87,
                                 ),
                               ),
-                              style: TextStyle(fontSize: 14.sp),
-                            ),
+                            ],
                           ),
-                        ),
-                        SizedBox(width: 8.w),
-                        // 상태 필터 드롭다운
-                        // v2.186.7: Flexible로 변경 (flex: 2 = 약 27%)
-                        Flexible(
-                          flex: 2,
-                          child: Container(
-                            height: 36.h,
-                            padding: EdgeInsets.symmetric(horizontal: 12.w),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[300]!),
-                              borderRadius: BorderRadius.circular(8.r),
-                              color: Colors.white,
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String?>(
-                                value: _selectedStatusFilter,
-                                icon: Icon(Icons.filter_list, size: 18.sp, color: Colors.grey[600]),
-                                hint: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.filter_list, size: 18.sp, color: Colors.grey[600]),
-                                    SizedBox(width: 6.w),
-                                    Text(
-                                      '전체',
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        color: Colors.black87,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                items: _statusFilterOptions.map((option) {
-                                  return DropdownMenuItem<String?>(
-                                    value: option['value'],
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.filter_list, size: 16.sp, color: Colors.grey[600]),
-                                        SizedBox(width: 6.w),
-                                        Text(
-                                          option['label']!,
-                                          style: TextStyle(fontSize: 14.sp),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    _selectedStatusFilter = newValue;
-                                  });
-                                },
-                                isExpanded: true,
+                          items: _statusFilterOptions.map((option) {
+                            return DropdownMenuItem<String?>(
+                              value: option['value'],
+                              child: Row(
+                                children: [
+                                  Icon(Icons.filter_list, size: 16.sp, color: Colors.grey[600]),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    option['label']!,
+                                    style: TextStyle(fontSize: 14.sp),
+                                  ),
+                                ],
                               ),
-                            ),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _selectedStatusFilter = newValue;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 6.w),
+                    // 앱 등록 버튼
+                    // v2.186.11: 90.w → 80.w
+                    SizedBox(
+                      width: 80.w,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          setState(() {
+                            _showUploadDialog = true;
+                          });
+                        },
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('앱 등록'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.providerBluePrimary,
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 10.h),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.r),
                           ),
                         ),
-                        SizedBox(width: 8.w),
-                        // 앱 등록 버튼
-                        // v2.186.7: Flexible로 변경 (flex: 2 = 약 27%)
-                        Flexible(
-                          flex: 2,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              setState(() {
-                                _showUploadDialog = true;
-                              });
-                            },
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('앱 등록'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppColors.providerBluePrimary,
-                              foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.r),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ],
                 ),

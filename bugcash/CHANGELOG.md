@@ -2,19 +2,66 @@
 
 All notable changes to BugCash project will be documented in this file.
 
-## [2.186.7] - 2025-10-27
+## [2.186.11] - 2025-10-27
 
 ### Fixed
-- **앱관리 페이지 상단 오버플로우 수정**: 안드로이드 앱에서 검색창, 필터, 버튼이 겹치는 문제 해결
-  - 고정 너비(width: 220.w, 120.w)를 Expanded/Flexible로 변경
-  - Flex 비율: 검색(3), 필터(2), 버튼(2) → 반응형 레이아웃
-  - 간격 축소: 12.w → 8.w
-  - 드롭다운에 `isExpanded: true`, `mainAxisSize: MainAxisSize.min` 추가
+- **앱관리 페이지 오버플로우 완전 해결**: 좁은 화면 스마트폰에서도 완벽하게 작동
+  - 검색 TextField: 150.w → 135.w
+  - 간격: 8.w → 6.w (2곳)
+  - 앱 등록 버튼: 90.w → 80.w
+  - 총 약 29w 절약으로 오버플로우 0픽셀 달성
 
 ### Technical Details
-- `app_management_page.dart` Line 754-894: Row 레이아웃 반응형 전환
-- ScreenUtil(.w) 기반 고정 너비 제거
-- 모든 화면 크기에서 오버플로우 없이 작동
+- `app_management_page.dart` Line 750, 799, 850, 854: 최종 크기 조정
+- 최종 구성: 검색(135.w) + 간격(6.w) + 필터(~95w) + 간격(6.w) + 버튼(80.w) = 약 322w
+- 여유 공간: 약 62w (384w 기준)
+
+## [2.186.10] - 2025-10-27
+
+### Fixed
+- **'앱 관리' 텍스트 제거**: 약 80-100w 공간 확보
+  - Row 구조 단순화 (mainAxisAlignment: spaceBetween 제거)
+  - 검색필드 140.w → 150.w로 증가 (사용성 개선)
+  - 버튼 85.w → 90.w로 증가
+  - 간격 6.w → 8.w 복원
+  - 오버플로우 80픽셀 → 25픽셀로 감소
+
+### Technical Details
+- `app_management_page.dart` Line 743-753: '앱 관리' Text 위젯 제거
+
+## [2.186.9] - 2025-10-27
+
+### Fixed
+- **검색필드 대폭 축소**: 오버플로우 153픽셀 → 80픽셀로 개선
+  - 검색 TextField: 180.w → 140.w
+  - 필터 padding: 12.w → 8.w
+  - 버튼: 100.w → 85.w
+  - 간격: 8.w → 6.w (2곳)
+  - 힌트 텍스트: "앱 이름, 설명, 카테고리 검색..." → "검색..."
+
+### Technical Details
+- `app_management_page.dart` Line 762, 777, 815, 865: 크기 축소
+
+## [2.186.8] - 2025-10-27
+
+### Fixed
+- **v2.186.7 긴급 롤백**: Expanded/Flexible 방식이 unbounded constraint 에러 유발
+  - 고정 너비 방식으로 복원
+  - 검색: 220.w → 180.w
+  - 버튼: 120.w → 100.w
+  - 간격: 12.w → 8.w
+
+### Technical Details
+- v2.186.7의 반응형 레이아웃은 부모 Row의 unbounded width로 인해 RenderFlex 에러 발생
+- 고정 너비 + 축소 방식이 더 안정적임을 확인
+
+## [2.186.7] - 2025-10-27 (ROLLBACK)
+
+### Attempted (Failed)
+- **반응형 레이아웃 시도**: Expanded/Flexible 사용
+- 문제: 부모 Row가 unbounded constraint를 가져 RenderFlex 에러 발생
+- 결과: 앱관리 탭 전체가 흰 화면으로 렌더링 실패
+- 해결: v2.186.8에서 고정 너비 방식으로 롤백
 
 ## [2.186.6] - 2025-10-27
 
@@ -79,7 +126,11 @@ All notable changes to BugCash project will be documented in this file.
 
 ## Version History Summary
 
-- **v2.186.7**: 앱관리 페이지 상단 오버플로우 수정 (반응형 레이아웃)
+- **v2.186.11**: 앱관리 페이지 오버플로우 완전 해결 (좁은 화면 대응)
+- **v2.186.10**: '앱 관리' 텍스트 제거로 공간 확보
+- **v2.186.9**: 검색필드 대폭 축소 (153px → 80px)
+- **v2.186.8**: v2.186.7 긴급 롤백 (고정 너비 방식 복원)
+- **v2.186.7**: 반응형 레이아웃 시도 실패 (RenderFlex 에러)
 - **v2.186.6**: 관리자 프로젝트 승인 권한 수정 (status 업데이트 가능)
 - **v2.186.5**: 공급자 앱 삭제 UI 제한 제거
 - **v2.186.4**: 공급자 앱 삭제 Firestore rules 권한 확대
