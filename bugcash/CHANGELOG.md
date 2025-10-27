@@ -2,6 +2,20 @@
 
 All notable changes to BugCash project will be documented in this file.
 
+## [2.186.7] - 2025-10-27
+
+### Fixed
+- **앱관리 페이지 상단 오버플로우 수정**: 안드로이드 앱에서 검색창, 필터, 버튼이 겹치는 문제 해결
+  - 고정 너비(width: 220.w, 120.w)를 Expanded/Flexible로 변경
+  - Flex 비율: 검색(3), 필터(2), 버튼(2) → 반응형 레이아웃
+  - 간격 축소: 12.w → 8.w
+  - 드롭다운에 `isExpanded: true`, `mainAxisSize: MainAxisSize.min` 추가
+
+### Technical Details
+- `app_management_page.dart` Line 754-894: Row 레이아웃 반응형 전환
+- ScreenUtil(.w) 기반 고정 너비 제거
+- 모든 화면 크기에서 오버플로우 없이 작동
+
 ## [2.186.6] - 2025-10-27
 
 ### Fixed
@@ -65,6 +79,7 @@ All notable changes to BugCash project will be documented in this file.
 
 ## Version History Summary
 
+- **v2.186.7**: 앱관리 페이지 상단 오버플로우 수정 (반응형 레이아웃)
 - **v2.186.6**: 관리자 프로젝트 승인 권한 수정 (status 업데이트 가능)
 - **v2.186.5**: 공급자 앱 삭제 UI 제한 제거
 - **v2.186.4**: 공급자 앱 삭제 Firestore rules 권한 확대
