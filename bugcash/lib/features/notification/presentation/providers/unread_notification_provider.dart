@@ -8,7 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 final unreadNotificationCountProvider =
     StreamProvider.family<int, String>((ref, userId) {
   return FirebaseFirestore.instance
-      .collection('notifications')
+      .collection('user_notifications')
       .where('recipientId', isEqualTo: userId)
       .where('isRead', isEqualTo: false)
       .snapshots()

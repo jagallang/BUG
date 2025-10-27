@@ -80,7 +80,7 @@ class _NotificationManagementTabState extends State<NotificationManagementTab> {
 
       for (final userId in recipientIds) {
         final notificationRef = FirebaseFirestore.instance
-            .collection('notifications')
+            .collection('user_notifications')
             .doc();
 
         batch.set(notificationRef, {
@@ -336,7 +336,7 @@ class _NotificationManagementTabState extends State<NotificationManagementTab> {
           // 알림 목록 (StreamBuilder)
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
-                .collection('notifications')
+                .collection('user_notifications')
                 .where('sentBy', isEqualTo: 'admin')
                 .orderBy('createdAt', descending: true)
                 .limit(20)

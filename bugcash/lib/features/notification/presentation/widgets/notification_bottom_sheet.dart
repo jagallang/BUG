@@ -18,7 +18,7 @@ class NotificationBottomSheet extends StatelessWidget {
   Future<void> _markAsRead(String notificationId) async {
     try {
       await FirebaseFirestore.instance
-          .collection('notifications')
+          .collection('user_notifications')
           .doc(notificationId)
           .update({
         'isRead': true,
@@ -33,7 +33,7 @@ class NotificationBottomSheet extends StatelessWidget {
   Future<void> _markAllAsRead(BuildContext context) async {
     try {
       final snapshot = await FirebaseFirestore.instance
-          .collection('notifications')
+          .collection('user_notifications')
           .where('recipientId', isEqualTo: userId)
           .where('isRead', isEqualTo: false)
           .get();
@@ -117,7 +117,7 @@ class NotificationBottomSheet extends StatelessWidget {
             Expanded(
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
-                    .collection('notifications')
+                    .collection('user_notifications')
                     .where('recipientId', isEqualTo: userId)
                     .orderBy('createdAt', descending: true)
                     .limit(50)

@@ -266,9 +266,30 @@ service cloud.firestore {
     }
 
     // ==============================================
-    // 알림 관리 (notifications) - v2.185.2
+    // 알림 관리 (notifications) - 기존 스낵바 알림용
     // ==============================================
     match /notifications/{notificationId} {
+      // 읽기: 알림 수신자 또는 관리자
+      allow read: if isAuthenticated() &&
+                     (request.auth.uid == resource.data.recipientId || isAdmin());
+
+      // 생성: 관리자만 가능
+      allow create: if isAdmin();
+
+      // 수정: 알림 수신자가 읽음 상태만 변경 가능
+      allow update: if isAuthenticated() &&
+                    request.auth.uid == resource.data.recipientId &&
+                    request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
+
+      // 삭제: 알림 수신자 또는 관리자
+      allow delete: if isAuthenticated() &&
+                    (request.auth.uid == resource.data.recipientId || isAdmin());
+    }
+
+    // ==============================================
+    // 사용자 알림 관리 (user_notifications) - v2.185.3
+    // ==============================================
+    match /user_notifications/{notificationId} {
       // 읽기: 알림 수신자 또는 관리자 (관리자는 발송 이력 조회용)
       allow read: if isAuthenticated() &&
                      (request.auth.uid == resource.data.recipientId || isAdmin());
