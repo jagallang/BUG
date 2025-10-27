@@ -264,6 +264,26 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     return _finalCompletionPoints * _maxTesters;
   }
 
+  /// v2.177.0: 해당 앱의 첫 번째 미션 고유번호 조회
+  Future<String?> _getFirstMissionSerialNumber(String appId) async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('daily_missions')
+          .where('appId', isEqualTo: appId)
+          .where('serialNumber', isNull: false)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.first.data()['serialNumber'] as String?;
+      }
+      return null;
+    } catch (e) {
+      AppLogger.error('Failed to get mission serial number', 'AppManagement', e);
+      return null;
+    }
+  }
+
   Future<void> _uploadApp() async {
     // v2.108.4: 중복 실행 방지
     if (_isSubmitting) {
@@ -752,7 +772,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                               });
                             },
                             decoration: InputDecoration(
-                              hintText: '앱 이름, 설명, 카테고리 검색...',
+                              hintText: '앱 이름, 설명, 카테고리 검색...', // v2.177.0: 미션 고유번호는 표시만 (검색 제외)
                               hintStyle: TextStyle(
                                 fontSize: 13.sp,
                                 color: Colors.grey[400],
@@ -886,6 +906,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         : apps.where((app) => app.status == _selectedStatusFilter).toList();
 
     // v2.175.0: 키워드 검색 (앱 이름, 설명, 카테고리)
+    // v2.177.0: 미션 고유번호는 표시만 하고 검색은 제외 (성능 이유)
     if (_searchKeyword.isNotEmpty) {
       final keyword = _searchKeyword.toLowerCase();
       filteredApps = filteredApps.where((app) {
@@ -966,6 +987,36 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // v2.132.0: Status Description 제거 (UI 간소화)
+          // v2.177.0: 미션 고유번호 표시 (daily_missions에서 조회)
+          FutureBuilder<String?>(
+            future: _getFirstMissionSerialNumber(app.id),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data != null) {
+                return Column(
+                  children: [
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade200,
+                        borderRadius: BorderRadius.circular(6.r),
+                      ),
+                      child: Text(
+                        snapshot.data!,
+                        style: TextStyle(
+                          fontSize: 11.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade700,
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 8.h),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
 
           // App Header (v2.133.0: 아이콘 제거, UI 간소화)
           Row(

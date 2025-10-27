@@ -35,6 +35,9 @@ import '../../../wallet/presentation/pages/unified_wallet_page.dart';
 // v2.80.0: 역할 전환 다이얼로그
 import '../../../shared/widgets/role_switch_dialog.dart';
 import '../../../auth/domain/entities/user_entity.dart' show UserType;
+// v2.185.1: 알림 기능
+import '../../../notification/presentation/widgets/notification_bottom_sheet.dart';
+import '../../../notification/presentation/providers/unread_notification_provider.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -381,14 +384,14 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                     tooltip: '역할 전환',
                     onPressed: () => _showRoleSwitchDialog(context),
                   ),
-                  // v2.162.0: 1. 프로필 아이콘 - 웹에서만 활성화
+                  // v2.181.0: 1. 프로필 아이콘 - 모든 플랫폼에서 활성화
                   IconButton(
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.account_circle,
-                      color: kIsWeb ? Colors.white : Colors.white.withOpacity(0.5),
+                      color: Colors.white,
                     ),
-                    tooltip: kIsWeb ? '프로필' : '프로필 (준비 중)',
-                    onPressed: kIsWeb ? () => _navigateToProfile(context) : null,
+                    tooltip: '프로필',
+                    onPressed: () => _navigateToProfile(context),
                   ),
                   // v2.161.0: 지갑 아이콘 제거 (프로필 페이지에서 접근 가능)
                   // 2. 알림 아이콘 (Badge 포함)
@@ -632,66 +635,12 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     );
   }
 
+  // v2.185.1: 알림 BottomSheet 표시
   void _showNotifications(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.7,
-        maxChildSize: 0.9,
-        minChildSize: 0.3,
-        builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20.r),
-              topRight: Radius.circular(20.r),
-            ),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: ResponsiveWrapper.getResponsivePadding(context),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.notifications,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    SizedBox(width: 8.w),
-                    Text(
-                      '알림',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {
-                        ref.read(testerDashboardProvider.notifier).markAllNotificationsRead();
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('모두 읽음'),
-                    ),
-                  ],
-                ),
-              ),
-              const Expanded(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.notifications_none, size: 48, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text('알림이 없습니다', style: TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (context) => NotificationBottomSheet(userId: widget.testerId),
     );
   }
 

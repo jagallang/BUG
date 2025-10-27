@@ -15,6 +15,7 @@ class ProviderAppEntity {
   final DateTime createdAt;
   final DateTime updatedAt;
   final Map<String, dynamic> metadata;
+  final String? appSerialNumber; // v2.176.0: 앱 등록 고유번호 (형식: APP-{YYMMDD}-{0001})
 
   const ProviderAppEntity({
     required this.id,
@@ -33,6 +34,7 @@ class ProviderAppEntity {
     required this.createdAt,
     required this.updatedAt,
     required this.metadata,
+    this.appSerialNumber, // v2.176.0
   });
 
   ProviderAppEntity copyWith({
@@ -52,6 +54,7 @@ class ProviderAppEntity {
     DateTime? createdAt,
     DateTime? updatedAt,
     Map<String, dynamic>? metadata,
+    String? appSerialNumber, // v2.176.0
   }) {
     return ProviderAppEntity(
       id: id ?? this.id,
@@ -70,6 +73,7 @@ class ProviderAppEntity {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       metadata: metadata ?? this.metadata,
+      appSerialNumber: appSerialNumber ?? this.appSerialNumber, // v2.176.0
     );
   }
 

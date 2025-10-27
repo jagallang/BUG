@@ -1,7 +1,7 @@
 name: bugcash_web_demo
 description: BugCash Web Demo - Bug testing platform
 publish_to: 'none'
-version: 2.175.0+175
+version: 2.185.2+188
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -24,6 +24,7 @@ dependencies:
   # Utils
   intl: ^0.19.0
   url_launcher: ^6.2.1
+  csv: ^6.0.0  # v2.184.0: CSV 파일 생성 및 다운로드
   
   # Firebase
   firebase_core: ^3.8.0

@@ -23,6 +23,8 @@ import '../../../wallet/presentation/pages/unified_wallet_page.dart';
 import '../../../shared/widgets/role_switch_dialog.dart';
 // v2.140.0: 통합 프로필 페이지
 import '../../../shared/presentation/pages/user_profile_page.dart';
+// v2.185.1: 알림 기능
+import '../../../notification/presentation/widgets/notification_bottom_sheet.dart';
 
 class ProviderDashboardPage extends ConsumerStatefulWidget {
   final String providerId;
@@ -166,14 +168,14 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             onPressed: () => _showRoleSwitchDialog(context),
           ),
           // v2.73.0: 4개 아이콘 배치
-          // v2.162.0: 1. 프로필 아이콘 - 웹에서만 활성화
+          // v2.181.0: 1. 프로필 아이콘 - 모든 플랫폼에서 활성화
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.account_circle,
-              color: kIsWeb ? Colors.white : Colors.white.withOpacity(0.5),
+              color: Colors.white,
             ),
-            tooltip: kIsWeb ? '프로필' : '프로필 (준비 중)',
-            onPressed: kIsWeb ? () => _navigateToProfile(context) : null,
+            tooltip: '프로필',
+            onPressed: () => _navigateToProfile(context),
           ),
           // v2.161.0: 지갑 아이콘 제거 (프로필 페이지에서 접근 가능)
           // 2. 알림 아이콘
@@ -1668,12 +1670,12 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
   }
 
   // v2.73.0: 알림 표시
+  // v2.185.1: 알림 BottomSheet 표시
   void _showNotifications(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('알림 기능 (개발 중)'),
-        duration: Duration(seconds: 2),
-      ),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => NotificationBottomSheet(userId: widget.providerId),
     );
   }
 

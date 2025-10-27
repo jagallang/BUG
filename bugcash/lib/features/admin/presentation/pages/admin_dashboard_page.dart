@@ -1,8 +1,12 @@
+import 'dart:html' as html;  // v2.184.0: 웹 다운로드
+import 'dart:convert';        // v2.184.0: UTF-8 인코딩
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:intl/intl.dart';
+import 'package:csv/csv.dart';  // v2.184.0: CSV 파일 생성
 import '../../../../shared/widgets/loading_widgets.dart';
 import '../../../../core/constants/app_colors.dart'; // v2.89.0: 관리자 색상 사용
 import 'test_data_page.dart';
@@ -13,6 +17,7 @@ import '../../../auth/domain/entities/user_entity.dart';
 import '../../../wallet/presentation/pages/admin_withdrawal_page.dart';
 import 'platform_settings_page.dart';
 import 'escrow_management_tab.dart'; // v2.103.0: 에스크로 관리 탭
+import 'notification_management_tab.dart'; // v2.185.0: 알림 관리 탭
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -45,10 +50,42 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
   DateTime? _projectEndDate; // 종료일
   bool _showProjectFilters = false; // 필터 섹션 표시 여부
 
+  // v2.178.0: 미션 고유번호 캐시 (appId -> serialNumber)
+  final Map<String, String?> _missionSerialNumbers = {};
+
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  /// v2.178.0: 해당 앱의 첫 번째 미션 고유번호 조회 (캐싱 포함)
+  Future<String?> _getFirstMissionSerialNumber(String appId) async {
+    // 이미 조회한 경우 캐시에서 반환
+    if (_missionSerialNumbers.containsKey(appId)) {
+      return _missionSerialNumbers[appId];
+    }
+
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('daily_missions')
+          .where('appId', isEqualTo: appId)
+          .where('serialNumber', isNull: false)
+          .limit(1)
+          .get();
+
+      final serialNumber = snapshot.docs.isNotEmpty
+          ? snapshot.docs.first.data()['serialNumber'] as String?
+          : null;
+
+      // 캐시에 저장
+      _missionSerialNumbers[appId] = serialNumber;
+      return serialNumber;
+    } catch (e) {
+      print('Failed to get mission serial number for $appId: $e');
+      _missionSerialNumbers[appId] = null;
+      return null;
+    }
   }
 
   @override
@@ -182,7 +219,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                       _buildNavItem(3, Icons.account_balance_wallet, 'Finance', '포인트/수익'),
                       _buildNavItem(4, Icons.account_balance, 'Escrow', '에스크로 관리'),
                       _buildNavItem(5, Icons.report_problem, 'Reports', '신고 처리'),
-                      _buildNavItem(6, Icons.settings, 'Settings', '플랫폼 설정'),
+                      _buildNavItem(6, Icons.notifications, 'Notifications', '알림 관리'), // v2.185.0
+                      _buildNavItem(7, Icons.settings, 'Settings', '플랫폼 설정'),
                     ],
                   ),
                 ),
@@ -214,6 +252,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 _buildFinanceTab(),
                 const EscrowManagementTab(),
                 _buildReportsTab(),
+                const NotificationManagementTab(), // v2.185.0: 알림 관리 탭
                 _buildSettingsTab(),
               ],
             ),
@@ -424,7 +463,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
           TextField(
             decoration: InputDecoration(
               labelText: '키워드 검색',
-              hintText: '앱 이름, 프로젝트 제목, 설명으로 검색',
+              hintText: '앱 이름, 프로젝트 제목, 설명, 미션 고유번호로 검색', // v2.178.0: 미션 고유번호 추가
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -1031,6 +1070,24 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               ),
             ],
           ),
+
+          // v2.184.1: CSV 다운로드 버튼 - 작은 크기
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerRight,
+            child: ElevatedButton.icon(
+              onPressed: () => _downloadTransactionsCSV(tabType),
+              icon: const Icon(Icons.download, size: 18),
+              label: const Text('CSV 다운로드'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                minimumSize: const Size(0, 36),
+                textStyle: const TextStyle(fontSize: 13),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1288,19 +1345,38 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
 
         // v2.89.0: 클라이언트 사이드 필터링
         final allDocs = snapshot.data!.docs;
+
+        // v2.178.0: 검색 시 미션 고유번호가 필요한 경우 미리 로드
+        if (_projectKeyword.isNotEmpty) {
+          for (final doc in allDocs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final appId = data['appId'] ?? doc.id;
+            if (!_missionSerialNumbers.containsKey(appId)) {
+              // 백그라운드에서 로드 (setState 호출하여 재렌더링)
+              _getFirstMissionSerialNumber(appId).then((_) {
+                if (mounted) setState(() {});
+              });
+            }
+          }
+        }
+
         final filteredDocs = allDocs.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
 
           // 키워드 검색 (appName, title, description)
+          // v2.178.0: 미션 고유번호 추가
           if (_projectKeyword.isNotEmpty) {
             final keyword = _projectKeyword.toLowerCase();
             final appName = (data['appName'] ?? '').toString().toLowerCase();
             final title = (data['title'] ?? '').toString().toLowerCase();
             final description = (data['description'] ?? '').toString().toLowerCase();
+            final appId = data['appId'] ?? doc.id;
+            final serialNumber = (_missionSerialNumbers[appId] ?? '').toLowerCase();
 
             if (!appName.contains(keyword) &&
                 !title.contains(keyword) &&
-                !description.contains(keyword)) {
+                !description.contains(keyword) &&
+                !serialNumber.contains(keyword)) {
               return false;
             }
           }
@@ -1860,10 +1936,28 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   '사용자 목록',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                OutlinedButton.icon(
-                  onPressed: () => setState(() {}),
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('새로고침'),
+                Row(
+                  children: [
+                    // v2.184.1: CSV 다운로드 버튼 - 작은 크기
+                    ElevatedButton.icon(
+                      onPressed: _downloadUsersCSV,
+                      icon: const Icon(Icons.download, size: 18),
+                      label: const Text('CSV'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        minimumSize: const Size(0, 36),
+                        textStyle: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => setState(() {}),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('새로고침'),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1906,7 +2000,6 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                       final dateString = createdAt != null
                           ? DateFormat('yyyy-MM-dd').format(createdAt.toDate())
                           : '미상';
-                      final points = data['points'] ?? 0;
                       final isSuspended = data['isSuspended'] ?? false;
 
                       return DataRow(
@@ -1932,7 +2025,30 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                               ),
                             ),
                           ),
-                          DataCell(Text('${NumberFormat('#,###').format(points)}P')),
+                          // v2.183.0: wallets 컬렉션에서 실시간 잔액 조회
+                          DataCell(
+                            FutureBuilder<DocumentSnapshot>(
+                              future: FirebaseFirestore.instance
+                                  .collection('wallets')
+                                  .doc(userId)
+                                  .get(),
+                              builder: (context, walletSnapshot) {
+                                if (walletSnapshot.connectionState == ConnectionState.waiting) {
+                                  return const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  );
+                                }
+
+                                final balance = walletSnapshot.data?.data() != null
+                                    ? (walletSnapshot.data!.data() as Map<String, dynamic>)['balance'] ?? 0
+                                    : 0;
+
+                                return Text('${NumberFormat('#,###').format(balance)}P');
+                              },
+                            ),
+                          ),
                           DataCell(Text(dateString)),
                           DataCell(
                             isSuspended
@@ -3566,6 +3682,186 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         Navigator.of(context).pop();
         _showErrorDialog('포인트 조정 실패: $e');
       }
+    }
+  }
+
+  // ============================================================
+  // v2.184.0: CSV 다운로드 기능
+  // ============================================================
+
+  /// v2.184.0: 사용자 데이터 CSV 다운로드
+  Future<void> _downloadUsersCSV() async {
+    try {
+      // 1. 모든 사용자 데이터 조회 (limit 제거)
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .orderBy('createdAt', descending: true)
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        _showSnackBar('다운로드할 데이터가 없습니다', Colors.orange);
+        return;
+      }
+
+      // 2. CSV 데이터 생성
+      List<List<dynamic>> rows = [];
+
+      // 헤더
+      rows.add([
+        'ID',
+        '이름',
+        '이메일',
+        '역할',
+        '포인트 잔액',
+        '가입일',
+        '상태',
+        '정지 여부',
+      ]);
+
+      // 데이터 행
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final userId = doc.id;
+
+        // Wallet 잔액 조회
+        final walletDoc = await FirebaseFirestore.instance
+            .collection('wallets')
+            .doc(userId)
+            .get();
+        final balance = walletDoc.data()?['balance'] ?? 0;
+
+        final createdAt = data['createdAt'] as Timestamp?;
+        final dateString = createdAt != null
+            ? DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt.toDate())
+            : '미상';
+
+        rows.add([
+          userId,
+          data['displayName'] ?? data['name'] ?? 'N/A',
+          data['email'] ?? 'N/A',
+          _getRoleText(data['role'] ?? data['primaryRole'] ?? 'tester'),
+          balance,
+          dateString,
+          data['isSuspended'] == true ? '정지' : '활성',
+          data['isSuspended'] ?? false,
+        ]);
+      }
+
+      // 3. CSV 문자열 생성
+      String csv = const ListToCsvConverter().convert(rows);
+
+      // 4. 웹에서 다운로드
+      final bytes = utf8.encode(csv);
+      final blob = html.Blob([bytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', 'users_backup_${DateTime.now().millisecondsSinceEpoch}.csv')
+        ..click();
+      html.Url.revokeObjectUrl(url);
+
+      _showSnackBar(
+        '✅ 사용자 데이터 ${snapshot.docs.length}건 다운로드 완료',
+        Colors.green,
+      );
+    } catch (e) {
+      _showSnackBar('❌ CSV 다운로드 실패: $e', Colors.red);
+    }
+  }
+
+  /// v2.184.0: 거래 내역 CSV 다운로드
+  Future<void> _downloadTransactionsCSV(String tabType) async {
+    try {
+      // 1. 필터된 거래 내역 조회
+      final snapshot = await FirebaseFirestore.instance
+          .collection('transactions')
+          .orderBy('createdAt', descending: true)
+          .limit(1000)  // 최대 1000건
+          .get();
+
+      if (snapshot.docs.isEmpty) {
+        _showSnackBar('다운로드할 거래 내역이 없습니다', Colors.orange);
+        return;
+      }
+
+      // 클라이언트 측 필터 적용
+      final filteredDocs = _applyTransactionFilters(snapshot.docs, tabType);
+
+      if (filteredDocs.isEmpty) {
+        _showSnackBar('필터 조건에 맞는 거래 내역이 없습니다', Colors.orange);
+        return;
+      }
+
+      // 2. CSV 데이터 생성
+      List<List<dynamic>> rows = [];
+
+      // 헤더
+      rows.add([
+        '거래 ID',
+        '사용자 ID',
+        '사용자 이메일',
+        '거래 유형',
+        '금액',
+        '상태',
+        '설명',
+        '거래 일시',
+        '완료 일시',
+      ]);
+
+      // 데이터 행
+      for (var doc in filteredDocs) {
+        final data = doc.data() as Map<String, dynamic>;
+
+        final createdAt = data['createdAt'] as Timestamp?;
+        final completedAt = data['completedAt'] as Timestamp?;
+
+        rows.add([
+          doc.id,
+          data['userId'] ?? 'N/A',
+          data['userEmail'] ?? 'N/A',
+          _getTransactionTypeText(data['type'] ?? 'unknown'),
+          data['amount'] ?? 0,
+          _getTransactionStatusText(data['status'] ?? 'unknown'),
+          data['description'] ?? '',
+          createdAt != null
+              ? DateFormat('yyyy-MM-dd HH:mm:ss').format(createdAt.toDate())
+              : 'N/A',
+          completedAt != null
+              ? DateFormat('yyyy-MM-dd HH:mm:ss').format(completedAt.toDate())
+              : 'N/A',
+        ]);
+      }
+
+      // 3. CSV 문자열 생성
+      String csv = const ListToCsvConverter().convert(rows);
+
+      // 4. 웹에서 다운로드
+      final bytes = utf8.encode(csv);
+      final blob = html.Blob([bytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
+      final anchor = html.AnchorElement(href: url)
+        ..setAttribute('download', 'transactions_${tabType}_${DateTime.now().millisecondsSinceEpoch}.csv')
+        ..click();
+      html.Url.revokeObjectUrl(url);
+
+      _showSnackBar(
+        '✅ 거래 내역 ${filteredDocs.length}건 다운로드 완료',
+        Colors.green,
+      );
+    } catch (e) {
+      _showSnackBar('❌ CSV 다운로드 실패: $e', Colors.red);
+    }
+  }
+
+  /// v2.184.0: SnackBar 표시 헬퍼
+  void _showSnackBar(String message, Color backgroundColor) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: backgroundColor,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 }

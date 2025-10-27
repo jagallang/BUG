@@ -20,6 +20,7 @@ class ProviderAppModel extends ProviderAppEntity {
     required super.createdAt,
     required super.updatedAt,
     required super.metadata,
+    super.appSerialNumber, // v2.176.0
   });
 
   factory ProviderAppModel.fromFirestore(DocumentSnapshot doc) {
@@ -56,6 +57,7 @@ class ProviderAppModel extends ProviderAppEntity {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       metadata: metadata,
+      appSerialNumber: data['appSerialNumber'], // v2.176.0: 기존 데이터는 null
     );
   }
 
@@ -77,6 +79,7 @@ class ProviderAppModel extends ProviderAppEntity {
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       metadata: entity.metadata,
+      appSerialNumber: entity.appSerialNumber, // v2.176.0
     );
   }
 
@@ -100,6 +103,11 @@ class ProviderAppModel extends ProviderAppEntity {
 
     if (appTestUrl != null) {
       map['appTestUrl'] = appTestUrl!;
+    }
+
+    // v2.176.0: appSerialNumber가 null이 아닐 때만 저장
+    if (appSerialNumber != null) {
+      map['appSerialNumber'] = appSerialNumber!;
     }
 
     return map;

@@ -7,6 +7,7 @@ import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/mission_service.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../shared/extensions/responsive_extensions.dart';
+import '../widgets/mission_application_terms_dialog.dart';
 
 class MissionDetailPage extends ConsumerStatefulWidget {
   final dynamic mission; // MissionModel 또는 MissionCard
@@ -1620,11 +1621,37 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
     // Navigator.pushNamed(context, '/application-status', arguments: missionId);
   }
 
+  // v2.179.0: 미션 신청 약관 동의 모달 표시
   Future<void> _applyToMission(AuthState authState) async {
     if (authState.user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('로그인이 필요합니다.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // v2.179.0: 약관 동의 및 구글 메일 입력 모달 표시
+    final result = await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => MissionApplicationTermsDialog(
+        missionName: missionAppName,
+      ),
+    );
+
+    // 모달을 닫았거나 동의하지 않은 경우
+    if (result == null || result['agreed'] != true) {
+      return;
+    }
+
+    final googleEmail = result['googleEmail'] as String?;
+    if (googleEmail == null || googleEmail.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('구글 메일 주소가 필요합니다.'),
           backgroundColor: Colors.red,
         ),
       );
@@ -1688,6 +1715,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         debugPrint('Provider name lookup failed: $e');
       }
 
+      // v2.179.0: googleEmail 추가
       final applicationData = {
         'missionId': missionId,
         'testerId': authState.user!.uid,
@@ -1695,6 +1723,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         'providerName': providerName,
         'testerName': authState.user!.displayName,
         'testerEmail': authState.user!.email,
+        'googleEmail': googleEmail, // v2.179.0: 구글플레이 테스터 등록용
         'missionName': missionAppName,
         'status': 'pending',
         'message': '미션에 참여하고 싶습니다.',
@@ -1707,6 +1736,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           'experience': 'beginner',
           'name': authState.user!.displayName,
           'email': authState.user!.email,
+          'googleEmail': googleEmail, // v2.179.0: 구글플레이 테스터 등록용
           'motivation': '새로운 앱을 테스트하며 버그를 찾는 것에 관심이 있습니다.',
         },
       };

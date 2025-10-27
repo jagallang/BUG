@@ -164,38 +164,43 @@ class ProviderWalletCard extends ConsumerWidget {
 
   /// 잔액 표시 섹션
   Widget _buildBalanceSection(BuildContext context, WalletEntity wallet) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Theme.of(context).primaryColor,
-            Theme.of(context).primaryColor.withOpacity(0.7),
-          ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Theme.of(context).primaryColor,
+                Theme.of(context).primaryColor.withOpacity(0.7),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '사용 가능 포인트',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _formatAmount(wallet.balance),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
         ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '보유 포인트',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _formatAmount(wallet.balance),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -314,4 +319,27 @@ class ProviderWalletCard extends ConsumerWidget {
       (Match m) => '${m[1]},',
     )}P';
   }
+
+  // ============================================================
+  // v2.182.0: 에스크로 UI 완전 제거
+  //
+  // 에스크로 시스템은 백그라운드에서만 작동합니다:
+  // - 앱 등록 시: depositToEscrow Cloud Function 자동 호출
+  // - 전액 예치: wallets/{providerId}.balance → SYSTEM_ESCROW
+  // - 자동 반환: 미션 완료 + 7일 후 자동으로 공급자 지갑으로 반환
+  //
+  // UI에는 순수하게 사용 가능한 지갑 잔액(wallet.balance)만 표시
+  // ============================================================
+
+  /* v2.180.0: 제거됨 - 에스크로 내역 확인 다이얼로그
+  void _showEscrowDetails(BuildContext context) {
+    // 에스크로 holdings 조회 및 표시
+    // 더 이상 사용되지 않음
+  }
+
+  String _formatDate(dynamic timestamp) {
+    // 날짜 포맷팅
+    // 더 이상 사용되지 않음
+  }
+  */
 }
