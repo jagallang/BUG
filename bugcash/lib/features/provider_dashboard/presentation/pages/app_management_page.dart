@@ -146,6 +146,9 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   int _uploadedCount = 0; // 업로드 완료된 스크린샷 수
   int _totalCount = 0; // 전체 스크린샷 수
 
+  // v2.174.0: 상태별 필터
+  String? _selectedStatusFilter; // null = 전체 보기
+
   // Basic info controllers
   final _appNameController = TextEditingController();
   final _appUrlController = TextEditingController();
@@ -175,6 +178,16 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
   // v2.97.0: 앱 스크린샷 (최대 3장)
   List<XFile> _appScreenshots = [];
+
+  // v2.174.0: 상태 필터 옵션
+  final List<Map<String, String?>> _statusFilterOptions = [
+    {'value': null, 'label': '전체'},
+    {'value': 'draft', 'label': '접수 대기'},
+    {'value': 'pending', 'label': '검수 중'},
+    {'value': 'open', 'label': '모집 중'},
+    {'value': 'closed', 'label': '완료'},
+    {'value': 'rejected', 'label': '거부'},
+  ];
 
   final List<String> _categories = [
     'Productivity',
@@ -700,7 +713,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Title and Add button
+                // Title, Filter and Add button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -712,26 +725,82 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                         color: Colors.black87,
                       ),
                     ),
-                    SizedBox(
-                        width: 120.w,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            setState(() {
-                              _showUploadDialog = true;
-                            });
-                          },
-                          icon: const Icon(Icons.add, size: 18),
-                          label: const Text('앱 등록'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.providerBluePrimary, // v2.76.0: 색상 통일
-                            foregroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8.r),
+                    // v2.174.0: 필터와 버튼을 함께 배치
+                    Row(
+                      children: [
+                        // 상태 필터 드롭다운
+                        Container(
+                          height: 36.h,
+                          padding: EdgeInsets.symmetric(horizontal: 12.w),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(8.r),
+                            color: Colors.white,
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String?>(
+                              value: _selectedStatusFilter,
+                              icon: Icon(Icons.filter_list, size: 18.sp, color: Colors.grey[600]),
+                              hint: Row(
+                                children: [
+                                  Icon(Icons.filter_list, size: 18.sp, color: Colors.grey[600]),
+                                  SizedBox(width: 6.w),
+                                  Text(
+                                    '전체',
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              items: _statusFilterOptions.map((option) {
+                                return DropdownMenuItem<String?>(
+                                  value: option['value'],
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.filter_list, size: 16.sp, color: Colors.grey[600]),
+                                      SizedBox(width: 6.w),
+                                      Text(
+                                        option['label']!,
+                                        style: TextStyle(fontSize: 14.sp),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                              onChanged: (String? newValue) {
+                                setState(() {
+                                  _selectedStatusFilter = newValue;
+                                });
+                              },
                             ),
                           ),
                         ),
-                      ),
+                        SizedBox(width: 12.w),
+                        // 앱 등록 버튼
+                        SizedBox(
+                          width: 120.w,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              setState(() {
+                                _showUploadDialog = true;
+                              });
+                            },
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('앱 등록'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.providerBluePrimary,
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 SizedBox(height: 16.h),
@@ -752,14 +821,19 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   }
 
   Widget _buildAppsTab(List<ProviderAppModel> apps) {
+    // v2.174.0: 상태별 필터링
+    final filteredApps = _selectedStatusFilter == null
+        ? apps
+        : apps.where((app) => app.status == _selectedStatusFilter).toList();
+
     return Padding(
       padding: EdgeInsets.all(16.w),
-      child: apps.isEmpty
+      child: filteredApps.isEmpty
           ? _buildEmptyState()
           : ListView.builder(
-              itemCount: apps.length,
+              itemCount: filteredApps.length,
               itemBuilder: (context, index) {
-                final app = apps[index];
+                final app = filteredApps[index];
                 return _buildAppCard(app);
               },
             ),
