@@ -126,13 +126,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
         TextEditingController(text: metadata['announcement'] ?? '');
     _requirementsController =
         TextEditingController(text: metadata['requirements'] ?? '');
+    // v2.170.0: projects 문서의 실제 값 사용 (하드코딩 제거)
     _participantCountController = TextEditingController(
-        text: (metadata['participantCount'] ?? 14)
-            .toString()); // v2.43.6: 디폴트 14명으로 변경
+        text: (metadata['maxTesters'] ?? metadata['participantCount'] ?? 10).toString());
     _testPeriodController =
-        TextEditingController(text: (metadata['testPeriod'] ?? 14).toString());
+        TextEditingController(text: (metadata['testPeriodDays'] ?? metadata['testPeriod'] ?? 14).toString());
     _testTimeController =
-        TextEditingController(text: (metadata['testTime'] ?? 30).toString());
+        TextEditingController(text: (metadata['testTimeMinutes'] ?? metadata['testTime'] ?? 30).toString());
 
     // 새 필드들 초기화 (안전한 드롭다운 값 설정)
     _selectedType = _getSafeDropdownValue(metadata['type'], _types);

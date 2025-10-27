@@ -523,6 +523,24 @@ class MissionWorkflowService {
           .doc(workflowId)
           .update(updateData);
 
+      // v2.170.0: 프로젝트 종료 시 projects 컬렉션 상태도 'closed'로 업데이트
+      if (isFinalDay) {
+        try {
+          final appId = data['appId'] as String;
+          await _firestore
+              .collection('projects')
+              .doc(appId)
+              .update({
+            'status': 'closed',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          AppLogger.info('✅ Project $appId status updated to closed', 'MissionWorkflow');
+        } catch (e) {
+          AppLogger.error('❌ Failed to update project status: $e', 'MissionWorkflow');
+          // 에러가 발생해도 workflow 업데이트는 성공했으므로 계속 진행
+        }
+      }
+
       // v2.131.0: 자동 포인트 지급 제거 (UI에서 명시적으로 호출)
       // 포인트 지급은 payFinalRewardOnly() 함수를 통해 UI에서 별도로 실행
       // if (isFinalDay) {

@@ -1,7 +1,7 @@
 name: bugcash_web_demo
 description: BugCash Web Demo - Bug testing platform
 publish_to: 'none'
-version: 2.167.0+167
+version: 2.170.0+170
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
