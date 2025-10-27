@@ -149,6 +149,10 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   // v2.174.0: 상태별 필터
   String? _selectedStatusFilter; // null = 전체 보기
 
+  // v2.175.0: 키워드 검색
+  final _searchController = TextEditingController();
+  String _searchKeyword = '';
+
   // Basic info controllers
   final _appNameController = TextEditingController();
   final _appUrlController = TextEditingController();
@@ -236,6 +240,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
   @override
   void dispose() {
+    // v2.175.0: 검색 컨트롤러 dispose
+    _searchController.dispose();
     _appNameController.dispose();
     _appUrlController.dispose();
     _descriptionController.dispose();
@@ -726,8 +732,61 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                       ),
                     ),
                     // v2.174.0: 필터와 버튼을 함께 배치
+                    // v2.175.0: 검색 기능 추가
                     Row(
                       children: [
+                        // v2.175.0: 검색 TextField
+                        Container(
+                          width: 220.w,
+                          height: 36.h,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey[300]!),
+                            borderRadius: BorderRadius.circular(8.r),
+                            color: Colors.white,
+                          ),
+                          child: TextField(
+                            controller: _searchController,
+                            onChanged: (value) {
+                              setState(() {
+                                _searchKeyword = value;
+                              });
+                            },
+                            decoration: InputDecoration(
+                              hintText: '앱 이름, 설명, 카테고리 검색...',
+                              hintStyle: TextStyle(
+                                fontSize: 13.sp,
+                                color: Colors.grey[400],
+                              ),
+                              prefixIcon: Icon(
+                                Icons.search,
+                                size: 18.sp,
+                                color: Colors.grey[600],
+                              ),
+                              suffixIcon: _searchKeyword.isNotEmpty
+                                  ? IconButton(
+                                      icon: Icon(
+                                        Icons.clear,
+                                        size: 18.sp,
+                                        color: Colors.grey[600],
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _searchController.clear();
+                                          _searchKeyword = '';
+                                        });
+                                      },
+                                    )
+                                  : null,
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 8.w,
+                                vertical: 8.h,
+                              ),
+                            ),
+                            style: TextStyle(fontSize: 14.sp),
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
                         // 상태 필터 드롭다운
                         Container(
                           height: 36.h,
@@ -822,9 +881,19 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
   Widget _buildAppsTab(List<ProviderAppModel> apps) {
     // v2.174.0: 상태별 필터링
-    final filteredApps = _selectedStatusFilter == null
+    var filteredApps = _selectedStatusFilter == null
         ? apps
         : apps.where((app) => app.status == _selectedStatusFilter).toList();
+
+    // v2.175.0: 키워드 검색 (앱 이름, 설명, 카테고리)
+    if (_searchKeyword.isNotEmpty) {
+      final keyword = _searchKeyword.toLowerCase();
+      filteredApps = filteredApps.where((app) {
+        return app.appName.toLowerCase().contains(keyword) ||
+               app.description.toLowerCase().contains(keyword) ||
+               app.category.toLowerCase().contains(keyword);
+      }).toList();
+    }
 
     return Padding(
       padding: EdgeInsets.all(16.w),
