@@ -753,21 +753,33 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       _showLoadingDialog('프로젝트 삭제 중...');
 
       try {
+        // v2.186.3: 관련 mission_workflows 먼저 삭제 (orphan workflows 방지)
+        final workflowsQuery = await FirebaseFirestore.instance
+            .collection('mission_workflows')
+            .where('appId', isEqualTo: projectId)
+            .get();
+
+        for (var doc in workflowsQuery.docs) {
+          await doc.reference.delete();
+        }
+
         // Firestore 프로젝트 문서 삭제
         await FirebaseFirestore.instance
             .collection('projects')
             .doc(projectId)
             .delete();
 
-        // TODO: 관련 서브컬렉션 삭제 (missions, tester progress 등)
-        // 필요시 Cloud Function으로 처리
-
         if (mounted) {
           Navigator.of(context).pop(); // 로딩 다이얼로그 닫기
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✅ 프로젝트가 삭제되었습니다'),
-              backgroundColor: Colors.red,
+            SnackBar(
+              content: Text(
+                '✅ 프로젝트 삭제 완료\n'
+                '   - 프로젝트 문서 삭제\n'
+                '   - 관련 미션 워크플로우 ${workflowsQuery.docs.length}개 삭제',
+              ),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 4),
             ),
           );
         }
