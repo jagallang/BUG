@@ -59,6 +59,10 @@ class ProviderAppModel {
   final String status;
   final int totalTesters;
   // v2.43.0: activeTesters, totalBugs, resolvedBugs, progressPercentage 제거 (UI 미사용)
+  // v2.171.0: 테스트 설정 필드 추가 (앱게시관리 데이터 매칭용)
+  final int? maxTesters;
+  final int? testPeriodDays;
+  final int? testTimeMinutes;
   final DateTime createdAt;
   final DateTime updatedAt;
   final Map<String, dynamic> metadata;
@@ -73,6 +77,10 @@ class ProviderAppModel {
     required this.status,
     required this.totalTesters,
     // v2.43.0: activeTesters, totalBugs, resolvedBugs, progressPercentage 파라미터 제거
+    // v2.171.0: 테스트 설정 필드 추가
+    this.maxTesters,
+    this.testPeriodDays,
+    this.testTimeMinutes,
     required this.createdAt,
     required this.updatedAt,
     required this.metadata,
@@ -90,6 +98,10 @@ class ProviderAppModel {
       status: data['status'] ?? 'draft',
       totalTesters: data['totalTesters'] ?? data['maxTesters'] ?? 0,
       // v2.43.0: activeTesters, totalBugs, resolvedBugs, progressPercentage 제거
+      // v2.171.0: 테스트 설정 필드 읽기 (Firestore 루트 레벨)
+      maxTesters: data['maxTesters'] as int?,
+      testPeriodDays: data['testPeriodDays'] as int?,
+      testTimeMinutes: data['testTimeMinutes'] as int?,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       metadata: data['metadata'] ?? {},

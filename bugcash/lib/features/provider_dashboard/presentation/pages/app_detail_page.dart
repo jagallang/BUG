@@ -127,12 +127,13 @@ class _AppDetailPageState extends ConsumerState<AppDetailPage> {
     _requirementsController =
         TextEditingController(text: metadata['requirements'] ?? '');
     // v2.170.0: projects 문서의 실제 값 사용 (하드코딩 제거)
+    // v2.171.0: widget.app 필드 우선 사용 (Firestore 루트 레벨 → metadata → 폴백)
     _participantCountController = TextEditingController(
-        text: (metadata['maxTesters'] ?? metadata['participantCount'] ?? 10).toString());
+        text: (widget.app.maxTesters ?? metadata['maxTesters'] ?? metadata['participantCount'] ?? 10).toString());
     _testPeriodController =
-        TextEditingController(text: (metadata['testPeriodDays'] ?? metadata['testPeriod'] ?? 14).toString());
+        TextEditingController(text: (widget.app.testPeriodDays ?? metadata['testPeriodDays'] ?? metadata['testPeriod'] ?? 14).toString());
     _testTimeController =
-        TextEditingController(text: (metadata['testTimeMinutes'] ?? metadata['testTime'] ?? 30).toString());
+        TextEditingController(text: (widget.app.testTimeMinutes ?? metadata['testTimeMinutes'] ?? metadata['testTime'] ?? 30).toString());
 
     // 새 필드들 초기화 (안전한 드롭다운 값 설정)
     _selectedType = _getSafeDropdownValue(metadata['type'], _types);
