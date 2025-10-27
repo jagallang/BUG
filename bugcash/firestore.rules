@@ -294,8 +294,9 @@ service cloud.firestore {
       allow read: if isAuthenticated() &&
                      (request.auth.uid == resource.data.recipientId || isAdmin());
 
-      // 생성: 관리자만 가능 (관리자가 직접 발송)
-      allow create: if isAdmin();
+      // v2.186.1: 생성 권한 수정 - 인증된 모든 사용자 허용 (시스템 알림용)
+      // NotificationService가 클라이언트에서 실행되므로 공급자/테스터도 알림 생성 가능해야 함
+      allow create: if isAuthenticated();
 
       // 수정: 알림 수신자가 읽음 상태만 변경 가능
       allow update: if isAuthenticated() &&
