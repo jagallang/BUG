@@ -5,13 +5,137 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.136.0-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.185.2-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
 > **혁신적인 크라우드소싱 버그 테스트 플랫폼** - 앱 개발자와 테스터를 연결하는 Win-Win 생태계
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
+
+## ✨ 주요 기능 (v2.185.2)
+
+### 🔔 알림 시스템 Firestore 권한 수정 (v2.185.2) - **NOTIFICATION PERMISSION FIX**
+- **🚨 문제 발생**
+  - ✅ **관리자 알림 발송 실패**: Firestore 보안 규칙 permission denied
+  - ✅ **알림 이력 조회 실패**: 발송한 알림이 화면에 표시되지 않음
+  - ✅ **읽음 처리 실패**: 사용자가 알림을 읽음으로 표시할 수 없음
+
+- **🔍 근본 원인**
+  - Firestore notifications 컬렉션 보안 규칙 오류:
+    - 필드명 불일치: `userId` ≠ `recipientId`, `read` ≠ `isRead`
+    - 관리자 생성 권한: `allow create: if false` (모든 생성 차단)
+    - 관리자 조회 권한: 관리자가 발송 이력 조회 불가
+
+- **✅ 해결 방법**
+  - 📝 **firestore.rules** (라인 271-287)
+    - ✅ 필드명 수정: `resource.data.userId` → `resource.data.recipientId`
+    - ✅ 관리자 생성 허용: `allow create: if isAdmin()`
+    - ✅ 관리자 조회 허용: `allow read: if ... || isAdmin()`
+    - ✅ 읽음 상태 업데이트: `['isRead', 'readAt']` 필드 수정 허용
+
+- **📂 수정된 파일**
+  - `firestore.rules`: notifications 컬렉션 보안 규칙 수정
+  - `pubspec.yaml`: 버전 2.185.2+188
+
+- **🎯 주요 교훈**
+  - ⚠️ Firestore 보안 규칙의 필드명은 실제 데이터 구조와 정확히 일치해야 함
+  - ⚠️ 관리자 기능은 클라이언트에서도 `isAdmin()` 권한이 필요
+  - ✅ 규칙 배포 후 Firebase Console에서 실제 동작 테스트 필수
+
+### 🔔 알림 시스템 Phase 1 구현 (v2.185.0 - v2.185.1) - **NOTIFICATION SYSTEM**
+- **🎯 Phase 1 목표**
+  - ✅ 관리자가 수동으로 알림 발송
+  - ✅ 사용자가 실시간으로 알림 수신
+  - ✅ 읽음/안읽음 상태 관리
+
+- **📱 관리자 알림 관리 (v2.185.0)**
+  - ✅ **알림 발송 섹션**:
+    - 수신자 선택: 전체/테스터만/공급자만
+    - 제목/내용 입력 (최대 50자/200자)
+    - Firestore batch write로 대량 발송
+  - ✅ **발송 이력 섹션**:
+    - StreamBuilder로 실시간 이력 조회
+    - 중복 제거 (같은 제목/내용은 1개만 표시)
+    - 수신자 수, 발송 시간 표시
+
+- **📱 사용자 알림 UI (v2.185.1)**
+  - ✅ **NotificationBottomSheet 위젯**:
+    - DraggableScrollableSheet로 부드러운 UX
+    - 읽음/안읽음 시각적 표시 (빨간 점)
+    - 탭하여 읽음 처리 기능
+    - "모두 읽음" 버튼
+  - ✅ **UnreadNotificationProvider**:
+    - Riverpod StreamProvider로 실시간 카운트
+    - 앱바 배지에 미읽음 개수 표시
+
+- **🗂️ 데이터 구조**
+  ```dart
+  NotificationEntity {
+    String id;
+    String recipientId;        // 수신자 userId
+    String recipientRole;      // 'all', 'testers', 'providers'
+    NotificationType type;     // admin_message, mission_started, etc.
+    String title;
+    String message;
+    bool isRead;
+    DateTime createdAt;
+    DateTime? readAt;
+    String sentBy;            // 'admin' 또는 관리자 userId
+  }
+  ```
+
+- **📂 새로 생성된 파일**
+  - `lib/features/notification/domain/entities/notification_entity.dart`
+  - `lib/features/notification/domain/repositories/notification_repository.dart`
+  - `lib/features/admin/presentation/pages/notification_management_tab.dart`
+  - `lib/features/notification/presentation/widgets/notification_bottom_sheet.dart`
+  - `lib/features/notification/presentation/providers/unread_notification_provider.dart`
+
+- **📂 수정된 파일**
+  - `lib/features/admin/presentation/pages/admin_dashboard_page.dart`: 알림 탭 추가
+  - `lib/features/tester_dashboard/presentation/pages/tester_dashboard_page.dart`: 실제 알림 연결
+  - `lib/features/provider_dashboard/presentation/pages/provider_dashboard_page.dart`: 실제 알림 연결
+
+- **🚀 Phase 2 계획 (미구현)**
+  - [ ] 특정 사용자에게 개별 발송
+  - [ ] 미션 진행 상황별 자동 알림
+    - 테스터 신청 시 → 공급자에게 알림
+    - 미션 승인 시 → 테스터에게 알림
+    - Day 제출 시 → 공급자에게 알림
+    - Day 승인 시 → 테스터에게 알림
+    - 미션 완료 시 → 양측 모두 알림
+  - [ ] 알림 필터링/검색 기능
+  - [ ] 알림 삭제 기능
+
+### 💾 CSV 데이터 백업 다운로드 (v2.184.0 - v2.184.1) - **ADMIN CSV EXPORT**
+- **🎯 관리자 데이터 백업**
+  - ✅ **거래 내역 CSV**: 모든 포인트 거래 내역 다운로드
+  - ✅ **사용자 데이터 CSV**: 사용자 목록 및 포인트 잔액
+  - ✅ **파일명 자동 생성**: `transactions_20250127_143022.csv`
+
+- **📊 CSV 형식**
+  - 거래 내역: 사용자명, 타입, 금액, 상태, 날짜
+  - 사용자: 이름, 이메일, 역할, 잔액, 가입일
+
+- **🎨 v2.184.1 UI 개선**
+  - ✅ **버튼 크기 축소**: 거래내역 탭의 CSV 버튼을 작게 수정
+  - ✅ **텍스트 변경**: "CSV 다운로드" → "CSV"
+
+- **📦 새로운 패키지**
+  - csv ^6.0.0
+
+### 👤 프로필 기능 활성화 (v2.181.0) - **PROFILE ENABLED**
+- **문제**: 웹에서 프로필 아이콘이 비활성화되어 있음
+- **해결**: `kIsWeb` 조건 제거로 모든 플랫폼에서 프로필 접근 가능
+
+### 💰 관리자 대시보드 포인트 잔액 실시간 반영 (v2.183.0) - **ADMIN WALLET BALANCE**
+- **문제**: 사용자 탭에서 포인트가 실시간으로 업데이트되지 않음
+- **해결**: `users.points` → `wallets.balance` 조회로 변경, FutureBuilder 사용
+
+### 🎨 에스크로 UI 제거 (v2.182.0) - **ESCROW UI REMOVED**
+- **변경**: 공급자 대시보드에서 "에스크로 예치금" UI 완전 제거
+- **유지**: 백엔드 에스크로 로직은 그대로 유지
 
 ## ✨ 주요 기능 (v2.136.0)
 
