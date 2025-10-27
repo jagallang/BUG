@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.7.2-0175C2?style=flat-square&logo=dart" />
   <img src="https://img.shields.io/badge/Node.js-20.19.2-339933?style=flat-square&logo=node.js" />
   <img src="https://img.shields.io/badge/Firebase-Production%20Ready-4285F4?style=flat-square&logo=firebase" />
-  <img src="https://img.shields.io/badge/Version-2.185.2-success?style=flat-square" />
+  <img src="https://img.shields.io/badge/Version-2.186.0-success?style=flat-square" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square" />
 </p>
 
@@ -13,7 +13,54 @@
 
 BugCash는 앱 개발자들이 실제 사용자들에게 버그 테스트를 의뢰하고, 테스터들이 이를 통해 리워드를 획득할 수 있는 플랫폼입니다.
 
-## ✨ 주요 기능 (v2.185.2)
+## ✨ 주요 기능 (v2.186.0)
+
+### 📢 미션 워크플로우 자동 알림 (v2.186.0) - **MISSION WORKFLOW AUTO-NOTIFICATION**
+- **🎯 기능 개요**
+  - ✅ 미션 전체 워크플로우에 자동 알림 구현
+  - ✅ 테스터-공급자 간 모든 상호작용에서 실시간 알림 전송
+  - ✅ 8가지 주요 단계별 자동 알림 구현
+
+- **📢 알림 트리거 (8단계)**
+  1. **미션 신청** → 공급자에게 알림 (`mission_applied`)
+     - "새로운 테스터 신청" - 테스터가 미션에 지원할 때
+  2. **미션 시작** → 테스터에게 알림 (`mission_started`)
+     - "미션이 시작되었습니다!" - 공급자가 승인할 때
+  3. **미션 거부** → 테스터에게 알림 (`mission_rejected`)
+     - "신청이 거부되었습니다" - 공급자가 거부할 때
+  4. **Day 제출** → 공급자에게 알림 (`day_submitted`)
+     - "일일 미션 완료" - 테스터가 일일 미션 제출할 때
+  5. **Day 승인** → 테스터에게 알림 (`day_approved`)
+     - "일일 미션 승인!" - 공급자가 일일 미션 승인할 때
+  6. **Day 거절** → 테스터에게 알림 (`day_rejected`)
+     - "일일 미션 거절됨" - 공급자가 일일 미션 거절할 때
+  7. **미션 완료** → 테스터에게 알림 (`mission_completed`)
+     - "미션 최종 승인!" - 최종 Day 승인 시
+  8. **포인트 지급** → 테스터에게 알림 (`points_awarded`)
+     - "포인트 지급 완료!" - 에스크로에서 포인트 지급 완료 시
+
+- **🔧 구현 내용**
+  - ✅ **NotificationService 생성** ([lib/core/services/notification_service.dart](lib/core/services/notification_service.dart))
+    - `sendNotification()`: 단일 사용자 알림
+    - `sendBatchNotifications()`: 다중 사용자 알림
+    - user_notifications 컬렉션에 알림 저장
+  - ✅ **mission_workflow_service.dart 통합**
+    - 기존 deprecated 헬퍼 함수 제거 (`_sendNotificationToProvider`, `_sendNotificationToTester`)
+    - 모든 알림 호출을 NotificationService로 전환
+    - 8개 워크플로우 단계에 알림 자동 추가
+
+- **📂 수정된 파일**
+  - `lib/core/services/notification_service.dart` (신규)
+  - `lib/core/services/mission_workflow_service.dart`
+  - `pubspec.yaml`: v2.186.0+191
+
+- **🎯 주요 장점**
+  - ✅ 테스터와 공급자 간 실시간 커뮤니케이션
+  - ✅ 미션 진행 상황 자동 추적
+  - ✅ 누락 없는 워크플로우 관리
+  - ✅ 사용자 경험 개선 (Push 알림 준비 완료)
+
+## ✨ 이전 버전 (v2.185.2)
 
 ### 🔔 알림 시스템 Firestore 권한 수정 (v2.185.2) - **NOTIFICATION PERMISSION FIX**
 - **🚨 문제 발생**
