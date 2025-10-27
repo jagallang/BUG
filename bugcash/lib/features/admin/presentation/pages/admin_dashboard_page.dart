@@ -1,5 +1,7 @@
-import 'dart:html' as html;  // v2.184.0: 웹 다운로드
 import 'dart:convert';        // v2.184.0: UTF-8 인코딩
+import 'package:flutter/foundation.dart' show kIsWeb;
+// v2.185.4: dart:html을 universal_io로 대체 (모바일 호환성)
+import 'package:universal_html/html.dart' as html;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -3750,14 +3752,19 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       // 3. CSV 문자열 생성
       String csv = const ListToCsvConverter().convert(rows);
 
-      // 4. 웹에서 다운로드
-      final bytes = utf8.encode(csv);
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'users_backup_${DateTime.now().millisecondsSinceEpoch}.csv')
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      // 4. 웹에서만 다운로드 (v2.185.4: 모바일 호환성)
+      if (kIsWeb) {
+        final bytes = utf8.encode(csv);
+        final blob = html.Blob([bytes]);
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute('download', 'users_backup_${DateTime.now().millisecondsSinceEpoch}.csv')
+          ..click();
+        html.Url.revokeObjectUrl(url);
+      } else {
+        _showSnackBar('⚠️ CSV 다운로드는 웹에서만 가능합니다', Colors.orange);
+        return;
+      }
 
       _showSnackBar(
         '✅ 사용자 데이터 ${snapshot.docs.length}건 다운로드 완료',
@@ -3834,14 +3841,19 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       // 3. CSV 문자열 생성
       String csv = const ListToCsvConverter().convert(rows);
 
-      // 4. 웹에서 다운로드
-      final bytes = utf8.encode(csv);
-      final blob = html.Blob([bytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'transactions_${tabType}_${DateTime.now().millisecondsSinceEpoch}.csv')
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      // 4. 웹에서만 다운로드 (v2.185.4: 모바일 호환성)
+      if (kIsWeb) {
+        final bytes = utf8.encode(csv);
+        final blob = html.Blob([bytes]);
+        final url = html.Url.createObjectUrlFromBlob(blob);
+        final anchor = html.AnchorElement(href: url)
+          ..setAttribute('download', 'transactions_${tabType}_${DateTime.now().millisecondsSinceEpoch}.csv')
+          ..click();
+        html.Url.revokeObjectUrl(url);
+      } else {
+        _showSnackBar('⚠️ CSV 다운로드는 웹에서만 가능합니다', Colors.orange);
+        return;
+      }
 
       _showSnackBar(
         '✅ 거래 내역 ${filteredDocs.length}건 다운로드 완료',

@@ -3,6 +3,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/shared/models/mission_workflow_model.dart';
 import '../utils/logger.dart';
+import 'notification_service.dart'; // v2.186.0: 통합 알림 서비스
 
 /// MissionWorkflowService Provider
 final missionWorkflowServiceProvider = Provider<MissionWorkflowService>((ref) {
@@ -111,15 +112,17 @@ class MissionWorkflowService {
         'MissionWorkflow'
       );
 
-      // 공급자에게 알림 전송
-      await _sendNotificationToProvider(
-        providerId: safeProviderId,
+      // v2.186.0: 공급자에게 알림 전송 (미션 신청)
+      await NotificationService.sendNotification(
+        recipientId: safeProviderId,
         title: '새로운 테스터 신청',
         message: '$testerName님이 $appName 테스트를 신청했습니다.',
+        type: 'mission_applied',
         data: {
           'workflowId': docRef.id,
           'testerId': testerId,
           'testerName': testerName,
+          'appName': appName,
         },
       );
 
@@ -206,15 +209,32 @@ class MissionWorkflowService {
         'MissionWorkflow'
       );
 
-      // 테스터에게 알림 전송
-      await _sendNotificationToTester(
-        testerId: updatedWorkflow.testerId,
-        title: approved ? '신청이 승인되었습니다!' : '신청이 거부되었습니다',
-        message: approved
-            ? '${updatedWorkflow.appName} 테스트를 시작할 수 있습니다.'
-            : '${updatedWorkflow.appName} 테스트 신청이 거부되었습니다.',
-        data: {'workflowId': workflowId},
-      );
+      // v2.186.0: 테스터에게 알림 전송 (신청 승인/거부)
+      if (approved) {
+        // 승인 시: mission_started 타입으로 알림
+        await NotificationService.sendNotification(
+          recipientId: updatedWorkflow.testerId,
+          title: '미션이 시작되었습니다!',
+          message: '${updatedWorkflow.appName} 테스트가 시작되었습니다. Day 1부터 시작하세요!',
+          type: 'mission_started',
+          data: {
+            'workflowId': workflowId,
+            'appName': updatedWorkflow.appName,
+          },
+        );
+      } else {
+        // 거부 시: mission_rejected 타입으로 알림
+        await NotificationService.sendNotification(
+          recipientId: updatedWorkflow.testerId,
+          title: '신청이 거부되었습니다',
+          message: '${updatedWorkflow.appName} 테스트 신청이 거부되었습니다.',
+          type: 'mission_rejected',
+          data: {
+            'workflowId': workflowId,
+            'appName': updatedWorkflow.appName,
+          },
+        );
+      }
 
       AppLogger.info('Mission application processed successfully', 'MissionWorkflow');
     } catch (e, stackTrace) {
@@ -431,11 +451,12 @@ class MissionWorkflowService {
       final providerId = data['providerId'] as String;
       final testerName = data['testerName'] as String? ?? '테스터';
 
-      // 공급자에게 알림
-      await _sendNotificationToProvider(
-        providerId: providerId,
+      // v2.186.0: 공급자에게 알림 (일일 미션 제출)
+      await NotificationService.sendNotification(
+        recipientId: providerId,
         title: '일일 미션 완료',
         message: '$testerName님이 $dayNumber일차 미션을 완료했습니다.',
+        type: 'day_submitted',
         data: {
           'workflowId': workflowId,
           'dayNumber': dayNumber,
@@ -552,13 +573,14 @@ class MissionWorkflowService {
       //   }
       // }
 
-      // 테스터에게 알림
-      await _sendNotificationToTester(
-        testerId: data['testerId'] ?? '',
+      // v2.186.0: 테스터에게 알림 (일일 미션 승인 또는 최종 승인)
+      await NotificationService.sendNotification(
+        recipientId: data['testerId'] ?? '',
         title: isFinalDay ? '미션 최종 승인!' : '일일 미션 승인!',
         message: isFinalDay
             ? '$dayNumber일차 미션이 승인되었습니다. 공급자가 포인트 지급을 진행합니다.'
             : '$dayNumber일차 미션이 승인되었습니다. 다음 미션을 진행해주세요.',
+        type: isFinalDay ? 'mission_completed' : 'day_approved',
         data: {
           'workflowId': workflowId,
           'dayNumber': dayNumber,
@@ -707,11 +729,12 @@ class MissionWorkflowService {
           .doc(workflowId)
           .update(updateData);
 
-      // 테스터에게 거절 알림
-      await _sendNotificationToTester(
-        testerId: workflow.testerId,
+      // v2.186.0: 테스터에게 거절 알림 (일일 미션 거절)
+      await NotificationService.sendNotification(
+        recipientId: workflow.testerId,
         title: '일일 미션 거절됨',
         message: '$dayNumber일차 미션이 거절되었습니다. 사유: $rejectionReason',
+        type: 'day_rejected',
         data: {
           'workflowId': workflowId,
           'dayNumber': dayNumber,
@@ -896,49 +919,6 @@ class MissionWorkflowService {
             .toList());
   }
 
-  // 알림 전송 헬퍼 메서드
-  Future<void> _sendNotificationToProvider({
-    required String providerId,
-    required String title,
-    required String message,
-    Map<String, dynamic>? data,
-  }) async {
-    try {
-      await _firestore.collection('notifications').add({
-        'userId': providerId,
-        'userType': 'provider',
-        'title': title,
-        'message': message,
-        'data': data ?? {},
-        'isRead': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      AppLogger.warning('Failed to send notification to provider', 'MissionWorkflow');
-    }
-  }
-
-  Future<void> _sendNotificationToTester({
-    required String testerId,
-    required String title,
-    required String message,
-    Map<String, dynamic>? data,
-  }) async {
-    try {
-      await _firestore.collection('notifications').add({
-        'userId': testerId,
-        'userType': 'tester',
-        'title': title,
-        'message': message,
-        'data': data ?? {},
-        'isRead': false,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      AppLogger.warning('Failed to send notification to tester', 'MissionWorkflow');
-    }
-  }
-
   /// v2.112.0: 최종 미션 완료 시 에스크로에서 포인트 지급
   /// Firebase Function을 호출하여 안전하게 포인트 지급
   Future<void> _payFinalReward(
@@ -1007,6 +987,19 @@ class MissionWorkflowService {
       AppLogger.info(
         '✅ Final reward paid successfully: $finalPoints P',
         'MissionWorkflow'
+      );
+
+      // v2.186.0: 테스터에게 포인트 지급 완료 알림
+      await NotificationService.sendNotification(
+        recipientId: testerId,
+        title: '포인트 지급 완료!',
+        message: '$appName 미션 완료 보상으로 ${finalPoints.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} P가 지급되었습니다.',
+        type: 'points_awarded',
+        data: {
+          'workflowId': workflowId,
+          'amount': finalPoints,
+          'appName': appName,
+        },
       );
     } catch (e) {
       AppLogger.error(
