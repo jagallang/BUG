@@ -228,15 +228,24 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     );
   }
 
+  // v2.186.14: 하드코딩 제거, 공급자 입력 데이터 우선 표시
   Widget _buildTestRequirementsSection() {
+    // 공급자가 앱 등록 시 입력한 실제 데이터 우선 사용
+    final testingGuidelines = widget.projectData['testingGuidelines'] ??
+                             _advancedRewardData['testingGuidelines'] ?? '';
+    final minOSVersion = widget.projectData['minOSVersion'] ??
+                        _advancedRewardData['minOSVersion'] ?? '';
+    final testTimeMinutes = widget.projectData['testTimeMinutes'] ??
+                           _advancedRewardData['testTimeMinutes'] ?? 0;
+
+    // 하드코딩된 fallback 제거: 데이터 없으면 '정보 없음' 또는 표시 안 함
     final data = _advancedRewardData;
-    final difficulty = data['difficulty'] ?? widget.projectData['difficulty'] ?? 'medium';
-    final installType = data['installType'] ?? widget.projectData['installType'] ?? 'play_store';
-    final dailyTestTime = data['dailyTestTime'] ?? widget.projectData['dailyTestTime'] ?? '30분';
-    final approvalCondition = data['approvalCondition'] ?? widget.projectData['approvalCondition'] ?? '스크린샷 필수';
+    final difficulty = data['difficulty'] ?? widget.projectData['difficulty'] ?? '';
+    final installType = data['installType'] ?? widget.projectData['installType'] ?? '';
+    final dailyTestTime = data['dailyTestTime'] ?? widget.projectData['dailyTestTime'] ?? '';
+    final approvalCondition = data['approvalCondition'] ?? widget.projectData['approvalCondition'] ?? '';
     final minExperience = data['minExperience'] ?? widget.projectData['minExperience'] ?? '';
     final specialRequirements = data['specialRequirements'] ?? widget.projectData['specialRequirements'] ?? '';
-    final minOSVersion = data['minOSVersion'] ?? widget.projectData['minOSVersion'] ?? '';
 
     return Container(
       padding: EdgeInsets.all(20.w),
@@ -260,14 +269,51 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
             style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16.h),
-          _buildInfoRow('난이도', _getDifficultyText(difficulty)),
-          _buildInfoRow('설치방법', _getInstallTypeText(installType)),
-          _buildInfoRow('일일테스트시간', dailyTestTime),
-          _buildInfoRow('승인조건', approvalCondition),
-          if (estimatedMinutes > 0) _buildInfoRow('예상 소요시간', '$estimatedMinutes분'),
+
+          // v2.186.14: testingGuidelines 최우선 표시 (공급자 입력 데이터)
+          if (testingGuidelines.isNotEmpty) ...[
+            _buildInfoRow('테스팅 가이드라인', testingGuidelines),
+            SizedBox(height: 8.h),
+            Divider(color: Colors.grey[300]),
+            SizedBox(height: 8.h),
+          ],
+
+          // v2.186.14: 실제 입력 데이터만 표시 (하드코딩 제거)
+          if (minOSVersion.isNotEmpty) _buildInfoRow('최소 OS 버전', minOSVersion),
+          if (testTimeMinutes > 0) _buildInfoRow('예상 테스트 시간', '$testTimeMinutes분'),
+          if (estimatedMinutes > 0 && estimatedMinutes != testTimeMinutes) _buildInfoRow('예상 소요시간', '$estimatedMinutes분'),
+          if (difficulty.isNotEmpty) _buildInfoRow('난이도', _getDifficultyText(difficulty)),
+          if (installType.isNotEmpty) _buildInfoRow('설치방법', _getInstallTypeText(installType)),
+          if (dailyTestTime.isNotEmpty) _buildInfoRow('일일테스트시간', dailyTestTime),
+          if (approvalCondition.isNotEmpty) _buildInfoRow('승인조건', approvalCondition),
           if (minExperience.isNotEmpty) _buildInfoRow('최소 경험', minExperience),
           if (specialRequirements.isNotEmpty) _buildInfoRow('특별 요구사항', specialRequirements),
-          if (minOSVersion.isNotEmpty) _buildInfoRow('최소 OS 버전', minOSVersion),
+
+          // v2.186.14: 데이터가 아무것도 없을 경우
+          if (testingGuidelines.isEmpty &&
+              minOSVersion.isEmpty &&
+              testTimeMinutes == 0 &&
+              estimatedMinutes == 0 &&
+              difficulty.isEmpty &&
+              installType.isEmpty &&
+              dailyTestTime.isEmpty &&
+              approvalCondition.isEmpty &&
+              minExperience.isEmpty &&
+              specialRequirements.isEmpty) ...[
+            Container(
+              padding: EdgeInsets.all(16.w),
+              decoration: BoxDecoration(
+                color: Colors.grey[50],
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: Text(
+                '⚠️ 테스트 조건 정보가 등록되지 않았습니다.',
+                style: TextStyle(fontSize: 14.sp, color: Colors.grey[600]),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ],
         ],
       ),
     );

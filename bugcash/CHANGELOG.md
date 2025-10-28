@@ -2,6 +2,21 @@
 
 All notable changes to BugCash project will be documented in this file.
 
+## [2.186.14] - 2025-10-28
+
+### Fixed
+- **관리자 대시보드 테스트 조건 하드코딩 제거**: 공급자 앱 등록 시 입력한 실제 데이터 표시
+  - 기존: 하드코딩된 fallback 값 표시 ('medium', 'play_store', '30분', '스크린샷 필수')
+  - 변경: `testingGuidelines`, `minOSVersion`, `testTimeMinutes` 등 실제 입력 데이터 우선 표시
+  - 데이터 없을 시: "⚠️ 테스트 조건 정보가 등록되지 않았습니다." 메시지 표시
+
+### Technical Details
+- `project_detail_page.dart` Line 231-320: `_buildTestRequirementsSection()` 개선
+  - 하드코딩된 fallback 값 제거
+  - 공급자 입력 데이터 (`testingGuidelines`) 최우선 표시
+  - Empty state 추가
+- 관리자 대시보드 → 프로젝트 탭 → 상세보기에서 정확한 데이터 표시
+
 ## [2.186.13] - 2025-10-28
 
 ### Fixed
