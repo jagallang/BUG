@@ -701,6 +701,37 @@ class MissionWorkflowService {
       });
 
       AppLogger.info('✅ Day $nextDayNumber activated successfully (auto-approved)', 'MissionWorkflow');
+
+      // v2.186.16: 테스터에게 알림 (공급자가 일일 미션 시작)
+      final testerId = workflow.testerId;
+      if (testerId.isEmpty) {
+        AppLogger.warning(
+          '⚠️ 테스터 알림 전송 실패: testerId가 비어있음\n'
+          '   ├─ workflowId: $workflowId\n'
+          '   └─ nextDay: $nextDayNumber',
+          'MissionWorkflow'
+        );
+      } else {
+        AppLogger.info(
+          '📧 테스터에게 Day $nextDayNumber 시작 알림 전송 준비\n'
+          '   ├─ testerId: $testerId\n'
+          '   ├─ testerName: ${workflow.testerName}\n'
+          '   └─ appName: ${workflow.appName}',
+          'MissionWorkflow'
+        );
+
+        await NotificationService.sendNotification(
+          recipientId: testerId,
+          title: 'Day $nextDayNumber 미션이 시작되었습니다!',
+          message: '${workflow.appName} Day $nextDayNumber 테스트를 시작하세요.',
+          type: 'day_started',
+          data: {
+            'workflowId': workflowId,
+            'dayNumber': nextDayNumber,
+            'appName': workflow.appName,
+          },
+        );
+      }
     } catch (e) {
       AppLogger.error('Failed to activate next day mission', e.toString());
       rethrow;

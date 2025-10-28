@@ -2,6 +2,27 @@
 
 All notable changes to BugCash project will be documented in this file.
 
+## [2.186.16] - 2025-10-28
+
+### Fixed
+- **공급자 Day 시작 시 테스터 알림 누락 해결**: `activateNextDayMission()` 함수에 테스터 알림 추가
+  - 공급자가 일일 미션 시작 → 테스터에게 `day_started` 타입 알림 전송
+  - 알림 제목: "Day N 미션이 시작되었습니다!"
+  - 알림 메시지: "{appName} Day N 테스트를 시작하세요."
+  - v2.186.15와 동일한 testerId 검증 및 상세 로깅 적용
+
+### Technical Details
+- `mission_workflow_service.dart` Line 705-734: `activateNextDayMission()` 개선
+  - testerId 빈 값 검증 및 경고 로그
+  - 알림 전송 전 수신자 정보 확인 로그 (📧, testerId, testerName, appName)
+  - NotificationService.sendNotification() 호출 추가
+- 미션 플로우 완성:
+  1. 테스터 신청 → 공급자 알림 ✅
+  2. 공급자 승인 → 테스터 알림 ✅ (v2.186.15)
+  3. **공급자 Day 시작 → 테스터 알림 ✅ (v2.186.16 추가)**
+  4. 테스터 완료 → 공급자 알림 ✅
+  5. 공급자 승인 → 테스터 알림 ✅
+
 ## [2.186.15] - 2025-10-28
 
 ### Improved
