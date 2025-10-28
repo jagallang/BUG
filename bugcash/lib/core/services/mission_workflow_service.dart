@@ -210,30 +210,51 @@ class MissionWorkflowService {
       );
 
       // v2.186.0: 테스터에게 알림 전송 (신청 승인/거부)
-      if (approved) {
-        // 승인 시: mission_started 타입으로 알림
-        await NotificationService.sendNotification(
-          recipientId: updatedWorkflow.testerId,
-          title: '미션이 시작되었습니다!',
-          message: '${updatedWorkflow.appName} 테스트가 시작되었습니다. Day 1부터 시작하세요!',
-          type: 'mission_started',
-          data: {
-            'workflowId': workflowId,
-            'appName': updatedWorkflow.appName,
-          },
+      // v2.186.15: testerId 검증 및 로깅 강화
+      final testerId = updatedWorkflow.testerId;
+      if (testerId.isEmpty) {
+        AppLogger.warning(
+          '⚠️ 테스터 알림 전송 실패: testerId가 비어있음\n'
+          '   ├─ workflowId: $workflowId\n'
+          '   ├─ appName: ${updatedWorkflow.appName}\n'
+          '   └─ approved: $approved',
+          'MissionWorkflow'
         );
       } else {
-        // 거부 시: mission_rejected 타입으로 알림
-        await NotificationService.sendNotification(
-          recipientId: updatedWorkflow.testerId,
-          title: '신청이 거부되었습니다',
-          message: '${updatedWorkflow.appName} 테스트 신청이 거부되었습니다.',
-          type: 'mission_rejected',
-          data: {
-            'workflowId': workflowId,
-            'appName': updatedWorkflow.appName,
-          },
+        AppLogger.info(
+          '📧 테스터에게 알림 전송 준비\n'
+          '   ├─ testerId: $testerId\n'
+          '   ├─ testerName: ${updatedWorkflow.testerName}\n'
+          '   ├─ appName: ${updatedWorkflow.appName}\n'
+          '   └─ approved: $approved',
+          'MissionWorkflow'
         );
+
+        if (approved) {
+          // 승인 시: mission_started 타입으로 알림
+          await NotificationService.sendNotification(
+            recipientId: testerId,
+            title: '미션이 시작되었습니다!',
+            message: '${updatedWorkflow.appName} 테스트가 시작되었습니다. Day 1부터 시작하세요!',
+            type: 'mission_started',
+            data: {
+              'workflowId': workflowId,
+              'appName': updatedWorkflow.appName,
+            },
+          );
+        } else {
+          // 거부 시: mission_rejected 타입으로 알림
+          await NotificationService.sendNotification(
+            recipientId: testerId,
+            title: '신청이 거부되었습니다',
+            message: '${updatedWorkflow.appName} 테스트 신청이 거부되었습니다.',
+            type: 'mission_rejected',
+            data: {
+              'workflowId': workflowId,
+              'appName': updatedWorkflow.appName,
+            },
+          );
+        }
       }
 
       AppLogger.info('Mission application processed successfully', 'MissionWorkflow');

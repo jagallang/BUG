@@ -14,6 +14,7 @@ class NotificationService {
   /// [message]: 알림 내용
   /// [type]: 알림 타입 (missionApplied, missionApproved, daySubmitted 등)
   /// [data]: 추가 데이터 (workflowId, testerId, dayNumber 등)
+  /// v2.186.15: 로깅 및 검증 강화
   static Future<void> sendNotification({
     required String recipientId,
     required String title,
@@ -22,12 +23,28 @@ class NotificationService {
     Map<String, dynamic>? data,
   }) async {
     try {
+      // v2.186.15: recipientId 상세 검증 및 로깅
       if (recipientId.isEmpty) {
-        AppLogger.warning('Cannot send notification: recipientId is empty', 'NotificationService');
+        AppLogger.warning(
+          '⚠️ 알림 전송 실패: recipientId가 비어있음\n'
+          '   ├─ 타입: $type\n'
+          '   ├─ 제목: $title\n'
+          '   └─ 메시지: $message',
+          'NotificationService'
+        );
         return;
       }
 
-      await _firestore.collection('user_notifications').add({
+      AppLogger.info(
+        '📤 알림 전송 시작\n'
+        '   ├─ 수신자 ID: $recipientId\n'
+        '   ├─ 타입: $type\n'
+        '   ├─ 제목: $title\n'
+        '   └─ 메시지: $message',
+        'NotificationService'
+      );
+
+      final notificationData = {
         'recipientId': recipientId,
         'recipientRole': 'user', // 일반 사용자 (테스터/공급자)
         'type': type,
@@ -38,17 +55,29 @@ class NotificationService {
         'createdAt': Timestamp.now(),
         'readAt': null,
         'sentBy': 'system', // 시스템 자동 발송
-      });
+      };
+
+      final docRef = await _firestore.collection('user_notifications').add(notificationData);
 
       AppLogger.info(
-        '📧 알림 전송 완료\n'
+        '✅ 알림 전송 성공\n'
         '   ├─ 수신자: $recipientId\n'
         '   ├─ 타입: $type\n'
-        '   └─ 제목: $title',
+        '   ├─ 제목: $title\n'
+        '   └─ Firestore Doc ID: ${docRef.id}',
         'NotificationService'
       );
-    } catch (e) {
-      AppLogger.error('Failed to send notification', e.toString());
+    } catch (e, stackTrace) {
+      // v2.186.15: 에러 로깅 강화 (스택 트레이스 포함)
+      AppLogger.error(
+        '❌ 알림 전송 실패\n'
+        '   ├─ 수신자: $recipientId\n'
+        '   ├─ 타입: $type\n'
+        '   ├─ 제목: $title\n'
+        '   ├─ 에러: $e\n'
+        '   └─ StackTrace: ${stackTrace.toString().split('\n').take(3).join('\n')}',
+        'NotificationService'
+      );
       // 알림 전송 실패는 메인 로직을 중단시키지 않음
     }
   }

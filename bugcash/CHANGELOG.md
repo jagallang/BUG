@@ -2,6 +2,27 @@
 
 All notable changes to BugCash project will be documented in this file.
 
+## [2.186.15] - 2025-10-28
+
+### Improved
+- **테스터 알림 시스템 진단 강화**: 알림 전송 과정 추적 및 문제 진단 개선
+  - 알림 전송 전/후 상세 로깅 추가 (📤 시작, ✅ 성공, ❌ 실패)
+  - `recipientId` 빈 값 검증 및 경고 메시지 출력
+  - `testerId` 검증 로직 추가 (미션 승인 시)
+  - 에러 발생 시 스택 트레이스 포함하여 원인 추적 가능
+
+### Technical Details
+- `notification_service.dart`:
+  - Line 17-83: sendNotification 로깅 강화
+  - recipientId 빈 값 체크 시 상세 경고 메시지
+  - Firestore 저장 성공 시 Document ID 로깅
+  - 에러 발생 시 스택 트레이스 상위 3줄 포함
+- `mission_workflow_service.dart`:
+  - Line 212-258: processMissionApplication 테스터 알림 개선
+  - testerId 검증 및 로깅 추가
+  - 알림 전송 전 수신자 정보 확인 로그
+- 알림 누락 문제 진단을 위한 로그 시스템 구축
+
 ## [2.186.14] - 2025-10-28
 
 ### Fixed
