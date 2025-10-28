@@ -754,15 +754,17 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                         borderRadius: BorderRadius.circular(8.r),
                         color: Colors.white,
                       ),
-                      child: TextField(
-                        controller: _searchController,
-                        onChanged: (value) {
-                          setState(() {
-                            _searchKeyword = value;
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: '검색...', // v2.186.9: 힌트 텍스트 축소
+                      child: Semantics(
+                        label: '앱 이름, 설명, 카테고리 검색', // v2.186.12: 접근성 개선
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchKeyword = value;
+                            });
+                          },
+                          decoration: InputDecoration(
+                          hintText: '앱 검색', // v2.186.12: UX 명확성 개선
                           hintStyle: TextStyle(
                             fontSize: 13.sp,
                             color: Colors.grey[400],
@@ -793,7 +795,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                             vertical: 8.h,
                           ),
                         ),
-                        style: TextStyle(fontSize: 14.sp),
+                          style: TextStyle(fontSize: 14.sp),
+                        ),
                       ),
                     ),
                     SizedBox(width: 6.w),
@@ -884,7 +887,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         ],
       ),
       // Upload Dialog
-      floatingActionButton: _showUploadDialog ? null : null,
+      // v2.186.12: 불필요한 삼항연산자 제거
+      floatingActionButton: null,
       bottomSheet: _showUploadDialog ? _buildUploadDialog() : null,
     );
   }

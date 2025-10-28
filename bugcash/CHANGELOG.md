@@ -2,6 +2,19 @@
 
 All notable changes to BugCash project will be documented in this file.
 
+## [2.186.12] - 2025-10-28
+
+### Improved
+- **UX 및 접근성 개선**: 코드 리뷰 피드백 반영
+  - 검색 힌트 텍스트: "검색..." → "앱 검색" (명확성 향상)
+  - TextField에 Semantics 레이블 추가: "앱 이름, 설명, 카테고리 검색"
+  - floatingActionButton 불필요한 삼항연산자 제거 (코드 간결화)
+
+### Technical Details
+- `app_management_page.dart` Line 765, 758, 888: UX 및 접근성 개선
+- 스크린 리더 지원 강화
+- 다른 코드 영향 없음 (app_management_page.dart 내부만 변경)
+
 ## [2.186.11] - 2025-10-27
 
 ### Fixed
@@ -126,6 +139,7 @@ All notable changes to BugCash project will be documented in this file.
 
 ## Version History Summary
 
+- **v2.186.12**: UX 및 접근성 개선 (코드 리뷰 피드백 반영)
 - **v2.186.11**: 앱관리 페이지 오버플로우 완전 해결 (좁은 화면 대응)
 - **v2.186.10**: '앱 관리' 텍스트 제거로 공간 확보
 - **v2.186.9**: 검색필드 대폭 축소 (153px → 80px)
