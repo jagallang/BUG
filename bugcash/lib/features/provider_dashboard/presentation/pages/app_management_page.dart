@@ -25,6 +25,16 @@ final providerAppsProvider = StreamProvider.family<List<ProviderAppModel>, Strin
         final docs = snapshot.docs
             .map((doc) => ProviderAppModel.fromFirestore(doc))
             .toList();
+
+        // v2.186.17: 디버그 로그 추가 - 실시간 업데이트 확인
+        AppLogger.info(
+          '🔄 providerAppsProvider 데이터 갱신\n'
+          '   ├─ providerId: $providerId\n'
+          '   ├─ 프로젝트 수: ${docs.length}개\n'
+          '   └─ 각 프로젝트 상태: ${docs.map((d) => '${d.appName}=${d.status}').join(', ')}',
+          'AppManagement'
+        );
+
         // 클라이언트 측에서 정렬 (인덱스 생성 전까지 임시 방안)
         // 인덱스 생성 후에는 이 정렬이 불필요하지만 안전성을 위해 유지
         docs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -1093,6 +1103,13 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   }
 
   Widget _buildStatusBadge(String status) {
+    // v2.186.17: 디버그 로그 추가 - 완료된 미션이 '모집중'으로 표시되는 문제 진단
+    AppLogger.info(
+      '📊 앱 상태 배지 렌더링\n'
+      '   └─ Firestore status: "$status"',
+      'AppManagement'
+    );
+
     Color color;
     String text;
     IconData icon;

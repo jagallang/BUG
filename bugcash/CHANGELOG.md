@@ -2,6 +2,25 @@
 
 All notable changes to BugCash project will be documented in this file.
 
+## [2.186.17] - 2025-10-28
+
+### Improved
+- **공급자 앱 관리 탭 상태 표시 진단 강화**: 완료된 미션이 "모집중"으로 표시되는 문제 진단을 위한 로깅 추가
+  - `providerAppsProvider`: Firestore 실시간 업데이트 시 프로젝트 상태 로깅 (🔄)
+  - `_buildStatusBadge`: 상태 배지 렌더링 시 Firestore status 값 로깅 (📊)
+  - 로그를 통해 실시간 데이터 갱신 여부 및 UI 렌더링 시점의 상태 값 확인 가능
+
+### Technical Details
+- `app_management_page.dart`:
+  - Line 30-36: providerAppsProvider에 실시간 데이터 갱신 로그 추가
+    - providerId, 프로젝트 수, 각 프로젝트의 상태 출력
+  - Line 1097-1101: _buildStatusBadge에 렌더링 시점 상태 로그 추가
+    - Firestore에서 받은 status 값 출력
+- 진단 목적:
+  - Firestore에서 `closed` 상태로 업데이트되었는지 확인
+  - StreamProvider가 실시간으로 데이터를 받고 있는지 확인
+  - UI가 최신 데이터를 렌더링하고 있는지 확인
+
 ## [2.186.16] - 2025-10-28
 
 ### Fixed
