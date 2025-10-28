@@ -1011,13 +1011,40 @@ class MissionWorkflowService {
   }
 
   /// v2.131.0: UI에서 명시적으로 호출 - 에스크로 포인트 지급만 수행
+  /// v2.186.13: 포인트 지급 후 프로젝트 상태 'closed' 유지 보장
   Future<void> payFinalRewardOnly({required String workflowId}) async {
     final doc = await _firestore.collection('mission_workflows').doc(workflowId).get();
     if (!doc.exists) {
       throw Exception('Workflow not found: $workflowId');
     }
     final data = doc.data()!;
+
+    // 포인트 지급 실행
     await _payFinalReward(workflowId, data);
+
+    // v2.186.13: 프로젝트 상태를 'closed'로 확실히 유지
+    // 최종일 승인 시 이미 closed로 변경되었지만,
+    // 포인트 지급 후에도 상태가 유지되도록 명시적으로 재확인
+    try {
+      final appId = data['appId'] as String;
+
+      AppLogger.info(
+        '🔒 Ensuring project status remains closed after payment\n'
+        '   ├─ workflowId: $workflowId\n'
+        '   └─ appId: $appId',
+        'MissionWorkflow'
+      );
+
+      await _firestore.collection('projects').doc(appId).update({
+        'status': 'closed',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      AppLogger.info('✅ Project $appId status ensured as closed after payment', 'MissionWorkflow');
+    } catch (e) {
+      AppLogger.error('❌ Failed to ensure project status: $e', 'MissionWorkflow');
+      // 포인트 지급은 성공했으므로 에러를 던지지 않음
+    }
   }
 
   // v2.25.09: Timestamp를 DateTime으로 변환하는 헬퍼 메서드
