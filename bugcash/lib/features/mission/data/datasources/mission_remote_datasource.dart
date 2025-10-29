@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/mission_workflow_model.dart';
 import '../../../../core/utils/logger.dart';
+import '../../../../core/services/notification_service.dart';
 
 /// Mission Remote Datasource
 /// Firestore 직접 접근 레이어 (구현 세부사항)
@@ -212,10 +213,12 @@ class MissionRemoteDatasource {
   }
 
   /// 미션 승인
+  /// v2.186.19: 테스터 알림 추가
   Future<void> approveMission(String missionId) async {
     try {
       AppLogger.info('Approving mission: $missionId', 'MissionDatasource');
 
+      // Firestore 업데이트
       await _firestore.collection(_collection).doc(missionId).update({
         'currentState': 'approved',
         'approvedAt': FieldValue.serverTimestamp(),
@@ -223,6 +226,53 @@ class MissionRemoteDatasource {
       });
 
       AppLogger.info('Mission approved: $missionId', 'MissionDatasource');
+
+      // v2.186.19: 테스터에게 알림 전송
+      try {
+        final doc = await _firestore.collection(_collection).doc(missionId).get();
+        if (doc.exists) {
+          final data = doc.data()!;
+          final testerId = data['testerId'] as String? ?? '';
+          final appName = data['appName'] as String? ?? '';
+
+          if (testerId.isEmpty) {
+            AppLogger.warning(
+              '⚠️ 테스터 알림 전송 실패: testerId가 비어있음\n'
+              '   ├─ missionId: $missionId\n'
+              '   └─ appName: $appName',
+              'MissionDatasource'
+            );
+          } else {
+            AppLogger.info(
+              '📧 테스터에게 미션 승인 알림 전송 준비\n'
+              '   ├─ testerId: $testerId\n'
+              '   ├─ missionId: $missionId\n'
+              '   └─ appName: $appName',
+              'MissionDatasource'
+            );
+
+            await NotificationService.sendNotification(
+              recipientId: testerId,
+              title: '미션이 시작되었습니다!',
+              message: '$appName 테스트가 시작되었습니다. Day 1부터 시작하세요!',
+              type: 'mission_started',
+              data: {
+                'workflowId': missionId,
+                'appName': appName,
+              },
+            );
+          }
+        }
+      } catch (notificationError) {
+        // 알림 실패 시에도 미션 승인은 성공으로 처리
+        AppLogger.error(
+          '❌ 테스터 알림 전송 실패 (미션 승인은 성공)\n'
+          '   ├─ missionId: $missionId\n'
+          '   └─ error: $notificationError',
+          'MissionDatasource',
+          notificationError
+        );
+      }
     } catch (e) {
       AppLogger.error('Failed to approve mission', 'MissionDatasource', e);
       rethrow;

@@ -2,6 +2,32 @@
 
 All notable changes to BugCash project will be documented in this file.
 
+## [2.186.19] - 2025-10-29
+
+### Fixed
+- **테스터 신청 승인 시 알림 미전송 문제 해결**: Clean Architecture 리팩터링 과정에서 누락된 알림 로직 복구
+  - `MissionRemoteDatasource.approveMission()` 함수에 테스터 알림 전송 로직 추가
+  - v2.186.15의 로깅 패턴 적용 (📧, testerId 검증, 상세 로그)
+  - 알림 타입: `mission_started`
+
+### Technical Details
+- `mission_remote_datasource.dart` Line 215-280:
+  - NotificationService import 추가
+  - approveMission() 함수에 알림 로직 추가:
+    - Firestore에서 미션 정보 조회 (testerId, appName)
+    - testerId 빈 값 검증 및 경고 로그
+    - 알림 전송 준비 로그 (📧 emoji)
+    - NotificationService.sendNotification() 호출
+    - 알림 실패 시에도 미션 승인은 성공으로 처리
+- 문제 원인:
+  - UI는 `cleanArchAppMissionProvider.approveMission()` 호출
+  - → UseCase → Repository → **Datasource에서 Firestore만 업데이트**
+  - `processMissionApplication()`은 호출되지 않았음 (Clean Architecture 전환 후 미사용)
+  - v2.186.0의 알림 로직이 Clean Architecture 레이어에는 미적용
+- 해결:
+  - Datasource 레이어에 직접 알림 로직 추가
+  - Single Responsibility를 유지하면서 알림 전송
+
 ## [2.186.18] - 2025-10-29
 
 ### Fixed
