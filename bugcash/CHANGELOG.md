@@ -2,6 +2,22 @@
 
 All notable changes to BugCash project will be documented in this file.
 
+## [2.186.18] - 2025-10-29
+
+### Fixed
+- **관리자 대시보드 예상소요시간 하드코딩 제거**: 앱 상세보기에서 하드코딩된 60분 표시 제거
+  - `estimatedMinutes` getter 삭제 (하드코딩된 fallback 60분)
+  - "예상 소요시간" 중복 표시 제거
+  - `testTimeMinutes`만 사용하여 공급자가 입력한 실제 시간 표시
+
+### Technical Details
+- `project_detail_page.dart`:
+  - Line 39-42: estimatedMinutes getter 삭제
+  - Line 282: "예상 테스트 시간" → "예상 소요시간"으로 라벨 변경
+  - Line 284: 중복 표시 로직 제거
+  - Line 294: 빈 데이터 체크에서 estimatedMinutes 제거
+- v2.186.14의 하드코딩 제거 작업에서 누락된 필드 정리 완료
+
 ## [2.186.17] - 2025-10-28
 
 ### Improved

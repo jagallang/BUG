@@ -36,10 +36,8 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
     return (rewards['bonusPoints'] as num?)?.toInt() ?? 0;
   }
 
-  int get estimatedMinutes {
-    final rewards = _advancedRewardData;
-    return (rewards['estimatedMinutes'] as num?)?.toInt() ?? 60;
-  }
+  // v2.186.18: estimatedMinutes getter 삭제 (하드코딩된 fallback 60분 제거)
+  // testTimeMinutes를 사용하도록 변경
 
   // v2.112.0: Simplified reward calculation - removed daily points
   int get totalAdvancedReward {
@@ -279,9 +277,9 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
           ],
 
           // v2.186.14: 실제 입력 데이터만 표시 (하드코딩 제거)
+          // v2.186.18: estimatedMinutes 중복 표시 제거, testTimeMinutes만 사용
           if (minOSVersion.isNotEmpty) _buildInfoRow('최소 OS 버전', minOSVersion),
-          if (testTimeMinutes > 0) _buildInfoRow('예상 테스트 시간', '$testTimeMinutes분'),
-          if (estimatedMinutes > 0 && estimatedMinutes != testTimeMinutes) _buildInfoRow('예상 소요시간', '$estimatedMinutes분'),
+          if (testTimeMinutes > 0) _buildInfoRow('예상 소요시간', '$testTimeMinutes분'),
           if (difficulty.isNotEmpty) _buildInfoRow('난이도', _getDifficultyText(difficulty)),
           if (installType.isNotEmpty) _buildInfoRow('설치방법', _getInstallTypeText(installType)),
           if (dailyTestTime.isNotEmpty) _buildInfoRow('일일테스트시간', dailyTestTime),
@@ -290,10 +288,10 @@ class _ProjectDetailPageState extends State<ProjectDetailPage> {
           if (specialRequirements.isNotEmpty) _buildInfoRow('특별 요구사항', specialRequirements),
 
           // v2.186.14: 데이터가 아무것도 없을 경우
+          // v2.186.18: estimatedMinutes 체크 제거
           if (testingGuidelines.isEmpty &&
               minOSVersion.isEmpty &&
               testTimeMinutes == 0 &&
-              estimatedMinutes == 0 &&
               difficulty.isEmpty &&
               installType.isEmpty &&
               dailyTestTime.isEmpty &&
