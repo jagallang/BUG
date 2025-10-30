@@ -18,6 +18,7 @@ class MissionWorkflowService {
   // 1단계: 미션 신청 생성 (자동 providerId 조회 포함)
   /// v2.18.0: totalDays 기본값 14일 → 10일 변경 (권장값)
   /// v2.112.0: dailyReward 파라미터 제거 (최종 포인트만 사용)
+  /// v2.186.21: totalDays를 projects.testPeriodDays에서 자동으로 읽어오도록 수정
   Future<String> createMissionApplication({
     required String appId,
     required String appName,
@@ -28,7 +29,7 @@ class MissionWorkflowService {
     String? providerName, // 옵셔널로 변경 - 자동 조회 기능 추가
     required String experience,
     required String motivation,
-    int totalDays = 10,  // v2.18.0: 14 → 10 (권장 기본값)
+    int? totalDays,  // v2.186.21: nullable로 변경 (projects에서 읽어올 것)
     // v2.112.0: dailyReward 제거
   }) async {
     try {
@@ -47,32 +48,46 @@ class MissionWorkflowService {
         'MissionWorkflow'
       );
 
-      // 🔍 자동 providerId 조회 기능 (projects 컬렉션에서)
+      // 🔍 자동 providerId 및 testPeriodDays 조회 (projects 컬렉션에서)
       String safeProviderId = providerId ?? '';
       String safeProviderName = providerName ?? '';
+      int actualTotalDays = totalDays ?? 10;  // 기본값 10일
 
-      if (safeProviderId.isEmpty || safeProviderName.isEmpty) {
-        AppLogger.info('Auto-looking up provider info from projects collection for appId: $appId', 'MissionWorkflow');
+      // appId에서 'provider_app_' 접두사 제거
+      final normalizedAppId = appId.replaceAll('provider_app_', '');
+      AppLogger.info('   ├─ normalizedAppId: $normalizedAppId', 'MissionWorkflow');
 
-        // appId에서 'provider_app_' 접두사 제거
-        final normalizedAppId = appId.replaceAll('provider_app_', '');
-        AppLogger.info('   ├─ normalizedAppId: $normalizedAppId', 'MissionWorkflow');
+      if (safeProviderId.isEmpty || safeProviderName.isEmpty || totalDays == null) {
+        AppLogger.info('Auto-looking up project info from projects collection for appId: $appId', 'MissionWorkflow');
 
         try {
           final projectDoc = await _firestore.collection('projects').doc(normalizedAppId).get();
           if (projectDoc.exists) {
             final projectData = projectDoc.data()!;
-            safeProviderId = projectData['providerId'] ?? '';
+            safeProviderId = projectData['providerId'] ?? safeProviderId;
             safeProviderName = projectData['providerName'] ?? projectData['appName'] ?? 'Unknown Provider';
 
-            AppLogger.info('✅ Auto-lookup successful: providerId=$safeProviderId, providerName=$safeProviderName', 'MissionWorkflow');
+            // v2.186.21: projects에서 testPeriodDays 읽어오기
+            final projectTestPeriodDays = projectData['testPeriodDays'] as int?;
+            if (projectTestPeriodDays != null && totalDays == null) {
+              actualTotalDays = projectTestPeriodDays;
+            }
+
+            AppLogger.info(
+              '✅ Auto-lookup successful\n'
+              '   ├─ providerId: $safeProviderId\n'
+              '   ├─ providerName: $safeProviderName\n'
+              '   ├─ projects.testPeriodDays: $projectTestPeriodDays\n'
+              '   └─ 최종 totalDays: $actualTotalDays',
+              'MissionWorkflow'
+            );
           } else {
             AppLogger.error('❌ Project not found in projects collection: $normalizedAppId', 'MissionWorkflow');
             throw ArgumentError('Project not found for appId: $appId');
           }
         } catch (e) {
-          AppLogger.error('❌ Failed to auto-lookup provider info: $e', 'MissionWorkflow');
-          throw ArgumentError('Failed to lookup provider info for appId: $appId');
+          AppLogger.error('❌ Failed to auto-lookup project info: $e', 'MissionWorkflow');
+          throw ArgumentError('Failed to lookup project info for appId: $appId');
         }
       }
 
@@ -95,7 +110,7 @@ class MissionWorkflowService {
         appliedAt: DateTime.now(),
         experience: experience,
         motivation: motivation,
-        totalDays: totalDays,
+        totalDays: actualTotalDays,  // v2.186.21: projects에서 읽은 값 사용
         // v2.112.0: dailyReward 제거
       );
 
@@ -534,14 +549,54 @@ class MissionWorkflowService {
         }
       }
 
-      // v2.112.0: 리워드 계산 로직 단순화
-      final totalDays = data['totalDays'] ?? 10;
+      // v2.186.21: projects에서 실제 testPeriodDays 확인 (이중 검증)
+      final workflowTotalDays = data['totalDays'] ?? 10;
+      final appId = data['appId'] as String;
+
+      // projects에서 실제 testPeriodDays 읽기
+      int actualTotalDays = workflowTotalDays;
+      try {
+        final projectDoc = await _firestore.collection('projects').doc(appId).get();
+        if (projectDoc.exists) {
+          final projectTestPeriodDays = projectDoc.data()!['testPeriodDays'] as int?;
+          if (projectTestPeriodDays != null) {
+            actualTotalDays = projectTestPeriodDays;
+
+            // totalDays 불일치 감지
+            if (workflowTotalDays != projectTestPeriodDays) {
+              AppLogger.warning(
+                '⚠️ totalDays 불일치 감지!\n'
+                '   ├─ workflow.totalDays: $workflowTotalDays\n'
+                '   ├─ projects.testPeriodDays: $projectTestPeriodDays\n'
+                '   └─ projects 값 사용 (우선)',
+                'MissionWorkflow'
+              );
+            }
+          }
+        }
+      } catch (e) {
+        AppLogger.error('❌ Failed to read testPeriodDays from projects: $e', 'MissionWorkflow');
+        // 에러 발생 시 workflow의 totalDays 사용
+      }
+
+      final totalDays = actualTotalDays;
 
       // v2.25.14: completedDays 계산 (승인된 일일 미션 개수)
       final completedDays = interactions.where((i) => i['providerApproved'] == true).length;
 
       // 최종 완료 여부 확인
       final isFinalDay = dayNumber >= totalDays;
+
+      AppLogger.info(
+        '📊 프로젝트 완료 조건 확인\n'
+        '   ├─ appId: $appId\n'
+        '   ├─ dayNumber: $dayNumber\n'
+        '   ├─ workflow.totalDays: $workflowTotalDays\n'
+        '   ├─ projects.testPeriodDays: $actualTotalDays\n'
+        '   ├─ 사용할 totalDays: $totalDays\n'
+        '   └─ isFinalDay: $isFinalDay ($dayNumber >= $totalDays)',
+        'MissionWorkflow'
+      );
 
       // v2.25.04: 다음 날 미션 자동 생성 제거 (공급자가 수동으로 생성)
       final updateData = {
@@ -565,10 +620,9 @@ class MissionWorkflowService {
           .doc(workflowId)
           .update(updateData);
 
-      // v2.170.0: 프로젝트 종료 시 projects 컬렉션 상태도 'closed'로 업데이트
+      // v2.186.21: 프로젝트 종료 시 projects 컬렉션 상태도 'closed'로 업데이트
       if (isFinalDay) {
         try {
-          final appId = data['appId'] as String;
           await _firestore
               .collection('projects')
               .doc(appId)
@@ -576,7 +630,14 @@ class MissionWorkflowService {
             'status': 'closed',
             'updatedAt': FieldValue.serverTimestamp(),
           });
-          AppLogger.info('✅ Project $appId status updated to closed', 'MissionWorkflow');
+          AppLogger.info(
+            '✅ Project status updated to closed\n'
+            '   ├─ appId: $appId\n'
+            '   ├─ dayNumber: $dayNumber\n'
+            '   ├─ totalDays: $totalDays\n'
+            '   └─ Reason: Day $dayNumber 승인 완료 ($dayNumber >= $totalDays)',
+            'MissionWorkflow'
+          );
         } catch (e) {
           AppLogger.error('❌ Failed to update project status: $e', 'MissionWorkflow');
           // 에러가 발생해도 workflow 업데이트는 성공했으므로 계속 진행
