@@ -1729,7 +1729,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         'message': '미션에 참여하고 싶습니다.',
         'appliedAt': DateTime.now(),
         'dailyReward': missionReward,
-        'totalDays': estimatedMinutes > 0 ? (estimatedMinutes / 30).ceil() : 14,
+        // v2.186.24: totalDays 제거 → mission_workflow_service가 projects.testPeriodDays에서 자동 조회
         'requirements': requiredSkills,
         'testerInfo': {
           'userType': authState.user!.primaryRole.toString(),

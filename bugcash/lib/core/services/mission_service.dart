@@ -386,7 +386,7 @@ class MissionService {
         providerName: applicationData['providerName'] ?? 'Unknown Provider',
         experience: applicationData['testerInfo']?['experience'] ?? 'beginner',
         motivation: applicationData['testerInfo']?['motivation'] ?? applicationData['message'] ?? '미션에 참여하고 싶습니다.',
-        totalDays: applicationData['totalDays'] ?? FirestoreConstants.defaultTotalDays,
+        totalDays: applicationData['totalDays'], // v2.186.24: null 허용 → projects.testPeriodDays 자동 조회
         // v2.112.0: dailyReward 파라미터 제거 (nullable field)
       );
 
