@@ -369,7 +369,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                         shadows: [
                           Shadow(
                             blurRadius: 2,
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withValues(alpha: 0.3),
                             offset: const Offset(1, 1),
                           ),
                         ],
@@ -533,7 +533,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     return Container(
       padding: EdgeInsets.all(12.w),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.r),
       ),
       child: Row(
@@ -583,7 +583,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
         Text(
           label,
           style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(alpha: 0.8),
             fontSize: 10.sp,
           ),
         ),
@@ -595,7 +595,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     return Container(
       width: 1.w,
       height: 40.h,
-      color: Colors.white.withOpacity(0.3),
+      color: Colors.white.withValues(alpha: 0.3),
     );
   }
 
@@ -715,7 +715,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 indicatorWeight: 3,
                 indicatorPadding: EdgeInsets.symmetric(horizontal: 8.w),
                 splashFactory: InkRipple.splashFactory,
-                overlayColor: WidgetStateProperty.all(Colors.white.withOpacity(0.1)),
+                overlayColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.1)),
                 labelStyle: TextStyle(
                   fontSize: 12.sp,
                   fontWeight: FontWeight.w600,
@@ -784,9 +784,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 8.w),
                 decoration: BoxDecoration(
-                  color: AppColors.testerOrangePrimary.withOpacity(0.1),
+                  color: AppColors.testerOrangePrimary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: AppColors.testerOrangePrimary.withOpacity(0.3)),
+                  border: Border.all(color: AppColors.testerOrangePrimary.withValues(alpha: 0.3)),
                 ),
                 child: DropdownButton<String>(
                   value: _sortOrder,
@@ -1411,9 +1411,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: Colors.orange.withOpacity(0.1),
+                  color: Colors.orange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
-                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                  border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1473,7 +1473,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               Container(
                 padding: EdgeInsets.all(8.w),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6.r),
                 ),
                 child: Row(
@@ -1847,7 +1847,7 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Column(
@@ -1998,9 +1998,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                         decoration: BoxDecoration(
-                          color: Colors.green.withOpacity(0.15),
+                          color: Colors.green.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12.r),
-                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                          border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -2728,7 +2728,7 @@ class _TimerDialogState extends State<TimerDialog> {
             Container(
               padding: EdgeInsets.all(24.w),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.1),
+                color: Colors.green.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Text(

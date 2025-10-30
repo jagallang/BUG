@@ -1,5 +1,6 @@
 /// v2.185.0: 알림 관리 탭 (관리자 대시보드)
 /// 관리자가 사용자들에게 알림을 발송하고 이력을 관리하는 페이지
+library;
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -164,7 +165,7 @@ class _NotificationManagementTabState extends State<NotificationManagementTab> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -301,7 +302,7 @@ class _NotificationManagementTabState extends State<NotificationManagementTab> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),

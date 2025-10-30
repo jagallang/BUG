@@ -975,13 +975,13 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [AppColors.providerBlueLight.withOpacity(0.3), Colors.white],
+          colors: [AppColors.providerBlueLight.withValues(alpha: 0.3), Colors.white],
         ),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(color: AppColors.providerBlueLight, width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: AppColors.providerBluePrimary.withOpacity(0.15),
+            color: AppColors.providerBluePrimary.withValues(alpha: 0.15),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1042,7 +1042,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                     Container(
                       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 2.h),
                       decoration: BoxDecoration(
-                        color: AppColors.providerBlueLight.withOpacity(0.3),
+                        color: AppColors.providerBlueLight.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(4.r),
                         border: Border.all(color: AppColors.providerBlueLight, width: 1),
                       ),
@@ -1150,10 +1150,10 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(16.r),
         border: Border.all(
-          color: color.withOpacity(0.3),
+          color: color.withValues(alpha: 0.3),
           width: 1.5,
         ),
       ),
@@ -1193,7 +1193,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -1960,7 +1960,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
             });
           },
           backgroundColor: Colors.grey[200],
-          selectedColor: AppColors.primary.withOpacity(0.2),
+          selectedColor: AppColors.primary.withValues(alpha: 0.2),
           checkmarkColor: AppColors.primary,
         );
       }).toList(),
@@ -2509,7 +2509,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
         },
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: AppColors.providerBluePrimary, width: 1.5),
-          backgroundColor: AppColors.providerBlueLight.withOpacity(0.2),
+          backgroundColor: AppColors.providerBlueLight.withValues(alpha: 0.2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.r),
           ),
@@ -2554,7 +2554,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           backgroundColor: canUse ? AppColors.providerBluePrimary : Colors.grey[400],
           foregroundColor: Colors.white,
           elevation: canUse ? 2 : 0,
-          shadowColor: canUse ? AppColors.providerBluePrimary.withOpacity(0.4) : null,
+          shadowColor: canUse ? AppColors.providerBluePrimary.withValues(alpha: 0.4) : null,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.r),
           ),

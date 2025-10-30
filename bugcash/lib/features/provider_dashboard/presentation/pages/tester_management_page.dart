@@ -155,7 +155,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
               children: [
                 CircleAvatar(
                   radius: 24.r,
-                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  backgroundColor: Colors.blue.withValues(alpha: 0.1),
                   child: Icon(Icons.person, color: Colors.blue, size: 24.sp),
                 ),
                 SizedBox(width: 12.w),
@@ -339,7 +339,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
               children: [
                 CircleAvatar(
                   radius: 24.r,
-                  backgroundColor: Colors.green.withOpacity(0.1),
+                  backgroundColor: Colors.green.withValues(alpha: 0.1),
                   child: Text(
                     '${workflow.currentDay}',
                     style: TextStyle(
@@ -417,10 +417,10 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: _getMissionStatusColor(todayInteraction).withOpacity(0.1),
+                  color: _getMissionStatusColor(todayInteraction).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(
-                    color: _getMissionStatusColor(todayInteraction).withOpacity(0.3),
+                    color: _getMissionStatusColor(todayInteraction).withValues(alpha: 0.3),
                   ),
                 ),
                 child: Column(
@@ -569,7 +569,7 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
               children: [
                 CircleAvatar(
                   radius: 24.r,
-                  backgroundColor: Colors.blue.withOpacity(0.1),
+                  backgroundColor: Colors.blue.withValues(alpha: 0.1),
                   child: Icon(Icons.check_circle, color: Colors.blue, size: 24.sp),
                 ),
                 SizedBox(width: 12.w),
@@ -801,9 +801,9 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(4.r),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Text(
         state.displayName,

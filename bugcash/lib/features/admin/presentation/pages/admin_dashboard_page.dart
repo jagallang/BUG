@@ -84,7 +84,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       _missionSerialNumbers[appId] = serialNumber;
       return serialNumber;
     } catch (e) {
-      print('Failed to get mission serial number for $appId: $e');
+      debugPrint('Failed to get mission serial number for $appId: $e');
       _missionSerialNumbers[appId] = null;
       return null;
     }
@@ -456,7 +456,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
       decoration: BoxDecoration(
         color: Colors.purple[50],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.adminPrimary.withOpacity(0.3)),
+        border: Border.all(color: AppColors.adminPrimary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -931,7 +931,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1165,7 +1165,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.deepPurple.withOpacity(0.3),
+                  color: Colors.deepPurple.withValues(alpha: 0.3),
                   spreadRadius: 0,
                   blurRadius: 10,
                   offset: const Offset(0, 4),
@@ -1177,7 +1177,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.tune, color: Colors.white, size: 32),
@@ -1200,7 +1200,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                         '보상, 출금, 수수료, 어뷰징 방지 등 모든 설정을 관리합니다',
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -1273,7 +1273,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1288,7 +1288,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 24),
@@ -1564,7 +1564,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: statusColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -1711,7 +1711,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1866,7 +1866,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1895,7 +1895,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -1931,7 +1931,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -2140,7 +2140,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -2263,7 +2263,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 spreadRadius: 0,
                 blurRadius: 10,
                 offset: const Offset(0, 2),
@@ -2303,7 +2303,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     DataCell(Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _getTransactionTypeColor(type).withOpacity(0.1),
+                        color: _getTransactionTypeColor(type).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -2324,7 +2324,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                     DataCell(Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: _getTransactionStatusColor(status).withOpacity(0.1),
+                        color: _getTransactionStatusColor(status).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -2530,7 +2530,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -2765,7 +2765,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -2796,7 +2796,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 0,
             blurRadius: 10,
             offset: const Offset(0, 2),

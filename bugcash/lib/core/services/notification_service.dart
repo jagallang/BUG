@@ -1,5 +1,6 @@
 /// v2.186.0: 통합 알림 서비스
 /// 미션 워크플로우 전체에서 사용하는 자동 알림 시스템
+library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../utils/logger.dart';

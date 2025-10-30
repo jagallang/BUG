@@ -219,7 +219,7 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
                 Container(
                   padding: EdgeInsets.all(12.w),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Column(
@@ -493,7 +493,7 @@ class _DailyMissionReviewPageState extends ConsumerState<DailyMissionReviewPage>
             color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1),
                 offset: const Offset(0, -2),
                 blurRadius: 4,
               ),

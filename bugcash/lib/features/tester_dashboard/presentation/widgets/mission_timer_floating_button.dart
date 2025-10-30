@@ -493,7 +493,7 @@ class _MissionStartTimerOverlayState extends State<MissionStartTimerOverlay>
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: Colors.blue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Row(

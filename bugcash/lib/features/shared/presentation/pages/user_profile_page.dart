@@ -98,7 +98,7 @@ class UserProfilePage extends ConsumerWidget {
                     border: Border.all(color: Colors.grey[300]!, width: 3),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -172,7 +172,7 @@ class UserProfilePage extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),  // 파란색 그림자
+            color: Colors.blue.withValues(alpha: 0.3),  // 파란색 그림자
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
@@ -194,7 +194,7 @@ class UserProfilePage extends ConsumerWidget {
               Container(
                 padding: EdgeInsets.all(12.w),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),  // 반투명 흰색
+                  color: Colors.white.withValues(alpha: 0.2),  // 반투명 흰색
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Icon(
@@ -222,7 +222,7 @@ class UserProfilePage extends ConsumerWidget {
                         '${NumberFormat('#,###').format(wallet.balance)}P',
                         style: TextStyle(
                           fontSize: 14.sp,
-                          color: Colors.white.withOpacity(0.9),  // 흰색 투명도 90%
+                          color: Colors.white.withValues(alpha: 0.9),  // 흰색 투명도 90%
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -230,14 +230,14 @@ class UserProfilePage extends ConsumerWidget {
                         '...P',
                         style: TextStyle(
                           fontSize: 14.sp,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                       error: (_, __) => Text(
                         '0P',
                         style: TextStyle(
                           fontSize: 14.sp,
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                         ),
                       ),
                     ),
@@ -247,7 +247,7 @@ class UserProfilePage extends ConsumerWidget {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 16.sp,
-                color: Colors.white.withOpacity(0.8),  // 흰색 화살표
+                color: Colors.white.withValues(alpha: 0.8),  // 흰색 화살표
               ),
             ],
           ),
@@ -270,7 +270,7 @@ class UserProfilePage extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),

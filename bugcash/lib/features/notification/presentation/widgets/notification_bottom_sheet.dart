@@ -247,7 +247,7 @@ class NotificationBottomSheet extends StatelessWidget {
                           ],
                         ),
                         tileColor:
-                            isRead ? Colors.white : Colors.blue[50]?.withOpacity(0.3),
+                            isRead ? Colors.white : Colors.blue[50]?.withValues(alpha: 0.3),
                         onTap: () async {
                           // 읽음 처리
                           if (!isRead) {

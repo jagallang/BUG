@@ -38,7 +38,7 @@ class MissionStatusBadge extends StatelessWidget {
             : null,
           boxShadow: isRealtime ? [
             BoxShadow(
-              color: statusInfo.accentColor.withOpacity(0.3),
+              color: statusInfo.accentColor.withValues(alpha: 0.3),
               blurRadius: 4,
               offset: const Offset(0, 2),
             ),

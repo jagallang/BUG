@@ -443,7 +443,7 @@ class _UnifiedWalletPageState extends ConsumerState<UnifiedWalletPage> {
                     return ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(
-                        backgroundColor: color.withOpacity(0.1), // v2.150.0: withValues → withOpacity (호환성)
+                        backgroundColor: color.withValues(alpha: 0.1), // v2.150.0: withValues → withOpacity (호환성)
                         child: Icon(icon, color: color, size: 20.sp),
                       ),
                       title: Text(

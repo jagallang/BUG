@@ -161,9 +161,9 @@ class _EscrowManagementTabState extends State<EscrowManagementTab> {
         width: 220,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3)),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,9 +626,9 @@ class _EscrowManagementTabState extends State<EscrowManagementTab> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -833,7 +833,7 @@ class _EscrowManagementTabState extends State<EscrowManagementTab> {
                 margin: const EdgeInsets.only(bottom: 8),
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: iconColor.withOpacity(0.1),
+                    backgroundColor: iconColor.withValues(alpha: 0.1),
                     child: Icon(icon, color: iconColor, size: 20),
                   ),
                   title: Row(

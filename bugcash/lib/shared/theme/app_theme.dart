@@ -37,7 +37,7 @@ class AppTheme {
       
       cardTheme: CardTheme(
         elevation: 2,  // Material elevation 사용 (일관된 입체감)
-        shadowColor: Colors.black.withOpacity(0.08),  // 통일된 shadow
+        shadowColor: Colors.black.withValues(alpha: 0.08),  // 통일된 shadow
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16.r),
         ),
@@ -89,7 +89,7 @@ class AppTheme {
         ),
         hintStyle: GoogleFonts.roboto(
           fontSize: 14.sp,
-          color: AppColors.textSecondary.withOpacity(0.5),
+          color: AppColors.textSecondary.withValues(alpha: 0.5),
         ),
       ),
     );

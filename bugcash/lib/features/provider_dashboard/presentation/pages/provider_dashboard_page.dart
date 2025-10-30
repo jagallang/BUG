@@ -152,7 +152,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                 shadows: [
                   Shadow(
                     blurRadius: 2,
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     offset: const Offset(1, 1),
                   ),
                 ],
@@ -232,7 +232,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
         type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.providerBluePrimary, // v2.78.0: 파스텔 블루 테마
         selectedItemColor: Colors.white,
-        unselectedItemColor: AppColors.providerBlueLight.withOpacity(0.7), // v2.78.0
+        unselectedItemColor: AppColors.providerBlueLight.withValues(alpha: 0.7), // v2.78.0
         currentIndex: _selectedIndex,
         onTap: (index) {
           debugPrint('BottomNavigationBar tapped: $index');
@@ -412,7 +412,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
                         ? Container(
                             padding: EdgeInsets.all(16.w),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.1),
+                              color: AppColors.primary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8.r),
                               border: Border.all(color: AppColors.primary, width: 2),
                             ),
@@ -546,7 +546,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             width: 50.w,
             height: 50.w,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -597,7 +597,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             Container(
               padding: EdgeInsets.all(16.w),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.05),
+                color: color.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Column(
@@ -726,7 +726,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: Text(
@@ -1060,7 +1060,7 @@ class _ProviderDashboardPageState extends ConsumerState<ProviderDashboardPage> {
             width: 40.w,
             height: 40.w,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8.r),
             ),
             child: Icon(

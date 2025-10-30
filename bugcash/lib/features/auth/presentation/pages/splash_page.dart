@@ -43,7 +43,7 @@ class SplashPage extends StatelessWidget {
                 AppStrings.welcomeSubtitle,
                 style: TextStyle(
                   fontSize: 16.sp,
-                  color: Colors.white.withOpacity(0.9),
+                  color: Colors.white.withValues(alpha: 0.9),
                 ),
               ),
               SizedBox(height: 60.h),

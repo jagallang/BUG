@@ -531,7 +531,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -607,7 +607,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -703,7 +703,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -804,7 +804,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -890,7 +890,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -1067,7 +1067,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -1157,7 +1157,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -1298,7 +1298,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -1420,7 +1420,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.green.withOpacity(0.3),
+            color: Colors.green.withValues(alpha: 0.3),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, 3),
@@ -1457,7 +1457,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           Container(
             padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 6.h),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20.r),
             ),
             child: Text(
@@ -1483,7 +1483,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 6,
             offset: const Offset(0, -3),
