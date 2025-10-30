@@ -565,13 +565,24 @@ class MissionWorkflowService {
       }
 
       // v2.186.21: projects에서 실제 testPeriodDays 확인 (이중 검증)
+      // v2.186.27: appId normalization 추가 (testPeriodDays 조회 시에도 normalize 필요)
       final workflowTotalDays = data['totalDays'] ?? 10;
       final appId = data['appId'] as String;
+
+      // appId normalize: provider_app_ 접두사 제거 (일관성 확보)
+      final normalizedAppId = appId.replaceAll('provider_app_', '');
+
+      AppLogger.info(
+        '🔍 [testPeriodDays 조회] appId normalization\n'
+        '   ├─ 원본 appId: $appId\n'
+        '   └─ normalized appId: $normalizedAppId',
+        'MissionWorkflow'
+      );
 
       // projects에서 실제 testPeriodDays 읽기
       int actualTotalDays = workflowTotalDays;
       try {
-        final projectDoc = await _firestore.collection('projects').doc(appId).get();
+        final projectDoc = await _firestore.collection('projects').doc(normalizedAppId).get();
         if (projectDoc.exists) {
           final projectTestPeriodDays = projectDoc.data()!['testPeriodDays'] as int?;
           if (projectTestPeriodDays != null) {
@@ -588,6 +599,13 @@ class MissionWorkflowService {
               );
             }
           }
+        } else {
+          AppLogger.warning(
+            '⚠️ Project document not found for testPeriodDays lookup\n'
+            '   ├─ normalizedAppId: $normalizedAppId\n'
+            '   └─ Using workflow.totalDays: $workflowTotalDays',
+            'MissionWorkflow'
+          );
         }
       } catch (e) {
         AppLogger.error('❌ Failed to read testPeriodDays from projects: $e', 'MissionWorkflow');
@@ -636,25 +654,83 @@ class MissionWorkflowService {
           .update(updateData);
 
       // v2.186.21: 프로젝트 종료 시 projects 컬렉션 상태도 'closed'로 업데이트
+      // v2.186.25: 로깅 강화 및 에러 처리 개선
+      // v2.186.26: appId normalization 추가 (일관성 확보)
+      // v2.186.27: normalizedAppId를 위에서 이미 생성했으므로 재사용
       if (isFinalDay) {
         try {
-          await _firestore
-              .collection('projects')
-              .doc(appId)
-              .update({
-            'status': 'closed',
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+          // normalizedAppId는 이미 위(573번 라인)에서 생성됨
           AppLogger.info(
-            '✅ Project status updated to closed\n'
-            '   ├─ appId: $appId\n'
+            '🔍 [projects.status 업데이트] Using normalized appId\n'
+            '   └─ normalizedAppId: $normalizedAppId',
+            'MissionWorkflow'
+          );
+
+          // 현재 프로젝트 상태 조회
+          final projectDoc = await _firestore.collection('projects').doc(normalizedAppId).get();
+          final currentStatus = projectDoc.exists ? projectDoc.data()!['status'] : 'unknown';
+
+          AppLogger.info(
+            '🔄 프로젝트 상태 업데이트 시작\n'
+            '   ├─ normalizedAppId: $normalizedAppId\n'
+            '   ├─ projectDoc.exists: ${projectDoc.exists}\n'
+            '   ├─ 현재 상태: $currentStatus\n'
+            '   ├─ 목표 상태: closed\n'
             '   ├─ dayNumber: $dayNumber\n'
             '   ├─ totalDays: $totalDays\n'
             '   └─ Reason: Day $dayNumber 승인 완료 ($dayNumber >= $totalDays)',
             'MissionWorkflow'
           );
-        } catch (e) {
-          AppLogger.error('❌ Failed to update project status: $e', 'MissionWorkflow');
+
+          if (!projectDoc.exists) {
+            AppLogger.error(
+              '❌ Project document not found\n'
+              '   ├─ normalizedAppId: $normalizedAppId\n'
+              '   └─ Cannot update status to closed',
+              'MissionWorkflow'
+            );
+            return; // 문서가 없으면 업데이트 불가
+          }
+
+          await _firestore
+              .collection('projects')
+              .doc(normalizedAppId)
+              .update({
+            'status': 'closed',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
+          // 업데이트 성공 후 재확인
+          final updatedDoc = await _firestore.collection('projects').doc(normalizedAppId).get();
+          final updatedStatus = updatedDoc.exists ? updatedDoc.data()!['status'] : 'unknown';
+
+          AppLogger.info(
+            '✅ Project status updated to closed\n'
+            '   ├─ normalizedAppId: $normalizedAppId\n'
+            '   ├─ 이전 상태: $currentStatus\n'
+            '   ├─ 업데이트 후 상태: $updatedStatus\n'
+            '   ├─ dayNumber: $dayNumber\n'
+            '   └─ totalDays: $totalDays',
+            'MissionWorkflow'
+          );
+
+          if (updatedStatus != 'closed') {
+            AppLogger.error(
+              '⚠️ Project status 업데이트 실패: 상태가 closed가 아님\n'
+              '   ├─ 예상: closed\n'
+              '   ├─ 실제: $updatedStatus\n'
+              '   └─ normalizedAppId: $normalizedAppId',
+              'MissionWorkflow'
+            );
+          }
+        } catch (e, stackTrace) {
+          AppLogger.error(
+            '❌ Failed to update project status\n'
+            '   ├─ appId: $appId\n'
+            '   ├─ Error: $e\n'
+            '   └─ StackTrace: $stackTrace',
+            'MissionWorkflow'
+          );
           // 에러가 발생해도 workflow 업데이트는 성공했으므로 계속 진행
         }
       }
