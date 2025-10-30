@@ -185,6 +185,21 @@ class MissionWorkflowService {
         );
 
         final startDate = DateTime.now();
+
+        // v2.186.23: 기존 dailyInteractions 확인 및 자동 복구
+        final existingInteractions = workflow.dailyInteractions;
+        final existingCount = existingInteractions.length;
+
+        if (existingCount > 0 && existingCount < workflow.totalDays) {
+          AppLogger.warning(
+            '⚠️ Auto-repair: dailyInteractions mismatch detected\n'
+            '   ├─ Expected (totalDays): ${workflow.totalDays}\n'
+            '   ├─ Actual (existing): $existingCount\n'
+            '   └─ Generating ${workflow.totalDays - existingCount} missing days...',
+            'MissionWorkflow'
+          );
+        }
+
         final allDayMissions = List.generate(workflow.totalDays, (index) {
           return {
             'dayNumber': index + 1,
@@ -976,7 +991,50 @@ class MissionWorkflowService {
         throw Exception('Mission workflow not found');
       }
 
-      return MissionWorkflowModel.fromFirestore(doc);
+      final workflow = MissionWorkflowModel.fromFirestore(doc);
+
+      // v2.186.23: 자동 복구 - dailyInteractions 개수가 totalDays보다 적으면 자동 생성
+      if (workflow.dailyInteractions.length < workflow.totalDays &&
+          workflow.currentState != MissionWorkflowState.applicationSubmitted &&
+          workflow.currentState != MissionWorkflowState.applicationRejected &&
+          workflow.currentState != MissionWorkflowState.cancelled) {
+        AppLogger.warning(
+          '🔧 Auto-repair triggered for workflowId: $workflowId\n'
+          '   ├─ totalDays: ${workflow.totalDays}\n'
+          '   ├─ dailyInteractions: ${workflow.dailyInteractions.length}\n'
+          '   └─ Generating ${workflow.totalDays - workflow.dailyInteractions.length} missing days...',
+          'MissionWorkflow'
+        );
+
+        final startDate = workflow.startedAt ?? DateTime.now();
+        final allDayMissions = List.generate(workflow.totalDays, (index) {
+          return {
+            'dayNumber': index + 1,
+            'date': startDate.add(Duration(days: index)),
+            'testerStarted': false,
+            'testerCompleted': false,
+            'testerScreenshots': [],
+            'testerData': {},
+            'providerApproved': false,
+          };
+        });
+
+        await _firestore
+            .collection('mission_workflows')
+            .doc(workflowId)
+            .update({'dailyInteractions': allDayMissions});
+
+        AppLogger.info('✅ Auto-repair completed: $workflowId (${allDayMissions.length} days)', 'MissionWorkflow');
+
+        // 수정된 데이터 다시 읽기
+        final updatedDoc = await _firestore
+            .collection('mission_workflows')
+            .doc(workflowId)
+            .get();
+        return MissionWorkflowModel.fromFirestore(updatedDoc);
+      }
+
+      return workflow;
     } catch (e) {
       AppLogger.error('Failed to get mission workflow', e.toString());
       rethrow;
