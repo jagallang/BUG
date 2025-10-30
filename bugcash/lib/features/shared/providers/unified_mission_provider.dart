@@ -225,7 +225,7 @@ class UnifiedMissionNotifier extends StateNotifier<UnifiedMissionState> {
         providerName: providerName,
         experience: experience,
         motivation: motivation,
-        totalDays: 14, // 기본 14일
+        // v2.186.22: totalDays 제거 → mission_workflow_service가 projects에서 자동 조회
         // v2.117.0: dailyReward 파라미터 제거 (최종 완료 시에만 포인트 지급)
       );
 
