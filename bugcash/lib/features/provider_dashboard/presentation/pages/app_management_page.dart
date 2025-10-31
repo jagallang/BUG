@@ -11,6 +11,7 @@ import '../../../../core/utils/logger.dart';
 import '../../../../core/config/feature_flags.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/image_upload_widget.dart';
+import '../../../../shared/widgets/debounce_button.dart'; // v2.186.34
 import 'app_detail_page.dart';
 import 'mission_management_page_v2.dart';
 import '../../../wallet/presentation/providers/wallet_provider.dart';
@@ -150,7 +151,7 @@ class AppManagementPage extends ConsumerStatefulWidget {
 
 class _AppManagementPageState extends ConsumerState<AppManagementPage> {
   bool _showUploadDialog = false;
-  bool _isSubmitting = false; // v2.108.4: 중복 클릭 방지
+  // v2.186.34: _isSubmitting 제거 (DebounceButton이 내부적으로 처리)
 
   // v2.114.0: 스크린샷 업로드 진행상황 추적
   String _uploadStatus = ''; // 업로드 상태 메시지
@@ -295,13 +296,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
     }
   }
 
+  // v2.186.34: DebounceButton으로 중복 클릭 방지 처리되므로 _isSubmitting 검사 제거
   Future<void> _uploadApp() async {
-    // v2.108.4: 중복 실행 방지
-    if (_isSubmitting) {
-      AppLogger.warning('App registration already in progress', 'AppManagement');
-      return;
-    }
-
     if (_appNameController.text.isEmpty ||
         _appUrlController.text.isEmpty ||
         _descriptionController.text.isEmpty) {
@@ -485,8 +481,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
     if (escrowConfirm != true || !mounted) return;
 
-    // v2.108.4: 등록 시작 - 플래그 설정
-    setState(() => _isSubmitting = true);
+    // v2.186.34: DebounceButton이 자동으로 처리하므로 플래그 설정 제거
 
     try {
       // v2.114.0: 스크린샷 업로드 (진행상황 피드백 포함)
@@ -669,8 +664,7 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
           ),
         );
 
-        // v2.108.4: 등록 완료 - 플래그 해제
-        setState(() => _isSubmitting = false);
+        // v2.186.34: DebounceButton이 자동으로 처리하므로 플래그 해제 제거
 
         // 다이얼로그 닫기 및 필드 초기화를 약간 지연
         Future.delayed(const Duration(milliseconds: 1500), () {
@@ -707,19 +701,16 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
       }
     } catch (e) {
       AppLogger.error('Failed to upload app', e.toString());
+      // v2.186.34: DebounceButton이 자동으로 에러 처리하므로 여기서는 상태만 초기화
       if (mounted) {
-        // v2.114.0: 등록 실패 - 플래그 및 업로드 상태 초기화
         setState(() {
-          _isSubmitting = false;
           _uploadStatus = '';
           _uploadedCount = 0;
           _totalCount = 0;
         });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('앱 등록 실패: ${e.toString()}')),
-        );
       }
+      // 에러를 다시 throw하여 DebounceButton에서 SnackBar 표시
+      rethrow;
     }
   }
 
@@ -1662,10 +1653,8 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                           context: context,
                           builder: (context) => AlertDialog(
                             title: const Text('앱 등록 취소'),
-                            content: Text(
-                              _isSubmitting
-                                  ? '앱 등록을 취소하시겠습니까?\n\n진행 중인 작업이 중단됩니다.'
-                                  : '앱 등록을 취소하시겠습니까?\n\n입력한 내용이 저장되지 않습니다.',
+                            content: const Text(
+                              '앱 등록을 취소하시겠습니까?\n\n입력한 내용이 저장되지 않습니다.',
                             ),
                             actions: [
                               TextButton(
@@ -1683,27 +1672,15 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                           ),
                         );
 
+                        // v2.186.34: _isSubmitting 제거로 간소화
                         if (confirmCancel == true && mounted) {
-                          if (_isSubmitting) {
-                            setState(() {
-                              _isSubmitting = false;
-                              _showUploadDialog = false;
-                              // v2.114.0: 업로드 상태 초기화
-                              _uploadStatus = '';
-                              _uploadedCount = 0;
-                              _totalCount = 0;
-                            });
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('앱 등록이 취소되었습니다'),
-                                backgroundColor: Colors.orange,
-                              ),
-                            );
-                          } else {
-                            setState(() {
-                              _showUploadDialog = false;
-                            });
-                          }
+                          setState(() {
+                            _showUploadDialog = false;
+                            // v2.114.0: 업로드 상태 초기화
+                            _uploadStatus = '';
+                            _uploadedCount = 0;
+                            _totalCount = 0;
+                          });
                         }
                       },
                       style: OutlinedButton.styleFrom(
@@ -1719,40 +1696,21 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
                 Expanded(
                   child: SizedBox(
                     height: 48.h,
-                    child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _uploadApp, // v2.108.4: 중복 클릭 방지
+                    // v2.186.34: DebounceButton으로 교체 (중복 클릭 자동 방지)
+                    child: DebounceButton(
+                      onPressed: _uploadApp,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.providerBluePrimary, // v2.76.0: 색상 통일
+                        backgroundColor: AppColors.providerBluePrimary,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                       ),
-                      child: _isSubmitting // v2.114.0: 로딩 및 업로드 상태 표시
-                        ? Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              ),
-                              if (_uploadStatus.isNotEmpty) ...[
-                                SizedBox(width: 8.w),
-                                Flexible(
-                                  child: Text(
-                                    _uploadStatus,
-                                    style: TextStyle(fontSize: 12.sp, color: Colors.white),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          )
-                        : const Text('등록'),
+                      // 업로드 상태에 따라 동적으로 로딩 텍스트 표시
+                      loadingText: _uploadStatus.isNotEmpty ? _uploadStatus : '등록 중...',
+                      showLoadingIndicator: true,
+                      showErrorSnackBar: true,
+                      errorMessageBuilder: (error) => '앱 등록 실패: ${error.toString()}',
+                      child: const Text('등록'),
                     ),
                   ),
                 ),

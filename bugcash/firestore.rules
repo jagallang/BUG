@@ -145,12 +145,17 @@ service cloud.firestore {
                     (request.resource.data.keys().hasAll(['title', 'description', 'providerId', 'status']) ||
                      request.resource.data.keys().hasAll(['appName', 'description', 'providerId', 'status']));
 
-      // v2.186.6: 수정 권한 개선
-      // - 공급자: status 외의 일반 필드만 수정 가능
-      // - 관리자: 모든 필드 수정 가능 (status 포함 - 승인/거부 처리용)
+      // v2.186.33: 수정 권한 개선
+      // - 공급자: status 외의 일반 필드 수정 가능
+      // - 공급자: 미션 완료 시 'open' → 'closed' 변경만 허용 (v2.186.33)
+      // - 관리자: 모든 필드 수정 가능
       allow update: if (isProjectProvider(projectId) &&
-                        // 공급자는 status 변경 불가
-                        !('status' in request.resource.data.diff(resource.data).affectedKeys()))
+                        (!('status' in request.resource.data.diff(resource.data).affectedKeys()) ||
+                         // v2.186.33: 미션 완료 시 'open' → 'closed' 변경 허용
+                         // updateTransforms는 affectedKeys()에 포함되지 않으므로 status와 closedBy만 체크
+                         (resource.data.status == 'open' &&
+                          request.resource.data.status == 'closed' &&
+                          request.resource.data.closedBy == request.auth.uid)))
                     || isAdmin(); // 관리자는 모든 필드 변경 가능
 
       // v2.186.4: 삭제 권한 개선
