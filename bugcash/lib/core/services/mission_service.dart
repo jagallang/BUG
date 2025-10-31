@@ -382,6 +382,7 @@ class MissionService {
         testerId: applicationData['testerId'],
         testerName: applicationData['testerName'],
         testerEmail: applicationData['testerEmail'],
+        googleEmail: applicationData['googleEmail'], // v2.186.35: 구글플레이 테스터 등록용
         providerId: applicationData['providerId'],
         providerName: applicationData['providerName'] ?? 'Unknown Provider',
         experience: applicationData['testerInfo']?['experience'] ?? 'beginner',

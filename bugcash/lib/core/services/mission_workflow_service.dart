@@ -20,12 +20,14 @@ class MissionWorkflowService {
   /// v2.18.0: totalDays 기본값 14일 → 10일 변경 (권장값)
   /// v2.112.0: dailyReward 파라미터 제거 (최종 포인트만 사용)
   /// v2.186.21: totalDays를 projects.testPeriodDays에서 자동으로 읽어오도록 수정
+  /// v2.186.35: googleEmail 파라미터 추가 (구글플레이 테스터 등록용)
   Future<String> createMissionApplication({
     required String appId,
     required String appName,
     required String testerId,
     required String testerName,
     required String testerEmail,
+    String? googleEmail, // v2.186.35: 구글플레이 테스터 등록용
     String? providerId, // 옵셔널로 변경 - 자동 조회 기능 추가
     String? providerName, // 옵셔널로 변경 - 자동 조회 기능 추가
     required String experience,
@@ -103,6 +105,7 @@ class MissionWorkflowService {
         testerId: testerId,
         testerName: testerName,
         testerEmail: testerEmail,
+        googleEmail: googleEmail, // v2.186.35
         providerId: safeProviderId,
         providerName: safeProviderName,
         currentState: MissionWorkflowState.applicationSubmitted,

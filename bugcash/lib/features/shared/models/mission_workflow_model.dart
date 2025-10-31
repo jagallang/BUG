@@ -195,6 +195,7 @@ class MissionWorkflowModel {
   final String testerId;
   final String testerName;
   final String testerEmail;
+  final String? googleEmail; // v2.186.35: 구글플레이 테스터 등록용 이메일
   final String providerId;
   final String providerName;
 
@@ -237,6 +238,7 @@ class MissionWorkflowModel {
     required this.testerId,
     required this.testerName,
     required this.testerEmail,
+    this.googleEmail, // v2.186.35
     required this.providerId,
     required this.providerName,
     required this.currentState,
@@ -302,6 +304,7 @@ class MissionWorkflowModel {
       testerId: data['testerId'] ?? '',
       testerName: data['testerName'] ?? '',
       testerEmail: data['testerEmail'] ?? '',
+      googleEmail: data['googleEmail'], // v2.186.35
       providerId: data['providerId'] ?? '',
       providerName: data['providerName'] ?? '',
       currentState: MissionWorkflowState.fromCode(data['currentState'] ?? 'application_submitted'),
@@ -334,6 +337,7 @@ class MissionWorkflowModel {
       'testerId': testerId,
       'testerName': testerName,
       'testerEmail': testerEmail,
+      'googleEmail': googleEmail, // v2.186.35
       'providerId': providerId,
       'providerName': providerName,
       'currentState': currentState.code,

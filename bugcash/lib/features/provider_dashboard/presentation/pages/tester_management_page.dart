@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // v2.186.35: Clipboard
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -185,6 +186,62 @@ class _TesterManagementPageState extends ConsumerState<TesterManagementPage>
             ),
 
             SizedBox(height: 16.h),
+
+            // v2.186.35: 구글 메일 표시
+            if (workflow.googleEmail != null && workflow.googleEmail!.isNotEmpty)
+              Container(
+                margin: EdgeInsets.only(bottom: 12.h),
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.email_outlined, color: Colors.blue[700], size: 20.w),
+                    SizedBox(width: 8.w),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '구글플레이 테스터 이메일',
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue[900],
+                            ),
+                          ),
+                          SizedBox(height: 2.h),
+                          Text(
+                            workflow.googleEmail!,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              color: Colors.blue[800],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.copy, size: 18.w, color: Colors.blue[700]),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: workflow.googleEmail!));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('이메일이 복사되었습니다'),
+                            backgroundColor: Colors.blue,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      tooltip: '이메일 복사',
+                    ),
+                  ],
+                ),
+              ),
 
             // 경험 & 동기
             Container(
