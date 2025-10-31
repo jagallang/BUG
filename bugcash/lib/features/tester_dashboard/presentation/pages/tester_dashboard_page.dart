@@ -38,6 +38,8 @@ import '../../../auth/domain/entities/user_entity.dart' show UserType;
 // v2.185.1: 알림 기능
 import '../../../notification/presentation/widgets/notification_bottom_sheet.dart';
 import '../../../notification/presentation/providers/unread_notification_provider.dart';
+// v2.186.39: 미션 취소 시 공급자 알림 전송
+import '../../../../core/services/notification_service.dart';
 
 class TesterDashboardPage extends ConsumerStatefulWidget {
   final String testerId;
@@ -1164,8 +1166,9 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                   }
                 },
                 // 삭제 버튼 (승인 완료 전까지 모든 상태에서 가능)
+                // v2.186.39: 간소화된 취소 로직으로 변경
                 onDelete: mission.status != DailyMissionStatus.approved
-                    ? () => _deleteMissionEnhanced(mission)
+                    ? () => _cancelMission(mission)
                     : null,
                 // v2.106.5: 시작 버튼 (approved, mission_in_progress, in_progress 상태에서 시작 가능)
                 onStart: ((mission.currentState == 'approved' ||
@@ -1624,6 +1627,77 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
     } else {
       passwordController.dispose();
       reasonController.dispose();
+    }
+  }
+
+  // v2.186.39: 미션 중도 포기 (간소화된 로직, 공급자 알림 포함)
+  Future<void> _cancelMission(DailyMissionModel mission) async {
+    try {
+      // 1. 워크플로우 상태를 'cancelled'로 변경
+      await FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .doc(mission.workflowId)
+          .update({
+        'currentState': 'cancelled',
+        'stateUpdatedAt': Timestamp.now(),
+        'stateUpdatedBy': widget.testerId,
+        'cancelledAt': Timestamp.now(),
+        'cancelledBy': widget.testerId,
+        'cancelReason': '테스터 중도 포기', // v2.186.39
+      });
+
+      // 2. 공급자에게 알림 전송
+      final workflowDoc = await FirebaseFirestore.instance
+          .collection('mission_workflows')
+          .doc(mission.workflowId)
+          .get();
+
+      final workflowData = workflowDoc.data();
+      if (workflowData != null) {
+        final providerId = workflowData['providerId'] as String?;
+        final testerName = workflowData['testerName'] as String? ?? '테스터';
+        final appName = workflowData['appName'] as String? ?? '미션';
+
+        if (providerId != null && providerId.isNotEmpty) {
+          await NotificationService.sendNotification(
+            recipientId: providerId,
+            title: '미션 중도 포기',
+            message: '$testerName님이 "$appName" 미션을 포기했습니다.',
+            type: 'missionCancelled', // v2.186.39
+            data: {
+              'workflowId': mission.workflowId,
+              'testerId': widget.testerId,
+              'testerName': testerName,
+              'appName': appName,
+              'cancelledAt': Timestamp.now().toDate().toIso8601String(),
+            },
+          );
+        }
+      }
+
+      // 3. 성공 메시지 표시
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('미션이 취소되었습니다'),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+
+      // 4. 목록 새로고침
+      ref.read(cleanArchTesterMissionProvider(widget.testerId).notifier).refreshMissions();
+    } catch (e) {
+      AppLogger.error('미션 취소 실패', e.toString());
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('미션 취소 실패: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

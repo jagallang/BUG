@@ -448,15 +448,16 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
   }
 
   /// 삭제 확인 다이얼로그
+  /// v2.186.39: 중도 포기 경고 메시지 강화
   Future<void> _showDeleteConfirmDialog() async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(Icons.warning, color: Colors.red, size: 28.sp),
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28.sp),
             SizedBox(width: 8.w),
-            Text('미션 삭제', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
+            Text('미션 중도 포기', style: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.bold)),
           ],
         ),
         content: Column(
@@ -464,13 +465,41 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '정말로 이 미션을 삭제하시겠습니까?',
+              '정말로 이 미션을 포기하시겠습니까?',
               style: TextStyle(fontSize: 14.sp, fontWeight: FontWeight.w500),
             ),
-            SizedBox(height: 8.h),
-            Text(
-              '삭제된 미션은 복구할 수 없습니다.',
-              style: TextStyle(fontSize: 13.sp, color: Colors.red[700]),
+            SizedBox(height: 16.h),
+            // v2.186.39: 중도 포기 경고 박스
+            Container(
+              padding: EdgeInsets.all(12.w),
+              decoration: BoxDecoration(
+                color: Colors.red[50],
+                borderRadius: BorderRadius.circular(8.r),
+                border: Border.all(color: Colors.red[200]!),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.cancel, color: Colors.red[700], size: 20.w),
+                      SizedBox(width: 8.w),
+                      Text(
+                        '중도 포기 시',
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red[700],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  _buildWarningText('포인트가 지급되지 않습니다'),
+                  _buildWarningText('공급자에게 알림이 전송됩니다'),
+                  _buildWarningText('이 작업은 취소할 수 없습니다'),
+                ],
+              ),
             ),
           ],
         ),
@@ -492,7 +521,7 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('삭제'),
+            child: const Text('포기하기'),
           ),
         ],
       ),
@@ -508,6 +537,37 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
         _deleteConfirmMode = false;
       });
     }
+  }
+
+  /// v2.186.39: 경고 텍스트 아이템 빌더
+  Widget _buildWarningText(String text) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 4.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 4.w,
+            height: 4.w,
+            margin: EdgeInsets.only(top: 6.h, right: 8.w),
+            decoration: BoxDecoration(
+              color: Colors.red[700],
+              shape: BoxShape.circle,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(
+                fontSize: 12.sp,
+                color: Colors.red[900],
+                height: 1.3,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   /// 가로 버튼 빌더
