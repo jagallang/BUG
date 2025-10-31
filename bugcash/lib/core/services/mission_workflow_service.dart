@@ -558,6 +558,22 @@ class MissionWorkflowService {
         _convertTimestampsToDateTime(interaction);
       }
 
+      // v2.186.32: completedDays 계산을 승인 처리 **전**에 수행 (타이밍 버그 수정)
+      // 현재 승인 전의 완료된 Day 개수를 먼저 계산
+      final completedDaysBeforeApproval = interactions
+          .where((i) {
+            final approved = i['providerApproved'];
+            return approved != null && approved == true;
+          })
+          .length;
+
+      AppLogger.info(
+        '📊 [승인 전] completedDays 계산\n'
+        '   ├─ dayNumber: $dayNumber\n'
+        '   └─ completedDaysBeforeApproval: $completedDaysBeforeApproval',
+        'MissionWorkflow'
+      );
+
       // 해당 날짜의 interaction 찾기 및 업데이트
       final now = DateTime.now();
       for (int i = 0; i < interactions.length; i++) {
@@ -649,16 +665,12 @@ class MissionWorkflowService {
         throw ArgumentError('dayNumber ($dayNumber) cannot exceed totalDays ($totalDays)');
       }
 
-      // v2.25.14: completedDays 계산 (승인된 일일 미션 개수)
-      // v2.186.31: Null safety 강화
-      final completedDays = (interactions)
-          .where((i) {
-            final approved = i['providerApproved'];
-            return approved != null && approved == true;
-          })
-          .length;
+      // v2.186.32: completedDays 계산 로직 수정
+      // completedDaysBeforeApproval에 현재 승인을 더해서 최종 completedDays 계산
+      final completedDays = completedDaysBeforeApproval + 1;
 
       // v2.186.28: 최종 완료 여부 확인 (completedDays 검증 추가)
+      // v2.186.32: 이제 completedDays는 현재 승인을 포함한 정확한 값
       // - dayNumber >= totalDays: 마지막 Day에 도달했는지 확인
       // - completedDays >= totalDays: 모든 Day가 승인되었는지 확인
       // → 중간 Day를 건너뛴 채 승인하는 예외 케이스 방지
@@ -698,6 +710,43 @@ class MissionWorkflowService {
           .doc(workflowId)
           .update(updateData);
 
+      // v2.186.32: Firestore 저장 후 재검증 (이중 안전장치)
+      try {
+        final verificationDoc = await _firestore
+            .collection('mission_workflows')
+            .doc(workflowId)
+            .get();
+
+        if (verificationDoc.exists) {
+          final savedCompletedDays = verificationDoc.data()!['completedDays'] ?? 0;
+          final savedCurrentState = verificationDoc.data()!['currentState'] ?? '';
+
+          if (savedCompletedDays != completedDays) {
+            AppLogger.warning(
+              '⚠️ [재검증] completedDays 불일치 감지\n'
+              '   ├─ 계산값: $completedDays\n'
+              '   ├─ 저장값: $savedCompletedDays\n'
+              '   └─ workflowId: $workflowId',
+              'MissionWorkflow'
+            );
+          } else {
+            AppLogger.info(
+              '✅ [재검증] completedDays 일치 확인\n'
+              '   ├─ completedDays: $completedDays\n'
+              '   ├─ currentState: $savedCurrentState\n'
+              '   ├─ isFinalDay: $isFinalDay\n'
+              '   └─ workflowId: $workflowId',
+              'MissionWorkflow'
+            );
+          }
+        }
+      } catch (e) {
+        AppLogger.error(
+          '❌ [재검증] 실패: $e',
+          'MissionWorkflow'
+        );
+      }
+
       // v2.186.21: 프로젝트 종료 시 projects 컬렉션 상태도 'closed'로 업데이트
       // v2.186.25: 로깅 강화 및 에러 처리 개선
       // v2.186.26: appId normalization 추가 (일관성 확보)
@@ -728,7 +777,10 @@ class MissionWorkflowService {
               '📊 Transaction: 현재 상태 확인\n'
               '   ├─ normalizedAppId: $normalizedAppId\n'
               '   ├─ 현재 상태: $currentStatus\n'
-              '   └─ 목표 상태: ${ProjectStatusConstants.closed}',
+              '   ├─ 목표 상태: ${ProjectStatusConstants.closed}\n'
+              '   ├─ completedDays: $completedDays\n'
+              '   ├─ totalDays: $totalDays\n'
+              '   └─ isFinalDay: $isFinalDay',
               'MissionWorkflow'
             );
 
