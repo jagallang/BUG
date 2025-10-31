@@ -617,17 +617,21 @@ class MissionWorkflowService {
       // v2.25.14: completedDays 계산 (승인된 일일 미션 개수)
       final completedDays = interactions.where((i) => i['providerApproved'] == true).length;
 
-      // 최종 완료 여부 확인
-      final isFinalDay = dayNumber >= totalDays;
+      // v2.186.28: 최종 완료 여부 확인 (completedDays 검증 추가)
+      // - dayNumber >= totalDays: 마지막 Day에 도달했는지 확인
+      // - completedDays >= totalDays: 모든 Day가 승인되었는지 확인
+      // → 중간 Day를 건너뛴 채 승인하는 예외 케이스 방지
+      final isFinalDay = (dayNumber >= totalDays) && (completedDays >= totalDays);
 
       AppLogger.info(
-        '📊 프로젝트 완료 조건 확인\n'
+        '📊 프로젝트 완료 조건 검증\n'
         '   ├─ appId: $appId\n'
         '   ├─ dayNumber: $dayNumber\n'
-        '   ├─ workflow.totalDays: $workflowTotalDays\n'
-        '   ├─ projects.testPeriodDays: $actualTotalDays\n'
-        '   ├─ 사용할 totalDays: $totalDays\n'
-        '   └─ isFinalDay: $isFinalDay ($dayNumber >= $totalDays)',
+        '   ├─ totalDays: $totalDays\n'
+        '   ├─ completedDays: $completedDays\n'
+        '   ├─ dayNumber >= totalDays: ${dayNumber >= totalDays}\n'
+        '   ├─ completedDays >= totalDays: ${completedDays >= totalDays}\n'
+        '   └─ isFinalDay: $isFinalDay',
         'MissionWorkflow'
       );
 
