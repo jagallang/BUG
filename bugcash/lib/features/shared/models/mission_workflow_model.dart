@@ -192,6 +192,7 @@ class MissionWorkflowModel {
   final String id;
   final String appId;
   final String appName;
+  final String? appUrl; // v2.186.37: 앱 설치 링크 (테스터가 미션진행상황 페이지에서 확인)
   final String testerId;
   final String testerName;
   final String testerEmail;
@@ -235,6 +236,7 @@ class MissionWorkflowModel {
     required this.id,
     required this.appId,
     required this.appName,
+    this.appUrl, // v2.186.37
     required this.testerId,
     required this.testerName,
     required this.testerEmail,
@@ -301,6 +303,7 @@ class MissionWorkflowModel {
       id: doc.id,
       appId: data['appId'] ?? '',
       appName: data['appName'] ?? '',
+      appUrl: data['appUrl'], // v2.186.37
       testerId: data['testerId'] ?? '',
       testerName: data['testerName'] ?? '',
       testerEmail: data['testerEmail'] ?? '',
@@ -334,6 +337,7 @@ class MissionWorkflowModel {
     return {
       'appId': appId,
       'appName': appName,
+      'appUrl': appUrl, // v2.186.37
       'testerId': testerId,
       'testerName': testerName,
       'testerEmail': testerEmail,

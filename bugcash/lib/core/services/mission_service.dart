@@ -376,9 +376,26 @@ class MissionService {
 
       AppLogger.info('🔄 워크플로우 생성 - missionId: $missionId, realAppId: $realAppId', 'MissionService');
 
+      // v2.186.37: projects 컬렉션에서 appUrl 조회
+      String? appUrl;
+      try {
+        final normalizedAppId = realAppId.replaceAll('provider_app_', '');
+        final projectDoc = await FirebaseFirestore.instance
+            .collection('projects')
+            .doc(normalizedAppId)
+            .get();
+        if (projectDoc.exists) {
+          appUrl = projectDoc.data()?['appUrl'] as String?;
+          AppLogger.info('✅ appUrl 조회 완료: $appUrl', 'MissionService');
+        }
+      } catch (e) {
+        AppLogger.warning('⚠️ appUrl 조회 실패: $e', 'MissionService');
+      }
+
       final workflowId = await workflowService.createMissionApplication(
         appId: realAppId, // 실제 appId 사용
         appName: applicationData['missionName'] ?? FirestoreConstants.unknownApp,
+        appUrl: appUrl, // v2.186.37: 앱 설치 링크
         testerId: applicationData['testerId'],
         testerName: applicationData['testerName'],
         testerEmail: applicationData['testerEmail'],

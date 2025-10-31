@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // v2.186.37: Clipboard
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart'; // v2.186.37: 앱 링크 열기
 import '../../../../core/services/mission_workflow_service.dart';
 import '../../../../features/shared/models/mission_workflow_model.dart';
 import 'daily_mission_submission_page.dart';
@@ -115,6 +117,93 @@ class _MissionTrackingPageState extends ConsumerState<MissionTrackingPage> {
               ),
             ),
             SizedBox(height: 8.h),
+
+            // v2.186.37: 앱 설치 링크 (appUrl이 있는 경우만 표시)
+            if (workflow.appUrl != null && workflow.appUrl!.isNotEmpty) ...[
+              Container(
+                margin: EdgeInsets.only(top: 8.h, bottom: 8.h),
+                padding: EdgeInsets.all(12.w),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.blue[200]!),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '앱 설치 링크',
+                            style: TextStyle(
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue[900],
+                            ),
+                          ),
+                          SizedBox(height: 4.h),
+                          Text(
+                            workflow.appUrl!,
+                            style: TextStyle(
+                              fontSize: 11.sp,
+                              color: Colors.blue[800],
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(width: 8.w),
+                    IconButton(
+                      icon: Icon(Icons.copy, size: 18.w, color: Colors.blue[700]),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: workflow.appUrl!));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('링크가 복사되었습니다'),
+                            backgroundColor: Colors.blue,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                      tooltip: '링크 복사',
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(
+                        minWidth: 32.w,
+                        minHeight: 32.w,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.open_in_new, size: 18.w, color: Colors.blue[700]),
+                      onPressed: () async {
+                        final uri = Uri.parse(workflow.appUrl!);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('링크를 열 수 없습니다'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      tooltip: '링크 열기',
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(
+                        minWidth: 32.w,
+                        minHeight: 32.w,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
 
             // 기간 정보
             Row(

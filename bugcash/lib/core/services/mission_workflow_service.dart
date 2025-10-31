@@ -21,9 +21,11 @@ class MissionWorkflowService {
   /// v2.112.0: dailyReward 파라미터 제거 (최종 포인트만 사용)
   /// v2.186.21: totalDays를 projects.testPeriodDays에서 자동으로 읽어오도록 수정
   /// v2.186.35: googleEmail 파라미터 추가 (구글플레이 테스터 등록용)
+  /// v2.186.37: appUrl 파라미터 추가 (테스터 미션진행상황 페이지에서 사용)
   Future<String> createMissionApplication({
     required String appId,
     required String appName,
+    String? appUrl, // v2.186.37: 앱 설치 링크
     required String testerId,
     required String testerName,
     required String testerEmail,
@@ -102,6 +104,7 @@ class MissionWorkflowService {
         id: '',
         appId: appId,
         appName: appName,
+        appUrl: appUrl, // v2.186.37
         testerId: testerId,
         testerName: testerName,
         testerEmail: testerEmail,
