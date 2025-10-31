@@ -1,6 +1,10 @@
+import 'package:flutter/material.dart';
+import '../constants/app_colors.dart';
+
 /// 프로젝트 상태(projects.status) 상수 및 한글 명칭 매핑
 ///
 /// v2.186.29: 프로젝트 상태 표시 일관성 확보
+/// v2.186.31: 실제 Color 객체 사용으로 UI 일관성 완성
 /// - 기존: app_status_badge.dart와 app_management_page.dart에서 서로 다른 한글 표시
 /// - 개선: 단일 진실 공급원(Single Source of Truth)으로 통합
 class ProjectStatusConstants {
@@ -33,12 +37,24 @@ class ProjectStatusConstants {
     return displayNames[normalizedStatus] ?? status;
   }
 
-  /// 상태별 색상 코드 (향후 UI 통일을 위해)
-  static const Map<String, String> statusColors = {
-    draft: 'gray',
-    pending: 'yellow',
-    open: 'green',
-    closed: 'blue',
-    rejected: 'red',
+  /// 상태별 UI 색상 (실제 Color 객체)
+  /// v2.186.31: AppStatusBadge와 완전히 일치하도록 수정
+  static final Map<String, Color> statusColors = {
+    draft: Colors.grey[600]!,
+    pending: Colors.orange,
+    open: AppColors.primary,      // 브랜드 색상
+    closed: Colors.green,          // 완료 = 녹색
+    rejected: Colors.red,
   };
+
+  /// 프로젝트 상태 코드를 UI 색상으로 변환
+  ///
+  /// [status]: 프로젝트 상태 코드
+  /// Returns: Flutter Color 객체
+  ///
+  /// 매칭되는 상태가 없으면 기본 회색 반환
+  static Color getStatusColor(String status) {
+    final normalizedStatus = status.toLowerCase();
+    return statusColors[normalizedStatus] ?? Colors.grey[600]!;
+  }
 }

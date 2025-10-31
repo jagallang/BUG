@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/shared/models/mission_workflow_model.dart';
+import '../constants/project_status_constants.dart'; // v2.186.31
 import '../utils/logger.dart';
 import 'notification_service.dart'; // v2.186.0: 통합 알림 서비스
 
@@ -530,6 +531,17 @@ class MissionWorkflowService {
     int? rating,
   }) async {
     try {
+      // v2.186.31: 입력 검증 강화
+      if (workflowId.isEmpty) {
+        throw ArgumentError('workflowId cannot be empty');
+      }
+      if (providerId.isEmpty) {
+        throw ArgumentError('providerId cannot be empty');
+      }
+      if (dayNumber < 1) {
+        throw ArgumentError('dayNumber must be >= 1, got: $dayNumber');
+      }
+
       AppLogger.info('Provider $providerId approving daily mission day $dayNumber', 'MissionWorkflow');
 
       // v2.25.09: Firestore 문서를 직접 읽어서 Timestamp 변환 문제 해결
@@ -571,6 +583,17 @@ class MissionWorkflowService {
 
       // appId normalize: provider_app_ 접두사 제거 (일관성 확보)
       final normalizedAppId = appId.replaceAll('provider_app_', '');
+
+      // v2.186.31: 정규화 결과 검증
+      if (normalizedAppId.isEmpty) {
+        AppLogger.error(
+          '❌ Invalid appId format after normalization\n'
+          '   ├─ 원본 appId: $appId\n'
+          '   └─ normalized: (empty)',
+          'MissionWorkflow'
+        );
+        throw ArgumentError('Invalid appId format: $appId');
+      }
 
       AppLogger.info(
         '🔍 [testPeriodDays 조회] appId normalization\n'
@@ -614,8 +637,26 @@ class MissionWorkflowService {
 
       final totalDays = actualTotalDays;
 
+      // v2.186.31: dayNumber 범위 검증 (악의적 값 방지)
+      if (dayNumber > totalDays) {
+        AppLogger.error(
+          '❌ Invalid dayNumber: exceeds totalDays\n'
+          '   ├─ dayNumber: $dayNumber\n'
+          '   ├─ totalDays: $totalDays\n'
+          '   └─ Possible exploit attempt',
+          'MissionWorkflow'
+        );
+        throw ArgumentError('dayNumber ($dayNumber) cannot exceed totalDays ($totalDays)');
+      }
+
       // v2.25.14: completedDays 계산 (승인된 일일 미션 개수)
-      final completedDays = interactions.where((i) => i['providerApproved'] == true).length;
+      // v2.186.31: Null safety 강화
+      final completedDays = (interactions)
+          .where((i) {
+            final approved = i['providerApproved'];
+            return approved != null && approved == true;
+          })
+          .length;
 
       // v2.186.28: 최종 완료 여부 확인 (completedDays 검증 추가)
       // - dayNumber >= totalDays: 마지막 Day에 도달했는지 확인
@@ -661,76 +702,65 @@ class MissionWorkflowService {
       // v2.186.25: 로깅 강화 및 에러 처리 개선
       // v2.186.26: appId normalization 추가 (일관성 확보)
       // v2.186.27: normalizedAppId를 위에서 이미 생성했으므로 재사용
+      // v2.186.31: Transaction으로 race condition 해결 + 멱등성 확보
       if (isFinalDay) {
         try {
-          // normalizedAppId는 이미 위(573번 라인)에서 생성됨
           AppLogger.info(
-            '🔍 [projects.status 업데이트] Using normalized appId\n'
-            '   └─ normalizedAppId: $normalizedAppId',
-            'MissionWorkflow'
-          );
-
-          // 현재 프로젝트 상태 조회
-          final projectDoc = await _firestore.collection('projects').doc(normalizedAppId).get();
-          final currentStatus = projectDoc.exists ? projectDoc.data()!['status'] : 'unknown';
-
-          AppLogger.info(
-            '🔄 프로젝트 상태 업데이트 시작\n'
+            '🔍 [projects.status 업데이트] Transaction 시작\n'
             '   ├─ normalizedAppId: $normalizedAppId\n'
-            '   ├─ projectDoc.exists: ${projectDoc.exists}\n'
-            '   ├─ 현재 상태: $currentStatus\n'
-            '   ├─ 목표 상태: closed\n'
-            '   ├─ dayNumber: $dayNumber\n'
-            '   ├─ totalDays: $totalDays\n'
-            '   └─ Reason: Day $dayNumber 승인 완료 ($dayNumber >= $totalDays)',
-            'MissionWorkflow'
-          );
-
-          if (!projectDoc.exists) {
-            AppLogger.error(
-              '❌ Project document not found\n'
-              '   ├─ normalizedAppId: $normalizedAppId\n'
-              '   └─ Cannot update status to closed',
-              'MissionWorkflow'
-            );
-            return; // 문서가 없으면 업데이트 불가
-          }
-
-          await _firestore
-              .collection('projects')
-              .doc(normalizedAppId)
-              .update({
-            'status': 'closed',
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-
-          // 업데이트 성공 후 재확인
-          final updatedDoc = await _firestore.collection('projects').doc(normalizedAppId).get();
-          final updatedStatus = updatedDoc.exists ? updatedDoc.data()!['status'] : 'unknown';
-
-          AppLogger.info(
-            '✅ Project status updated to closed\n'
-            '   ├─ normalizedAppId: $normalizedAppId\n'
-            '   ├─ 이전 상태: $currentStatus\n'
-            '   ├─ 업데이트 후 상태: $updatedStatus\n'
             '   ├─ dayNumber: $dayNumber\n'
             '   └─ totalDays: $totalDays',
             'MissionWorkflow'
           );
 
-          if (updatedStatus != 'closed') {
-            AppLogger.error(
-              '⚠️ Project status 업데이트 실패: 상태가 closed가 아님\n'
-              '   ├─ 예상: closed\n'
-              '   ├─ 실제: $updatedStatus\n'
-              '   └─ normalizedAppId: $normalizedAppId',
+          // Transaction으로 원자적 업데이트 보장
+          await _firestore.runTransaction((transaction) async {
+            final projectRef = _firestore.collection('projects').doc(normalizedAppId);
+            final projectSnapshot = await transaction.get(projectRef);
+
+            if (!projectSnapshot.exists) {
+              throw Exception('Project not found: $normalizedAppId');
+            }
+
+            final currentStatus = projectSnapshot.data()!['status'];
+
+            AppLogger.info(
+              '📊 Transaction: 현재 상태 확인\n'
+              '   ├─ normalizedAppId: $normalizedAppId\n'
+              '   ├─ 현재 상태: $currentStatus\n'
+              '   └─ 목표 상태: ${ProjectStatusConstants.closed}',
               'MissionWorkflow'
             );
-          }
+
+            // 멱등성: 이미 closed면 업데이트 스킵
+            if (currentStatus != ProjectStatusConstants.closed) {
+              transaction.update(projectRef, {
+                'status': ProjectStatusConstants.closed,
+                'updatedAt': FieldValue.serverTimestamp(),
+                'closedBy': providerId,
+                'closedAt': FieldValue.serverTimestamp(),
+              });
+
+              AppLogger.info(
+                '✅ Transaction: Project status updated to closed\n'
+                '   ├─ normalizedAppId: $normalizedAppId\n'
+                '   ├─ 이전 상태: $currentStatus\n'
+                '   └─ 새 상태: ${ProjectStatusConstants.closed}',
+                'MissionWorkflow'
+              );
+            } else {
+              AppLogger.info(
+                '⚪ Transaction: Status already closed, skipping\n'
+                '   └─ normalizedAppId: $normalizedAppId',
+                'MissionWorkflow'
+              );
+            }
+          });
         } catch (e, stackTrace) {
           AppLogger.error(
-            '❌ Failed to update project status\n'
+            '❌ Failed to update project status (Transaction)\n'
             '   ├─ appId: $appId\n'
+            '   ├─ normalizedAppId: $normalizedAppId\n'
             '   ├─ Error: $e\n'
             '   └─ StackTrace: $stackTrace',
             'MissionWorkflow'

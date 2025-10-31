@@ -30,24 +30,12 @@ class AppStatusBadge extends StatelessWidget {
     );
   }
 
+  // v2.186.29: ProjectStatusConstants 사용으로 일관성 확보
+  // v2.186.31: 색상도 ProjectStatusConstants 사용
   Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'draft':
-        return Colors.grey[600]!;
-      case 'pending':
-        return Colors.orange;
-      case 'open':
-        return AppColors.primary;
-      case 'closed':
-        return Colors.green;
-      case 'rejected':
-        return Colors.red;
-      default:
-        return Colors.grey[600]!;
-    }
+    return ProjectStatusConstants.getStatusColor(status);
   }
 
-  // v2.186.29: ProjectStatusConstants 사용으로 일관성 확보
   String _getStatusText(String status) {
     return ProjectStatusConstants.getDisplayName(status);
   }
