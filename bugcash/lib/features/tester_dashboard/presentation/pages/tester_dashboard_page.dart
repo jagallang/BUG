@@ -1167,15 +1167,16 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
                 },
                 // 삭제 버튼 (승인 완료 전까지 모든 상태에서 가능)
                 // v2.186.39: 간소화된 취소 로직으로 변경
+                // v2.186.40: 진행중 탭의 모든 미션은 중도 포기 가능
                 onDelete: mission.status != DailyMissionStatus.approved
                     ? () => _cancelMission(mission)
                     : null,
                 // v2.106.5: 시작 버튼 (approved, mission_in_progress, in_progress 상태에서 시작 가능)
-                onStart: ((mission.currentState == 'approved' ||
+                // v2.186.41: startedAt 조건 제거 (미션진행중 버튼 클릭 시 미션진행현황 페이지로 이동)
+                onStart: (mission.currentState == 'approved' ||
                           mission.currentState == 'application_approved' ||
                           mission.currentState == 'mission_in_progress' ||
-                          mission.currentState == 'in_progress') &&
-                         mission.startedAt == null)
+                          mission.currentState == 'in_progress')
                     ? () => _startMission(mission)
                     : null,
                 // v2.8.9: 완료 버튼 (시간 기반 체크 - 10분 경과 여부)
@@ -1702,8 +1703,23 @@ class _TesterDashboardPageState extends ConsumerState<TesterDashboardPage>
   }
 
   // v2.21.01: 미션 시작 (단순 가이드 메시지만 표시)
+  // v2.186.41: 미션이 시작된 경우 미션진행현황 페이지로 이동
   Future<void> _startMission(DailyMissionModel mission) async {
-    // 가이드 대화상자 표시
+    // v2.186.41: 미션이 시작된 경우 미션진행현황 페이지로 바로 이동
+    if (mission.startedAt != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MissionTrackingPage(
+            workflowId: mission.workflowId!,
+            appId: mission.appId,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // 가이드 대화상자 표시 (미션 시작 전)
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
