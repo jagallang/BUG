@@ -259,12 +259,13 @@ class _DailyMissionCardState extends ConsumerState<DailyMissionCard> {
     // 3. 미션 진행 중 (in_progress, mission_in_progress, testing_completed)
     // 완료 버튼 활성화 (10분 미만 시 경고 다이얼로그 표시)
     // v2.11.4: testing_completed도 완료 버튼 표시 (중복 방지는 _canCompleteMission에서 처리)
+    // v2.186.42: canStart를 widget.onStart에 따라 결정 (미션진행현황 페이지 이동용)
     if (widget.mission.currentState == 'in_progress' ||
         widget.mission.currentState == 'mission_in_progress' ||
         widget.mission.currentState == 'testing_completed') {
       return _build4ButtonRow(
         canDelete: widget.onDelete != null,
-        canStart: false,
+        canStart: widget.onStart != null,
         canComplete: widget.onComplete != null,
         canSubmit: false,
         startedAt: widget.mission.startedAt,
