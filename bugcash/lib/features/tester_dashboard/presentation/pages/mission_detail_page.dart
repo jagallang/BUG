@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // v2.186.36: Clipboard
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart'; // v2.186.36: 앱 링크 열기
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../core/services/mission_service.dart';
 import '../../../../core/utils/logger.dart';
@@ -1095,7 +1097,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
           _buildDetailRow('앱 이름', _appDetails!['appName'] ?? '정보 없음'),
           _buildDetailRow('카테고리', _appDetails!['category'] ?? '정보 없음'),
           if (_appDetails!['appUrl'] != null && _appDetails!['appUrl'].toString().isNotEmpty)
-            _buildDetailRow('앱 URL', _appDetails!['appUrl']),
+            _buildAppLinkRow('앱 설치 링크', _appDetails!['appUrl']), // v2.186.36: 복사 + 바로가기 버튼 추가
           _buildDetailRow('등록일', _formatTimestamp(_appDetails!['createdAt'])),
         ],
       ),
@@ -1391,6 +1393,95 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
                 fontWeight: FontWeight.w500,
                 color: Colors.black87,
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // v2.186.36: 앱 링크 행 (복사 + 바로가기 버튼 포함)
+  Widget _buildAppLinkRow(String label, String url) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: 12.h),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13.sp,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          SizedBox(height: 8.h),
+          Container(
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: Colors.blue[50],
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: Colors.blue[200]!),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    url,
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      color: Colors.blue[800],
+                      fontWeight: FontWeight.w500,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                IconButton(
+                  icon: Icon(Icons.copy, size: 18.w, color: Colors.blue[700]),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: url));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('링크가 복사되었습니다'),
+                        backgroundColor: Colors.blue,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                  tooltip: '링크 복사',
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(
+                    minWidth: 32.w,
+                    minHeight: 32.w,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.open_in_new, size: 18.w, color: Colors.blue[700]),
+                  onPressed: () async {
+                    final uri = Uri.parse(url);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                    } else {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('링크를 열 수 없습니다'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  tooltip: '링크 열기',
+                  padding: EdgeInsets.zero,
+                  constraints: BoxConstraints(
+                    minWidth: 32.w,
+                    minHeight: 32.w,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
