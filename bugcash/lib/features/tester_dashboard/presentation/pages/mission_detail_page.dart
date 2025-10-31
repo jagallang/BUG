@@ -1730,6 +1730,7 @@ class _MissionDetailPageState extends ConsumerState<MissionDetailPage> {
       barrierDismissible: true,
       builder: (context) => MissionApplicationTermsDialog(
         missionName: missionAppName,
+        testerEmail: ref.read(authProvider).currentUser?.email, // v2.186.38: Gmail 자동 입력
       ),
     );
 

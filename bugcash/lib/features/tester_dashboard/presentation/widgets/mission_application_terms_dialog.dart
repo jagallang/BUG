@@ -3,12 +3,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/terms.dart';
 
 /// v2.179.0: 미션 신청 약관 동의 모달
+/// v2.186.38: testerEmail 파라미터 추가 (Gmail인 경우 자동 입력)
 class MissionApplicationTermsDialog extends StatefulWidget {
   final String missionName;
+  final String? testerEmail; // v2.186.38: 테스터 이메일 (Gmail인 경우 자동 입력)
 
   const MissionApplicationTermsDialog({
     super.key,
     required this.missionName,
+    this.testerEmail, // v2.186.38
   });
 
   @override
@@ -20,6 +23,16 @@ class _MissionApplicationTermsDialogState
     extends State<MissionApplicationTermsDialog> {
   final TextEditingController _emailController = TextEditingController();
   bool _agreedToTerms = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // v2.186.38: Gmail 주소면 자동 입력
+    if (widget.testerEmail != null &&
+        widget.testerEmail!.toLowerCase().endsWith('@gmail.com')) {
+      _emailController.text = widget.testerEmail!;
+    }
+  }
 
   @override
   void dispose() {
