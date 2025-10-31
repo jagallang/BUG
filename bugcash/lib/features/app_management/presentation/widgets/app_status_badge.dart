@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/project_status_constants.dart';
 
 class AppStatusBadge extends StatelessWidget {
   final String status;
@@ -46,20 +47,8 @@ class AppStatusBadge extends StatelessWidget {
     }
   }
 
+  // v2.186.29: ProjectStatusConstants 사용으로 일관성 확보
   String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'draft':
-        return '초안';
-      case 'pending':
-        return '검토중';
-      case 'open':
-        return '활성';
-      case 'closed':
-        return '종료';
-      case 'rejected':
-        return '거부됨';
-      default:
-        return status;
-    }
+    return ProjectStatusConstants.getDisplayName(status);
   }
 }

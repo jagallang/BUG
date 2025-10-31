@@ -6,6 +6,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/project_status_constants.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/config/feature_flags.dart';
 import '../../../../core/services/storage_service.dart';
@@ -2392,17 +2393,11 @@ class _AppManagementPageState extends ConsumerState<AppManagementPage> {
 
   /// v2.109.0: 상태 표시명 반환
   /// v2.173.0: projects.status 필드 기반 상태 표시
+  /// v2.186.29: ProjectStatusConstants 사용으로 일관성 확보
   /// - v2.170.0부터 최종 미션 승인 시 자동으로 projects.status가 'closed'로 업데이트됨
   /// - 이전 데이터는 Firebase Console에서 수동 업데이트 필요
   String _getStatusDisplayName(String status) {
-    switch (status) {
-      case 'draft': return '접수 대기';
-      case 'pending': return '검수 중';
-      case 'open': return '모집 중';
-      case 'closed': return '완료';
-      case 'rejected': return '거부';
-      default: return status;
-    }
+    return ProjectStatusConstants.getDisplayName(status);
   }
 
   /// 미션관리 기능 사용 가능 여부 확인
